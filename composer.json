@@ -52,6 +52,18 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "merge-plugin": {
+            "include": [
+                "app/Ship/composer.json",
+                "app/Containers/*/*/composer.json"
+            ],
+            "recurse": true,
+            "replace": false,
+            "merge-dev": true,
+            "merge-extra": true,
+            "merge-extra-deep": false,
+            "merge-scripts": true
         }
     },
     "config": {

@@ -9,17 +9,20 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Traits\ForwardsCalls;
 use Symfony\Component\Finder\SplFileInfo;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as LaravelRouteServiceProvider;
 
-class RouteServiceProvider extends ServiceProvider
+class RouteServiceProvider extends LaravelRouteServiceProvider
 {
+    use ForwardsCalls;
+
     /**
      * Register any application services.
      */
     public function register(): void
     {
-        //
+        parent::register();
     }
 
     /**
@@ -27,7 +30,14 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+    }
+
+    /**
+     * Define the routes for the application.
+     */
+    public function map(): void
+    {
+        $this->runRoutesAutoLoader();
     }
 
     public function runRoutesAutoLoader(): void
@@ -39,8 +49,10 @@ class RouteServiceProvider extends ServiceProvider
         $allContainerPaths = $this->getAllContainerPaths();
 
         foreach ($allContainerPaths as $containerPath) {
-            $this->loadApiContainerRoutes($containerPath);
-            $this->loadWebContainerRoutes($containerPath);
+            if (basename($containerPath) === 'UI') {
+                $this->loadApiContainerRoutes($containerPath);
+                $this->loadWebContainerRoutes($containerPath);
+            }
         }
     }
 
@@ -74,11 +86,10 @@ class RouteServiceProvider extends ServiceProvider
     private function getFilesSortedByName(string $apiRoutesPath): array
     {
         $files = File::allFiles($apiRoutesPath);
-        $files = Arr::sort($files, function ($file) {
+
+        return Arr::sort($files, function ($file) {
             return $file->getFilename();
         });
-
-        return $files;
     }
 
     private function getRoutePathsForUI(string $containerPath, string $ui): string
@@ -88,7 +99,7 @@ class RouteServiceProvider extends ServiceProvider
 
     private function getUIPathForContainer(string $containerPath, string $ui): string
     {
-        return $containerPath . DIRECTORY_SEPARATOR . 'UI' . DIRECTORY_SEPARATOR . $ui;
+        return $containerPath . DIRECTORY_SEPARATOR . $ui;
     }
 
     /**
@@ -150,7 +161,7 @@ class RouteServiceProvider extends ServiceProvider
 
     private function getApiUrl(): string
     {
-        return Config::get('app.api_url');
+        return Config::get('api.url');
     }
 
     private function getRateLimitMiddleware(): string|null

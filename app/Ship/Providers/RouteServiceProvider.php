@@ -2,6 +2,7 @@
 
 namespace App\Ship\Providers;
 
+use App\Ship\Traits\PortoPaths;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -15,7 +16,8 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as LaravelRoute
 
 class RouteServiceProvider extends LaravelRouteServiceProvider
 {
-    use ForwardsCalls;
+    use ForwardsCalls,
+        PortoPaths;
 
     /**
      * Register any application services.
@@ -194,41 +196,5 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
     private function getRouteFileNameWithoutExtension(SplFileInfo $file): string
     {
         return pathinfo($file->getFilename(), PATHINFO_FILENAME);
-    }
-
-    //todo: Следующие методы вынести в отдельный класс
-    private function getAllContainerPaths(): array
-    {
-        $sectionNames = $this->getSectionNames();
-        $containerPaths = [];
-        foreach ($sectionNames as $name) {
-            $sectionContainerPaths = $this->getSectionContainerPaths($name);
-            foreach ($sectionContainerPaths as $containerPath) {
-                $containerPaths[] = $containerPath;
-            }
-        }
-
-        return $containerPaths;
-    }
-
-    public function getSectionNames(): array
-    {
-        $sectionNames = [];
-
-        foreach ($this->getSectionPaths() as $sectionPath) {
-            $sectionNames[] = basename($sectionPath);
-        }
-
-        return $sectionNames;
-    }
-
-    public function getSectionPaths(): array
-    {
-        return File::directories(app_path('Containers'));
-    }
-
-    public function getSectionContainerPaths(string $sectionName): array
-    {
-        return File::directories(app_path('Containers' . DIRECTORY_SEPARATOR . $sectionName));
     }
 }

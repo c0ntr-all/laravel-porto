@@ -22,7 +22,6 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
      */
     public function register(): void
     {
-        parent::register();
     }
 
     /**
@@ -30,6 +29,7 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
      */
     public function boot(): void
     {
+        $this->runRoutesAutoLoader();
     }
 
     /**
@@ -37,7 +37,6 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
      */
     public function map(): void
     {
-        $this->runRoutesAutoLoader();
     }
 
     public function runRoutesAutoLoader(): void
@@ -137,12 +136,13 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
 
     public function getApiRouteGroup(SplFileInfo|string $endpointFileOrPrefixString): array
     {
+        $prefix = is_string($endpointFileOrPrefixString) ? $endpointFileOrPrefixString : $this->getApiVersionPrefix($endpointFileOrPrefixString);
+
         return [
             'middleware' => $this->getMiddlewares(),
             'domain' => $this->getApiUrl(),
-            // If $endpointFileOrPrefixString is a string, use that string as prefix
-            // else, if it is a file then get the version name from the file name, and use it as prefix
-            'prefix' => is_string($endpointFileOrPrefixString) ? $endpointFileOrPrefixString : $this->getApiVersionPrefix($endpointFileOrPrefixString),
+            //todo: Temporary solution for api routes
+            'prefix' => 'api' . $prefix,
         ];
     }
 

@@ -15,6 +15,7 @@ class MigrationServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        parent::register();
     }
 
     /**

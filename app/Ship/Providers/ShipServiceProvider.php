@@ -2,14 +2,17 @@
 
 namespace App\Ship\Providers;
 
+use App\Containers\Authentication\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class ShipServiceProvider extends ServiceProvider
 {
     private array $serviceProviders = [
         RouteServiceProvider::class,
-        MigrationServiceProvider::class
+        MigrationServiceProvider::class,
+        AuthServiceProvider::class,
     ];
 
     /**
@@ -22,6 +25,8 @@ class ShipServiceProvider extends ServiceProvider
                 App::register($provider);
             }
         }
+
+        Passport::ignoreRoutes();
     }
 
     /**

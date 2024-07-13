@@ -10,6 +10,7 @@
         "laravel/tinker": "^2.9",
         "lorisleiva/laravel-actions": "^2.8",
         "spatie/laravel-data": "^4.7",
+        "spatie/laravel-permission": "^6.9",
         "spatie/laravel-query-builder": "^6.0"
     },
     "require-dev": {

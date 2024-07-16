@@ -3,6 +3,7 @@
 namespace App\Ship\Providers;
 
 use App\Containers\Authentication\Providers\AuthServiceProvider;
+use App\Containers\Authentication\Providers\JwtServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
@@ -13,6 +14,7 @@ class ShipServiceProvider extends ServiceProvider
         RouteServiceProvider::class,
         MigrationServiceProvider::class,
         AuthServiceProvider::class,
+        JwtServiceProvider::class,
     ];
 
     /**

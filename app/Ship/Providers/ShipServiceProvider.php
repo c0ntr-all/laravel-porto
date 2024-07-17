@@ -4,6 +4,7 @@ namespace App\Ship\Providers;
 
 use App\Containers\Authentication\Providers\AuthServiceProvider;
 use App\Containers\Authentication\Providers\JwtServiceProvider;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
@@ -28,6 +29,7 @@ class ShipServiceProvider extends ServiceProvider
             }
         }
 
+        JsonResource::withoutWrapping();
         Passport::ignoreRoutes();
     }
 

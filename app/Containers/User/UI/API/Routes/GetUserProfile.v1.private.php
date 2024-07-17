@@ -1,6 +1,6 @@
 <?php
 
-use App\Containers\User\Actions\GetUserProfileAction;
+use App\Containers\User\UI\Actions\GetUserProfileAction;
 use Illuminate\Support\Facades\Route;
 
 Route::get('profile', GetUserProfileAction::class)

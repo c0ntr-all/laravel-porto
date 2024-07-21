@@ -35,9 +35,5 @@ class LogoutAction
         return new JsonResponse([
             'message' => 'Token revoked successfully.',
         ]);
-
-        return $this->accepted([
-            'message' => 'Token revoked successfully.',
-        ])->withCookie(Cookie::forget('refreshToken'));
     }
 }

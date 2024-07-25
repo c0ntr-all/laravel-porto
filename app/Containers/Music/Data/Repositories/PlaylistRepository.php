@@ -1,8 +1,6 @@
 <?php
 
-namespace App\Repositories;
-
-use App\Models\Music\Playlist;
+namespace App\Containers\Music\Data\Repositories;
 
 class PlaylistRepository
 {

@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Models\Music;
+namespace App\Containers\Music\Models;
 
-use App\Models\Traits\HasDates;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,8 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Playlist extends Model
 {
-    use HasFactory,
-        HasDates;
+    use HasFactory;
 
     public $fillable = [
         'user_id',

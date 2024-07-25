@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace App\Repositories;
+namespace App\Containers\Music\Data\Repositories;
 
-use App\Filters\Filter;
-use App\Models\Music\Track;
+use App\Containers\Music\Models\Track;
+use Illuminate\Pagination\CursorPaginator;
 
 class TrackRepository
 {
@@ -19,5 +19,16 @@ class TrackRepository
         return Track::filter($filter)
                      ->orderByDesc('created_at')
                      ->paginate(100);
+    }
+
+    /**
+     * Get list of all tracks for Artist
+     *
+     * @param array $albumIds
+     * @return CursorPaginator
+     */
+    public function listTracksByAlbumIdsWithCursor(array $albumIds): CursorPaginator
+    {
+        return Track::whereIn('album_id', $albumIds)->cursorPaginate(50);
     }
 }

@@ -1,17 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\Music\Models;
 
-use App\Models\Music\Album;
-use App\Models\Music\Track;
-use App\Models\Traits\HasDates;
-use App\Models\Traits\HasFilters;
-use App\Models\Traits\HasImage;
-use App\Models\Traits\HasMusicTags;
+use App\Containers\Music\Models\Traits\HasMusicTags;
+use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -57,10 +52,8 @@ class Artist extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    use HasDates;
     use HasMusicTags;
     use HasImage;
-    use HasFilters;
 
     protected $table = 'music_artists';
 
@@ -69,10 +62,5 @@ class Artist extends Model
     public function albums(): BelongsToMany
     {
         return $this->belongsToMany(Album::class, 'music_album_artist', 'artist_id', 'album_id');
-    }
-
-    public function tracks(): HasManyThrough
-    {
-        return $this->hasManyThrough(Track::class, Album::class);
     }
 }

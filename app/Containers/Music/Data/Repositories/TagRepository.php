@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace App\Repositories;
+namespace App\Containers\Music\Data\Repositories;
 
 use App\Models\Music\MusicTag;
 use Illuminate\Database\Eloquent\Collection;

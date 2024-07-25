@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Models\Music;
+namespace App\Containers\Music\Models;
 
-use App\Models\Traits\HasDates;
 use App\Models\Traits\HasUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Collection;
 
 /**
  * App\Models\Music\MusicHistory
@@ -38,7 +36,6 @@ use Illuminate\Support\Collection;
 class History extends Model
 {
     use HasFactory,
-        HasDates,
         HasUser,
         SoftDeletes;
 

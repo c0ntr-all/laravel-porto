@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Models\Music;
+namespace App\Containers\Music\Models;
 
-use App\Models\Traits\HasDates;
-use App\Models\Traits\HasImage;
-use App\Models\Traits\HasMusicTags;
+use App\Containers\Music\Models\Traits\HasMusicTags;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -57,9 +55,7 @@ use Illuminate\Support\Carbon;
 class Album extends Model
 {
     use SoftDeletes;
-    use HasDates;
     use HasMusicTags;
-    use HasImage;
 
     protected $table = 'music_albums';
 

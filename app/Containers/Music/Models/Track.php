@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Models\Music;
+namespace App\Containers\Music\Models;
 
 use App\Casts\TrackDurationCast;
-use App\Models\Traits\HasFilters;
-use App\Models\Traits\HasImage;
-use App\Models\Traits\HasMusicTags;
+use App\Containers\Music\Models\Traits\HasMusicTags;
+use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -68,8 +67,7 @@ class Track extends Model
 {
     use SoftDeletes,
         HasMusicTags,
-        HasImage,
-        HasFilters;
+        HasImage;
 
     protected $table = 'music_tracks';
 

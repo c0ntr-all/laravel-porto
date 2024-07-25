@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Models\Music;
+namespace App\Containers\Music\Models;
 
-use App\Models\Traits\HasDates;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,7 +46,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 class MusicTag extends Model
 {
     use HasFactory;
-    use HasDates;
 
     protected $table ='music_tags';
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Music\Artist;
+namespace App\Containers\Music\UI\API\Requests\Artists;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +24,6 @@ class IndexRequest extends FormRequest
     public function rules()
     {
         return [
-            'filters' => 'sometimes|array'
         ];
     }
 }

@@ -1,26 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace App\Http\Resources\Client\Music\Albums\Page\Tracks;
+namespace App\Containers\Music\UI\API\Resources\Albums\Page\Tracks;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class TrackCollection extends ResourceCollection
 {
-    public function withResponse($request, $response): void
-    {
-        $arrResponse = json_decode($response->getContent(), true);
-
-        unset($arrResponse['links'], $arrResponse['meta']);
-
-        $response->setContent(json_encode($arrResponse['data']));
-    }
-
     public function toArray($request): array
     {
         return [
-            'success' => true,
-            'tracks' => $this->collection,
             'count' => $this->count(),
+            'items' => $this->collection,
             'pagination' => [
                 'perPage' => $this->perPage(),
                 'nextPageUrl' => $this->nextPageUrl(),

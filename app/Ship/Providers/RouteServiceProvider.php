@@ -50,10 +50,8 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
         $allContainerPaths = $this->getAllContainerPaths();
 
         foreach ($allContainerPaths as $containerPath) {
-            if (basename($containerPath) === 'UI') {
-                $this->loadApiContainerRoutes($containerPath);
-                $this->loadWebContainerRoutes($containerPath);
-            }
+            $this->loadApiContainerRoutes($containerPath);
+            $this->loadWebContainerRoutes($containerPath);
         }
     }
 
@@ -100,7 +98,7 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
 
     private function getUIPathForContainer(string $containerPath, string $ui): string
     {
-        return $containerPath . DIRECTORY_SEPARATOR . $ui;
+        return $containerPath . DIRECTORY_SEPARATOR . 'UI' . DIRECTORY_SEPARATOR . $ui;
     }
 
     /**

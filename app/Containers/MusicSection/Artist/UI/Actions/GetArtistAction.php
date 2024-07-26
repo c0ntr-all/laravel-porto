@@ -1,0 +1,25 @@
+<?php declare(strict_types=1);
+
+namespace App\Containers\MusicSection\Artist\UI\Actions;
+
+use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Artist\UI\API\Resources\Page\ArtistResource;
+use Illuminate\Http\Response;
+use Lorisleiva\Actions\Concerns\AsAction;
+
+class GetArtistAction
+{
+    use AsAction;
+
+    public function handle(Artist $artist): Artist
+    {
+        return $artist->load(['albums', 'tags']);
+    }
+
+    public function asController(Artist $artist): Response
+    {
+        $data = $this->handle($artist);
+
+        return response(new ArtistResource($data));
+    }
+}

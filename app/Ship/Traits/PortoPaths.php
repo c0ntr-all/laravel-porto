@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\File;
 
 trait PortoPaths
 {
+    private const SHIP_NAME = 'ship';
+    private const CONTAINERS_DIRECTORY_NAME = 'Containers';
+
     private function getAllContainerPaths(): array
     {
         $sectionNames = $this->getSectionNames();
@@ -33,11 +36,11 @@ trait PortoPaths
 
     public function getContainersPaths(): array
     {
-        return File::directories(app_path('Containers'));
+        return File::directories(app_path(self::CONTAINERS_DIRECTORY_NAME));
     }
 
     public function getSectionContainerPaths(string $sectionName): array
     {
-        return File::directories(app_path('Containers' . DIRECTORY_SEPARATOR . $sectionName));
+        return File::directories(app_path(self::CONTAINERS_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $sectionName));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Containers\MusicSection\Artist\Providers;
 
+use App\Containers\MusicSection\Track\Facades\TrackFacade;
 use App\Containers\MusicSection\Track\Facades\TrackFacadeInterface;
 use App\Ship\Parents\Providers\DependencyProvider;
 

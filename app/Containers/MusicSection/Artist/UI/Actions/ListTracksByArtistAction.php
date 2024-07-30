@@ -5,6 +5,7 @@ namespace App\Containers\MusicSection\Artist\UI\Actions;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Artist\Providers\ArtistDependencyProvider;
 use App\Containers\MusicSection\Track\Data\Collections\TrackCollection;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\Response;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -18,7 +19,7 @@ final class ListTracksByArtistAction
     {
     }
 
-    public function handle(Artist $artist): TrackCollection
+    public function handle(Artist $artist): CursorPaginator
     {
         return $this->artistDependencyProvider->getTrackFacade()->listTracksByArtist($artist);
     }

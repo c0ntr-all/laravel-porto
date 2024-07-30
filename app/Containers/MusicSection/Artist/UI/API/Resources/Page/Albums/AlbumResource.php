@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Containers\MusicSection\Album\UI\API\Resources\ForArtistPage;
+namespace App\Containers\MusicSection\Artist\UI\API\Resources\Page\Albums;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 

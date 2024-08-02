@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
-use App\Containers\MusicSection\Artist\UI\Actions\GetArtistAction;
+use App\Containers\MusicSection\Album\UI\Actions\GetAlbumAction;
 use Illuminate\Support\Facades\Route;
 
-Route::get('music/albums/{albums}', GetArtistAction::class)
+Route::get('music/albums/{album}', GetAlbumAction::class)
      ->middleware(['auth:api']);

@@ -1,0 +1,50 @@
+<?php declare(strict_types=1);
+
+namespace App\Containers\MusicSection\Album\UI\API\Transformers;
+
+use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
+use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
+use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
+use League\Fractal\Resource\Collection;
+use League\Fractal\TransformerAbstract;
+
+class AlbumTransformer extends TransformerAbstract
+{
+    protected array $availableIncludes = [
+        'artists', 'tracks', 'tags', 'versions'
+    ];
+
+    public function transform(Album $album): array
+    {
+        return [
+            'id' => $album->id,
+            'parent_id' => $album->parent_id,
+            'name' => $album->name,
+            'date' => $album->date->format('Y-m-d'),
+            'content' => $album->content,
+            'image' => $album->full_image,
+            'created_at' => $album->created_at->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    public function includeArtists(Album $album): Collection
+    {
+        return $this->collection($album->artists, new ArtistTransformer(), 'artists');
+    }
+
+    public function includeTracks(Album $album): Collection
+    {
+        return $this->collection($album->tracks, new TrackTransformer(), 'tracks');
+    }
+
+    public function includeTags(Album $album): Collection
+    {
+        return $this->collection($album->tags, new TagTransformer(), 'tags');
+    }
+
+    public function includeVersions(Album $album): Collection
+    {
+        return $this->collection($album->versions, new VersionTransformer(), 'versions');
+    }
+}

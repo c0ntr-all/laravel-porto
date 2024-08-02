@@ -4,6 +4,7 @@ namespace App\Ship\Providers;
 
 use App\Containers\AppSection\Authentication\Providers\AuthServiceProvider;
 use App\Containers\AppSection\Authentication\Providers\JwtServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +32,13 @@ class ShipServiceProvider extends ServiceProvider
 
         JsonResource::withoutWrapping();
         Passport::ignoreRoutes();
+
+        Relation::enforceMorphMap([
+            'artist' => 'App\Containers\MusicSection\Artist\Models\Artist',
+            'album' => 'App\Containers\MusicSection\Album\Models\Album',
+            'track' => 'App\Containers\MusicSection\Track\Models\Track',
+            'user' => 'App\Containers\AppSection\User\Models\User',
+        ]);
     }
 
     /**

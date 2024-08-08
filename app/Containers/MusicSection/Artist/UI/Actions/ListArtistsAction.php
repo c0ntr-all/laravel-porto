@@ -4,8 +4,8 @@ namespace App\Containers\MusicSection\Artist\UI\Actions;
 
 use App\Containers\MusicSection\Artist\Data\Repositories\ArtistRepository;
 use App\Containers\MusicSection\Artist\UI\API\Requests\IndexRequest;
-use App\Containers\MusicSection\Artist\UI\API\Resources\List\ArtistCollection;
-use Illuminate\Http\Response;
+use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -24,10 +24,13 @@ class ListArtistsAction
         return $this->artistRepository->getWithCursor();
     }
 
-    public function asController(IndexRequest $request): Response
+    public function asController(IndexRequest $request): JsonResponse
     {
-        $data = $this->handle();
+        $artists = $this->handle();
 
-        return response(new ArtistCollection($data));
+        return fractal($artists, new ArtistTransformer())
+            ->withResourceName('artists')
+            ->parseIncludes(['tags'])
+            ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

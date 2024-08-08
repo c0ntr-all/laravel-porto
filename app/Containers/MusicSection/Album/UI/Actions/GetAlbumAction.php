@@ -21,6 +21,7 @@ class GetAlbumAction
         $album = $this->handle($album);
 
         return fractal($album, new AlbumTransformer())
+            ->withResourceName('albums')
             ->parseIncludes(['artists', 'tracks', 'tags', 'versions'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

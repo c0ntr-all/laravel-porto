@@ -2,11 +2,10 @@
 
 namespace App\Containers\MusicSection\Artist\UI\Actions;
 
-use App\Containers\MusicSection\Album\Data\Repositories\AlbumRepository;
+use App\Containers\MusicSection\Album\Tasks\ListAlbumsByArtistTask;
+use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumInArtistTransformer;
 use App\Containers\MusicSection\Artist\Models\Artist;
-use App\Containers\MusicSection\Artist\UI\API\Resources\Page\Albums\AlbumCollection;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ListAlbumsByArtistAction
@@ -14,20 +13,18 @@ class ListAlbumsByArtistAction
     use AsAction;
 
     public function __construct(
-        private readonly AlbumRepository $albumRepository
+        private readonly ListAlbumsByArtistTask $listAlbumsByArtistTask
     )
     {
     }
 
-    public function handle(Artist $artist): Collection
+    public function handle(Artist $artist): JsonResponse
     {
-        return $this->albumRepository->listAlbumsByArtist($artist);
-    }
+        $albums = $this->listAlbumsByArtistTask->run($artist);
 
-    public function asController(Artist $artist): Response
-    {
-        $data = $this->handle($artist);
-
-        return response(new AlbumCollection($data));
+        return fractal($albums, new AlbumInArtistTransformer())
+            ->withResourceName('albums')
+            ->parseIncludes(['artists', 'tags'])
+            ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

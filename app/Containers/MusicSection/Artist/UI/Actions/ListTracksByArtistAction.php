@@ -3,10 +3,11 @@
 namespace App\Containers\MusicSection\Artist\UI\Actions;
 
 use App\Containers\MusicSection\Artist\Models\Artist;
-use App\Containers\MusicSection\Artist\Providers\ArtistDependencyProvider;
 use App\Containers\MusicSection\Track\Data\Collections\TrackCollection;
+use App\Containers\MusicSection\Track\Tasks\ListTracksByArtistTask;
+use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use Illuminate\Contracts\Pagination\CursorPaginator;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 final class ListTracksByArtistAction
@@ -14,20 +15,23 @@ final class ListTracksByArtistAction
     use AsAction;
 
     public function __construct(
-        private readonly ArtistDependencyProvider $artistDependencyProvider
+        private readonly ListTracksByArtistTask $listTracksByArtistTask
     )
     {
     }
 
     public function handle(Artist $artist): CursorPaginator
     {
-        return $this->artistDependencyProvider->getTrackFacade()->listTracksByArtist($artist);
+        return $this->listTracksByArtistTask->run($artist);
     }
 
-    public function asController(Artist $artist): Response
+    public function asController(Artist $artist): JsonResponse
     {
-        $data = $this->handle($artist);
+        $tracks = $this->handle($artist);
 
-        return response(new TrackCollection($data));
+        return fractal($tracks, new TrackTransformer())
+            ->withResourceName('tracks')
+            ->parseIncludes(['tags'])
+            ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

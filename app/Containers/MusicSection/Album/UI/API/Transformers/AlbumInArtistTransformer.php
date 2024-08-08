@@ -12,10 +12,10 @@ use League\Fractal\TransformerAbstract;
 /**
  * Transformer for Album in album page
  */
-class AlbumTransformer extends TransformerAbstract
+class AlbumInArtistTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'artists', 'tracks', 'tags', 'versions'
+        'artists', 'tags'
     ];
 
     public function transform(Album $album): array
@@ -24,9 +24,7 @@ class AlbumTransformer extends TransformerAbstract
             'id' => $album->id,
             'name' => $album->name,
             'date' => $album->date->format('Y-m-d'),
-            'content' => $album->content,
             'image' => $album->full_image,
-            'created_at' => $album->created_at->format('Y-m-d H:i:s'),
         ];
     }
 
@@ -35,18 +33,8 @@ class AlbumTransformer extends TransformerAbstract
         return $this->collection($album->artists, new ArtistInAlbumTransformer(), 'artists');
     }
 
-    public function includeTracks(Album $album): Collection
-    {
-        return $this->collection($album->tracks, new TrackTransformer(), 'tracks');
-    }
-
     public function includeTags(Album $album): Collection
     {
         return $this->collection($album->tags, new TagTransformer(), 'tags');
-    }
-
-    public function includeVersions(Album $album): Collection
-    {
-        return $this->collection($album->versions, new VersionTransformer(), 'versions');
     }
 }

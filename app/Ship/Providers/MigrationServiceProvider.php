@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Ship\Providers;
 
@@ -36,7 +36,7 @@ class MigrationServiceProvider extends ServiceProvider
 
     public function loadMigrationsFromContainers(): void
     {
-        foreach($this->getContainersPaths() as $containerPath) {
+        foreach($this->getAllContainerPaths() as $containerPath) {
             $containerMigrationDirectory = $containerPath . '/Data/Migrations';
             $this->loadMigrations($containerMigrationDirectory);
         }

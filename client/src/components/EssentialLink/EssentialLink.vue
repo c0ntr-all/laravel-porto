@@ -20,16 +20,11 @@
 </template>
 
 <script setup lang="ts">
+import type { EssentialLinkProps } from './EssentialLink.types'
+
 defineOptions({
   name: 'EssentialLink'
 })
-
-export interface EssentialLinkProps {
-  title: string;
-  caption?: string;
-  link?: string;
-  icon?: string;
-};
 
 withDefaults(defineProps<EssentialLinkProps>(), {
   caption: '',

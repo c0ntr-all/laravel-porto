@@ -40,14 +40,15 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view/>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue'
+import type { EssentialLinkProps } from 'src/components/EssentialLink/EssentialLink.types'
+import EssentialLink from 'components/EssentialLink/EssentialLink.vue'
 
 defineOptions({
   name: 'MainLayout'
@@ -100,7 +101,7 @@ const linksList: EssentialLinkProps[] = [
 
 const leftDrawerOpen = ref(false)
 
-function toggleLeftDrawer () {
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>

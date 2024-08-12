@@ -1,5 +1,5 @@
 import { defineStore, StoreDefinition } from 'pinia'
-import { api } from '@/boot/axios'
+import { api } from 'src/boot/axios'
 
 interface Data {
   email: string,

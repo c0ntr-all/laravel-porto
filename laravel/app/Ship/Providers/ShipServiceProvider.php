@@ -38,6 +38,7 @@ class ShipServiceProvider extends ServiceProvider
             'album' => 'App\Containers\MusicSection\Album\Models\Album',
             'track' => 'App\Containers\MusicSection\Track\Models\Track',
             'user' => 'App\Containers\AppSection\User\Models\User',
+            'task' => 'App\Containers\TaskManagerSection\Task\Models\Task',
         ]);
     }
 

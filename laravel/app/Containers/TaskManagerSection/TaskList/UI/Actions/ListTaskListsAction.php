@@ -32,6 +32,9 @@ class ListTaskListsAction
         return fractal($taskLists, new TaskListTransformer())
             ->withResourceName('task-lists')
             ->parseIncludes(['tasks'])
+            ->addMeta([
+                'task_lists_count' => $taskLists->count()
+            ])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

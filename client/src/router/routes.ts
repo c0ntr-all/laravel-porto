@@ -3,6 +3,8 @@ import { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
+    redirect: '/dashboard',
+    name: 'main',
     component: () => import('layouts/MainLayout.vue'),
     children: [{
       path: '/dashboard',
@@ -13,11 +15,21 @@ const routes: RouteRecordRaw[] = [
         menu: true
       },
       name: 'dashboard',
-      alias: '/'
+      alias: '/dashboard'
+    }, {
+      path: '/task-manager',
+      component: () => import('pages/client/TaskManager/TaskManagerPage.vue'),
+      meta: {
+        title: 'Task Manager',
+        icon: 'list',
+        menu: true
+      },
+      name: 'task-manager',
+      alias: '/task-manager'
     }]
   }, {
     path: '/login',
-    component: () => import('layouts/Login.vue'),
+    component: () => import('layouts/LoginLayout.vue'),
     meta: {
       title: 'Authorization',
       menu: false

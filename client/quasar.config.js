@@ -62,7 +62,7 @@ module.exports = configure(function (ctx) {
       env: {
         mode: ctx.dev ? 'test' : 'prod',
         host: ctx.dev
-          ? 'https://api.home-portal.test'
+          ? 'https://home-portal-v2.loc/api'
           : 'https://api.home-portal.prod'
       },
       // rawDefine: {}

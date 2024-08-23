@@ -206,4 +206,7 @@ const toggleLeftDrawer = (): void => {
     font-size: 16px;
   }
 }
+.q-router-link--active {
+  color: $secondary;
+}
 </style>

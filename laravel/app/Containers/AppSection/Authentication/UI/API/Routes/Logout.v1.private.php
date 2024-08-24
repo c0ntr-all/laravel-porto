@@ -1,6 +1,6 @@
 <?php
 
-use App\Containers\AppSection\Authentication\Actions\LogoutAction;
+use App\Containers\AppSection\Authentication\UI\Actions\LogoutAction;
 use Illuminate\Support\Facades\Route;
 
 Route::post('logout', LogoutAction::class)

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Containers\AppSection\Authentication\Actions;
+namespace App\Containers\AppSection\Authentication\UI\Actions;
 
 use App\Containers\AppSection\Authentication\UI\API\Requests\LogoutRequest;
 use Illuminate\Http\JsonResponse;

@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace App\Containers\AppSection\Authentication\Actions;
+namespace App\Containers\AppSection\Authentication\UI\Actions;
 
 use App\Containers\AppSection\Authentication\UI\API\Requests\LoginRequest;
 use Illuminate\Support\Facades\Http;
@@ -32,6 +32,11 @@ class LoginAction
             return $response->json();
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401);
+        if ($response->status() === 400) {
+            $decoded = json_decode($response->body(), true);
+            return response()->json($decoded, 400);
+        }
+
+        return response()->json(['message' => 'Authentication failed'], 401);
     }
 }

@@ -16,7 +16,7 @@ export const useUserStore: StoreDefinition = defineStore({
   }),
   actions: {
     async login(data: Data) {
-      await api.post('login', data)
+      await api.post('v1/login', data)
         .then(response => {
           localStorage.setItem('access_token', response.data.access_token)
 

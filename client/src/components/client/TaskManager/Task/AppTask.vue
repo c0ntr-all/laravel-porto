@@ -70,7 +70,7 @@
             />
             <q-btn @click="createComment" color="primary" label="Отправить"/>
           </div>
-          <div v-if="task.comments.length" class="comments-list column q-gutter-sm">
+          <div v-if="task.comments" class="comments-list column q-gutter-sm">
             <q-card v-for="comment in task.comments" :key="comment.id">
               <q-card-section class="flex justify-between">
                 <span>{{ comment.user_name }}</span>
@@ -105,82 +105,78 @@ interface Task {
   id: string
   title: string
   content?: string
-  comments: Comment[]
+  completed: boolean
+  comments?: Comment[]
 }
 
 interface ApiResponse {
   comments: Comment[]
 }
 
-const props = defineProps<{ item: Task }>()
+const props = defineProps<{ task: Task }>()
 const $q = useQuasar()
 
 const showModal = ref(false)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
-const task = ref<Task>(props.item)
+const task = ref<Task>(props.task)
 const comment = ref('')
 
 const updateTitle = (value: string) => {
-  api.patch(`tasks/${task.value.id}/update`, {
+  api.patch(`v1/task-manager/tasks/${task.value.id}`, {
     title: value
+  }).then(() => {
+    $q.notify({
+      type: 'positive',
+      message: 'Имя карточки успешно обновлено!'
+    })
+    titlePopup.value?.set()
+  }).catch((error: AxiosError<{ message: string }>) => {
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data.message || 'Произошла ошибка'
+    })
+    titlePopup.value?.cancel()
   })
-    .then(() => {
-      $q.notify({
-        type: 'positive',
-        message: 'Имя карточки успешно обновлено!'
-      })
-      titlePopup.value?.set()
-    })
-    .catch((error: AxiosError<{ message: string }>) => {
-      $q.notify({
-        type: 'negative',
-        message: `Server Error: ${error.response?.data.message || 'Произошла ошибка'}`
-      })
-      titlePopup.value?.cancel()
-    })
 }
 
 const updateContent = (value: string) => {
-  api.patch(`tasks/${task.value.id}/update`, {
+  api.patch(`v1/task-manager/tasks/${task.value.id}`, {
     content: value
+  }).then(() => {
+    $q.notify({
+      type: 'positive',
+      message: 'Описание успешно обновлено!'
+    })
+    contentPopup.value?.set()
+  }).catch((error: AxiosError<{ message: string }>) => {
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data.message || 'Произошла ошибка'
+    })
+    contentPopup.value?.cancel()
   })
-    .then(() => {
-      $q.notify({
-        type: 'positive',
-        message: 'Описание успешно обновлено!'
-      })
-      contentPopup.value?.set()
-    })
-    .catch((error: AxiosError<{ message: string }>) => {
-      $q.notify({
-        type: 'negative',
-        message: error.response?.data.message || 'Произошла ошибка'
-      })
-      contentPopup.value?.cancel()
-    })
 }
 
 const createComment = () => {
-  api.post<ApiResponse>('comments/store', {
+  api.post<ApiResponse>('v1/comments/store', {
     commentable_id: task.value.id,
     commentable_type: 'task',
     content: comment.value
-  })
-    .then((response) => {
-      task.value.comments.push(response.data.comments[0])
+  }).then((response) => {
+    task.value.comments = task.value.comments || []
+    task.value.comments.push(response.data.comments[0])
 
-      $q.notify({
-        type: 'positive',
-        message: 'Комментарий успешно добавлен!'
-      })
+    $q.notify({
+      type: 'positive',
+      message: 'Комментарий успешно добавлен!'
     })
-    .catch((error: AxiosError<{ message: string }>) => {
-      $q.notify({
-        type: 'negative',
-        message: error.response?.data.message || 'Произошла ошибка'
-      })
+  }).catch((error: AxiosError<{ message: string }>) => {
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data.message || 'Произошла ошибка'
     })
+  })
 }
 </script>
 

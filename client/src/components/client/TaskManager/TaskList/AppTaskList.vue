@@ -5,7 +5,13 @@
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">
-      <TaskItem v-for="task in tasks" :key="task.id" :item="task"/>
+      <template v-if="tasks.length">
+        <AppTask
+          v-for="task in tasks"
+          :key="task.id"
+          :task="task"
+        />
+      </template>
     </q-card-section>
     <q-card-section class="list__footer">
       <div v-if="!showAddForm" @click="openAddForm" class="list__add-button">
@@ -49,14 +55,22 @@
 import { ref, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
+
 import { api } from 'src/boot/axios'
+import AppTask from 'src/components/client/TaskManager/Task/AppTask.vue'
 
-import TaskItem from 'src/components/client/TaskManager/AppTask.vue'
-
+interface Comment {
+  id: string
+  user_name: string
+  content: string
+  created_at: string
+}
 interface Task {
   id: string
   title: string
+  content?: string
   completed: boolean
+  comments?: Comment[]
 }
 interface TaskList {
   id: string
@@ -67,7 +81,9 @@ interface TaskList {
 interface TaskAttributes {
   title: string
   completed: boolean
+  content?: string
   created_at?: string
+  comments?: Comment[]
 }
 
 interface ApiResponse {
@@ -106,30 +122,28 @@ const addNewTask = async () => {
   const cardName = model.value.newCardName
   model.value.newCardName = ''
 
-  await api
-    .post<ApiResponse>('tasks', {
-      title: cardName,
-      task_list_id: props.list.id
+  await api.post<ApiResponse>('v1/task-manager/tasks', {
+    title: cardName,
+    task_list_id: props.list.id
+  }).then(response => {
+    $q.notify({
+      type: 'positive',
+      message: response?.data.meta.message
     })
-    .then(response => {
-      $q.notify({
-        type: 'positive',
-        message: response?.data.meta.message
-      })
-      const newTask: Task = {
-        id: response.data.data.id,
-        title: response.data.data.attributes.title,
-        completed: false
-      }
+    const newTask: Task = {
+      id: response.data.data.id,
+      title: response.data.data.attributes.title,
+      content: response.data.data.attributes.content,
+      completed: false
+    }
 
-      tasks.value.push(newTask)
+    tasks.value.push(newTask)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data.message || 'Произошла ошибка'
     })
-    .catch((error: AxiosError<{ message: string }>) => {
-      $q.notify({
-        type: 'negative',
-        message: error.response?.data.message || 'Произошла ошибка'
-      })
-    })
+  })
 }
 </script>
 

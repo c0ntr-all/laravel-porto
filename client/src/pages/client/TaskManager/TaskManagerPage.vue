@@ -1,5 +1,5 @@
 <template>
-  <TasksPageSkeleton v-if="loading"/>
+  <TaskManagerPageSkeleton v-if="loading" />
   <template v-else>
     <q-btn
       v-if="!showAddForm"
@@ -20,8 +20,8 @@
         dense
         outlined
       />
-      <q-btn @click="addNewList" label="Добавить список" color="primary" class="q-mr-sm" no-caps/>
-      <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense/>
+      <q-btn @click="addNewList" label="Добавить список" color="primary" class="q-mr-sm" no-caps />
+      <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense />
     </div>
     <div class="task-lists row items-start q-gutter-md q-mb-lg">
       <AppTaskList
@@ -40,7 +40,7 @@ import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 
-import TasksPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
+import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import AppTaskList from 'src/components/client/TaskManager/TaskList/AppTaskList.vue'
 
 interface Task {
@@ -52,7 +52,7 @@ interface Task {
 interface TaskList {
   id: string
   title: string
-  tasks?: Task[]
+  tasks: Task[] // Неопределённость убрана, так как список задач теперь всегда существует
 }
 
 interface ApiResponse {
@@ -86,19 +86,24 @@ const closeAddForm = () => {
 }
 
 const addNewList = async () => {
-  const listName = model.value.newListName
-  model.value.newListName = ''
-
   await api.post<ApiResponse>('v1/task-manager/list/store', {
-    title: listName
+    title: model.value.newListName
   }).then(response => {
     $q.notify({
       type: 'positive',
-      message: response.data.meta.message || 'Произошла ошибка'
+      message: response.data.meta.message || 'Список успешно добавлен!'
     })
-    taskLists.value.push(response.data.data[0])
+
+    const newTaskList: TaskList = {
+      id: response.data.data[0].id,
+      title: response.data.data[0].title,
+      tasks: [] // Задаем пустой список задач по умолчанию
+    }
+
+    taskLists.value.push(newTaskList)
   }).catch(error => {
     const axiosError = error as AxiosError<{ message: string }>
+
     $q.notify({
       type: 'negative',
       message: axiosError.response?.data.message || 'Произошла ошибка'
@@ -108,20 +113,17 @@ const addNewList = async () => {
 
 const getTaskLists = async () => {
   loading.value = true
-  api.get<ApiResponse>('v1/task-manager/task-lists')
-    .then(response => {
-      taskLists.value = response.data.data
-      listsCount.value = response.data.meta.task_lists_count
+  await api.get<ApiResponse>('v1/task-manager/task-lists').then(response => {
+    taskLists.value = response.data.data
+    listsCount.value = response.data.meta.task_lists_count
+  }).catch(error => {
+    $q.notify({
+      type: 'negative',
+      message: (error as AxiosError).message || 'Не удалось загрузить списки задач'
     })
-    .catch(error => {
-      $q.notify({
-        type: 'negative',
-        message: (error as AxiosError).message
-      })
-    })
-    .finally(() => {
-      loading.value = false
-    })
+  }).finally(() => {
+    loading.value = false
+  })
 }
 
 onMounted(() => {

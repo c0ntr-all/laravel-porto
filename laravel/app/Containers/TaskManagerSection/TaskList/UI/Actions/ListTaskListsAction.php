@@ -31,7 +31,7 @@ class ListTaskListsAction
 
         return fractal($taskLists, new TaskListTransformer())
             ->withResourceName('task-lists')
-            ->parseIncludes(['tasks'])
+            ->parseIncludes(['tasks.comments'])
             ->addMeta([
                 'task_lists_count' => $taskLists->count()
             ])

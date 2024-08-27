@@ -20,7 +20,7 @@
       </div>
       <div v-if="showAddForm" class="list__add-form">
         <q-input
-          @keyup.enter="addNewTask"
+          @keyup.enter="createTask"
           v-model="model.newCardName"
           ref="taskAddTextarea"
           type="textarea"
@@ -30,7 +30,7 @@
           outlined
         />
         <q-btn
-          @click="addNewTask"
+          @click="createTask"
           label="Добавить карточку"
           color="secondary"
           class="q-mr-sm"
@@ -72,6 +72,7 @@ interface Task {
   completed: boolean
   comments?: Comment[]
 }
+
 interface TaskList {
   id: string
   title: string
@@ -118,7 +119,7 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
-const addNewTask = async () => {
+const createTask = async () => {
   const cardName = model.value.newCardName
   model.value.newCardName = ''
 

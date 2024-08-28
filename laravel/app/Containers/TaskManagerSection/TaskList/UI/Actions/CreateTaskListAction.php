@@ -34,6 +34,7 @@ class CreateTaskListAction
 
         return fractal($taskList, new TaskListTransformer())
             ->withResourceName('task-lists')
+            ->addMeta(['message' => 'New task list successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

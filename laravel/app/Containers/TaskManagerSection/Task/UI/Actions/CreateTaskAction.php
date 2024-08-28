@@ -34,6 +34,7 @@ class CreateTaskAction
 
         return fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
+            ->addMeta(['message' => 'New task successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

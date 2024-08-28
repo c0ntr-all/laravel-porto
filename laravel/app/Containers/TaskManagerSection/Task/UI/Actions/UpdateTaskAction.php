@@ -33,6 +33,7 @@ class UpdateTaskAction
 
         return fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
+            ->addMeta(['message' => 'Task successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

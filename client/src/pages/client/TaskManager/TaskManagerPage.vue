@@ -6,11 +6,11 @@
       @click="openAddForm"
       color="primary"
       icon="add"
-      label="Добавить список"
+      label="Create a list"
       class="q-mb-lg"
       no-caps
     />
-    <p>Всего списков: {{ listsCount }}</p>
+    <p>Total lists: {{ listsCount }}</p>
     <div v-if="showAddForm" class="list__add-form q-mb-lg">
       <q-input
         @keyup.enter="createList"
@@ -20,7 +20,7 @@
         dense
         outlined
       />
-      <q-btn @click="createList" label="Добавить список" color="primary" class="q-mr-sm" no-caps />
+      <q-btn @click="createList" label="Create a list" color="primary" class="q-mr-sm" no-caps />
       <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense />
     </div>
     <div class="task-lists row items-start q-gutter-md q-mb-lg">
@@ -160,7 +160,7 @@ const createList = async () => {
   }).then(response => {
     $q.notify({
       type: 'positive',
-      message: response.data.data.meta.message || 'Список успешно добавлен!'
+      message: response.data.data.meta.message || 'Task list successfully created!'
     })
 
     const newTaskList: TaskList = {
@@ -175,7 +175,7 @@ const createList = async () => {
 
     $q.notify({
       type: 'negative',
-      message: axiosError.response?.data.message || 'Произошла ошибка'
+      message: axiosError.response?.data.message || 'Error!'
     })
   })
 }
@@ -194,7 +194,7 @@ const getTaskLists = async () => {
   }).catch(error => {
     $q.notify({
       type: 'negative',
-      message: (error as AxiosError).message || 'Не удалось загрузить списки задач'
+      message: (error as AxiosError).message || 'Error!'
     })
   }).finally(() => {
     loading.value = false

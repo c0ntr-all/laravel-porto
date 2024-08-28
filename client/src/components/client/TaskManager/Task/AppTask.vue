@@ -26,8 +26,8 @@
               counter
             />
             <div class="q-pt-sm">
-              <q-btn @click="updateTitle(scope.value)" label="Сохранить" color="primary" flat/>
-              <q-btn @click="titlePopup?.cancel()" label="Отмена" color="primary" flat/>
+              <q-btn @click="updateTitle(scope.value)" label="Save" color="primary" flat/>
+              <q-btn @click="titlePopup?.cancel()" label="Cancel" color="primary" flat/>
             </div>
           </q-popup-edit>
         </div>
@@ -38,7 +38,7 @@
 
       <q-card-section>
         <div v-if="task.content" v-html="task.content" class="task__content"></div>
-        <div v-else class="task__content text-grey-5">Описание отсутствует!</div>
+        <div v-else class="task__content text-grey-5">There is no description!</div>
         <q-popup-edit
           ref="contentPopup"
           v-model="task.content"
@@ -51,24 +51,24 @@
             @keyup.enter.stop
           />
           <div class="q-pt-sm">
-            <q-btn @click="updateContent(scope.value)" label="Сохранить" color="primary" flat/>
-            <q-btn @click="contentPopup?.cancel()" label="Отмена" color="primary" flat/>
+            <q-btn @click="updateContent(scope.value)" label="Save" color="primary" flat/>
+            <q-btn @click="contentPopup?.cancel()" label="Cancel" color="primary" flat/>
           </div>
         </q-popup-edit>
       </q-card-section>
 
       <q-card-section>
         <div class="comments">
-          <div class="text-h6 q-mb-sm">Комментарии</div>
+          <div class="text-h6 q-mb-sm">Comments</div>
           <div class="comments-form q-mb-md">
             <q-input
               v-model="comment"
               class="q-mb-sm"
-              placeholder="Напишите комментарий..."
+              placeholder="Write a comment..."
               filled
               autogrow
             />
-            <q-btn @click="createComment" color="primary" label="Отправить"/>
+            <q-btn @click="createComment" color="primary" label="Send"/>
           </div>
           <div v-if="task.comments" class="comments-list column q-gutter-sm">
             <q-card v-for="comment in task.comments" :key="comment.id">
@@ -81,7 +81,7 @@
               </q-card-section>
             </q-card>
           </div>
-          <p v-else class="text-grey-5">Комментарии отсутствуют!</p>
+          <p v-else class="text-grey-5">There are no comments!</p>
         </div>
       </q-card-section>
     </q-card>
@@ -113,6 +113,25 @@ interface ApiResponse {
   comments: Comment[]
 }
 
+interface TaskAttributes {
+  title: string
+  completed: boolean
+  content?: string
+  created_at?: string
+  comments?: Comment[]
+}
+
+interface UpdateTaskResponse {
+  data: {
+    type: string
+    id: string
+    attributes: TaskAttributes
+  },
+  meta: {
+    message?: string
+  }
+}
+
 const props = defineProps<{ task: Task }>()
 const $q = useQuasar()
 
@@ -123,36 +142,36 @@ const task = ref<Task>(props.task)
 const comment = ref('')
 
 const updateTitle = (value: string) => {
-  api.patch(`v1/task-manager/tasks/${task.value.id}`, {
+  api.patch<UpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
     title: value
-  }).then(() => {
+  }).then(response => {
     $q.notify({
       type: 'positive',
-      message: 'Имя карточки успешно обновлено!'
+      message: response?.data.meta.message || 'Task title successfully updated!'
     })
     titlePopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
     $q.notify({
       type: 'negative',
-      message: error.response?.data.message || 'Произошла ошибка'
+      message: error.response?.data.message || 'Error!'
     })
     titlePopup.value?.cancel()
   })
 }
 
 const updateContent = (value: string) => {
-  api.patch(`v1/task-manager/tasks/${task.value.id}`, {
+  api.patch<UpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
     content: value
-  }).then(() => {
+  }).then(response => {
     $q.notify({
       type: 'positive',
-      message: 'Описание успешно обновлено!'
+      message: response?.data.meta.message || 'Task content successfully updated!'
     })
     contentPopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
     $q.notify({
       type: 'negative',
-      message: error.response?.data.message || 'Произошла ошибка'
+      message: error.response?.data.message || 'Error!'
     })
     contentPopup.value?.cancel()
   })

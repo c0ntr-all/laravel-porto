@@ -16,7 +16,7 @@
     <q-card-section class="list__footer">
       <div v-if="!showAddForm" @click="openAddForm" class="list__add-button">
         <q-icon name="add" size="sm"/>
-        <span>Добавить карточку</span>
+        <span>Create a card</span>
       </div>
       <div v-if="showAddForm" class="list__add-form">
         <q-input
@@ -31,7 +31,7 @@
         />
         <q-btn
           @click="createTask"
-          label="Добавить карточку"
+          label="Create a card"
           color="secondary"
           class="q-mr-sm"
           no-caps
@@ -87,7 +87,7 @@ interface TaskAttributes {
   comments?: Comment[]
 }
 
-interface ApiResponse {
+interface CreateTaskResponse {
   data: {
     type: string
     id: string
@@ -123,13 +123,13 @@ const createTask = async () => {
   const cardName = model.value.newCardName
   model.value.newCardName = ''
 
-  await api.post<ApiResponse>('v1/task-manager/tasks', {
+  await api.post<CreateTaskResponse>('v1/task-manager/tasks', {
     title: cardName,
     task_list_id: props.list.id
   }).then(response => {
     $q.notify({
       type: 'positive',
-      message: response?.data.meta.message
+      message: response?.data.meta.message || 'Task successfully created!'
     })
     const newTask: Task = {
       id: response.data.data.id,
@@ -142,7 +142,7 @@ const createTask = async () => {
   }).catch((error: AxiosError<{ message: string }>) => {
     $q.notify({
       type: 'negative',
-      message: error.response?.data.message || 'Произошла ошибка'
+      message: error.response?.data.message || 'Error!'
     })
   })
 }

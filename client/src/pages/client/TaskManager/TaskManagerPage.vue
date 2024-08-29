@@ -124,11 +124,11 @@ interface CreateListApiResponse {
       title: string
       created_at: string
     }
-    included?: IncludedItem[]
-    meta: {
-      task_lists_count: number
-      message?: string
-    }
+  }
+  included?: IncludedItem[]
+  meta: {
+    task_lists_count: number
+    message?: string
   }
 }
 
@@ -160,7 +160,7 @@ const createList = async () => {
   }).then(response => {
     $q.notify({
       type: 'positive',
-      message: response.data.data.meta.message || 'Task list successfully created!'
+      message: response.data.meta.message || 'Task list successfully created!'
     })
 
     const newTaskList: TaskList = {

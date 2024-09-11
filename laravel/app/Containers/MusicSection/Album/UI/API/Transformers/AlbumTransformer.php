@@ -24,7 +24,7 @@ class AlbumTransformer extends TransformerAbstract
             'id' => $album->id,
             'name' => $album->name,
             'date' => $album->date->format('Y-m-d'),
-            'content' => $album->content,
+            'description' => $album->description,
             'image' => $album->full_image,
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),
         ];
@@ -47,6 +47,7 @@ class AlbumTransformer extends TransformerAbstract
 
     public function includeVersions(Album $album): Collection
     {
-        return $this->collection($album->versions, new VersionTransformer(), 'versions');
+        return $this->collection($album->versions, new VersionTransformer(), 'versions')
+                    ->setMeta(['count' => $album->versions->count()]);
     }
 }

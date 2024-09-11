@@ -5,6 +5,7 @@ namespace App\Containers\MusicSection\Album\Models;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
 use App\Containers\MusicSection\Track\Models\Track;
+use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,8 +57,9 @@ use Illuminate\Support\Carbon;
  */
 class Album extends Model
 {
-    use SoftDeletes;
-    use HasMusicTags;
+    use SoftDeletes,
+        HasMusicTags,
+        HasImage;
 
     protected $table = 'music_albums';
 

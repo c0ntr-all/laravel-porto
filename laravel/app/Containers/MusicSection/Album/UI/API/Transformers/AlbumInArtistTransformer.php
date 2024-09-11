@@ -5,7 +5,6 @@ namespace App\Containers\MusicSection\Album\UI\API\Transformers;
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistInAlbumTransformer;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
-use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\TransformerAbstract;
 

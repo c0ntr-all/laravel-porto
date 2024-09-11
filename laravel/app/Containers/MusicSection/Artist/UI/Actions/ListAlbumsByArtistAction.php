@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Artist\UI\Actions;
 
@@ -24,6 +24,7 @@ class ListAlbumsByArtistAction
 
         return fractal($albums, new AlbumInArtistTransformer())
             ->withResourceName('albums')
+            ->addMeta(['albums_count' => $albums->count()])
             ->parseIncludes(['artists', 'tags'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

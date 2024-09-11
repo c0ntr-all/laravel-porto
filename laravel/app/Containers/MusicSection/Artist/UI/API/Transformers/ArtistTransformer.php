@@ -18,7 +18,7 @@ class ArtistTransformer extends TransformerAbstract
         return [
             'id' => $artist->id,
             'name' => $artist->name,
-            'content' => $artist->content,
+            'description' => $artist->description,
             'image' => $artist->full_image,
             'created_at' => $artist->created_at->format('Y-m-d H:i:s'),
         ];

@@ -15,7 +15,7 @@ export const useUserStore: StoreDefinition = defineStore({
     user: {}
   }),
   actions: {
-    async login(data: Data) {
+    async login(data: Data): Promise<void> {
       await api.post('v1/login', data)
         .then(response => {
           localStorage.setItem('access_token', response.data.access_token)
@@ -31,7 +31,7 @@ export const useUserStore: StoreDefinition = defineStore({
           throw error
         })
     },
-    async logout() {
+    async logout(): Promise<void> {
       await api.post('user/logout')
         .then(() => {
           localStorage.removeItem('access_token')

@@ -6,11 +6,11 @@ use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Track\Models\Track;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\Music\MusicTag
@@ -21,18 +21,17 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $slug
  * @property string|null $content
  * @property bool $is_base
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Collection<int, \App\Models\Music\Album> $albums
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Album> $albums
  * @property-read int|null $albums_count
- * @property-read Collection<int, \App\Models\Music\Artist> $artists
+ * @property-read Collection<int, Artist> $artists
  * @property-read int|null $artists_count
  * @property-read Collection<int, MusicTag> $children
  * @property-read int|null $children_count
  * @property-read MusicTag|null $parent
- * @property-read Collection<int, \App\Models\Music\Track> $tracks
+ * @property-read Collection<int, Track> $tracks
  * @property-read int|null $tracks_count
- * @method static \Database\Factories\Music\MusicTagFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder|MusicTag newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|MusicTag newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|MusicTag query()
@@ -48,8 +47,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class MusicTag extends Model
 {
-    use HasFactory;
-
     protected $table ='music_tags';
 
     protected $guarded = [];

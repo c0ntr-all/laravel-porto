@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Track\Models;
 
@@ -8,7 +8,7 @@ use App\Containers\MusicSection\Playlist\Models\Playlist;
 use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
 use App\Containers\MusicSection\Track\Casts\TrackDurationCast;
-use App\Helpers\ArrayHelper;
+use App\Ship\Helpers\ArrayHelper;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * App\Models\Music\Track
  *
- * @property int $id
+ * @property string $id
  * @property int $album_id
  * @property int|null $number
  * @property string $name

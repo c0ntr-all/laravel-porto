@@ -1,17 +1,17 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace App\Http\Requests\Music\Track;
+namespace App\Containers\MusicSection\Track\UI\API\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdatePlaylistsRequest extends FormRequest
+class AddTrackToPlaylistsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,10 +21,11 @@ class UpdatePlaylistsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'playlists' => 'required|array'
+            'playlist_ids' => 'required|array',
+            'playlist_ids.*' => 'required|numeric'
         ];
     }
 }

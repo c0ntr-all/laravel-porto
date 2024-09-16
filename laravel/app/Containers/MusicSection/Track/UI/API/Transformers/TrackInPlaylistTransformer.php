@@ -5,7 +5,7 @@ namespace App\Containers\MusicSection\Track\UI\API\Transformers;
 use App\Containers\MusicSection\Track\Models\Track;
 use League\Fractal\TransformerAbstract;
 
-class TrackTransformer extends TransformerAbstract
+class TrackInPlaylistTransformer extends TransformerAbstract
 {
     public function transform(Track $track): array
     {
@@ -13,7 +13,6 @@ class TrackTransformer extends TransformerAbstract
             'id' => $track->id,
             'name' => $track->name,
             'image' => $track->full_image,
-            'duration' => $track->duration,
         ];
     }
 }

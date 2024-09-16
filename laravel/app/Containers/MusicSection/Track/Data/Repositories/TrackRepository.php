@@ -17,4 +17,9 @@ class TrackRepository
     {
         return Track::whereIn('album_id', $albumIds)->cursorPaginate(50);
     }
+
+    public function addTrackToPlaylists(Track $track, array $playlists, array $pivotValues): array
+    {
+        return $track->playlists()->syncWithPivotValues($playlists, $pivotValues);
+    }
 }

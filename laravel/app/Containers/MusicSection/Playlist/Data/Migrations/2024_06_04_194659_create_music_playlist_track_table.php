@@ -14,13 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('music_playlist_track', function (Blueprint $table) {
-            $table->unsignedBigInteger('idx')->comment('Номер по порядку');
+            $table->unsignedBigInteger('idx')->default(0)->comment('Номер по порядку');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('track_id');
             $table->unsignedBigInteger('playlist_id');
             $table->timestamps();
-
-            $table->unique(['playlist_id', 'idx'], 'unique_playlist_idx');
 
             $table->foreign('user_id')
                   ->references('id')

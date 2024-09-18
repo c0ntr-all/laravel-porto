@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Ship\Models\Traits;
 
@@ -13,7 +13,7 @@ trait HasImage
     {
         $rootPath = url('') . '/storage/';
 
-        if (str_contains($this->image, 'http')) {
+        if ($this->image && str_contains($this->image, 'http')) {
             return $this->image;
         } else {
             return !empty($this->image) ? $rootPath . $this->image : $rootPath . 'no-image.jpg';

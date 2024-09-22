@@ -25,6 +25,7 @@ class TaskTransformer extends TransformerAbstract
 
     public function includeComments(Task $task): Collection
     {
-        return $this->collection($task->comments, new CommentTransformer(), 'comments');
+        return $this->collection($task->comments, new CommentTransformer(), 'comments')
+                    ->setMeta(['count' => $task->comments->count()]);
     }
 }

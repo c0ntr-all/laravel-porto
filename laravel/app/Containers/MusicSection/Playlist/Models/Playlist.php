@@ -1,8 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Playlist\Models;
 
 use App\Containers\MusicSection\Track\Models\Track;
+use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $id
  * @property int $user_id
  * @property string $name
- * @property string|null $content
+ * @property string|null $description
+ * @property string|null $full_image
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\Track> $tracks
@@ -34,20 +36,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Playlist extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        HasImage;
 
     public $fillable = [
         'user_id',
         'image',
         'name',
-        'content'
+        'description'
     ];
 
     public $table = 'music_playlists';
 
     public function tracks(): belongsToMany
     {
-        return $this->belongsToMany(Track::class, 'music_playlists_tracks', 'playlist_id', 'track_id');
+        return $this->belongsToMany(Track::class, 'music_playlist_track', 'playlist_id', 'track_id');
     }
 
     public function scopeUser(Builder $query, int $userid): void

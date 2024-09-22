@@ -37,11 +37,10 @@
 <script lang="ts" setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
-import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-
+import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
-import AppTaskList from 'src/components/client/TaskManager/TaskList/AppTaskList.vue'
+import AppTaskList from 'src/components/client/TaskManager/TaskList/TMTaskList.vue'
 
 interface Comment {
   id: string
@@ -55,18 +54,24 @@ interface Task {
   title: string
   content?: string
   completed: boolean
-  comments?: Comment[]
+  relationships: {
+    comments: {
+      data: Comment[],
+      meta: {
+        count: number
+      }
+    }
+  }
 }
 
 interface TaskList {
   id: string
   title: string
-  tasks?: Task[]
-}
-
-interface ResponseTaskShort {
-  id: string
-  type: string
+  relationships: {
+    tasks?: {
+      data: Task[]
+    }
+  }
 }
 
 interface ResponseTaskList {
@@ -78,7 +83,7 @@ interface ResponseTaskList {
   }
   relationships: {
     tasks: {
-      data: ResponseTaskShort[],
+      data: [],
       meta: {
         tasks_count: bigint
       }
@@ -87,8 +92,9 @@ interface ResponseTaskList {
 }
 
 interface RelationshipData {
-  type: string;
-  id: string;
+  type: string
+  id: string
+  attributes: object
 }
 
 interface Relationships {
@@ -154,7 +160,7 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
-const createList = async () => {
+const createList = async (): Promise<void> => {
   await api.post<CreateListApiResponse>('v1/task-manager/task-lists', {
     title: model.value.newListName
   }).then(response => {
@@ -166,79 +172,39 @@ const createList = async () => {
     const newTaskList: TaskList = {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
-      tasks: []
+      relationships: {
+        tasks: {
+          data: []
+        }
+      }
     }
 
     taskLists.value.push(newTaskList)
   }).catch(error => {
-    const axiosError = error as AxiosError<{ message: string }>
-
-    $q.notify({
-      type: 'negative',
-      message: axiosError.response?.data.message || 'Error!'
-    })
+    handleApiError(error)
   })
 }
 
-const getTaskLists = async () => {
+const getTaskLists = async (): Promise<void> => {
   loading.value = true
-  await api.get<GetListApiResponse>('v1/task-manager/task-lists').then(response => {
-    taskLists.value = response.data.data.map((responseTaskList: ResponseTaskList) => {
-      return {
-        id: responseTaskList.id,
-        title: responseTaskList.attributes.title,
-        tasks: getIncluded('tasks.comments', responseTaskList.relationships, response.data.included || [])
-      } as TaskList
+  await api.get<GetListApiResponse>('v1/task-manager/task-lists')
+    .then(response => {
+      taskLists.value = response.data.data.map((responseTaskList: ResponseTaskList) => {
+        return {
+          id: responseTaskList.id,
+          title: responseTaskList.attributes.title,
+          relationships: {
+            tasks: getIncluded('tasks.comments', responseTaskList.relationships, response.data.included || [])
+          }
+        } as TaskList
+      })
+
+      listsCount.value = response.data.meta.task_lists_count
+    }).catch(error => {
+      handleApiError(error)
+    }).finally(() => {
+      loading.value = false
     })
-    listsCount.value = response.data.meta.task_lists_count
-  }).catch(error => {
-    $q.notify({
-      type: 'negative',
-      message: (error as AxiosError).message || 'Error!'
-    })
-  }).finally(() => {
-    loading.value = false
-  })
-}
-
-const getIncluded = (
-  chain: string,
-  relationships: Relationships,
-  included: IncludedItem[]
-) => {
-  const chainArray = chain.split('.')
-  const initRelationName = chainArray[0]
-
-  const firstLevelRelations = relationships[initRelationName]
-
-  if (!firstLevelRelations || !firstLevelRelations.data) {
-    return []
-  }
-
-  return firstLevelRelations.data.map(item => {
-    const includedItem = included.find((include: IncludedItem) => include.type === initRelationName && include.id === item.id)
-
-    if (!includedItem) {
-      return null
-    }
-
-    const groupedItem: {
-      id: string
-      [key: string]: any
-    } = {
-      id: includedItem.id,
-      ...includedItem.attributes
-    }
-
-    if (chainArray.length > 1) {
-      const remainingRelations = chainArray.slice(1).join('.')
-      if (includedItem.relationships) {
-        groupedItem[chainArray[1]] = getIncluded(remainingRelations, includedItem.relationships, included)
-      }
-    }
-
-    return groupedItem
-  })
 }
 
 onMounted(() => {

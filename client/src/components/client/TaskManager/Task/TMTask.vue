@@ -70,8 +70,8 @@
             />
             <q-btn @click="createComment" color="primary" label="Send"/>
           </div>
-          <div v-if="task.comments" class="comments-list column q-gutter-sm">
-            <q-card v-for="comment in task.comments" :key="comment.id">
+          <div v-if="task?.relationships?.comments?.data" class="comments-list column q-gutter-sm">
+            <q-card v-for="comment in task.relationships.comments.data" :key="comment.id">
               <q-card-section class="flex justify-between">
                 <span>{{ comment.user_name }}</span>
                 <time class="time">{{ comment.created_at }}</time>
@@ -93,6 +93,7 @@ import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
+import { handleApiError } from 'src/utils/jsonapi'
 
 interface Comment {
   id: string
@@ -106,7 +107,14 @@ interface Task {
   title: string
   content?: string
   completed: boolean
-  comments?: Comment[]
+  relationships: {
+    comments: {
+      data: Comment[],
+      meta: {
+        count: number
+      }
+    }
+  }
 }
 
 interface ApiResponse {
@@ -151,10 +159,7 @@ const updateTitle = (value: string) => {
     })
     titlePopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data.message || 'Error!'
-    })
+    handleApiError(error)
     titlePopup.value?.cancel()
   })
 }
@@ -169,10 +174,7 @@ const updateContent = (value: string) => {
     })
     contentPopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data.message || 'Error!'
-    })
+    handleApiError(error)
     contentPopup.value?.cancel()
   })
 }
@@ -183,18 +185,15 @@ const createComment = () => {
     commentable_type: 'task',
     content: comment.value
   }).then((response) => {
-    task.value.comments = task.value.comments || []
-    task.value.comments.push(response.data.comments[0])
+    task.value.relationships.comments.data = task.value.relationships.comments.data || []
+    task.value.relationships.comments.data.push(response.data.comments[0])
 
     $q.notify({
       type: 'positive',
       message: 'Комментарий успешно добавлен!'
     })
   }).catch((error: AxiosError<{ message: string }>) => {
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data.message || 'Произошла ошибка'
-    })
+    handleApiError(error)
   })
 }
 </script>

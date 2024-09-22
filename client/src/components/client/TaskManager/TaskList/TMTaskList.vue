@@ -55,9 +55,8 @@
 import { ref, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
-
 import { api } from 'src/boot/axios'
-import AppTask from 'src/components/client/TaskManager/Task/AppTask.vue'
+import AppTask from 'src/components/client/TaskManager/Task/TMTask.vue'
 
 interface Comment {
   id: string
@@ -70,13 +69,24 @@ interface Task {
   title: string
   content?: string
   completed: boolean
-  comments?: Comment[]
+  relationships: {
+    comments: {
+      data: Comment[],
+      meta: {
+        count: number
+      }
+    }
+  }
 }
 
 interface TaskList {
   id: string
   title: string
-  tasks?: Task[]
+  relationships: {
+    tasks?: {
+      data: Task[]
+    }
+  }
 }
 
 interface TaskAttributes {
@@ -103,7 +113,7 @@ const props = defineProps<{ list: TaskList }>()
 const $q = useQuasar()
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
-const tasks = ref<Task[]>(props.list.tasks || [])
+const tasks = ref<Task[]>(props.list.relationships.tasks?.data || [])
 const model = ref<{ newCardName: string }>({
   newCardName: ''
 })
@@ -119,7 +129,7 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
-const createTask = async () => {
+const createTask = async (): Promise<void> => {
   const cardName = model.value.newCardName
   model.value.newCardName = ''
 
@@ -135,7 +145,15 @@ const createTask = async () => {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
       content: response.data.data.attributes.content,
-      completed: false
+      completed: false,
+      relationships: {
+        comments: {
+          data: [],
+          meta: {
+            count: 0
+          }
+        }
+      }
     }
 
     tasks.value.push(newTask)

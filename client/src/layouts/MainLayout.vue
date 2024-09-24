@@ -103,7 +103,7 @@
 
     <q-page-container>
       <q-page class="q-pa-lg">
-        <div class="text-h4 q-mb-lg">{{ $route.meta.title || defaultTitleText }}</div>
+        <div class="text-h4 q-mb-lg">{{ $route.meta?.title || defaultTitleText }}</div>
         <router-view />
       </q-page>
     </q-page-container>
@@ -112,54 +112,51 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/user'
+import { handleApiSuccess } from 'src/utils/jsonapi'
 
 defineOptions({
   name: 'MainLayout'
 })
 
-interface Item {
-  path: string;
+interface Route {
+  path: string
   meta?: {
-    icon?: string;
-    title?: string;
-    menu?: boolean;
-    admin?: boolean;
-  };
+    icon?: string
+    title?: string
+    menu?: boolean
+    is_admin?: boolean
+  }
 }
 
-const $q = useQuasar()
 const $router = useRouter()
+const $route: Route = useRoute()
 const user = useUserStore()
 const leftDrawerOpen = ref<boolean>(false)
 
 const defaultTitleText = 'No title for route'
 const defaultIcon = 'label'
 
-const menuItems = computed((): Item[] => {
+const menuItems = computed((): Route[] => {
   const routes = $router.options.routes
   if (routes.length > 0 && routes[0].children) {
-    return routes[0].children.filter((item: Item) => item.meta?.menu === true)
+    return routes[0].children.filter((route: Route) => route.meta?.menu === true)
   }
   return []
 })
 
-const adminItems = computed((): Item[] => {
+const adminItems = computed((): Route[] => {
   const routes = $router.options.routes
   if (routes.length > 0 && routes[0].children) {
-    return routes[0].children.filter((item: Item) => item.meta?.admin === true)
+    return routes[0].children.filter((route: Route) => route.meta?.is_admin === true)
   }
   return []
 })
 
 const logout = (): void => {
   user.logout().then((response: { data: { message: string } }) => {
-    $q.notify({
-      type: 'positive',
-      message: response.data.message
-    })
+    handleApiSuccess(response)
     $router.push('/login')
   })
 }
@@ -182,14 +179,6 @@ const toggleLeftDrawer = (): void => {
     z-index: -1;
     opacity: .2;
     filter: grayscale(100%);
-  }
-}
-.user-menu {
-  &__name {
-
-  }
-  &__role {
-
   }
 }
 .logo-wrap {

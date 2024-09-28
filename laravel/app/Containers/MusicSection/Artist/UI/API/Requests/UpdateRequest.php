@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Artist\UI\API\Requests;
 
@@ -11,7 +11,7 @@ class UpdateRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,13 +21,14 @@ class UpdateRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name' => 'required|string',
-            'content' => 'sometimes|string|nullable',
+            'name' => 'sometimes|string',
+            'description' => 'sometimes|string|nullable',
             'tags' => 'sometimes|array',
-            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192',
+            'tags.*' => 'sometimes|string',
+            'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];
     }
 }

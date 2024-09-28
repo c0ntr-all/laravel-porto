@@ -3,7 +3,9 @@
 namespace App\Containers\MusicSection\Artist\Models;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
+use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,12 +24,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\Album> $albums
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Album> $albums
  * @property-read int|null $albums_count
  * @property-read string $full_image
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\MusicTag> $tags
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, MusicTag> $tags
  * @property-read int|null $tags_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\Track> $tracks
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Track> $tracks
  * @property-read int|null $tracks_count
  * @method static \Database\Factories\Music\ArtistFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder|Artist filter($filter)

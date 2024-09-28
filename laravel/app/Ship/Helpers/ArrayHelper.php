@@ -8,22 +8,23 @@ class ArrayHelper {
      * Makes a regular array from a recursively nested array
      *
      * @param array $array
+     * @param string $keyToFlat
      * @return array
      */
-    public static function flattenArray(array $array = []): array
+    public static function flattenArray(array $array = [], string $keyToFlat = 'children'): array
     {
         static $out = [];
 
         foreach ($array as $subArray) {
-            if (!empty($subArray['children'])) {
+            if (!empty($subArray[$keyToFlat])) {
                 $arrayToAdd = $subArray;
-                unset($arrayToAdd['children']);
+                unset($arrayToAdd[$keyToFlat]);
 
                 $out[] = $arrayToAdd;
-                self::flattenArray($subArray['children']);
+                self::flattenArray($subArray[$keyToFlat]);
             } else {
-                if (isset($subArray['children'])) {
-                    unset($subArray['children']);
+                if (isset($subArray[$keyToFlat])) {
+                    unset($subArray[$keyToFlat]);
                 }
 
                 $out[] = $subArray;

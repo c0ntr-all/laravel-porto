@@ -159,7 +159,7 @@ const getArtist = async (id: string): Promise<void> => {
         id: responseArtist.id,
         ...responseArtist.attributes,
         relationships: {
-          tags: getIncluded('tags', responseArtist.relationships, response.data.included || [])
+          tags: getIncluded<Tag>('tags', responseArtist.relationships, response.data.included) as { data: Tag[] }
         }
       }
       loading.value = false

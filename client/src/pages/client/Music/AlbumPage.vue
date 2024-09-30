@@ -78,17 +78,18 @@ interface Artist {
   name: string
 }
 
-interface Tag {
-  id: string
-  name: string
-}
-
 interface AlbumVersion {
   id: string
   name: string
   content: string | null
   date: string
   image: string
+}
+
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
 }
 
 interface Track {
@@ -99,6 +100,11 @@ interface Track {
   image: string
   duration: string
   rate: number
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 interface Album {
@@ -192,11 +198,11 @@ const getAlbum = async (id: string): Promise<void> => {
         id: responseAlbum.id,
         ...responseAlbum.attributes,
         relationships: {
-          artists: getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included),
-          tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included),
-          tracks: getIncluded<Track>('tracks', responseAlbum.relationships, response.data.included),
+          artists: getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included) as { data: Artist[] },
+          tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as { data: Tag[] },
+          tracks: getIncluded<Track>('tracks', responseAlbum.relationships, response.data.included) as { data: Track[] },
           versions: {
-            ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included),
+            ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included) as { data: AlbumVersion[] },
             meta: {
               count: responseAlbum.relationships.versions.meta.count
             }

@@ -23,7 +23,7 @@
     transition-next="jump-up"
   >
     <q-tab-panel name="tracks" class="q-pa-none">
-<!--      <MusicTabTracks/>-->
+      <MusicTabTracks/>
     </q-tab-panel>
 
     <q-tab-panel name="artists" class="q-pa-none">

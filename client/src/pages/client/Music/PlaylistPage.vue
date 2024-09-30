@@ -49,6 +49,12 @@ import MusicPlaylistTracksList from 'src/components/client/Music/MusicPlaylistTr
 import PlaylistPageSkeleton from 'src/pages/client/Music/PlaylistPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
+}
+
 interface Track {
   id: string
   name: string
@@ -57,6 +63,11 @@ interface Track {
   image: string
   duration: string
   rate: number
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 interface Playlist {
@@ -111,7 +122,7 @@ const getPlaylist = async (id: string | string[]): Promise<void> => {
       playlist.value = {
         ...responsePlaylist.attributes,
         relationships: {
-          tracks: getIncluded('tracks', responsePlaylist.relationships, response.data.included)
+          tracks: getIncluded<Track>('tracks', responsePlaylist.relationships, response.data.included) as { data: Track[] }
         }
       }
     }).catch(error => {

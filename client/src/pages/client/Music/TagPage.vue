@@ -18,7 +18,7 @@ import { AxiosError } from 'axios'
 interface Tag {
   id: string
   name: string
-  content: string
+  content: string | null
 }
 
 interface ResponseTag {
@@ -26,7 +26,7 @@ interface ResponseTag {
   id: string
   attributes: {
     name: string
-    content: string
+    content: string | null
   }
 }
 

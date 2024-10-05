@@ -27,8 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read int|null $albums_count
  * @property-read Collection<int, Artist> $artists
  * @property-read int|null $artists_count
- * @property-read Collection<int, MusicTag> $children
- * @property-read int|null $children_count
+ * @property-read Collection<int, MusicTag> $tags
  * @property-read MusicTag|null $parent
  * @property-read Collection<int, Track> $tracks
  * @property-read int|null $tracks_count
@@ -86,8 +85,8 @@ class MusicTag extends Model
      *
      * @return HasMany
      */
-    public function children(): HasMany
+    public function tags(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'parent_id', 'id')->with('children');
+        return $this->hasMany(__CLASS__, 'parent_id', 'id')->with('tags');
     }
 }

@@ -3,5 +3,5 @@
 use App\Containers\MusicSection\Tag\UI\Actions\GetTagAction;
 use Illuminate\Support\Facades\Route;
 
-Route::get('music/tags/{tag}', GetTagAction::class)
+Route::get('music/tags/{tag:slug}', GetTagAction::class)
      ->middleware(['auth:api']);

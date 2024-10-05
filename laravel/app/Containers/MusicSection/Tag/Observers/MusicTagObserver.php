@@ -1,8 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Tag\Observers;
 
-use App\Models\Music\MusicTag;
+use App\Containers\MusicSection\Tag\Models\MusicTag;
+use Illuminate\Support\Str;
 
 class MusicTagObserver
 {
@@ -13,11 +14,11 @@ class MusicTagObserver
 
     public function updating(MusicTag $tag): void
     {
-        $tag->slug = \Str::slug($tag->name);
+        $this->setSlug($tag);
     }
 
     protected function setSlug(MusicTag $tag): void
     {
-        $tag->slug = \Str::slug($tag->name);
+        $tag->slug = Str::slug($tag->name);
     }
 }

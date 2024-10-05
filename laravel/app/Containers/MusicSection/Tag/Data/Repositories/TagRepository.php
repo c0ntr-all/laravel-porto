@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Tag\Data\Repositories;
 
-use App\Models\Music\MusicTag;
+use App\Containers\MusicSection\Tag\Models\MusicTag;
 use Illuminate\Database\Eloquent\Collection;
 
 class TagRepository
@@ -14,8 +14,18 @@ class TagRepository
 
     public function getTagsTree(): Collection
     {
-        return MusicTag::with('children')
+        return MusicTag::with('tags')
                        ->whereNull('parent_id')
                        ->get();
+    }
+
+    public function createTag($dto)
+    {
+        return MusicTag::create($dto->toArray());
+    }
+
+    public function deleteTags(array $ids): int
+    {
+        return MusicTag::whereIn('id', $ids)->delete();
     }
 }

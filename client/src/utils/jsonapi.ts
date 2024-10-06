@@ -15,49 +15,66 @@ interface IncludedItem {
 }
 
 interface ResolvedResource<T> {
-  data: T[] | any[]
+  data: T[]
   meta?: Record<string, any>
 }
 
 export function getIncluded<T>(
   chain: string,
   relationships: any,
-  included: IncludedItem[]
-): ResolvedResource<T> {
+  included: IncludedItem[],
+  enableWrapping: boolean = true
+): ResolvedResource<T> | T[] {
   const chainArray = chain.split('.')
   const initRelationName = chainArray[0]
   const firstLevelRelations = relationships[initRelationName]
 
   if (!firstLevelRelations || !firstLevelRelations.data) {
-    return {
-      data: []
-    }
+    return enableWrapping ? { data: [] } : []
   }
 
-  return {
-    ...relationships[initRelationName],
-    data: firstLevelRelations.data.map((item: RelationshipItem) => {
-      const includedItem = included.find((include: IncludedItem) => include.type === initRelationName && include.id === item.id)
+  const result = firstLevelRelations.data.map((item: RelationshipItem) => {
+    const includedItem = included.find((include: IncludedItem) => include.type === initRelationName && include.id === item.id)
 
-      if (!includedItem) {
-        return []
-      }
+    if (!includedItem) {
+      return []
+    }
 
-      const groupedItem: Record<string, any> = {
-        id: includedItem.id,
-        ...includedItem.attributes
-      }
+    const groupedItem: Record<string, any> = {
+      id: includedItem.id,
+      ...includedItem.attributes
+    }
 
-      if (chainArray.length > 1) {
-        const remainingRelations = chainArray.slice(1).join('.')
-        if (includedItem.relationships) {
+    if (chainArray.length > 1) {
+      let remainingRelations = chainArray.slice(1).join('.')
+      let nextRelationName = chainArray[1]
+      if (includedItem.relationships) {
+        if (remainingRelations === '*') {
+          remainingRelations = chainArray.join('.')
+          nextRelationName = chainArray[0]
+        }
+
+        const nestedRelationships = getIncluded(remainingRelations, includedItem.relationships, included, enableWrapping)
+
+        if (enableWrapping) {
           groupedItem.relationships = {}
-          groupedItem.relationships[chainArray[1]] = getIncluded(remainingRelations, includedItem.relationships, included)
+          groupedItem.relationships[nextRelationName] = nestedRelationships
+        } else {
+          groupedItem[nextRelationName] = nestedRelationships
         }
       }
+    }
 
-      return groupedItem
-    })
+    return groupedItem
+  })
+
+  if (enableWrapping) {
+    return {
+      ...relationships[initRelationName],
+      data: result
+    }
+  } else {
+    return result
   }
 }
 
@@ -66,6 +83,15 @@ export function handleApiError(error: AxiosError) {
 
   Notify.create({
     type: 'negative',
+    message
+  })
+}
+
+export function handleApiSuccess(response: any) {
+  const message = response.data.meta.message || 'The action was done!'
+
+  Notify.create({
+    type: 'positive',
     message
   })
 }

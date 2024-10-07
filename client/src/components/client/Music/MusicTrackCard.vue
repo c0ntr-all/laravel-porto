@@ -3,7 +3,7 @@
     class="music-track flex no-wrap self-start items-center col-grow q-pr-sm rounded-borders"
     :class="{'music-track--active': track.id === musicPlayer.track.id}"
   >
-    <div class="music-track__left" @click="$emit('play')">
+    <div class="music-track__left" @click="handlePlay">
       <div class="music-track-cover q-mr-md">
         <q-img
           v-if="track.image"
@@ -39,7 +39,7 @@
       <div class="music-track__rate q-gutter-y-md">
         <q-rating
           v-model="track.rate"
-          @update:model-value="changeRate"
+          @update:model-value="rateTrack"
           :max="4"
           size="1.5em"
           color="primary"
@@ -148,10 +148,15 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
-import { useQuasar } from 'quasar'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
+import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
+
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
+}
 
 interface Track {
   id: string
@@ -161,6 +166,11 @@ interface Track {
   image: string
   duration: string
   rate: number
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 interface PlaylistTrack {
@@ -224,7 +234,6 @@ const props = defineProps<{
   actions?: string[]
   playlistId?: string
 }>()
-const $q = useQuasar()
 const musicPlayer = useMusicPlayer()
 
 const availableActions: Action[] = [{
@@ -249,14 +258,16 @@ const filteredActions = computed(() => {
   return availableActions.filter(item => props.actions?.includes(item.name))
 })
 
-const changeRate = async (value: number): Promise<void> => {
+const rateTrack = async (value: number): Promise<void> => {
   const previousRate = track.value.rate
 
   await api.post(`v1/music/tracks/${track.value.id}/rate`, {
     rate: value
+  }).then(response => {
+    handleApiSuccess(response)
   }).catch(error => {
-    handleApiError(error)
     track.value.rate = previousRate ?? 0
+    handleApiError(error)
   })
 }
 
@@ -266,8 +277,8 @@ const initPlaylistDialog = async (): Promise<void> => {
   await api.get<GetPlaylistsApiResponse>('v1/music/playlists?include=tracks')
     .then(response => {
       const playlistsList = response.data.data.map(item => {
-        const tracks = getIncluded<PlaylistTrack>('tracks', item.relationships, response.data.included)
-        if (tracks.data.find(track => track?.id === props.track.id) && !selectedPlaylistsIds.value.includes(item.id)) {
+        const tracks = getIncluded<PlaylistTrack>('tracks', item.relationships, response.data.included) as { data: PlaylistTrack[] }
+        if (tracks.data.find((track: PlaylistTrack) => track?.id === props.track.id) && !selectedPlaylistsIds.value.includes(item.id)) {
           selectedPlaylistsIds.value.push(item.id)
         }
 
@@ -307,10 +318,7 @@ const syncPlaylists = async (): Promise<void> => {
   await api.put(`v1/music/tracks/${track.value.id}/playlists`, {
     playlist_ids: selectedPlaylistsIds.value
   }).then(response => {
-    $q.notify({
-      type: 'positive',
-      message: response.data.meta.message
-    })
+    handleApiSuccess(response)
   }).catch(error => {
     handleApiError(error)
   }).finally(() => {
@@ -322,13 +330,14 @@ const deleteTrackFromPlaylist = async (): Promise<void> => {
   await api.delete(`v1/music/playlists/${props.playlistId}/tracks/${track.value.id}`)
     .then(response => {
       emit('remove', track.value.id)
-      $q.notify({
-        type: 'positive',
-        message: response.data.meta.message
-      })
+      handleApiSuccess(response)
     }).catch(error => {
       handleApiError(error)
     })
+}
+
+const handlePlay = () => {
+  emit('play')
 }
 
 watch(playlistSearch, (value) => {

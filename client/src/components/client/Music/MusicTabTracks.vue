@@ -33,15 +33,25 @@ import TracksFilter from 'src/components/client/Music/default/tracksTab/TracksFi
 import TrackCardRow from 'src/components/client/Music/default/tracksTab/TrackCardRow.vue'
 import MusicTabTracksSkeleton from 'src/components/client/Music/MusicTabTracksSkeleton.vue'
 
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
+}
+
 interface Track {
   id: string
-  number: number
-  rate: number
   name: string
+  number: number
   artist: string
-  tags: string[]
   image: string
   duration: string
+  rate: number
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 interface Pagination {
@@ -94,7 +104,7 @@ const columns = ref([
     required: true,
     label: 'Tags',
     align: 'left' as const,
-    field: (row: Track) => row.tags,
+    field: (row: Track) => row.relationships.tags.data,
     sortable: true
   }, {
     name: 'duration',

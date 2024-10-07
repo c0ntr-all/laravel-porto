@@ -38,11 +38,10 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
-import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
 
 import { api } from 'src/boot/axios'
-import { getIncluded } from 'src/utils/jsonapi'
+import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import MusicArtistsList from 'src/components/client/Music/MusicArtistsList.vue'
 import MusicArtistsListSkeleton from 'src/components/client/Music/MusicArtistsListSkeleton.vue'
 import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFilter.vue'
@@ -93,8 +92,6 @@ interface Pagination {
   prevPageUrl: string
 }
 
-const $q = useQuasar()
-
 const artists = ref<Artist[]>([])
 const pagination = ref<Pagination>({
   perPage: 0,
@@ -104,13 +101,6 @@ const pagination = ref<Pagination>({
 })
 const loading = ref(true)
 const cardMode = ref<'card' | 'row'>('row')
-
-const handleApiError = (error: AxiosError<{ message: string }>) => {
-  $q.notify({
-    type: 'negative',
-    message: error.response?.data.message || 'Error'
-  })
-}
 
 const getArtists = async(filters?: Record<string, any>): Promise<void> => {
   loading.value = true
@@ -124,7 +114,7 @@ const getArtists = async(filters?: Record<string, any>): Promise<void> => {
         content: responseArtist.attributes.content,
         image: responseArtist.attributes.image,
         relationships: {
-          tags: getIncluded<Tag>('tags', responseArtist.relationships, response.data.included)
+          tags: getIncluded<Tag>('tags', responseArtist.relationships, response.data.included) as { data: Tag[] }
         }
       }
     })

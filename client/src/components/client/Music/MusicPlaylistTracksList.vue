@@ -18,6 +18,12 @@ import { ref } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
 
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
+}
+
 interface Track {
   id: string
   name: string
@@ -26,6 +32,11 @@ interface Track {
   image: string
   duration: string
   rate: number
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 const props = defineProps<{

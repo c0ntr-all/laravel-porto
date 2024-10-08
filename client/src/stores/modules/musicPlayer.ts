@@ -6,6 +6,12 @@ import { api } from 'src/boot/axios'
 
 const DEFAULT_VOLUME = 0.01
 
+interface Tag {
+  id: string
+  name: string
+  is_base: boolean
+}
+
 interface Track {
   id: string
   name: string
@@ -14,7 +20,11 @@ interface Track {
   image: string
   duration: string
   rate: number
-  tags?: string[]
+  relationships: {
+    tags: {
+      data: Tag[]
+    }
+  }
 }
 
 export const useMusicPlayer = defineStore('musicPlayer', {

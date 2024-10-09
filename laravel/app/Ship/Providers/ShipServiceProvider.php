@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Ship\Providers;
 
@@ -14,6 +14,7 @@ class ShipServiceProvider extends ServiceProvider
 {
     private array $serviceProviders = [
         RouteServiceProvider::class,
+        EventServiceProvider::class,
         MigrationServiceProvider::class,
         AuthServiceProvider::class,
         JwtServiceProvider::class,

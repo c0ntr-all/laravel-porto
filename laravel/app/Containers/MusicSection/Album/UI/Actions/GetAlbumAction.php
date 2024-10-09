@@ -13,7 +13,7 @@ class GetAlbumAction
 
     public function handle(Album $album): Album
     {
-        return $album->load(['tracks.artists', 'tags', 'versions']);
+        return $album->load(['tracks.artists', 'tracks.rate', 'tags', 'versions']);
     }
 
     public function asController(Album $album): JsonResponse

@@ -13,7 +13,7 @@ use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -33,14 +33,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Music\Album|null $album
+ * @property-read Album|null $album
  * @property-read string $full_image
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\Playlist> $playlists
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Playlist> $playlists
  * @property-read int|null $playlists_count
- * @property-read \App\Models\Music\Rate|null $rate
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Music\MusicTag> $tags
+ * @property-read Rate|null $rate
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, MusicTag> $tags
  * @property-read int|null $tags_count
- * @method static \Database\Factories\Music\TrackFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder|Track filter($filter)
  * @method static \Illuminate\Database\Eloquent\Builder|Track newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Track newQuery()
@@ -96,9 +95,9 @@ class Track extends Model
         return $this->belongsToMany(Playlist::class, 'music_playlist_track', 'track_id', 'playlist_id');
     }
 
-    public function rate(): HasOne
+    public function rate(): HasMany
     {
-        return $this->hasOne(Rate::class);
+        return $this->hasMany(Rate::class);
     }
 
     public function scopeUser($query, $userId): void

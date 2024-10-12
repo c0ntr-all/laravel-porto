@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Track\Models;
 
@@ -29,4 +29,13 @@ class Rate extends Model
     protected $table = 'music_track_rates';
 
     protected $guarded = [];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::addGlobalScope('user', function ($builder) {
+            $builder->where('user_id', '=', auth()->user()->id);
+        });
+    }
 }

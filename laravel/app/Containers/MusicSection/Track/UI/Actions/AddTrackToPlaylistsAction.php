@@ -7,7 +7,6 @@ use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Track\Tasks\AddTrackToPlaylistsTask;
 use App\Containers\MusicSection\Track\UI\API\Requests\AddTrackToPlaylistsRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class AddTrackToPlaylistsAction

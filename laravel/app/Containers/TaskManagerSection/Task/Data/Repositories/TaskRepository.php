@@ -19,7 +19,7 @@ class TaskRepository
 
     /**
      * @param Task $task
-     * @param array $data
+     * @param TaskUpdateData $dto
      * @return Task
      */
     public function updateTask(Task $task, TaskUpdateData $dto): Task

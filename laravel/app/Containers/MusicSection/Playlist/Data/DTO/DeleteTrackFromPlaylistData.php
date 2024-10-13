@@ -6,8 +6,8 @@ use Spatie\LaravelData\Data;
 
 class DeleteTrackFromPlaylistData extends Data
 {
-    public int $user_id;
-    public int $track_id;
+    public string $user_id;
+    public string $track_id;
 
     public function __construct(
     ) {

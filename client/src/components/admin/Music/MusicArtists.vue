@@ -24,7 +24,7 @@
         </q-tab-panel>
 
         <q-tab-panel name="upload">
-<!--          <artists-upload/>-->
+          <MusicArtistsUpload/>
         </q-tab-panel>
       </q-tab-panels>
     </template>
@@ -34,7 +34,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import MusicArtistsEdit from 'src/components/admin/Music/MusicArtistsEdit.vue'
-// import ArtistsUpload from 'src/components/admin/music/tabs/artists/ArtistsUpload.vue'
+import MusicArtistsUpload from 'src/components/admin/Music/MusicArtistsUpload.vue'
 
 const artistsSplitter = ref(6)
 const tabs = ref('edit')

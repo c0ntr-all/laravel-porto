@@ -72,15 +72,9 @@ import { handleApiError } from 'src/utils/jsonapi'
 import MusicPlaylistCard from 'src/components/client/Music/MusicPlaylistCard.vue'
 import MusicPlaylistCardSkeleton from 'src/components/client/Music/MusicPlaylistCardSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import { IPlaylist } from 'src/components/client/Music/types'
 
-interface Playlist {
-  id: string
-  name: string
-  image: string
-  created_at: string
-}
-
-interface ResponsePlaylist {
+interface IResponsePlaylist {
   type: string
   id: string
   attributes: {
@@ -90,14 +84,14 @@ interface ResponsePlaylist {
   }
 }
 
-interface GetPlaylistsApiResponse {
-  data: ResponsePlaylist[]
+interface IGetPlaylistsResponse {
+  data: IResponsePlaylist[]
   meta: {
     playlists_count: number
   }
 }
 
-interface CreatePlaylistApiResponse {
+interface ICreatePlaylistResponse {
   data: {
     type: string
     id: string
@@ -115,13 +109,13 @@ interface CreatePlaylistApiResponse {
 const loading = ref(true)
 const createPlaylistModal = ref(false)
 const newPlaylistName = ref('')
-const playlists = ref<Playlist[]>([])
+const playlists = ref<IPlaylist[]>([])
 const playlistsCount = ref(0)
 
 const getPlaylists = async (): Promise<void> => {
-  await api.get<GetPlaylistsApiResponse>('v1/music/playlists')
+  await api.get<IGetPlaylistsResponse>('v1/music/playlists')
     .then(response => {
-      playlists.value = response.data.data.map((responsePlaylist: ResponsePlaylist) => {
+      playlists.value = response.data.data.map((responsePlaylist: IResponsePlaylist) => {
         return {
           id: responsePlaylist.id,
           ...responsePlaylist.attributes
@@ -136,7 +130,7 @@ const getPlaylists = async (): Promise<void> => {
 }
 
 const createPlaylist = async (): Promise<void> => {
-  await api.post<CreatePlaylistApiResponse>('v1/music/playlists', {
+  await api.post<ICreatePlaylistResponse>('v1/music/playlists', {
     name: newPlaylistName.value
   }).then(response => {
     playlists.value.push({

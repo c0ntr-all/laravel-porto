@@ -40,7 +40,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
-import AppTaskList from 'src/components/client/TaskManager/TaskList/TMTaskList.vue'
+import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 
 interface Comment {
   id: string

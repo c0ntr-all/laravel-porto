@@ -39,7 +39,6 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { AxiosError } from 'axios'
-
 import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import MusicArtistsList from 'src/components/client/Music/MusicArtistsList.vue'
@@ -47,25 +46,9 @@ import MusicArtistsListSkeleton from 'src/components/client/Music/MusicArtistsLi
 import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFilter.vue'
 import MusicTabArtistsSearch from 'src/components/client/Music/MusicTabArtistsSearch.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import { IArtist, ITagShort } from 'src/components/client/Music/types'
 
-interface Tag {
-  id: string
-  name: string
-}
-
-interface Artist {
-  id: string
-  name: string
-  image: string
-  content: string
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
-
-interface ResponseArtist {
+interface IResponseArtist {
   type: string
   id: string
   attributes: {
@@ -77,8 +60,8 @@ interface ResponseArtist {
   relationships: any
 }
 
-interface GetArtistsApiResponse {
-  data: ResponseArtist[],
+interface IGetArtistsResponse {
+  data: IResponseArtist[],
   included: any
   meta: {
     message?: string
@@ -92,7 +75,7 @@ interface Pagination {
   prevPageUrl: string
 }
 
-const artists = ref<Artist[]>([])
+const artists = ref<IArtist[]>([])
 const pagination = ref<Pagination>({
   perPage: 0,
   hasPages: false,
@@ -106,15 +89,15 @@ const getArtists = async(filters?: Record<string, any>): Promise<void> => {
   loading.value = true
   filters = filters || {}
 
-  await api.get<GetArtistsApiResponse>('v1/music/artists', filters).then(response => {
-    artists.value = (response.data.data as ResponseArtist[]).map((responseArtist: ResponseArtist) => {
+  await api.get<IGetArtistsResponse>('v1/music/artists', filters).then(response => {
+    artists.value = (response.data.data as IResponseArtist[]).map((responseArtist: IResponseArtist) => {
       return {
         id: responseArtist.id,
         name: responseArtist.attributes.name,
         content: responseArtist.attributes.content,
         image: responseArtist.attributes.image,
         relationships: {
-          tags: getIncluded<Tag>('tags', responseArtist.relationships, response.data.included) as { data: Tag[] }
+          tags: getIncluded<ITagShort>('tags', responseArtist.relationships, response.data.included) as { data: ITagShort[] }
         }
       }
     })

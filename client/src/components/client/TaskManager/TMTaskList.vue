@@ -53,55 +53,32 @@
 
 <script lang="ts" setup>
 import { ref, nextTick } from 'vue'
-import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-import AppTask from 'src/components/client/TaskManager/Task/TMTask.vue'
-
-interface Comment {
-  id: string
-  user_name: string
-  content: string
-  created_at: string
-}
-interface Task {
-  id: string
-  title: string
-  content?: string
-  completed: boolean
-  relationships: {
-    comments: {
-      data: Comment[],
-      meta: {
-        count: number
-      }
-    }
-  }
-}
+import AppTask from 'src/components/client/TaskManager/TMTask.vue'
+import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { IComment, ITask } from 'src/components/client/TaskManager/types'
 
 interface TaskList {
   id: string
   title: string
   relationships: {
     tasks?: {
-      data: Task[]
+      data: ITask[]
     }
   }
 }
-
-interface TaskAttributes {
-  title: string
-  completed: boolean
-  content?: string
-  created_at?: string
-  comments?: Comment[]
-}
-
 interface CreateTaskResponse {
   data: {
     type: string
     id: string
-    attributes: TaskAttributes
+    attributes: {
+      title: string
+      completed: boolean
+      content?: string
+      created_at?: string
+      comments?: IComment[]
+    }
   },
   meta: {
     message?: string
@@ -109,11 +86,9 @@ interface CreateTaskResponse {
 }
 
 const props = defineProps<{ list: TaskList }>()
-
-const $q = useQuasar()
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
-const tasks = ref<Task[]>(props.list.relationships.tasks?.data || [])
+const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])
 const model = ref<{ newCardName: string }>({
   newCardName: ''
 })
@@ -137,11 +112,9 @@ const createTask = async (): Promise<void> => {
     title: cardName,
     task_list_id: props.list.id
   }).then(response => {
-    $q.notify({
-      type: 'positive',
-      message: response?.data.meta.message || 'Task successfully created!'
-    })
-    const newTask: Task = {
+    handleApiSuccess(response)
+
+    const newTask: ITask = {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
       content: response.data.data.attributes.content,
@@ -158,10 +131,7 @@ const createTask = async (): Promise<void> => {
 
     tasks.value.push(newTask)
   }).catch((error: AxiosError<{ message: string }>) => {
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data.message || 'Error!'
-    })
+    handleApiError(error)
   })
 }
 </script>

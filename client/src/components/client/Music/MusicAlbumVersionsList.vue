@@ -42,14 +42,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { AlbumVersion } from 'src/components/client/Music/types'
 
-interface AlbumVersion {
-  id: string,
-  name: string,
-  image: string
-}
-
-interface AlbumVersionsData {
+interface AlbumVersionsProp {
   data: AlbumVersion[],
   meta: {
     count: number
@@ -58,7 +53,7 @@ interface AlbumVersionsData {
 
 const $router = useRouter()
 const props = defineProps<{
-  versions: AlbumVersionsData
+  versions: AlbumVersionsProp
 }>()
 const versions = ref(props.versions)
 const columns = [{

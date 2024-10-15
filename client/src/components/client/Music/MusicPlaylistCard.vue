@@ -11,15 +11,10 @@
 </template>
 
 <script lang="ts" setup>
-interface Playlist {
-  id: string
-  name: string
-  image: string
-  created_at: string
-}
+import { IPlaylist } from 'src/components/client/Music/types'
 
 const props = defineProps<{
-  playlist: Playlist
+  playlist: IPlaylist
 }>()
 const playlist = props.playlist
 </script>

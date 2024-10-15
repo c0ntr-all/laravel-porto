@@ -32,27 +32,7 @@ import { api } from 'src/boot/axios'
 import TracksFilter from 'src/components/client/Music/default/tracksTab/TracksFilter.vue'
 import TrackCardRow from 'src/components/client/Music/default/tracksTab/TrackCardRow.vue'
 import MusicTabTracksSkeleton from 'src/components/client/Music/MusicTabTracksSkeleton.vue'
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { ITrack } from 'src/components/client/Music/types'
 
 interface Pagination {
   perPage: number
@@ -74,7 +54,7 @@ const columns = ref([
     required: true,
     label: '#',
     align: 'center' as const,
-    field: (row: Track) => row.number,
+    field: (row: ITrack) => row.number,
     sortable: true,
     style: 'width: 70px'
   }, {
@@ -82,7 +62,7 @@ const columns = ref([
     required: true,
     label: '',
     align: 'center' as const,
-    field: (row: Track) => row.rate,
+    field: (row: ITrack) => row.rate,
     sortable: true,
     style: 'width: 120px'
   }, {
@@ -90,33 +70,33 @@ const columns = ref([
     required: true,
     label: 'Name',
     align: 'left' as const,
-    field: (row: Track) => row.name,
+    field: (row: ITrack) => row.name,
     sortable: true
   }, {
     name: 'artist',
     required: true,
     label: 'Artist',
     align: 'left' as const,
-    field: (row: Track) => row.artist,
+    field: (row: ITrack) => row.artist,
     sortable: true
   }, {
     name: 'tags',
     required: true,
     label: 'Tags',
     align: 'left' as const,
-    field: (row: Track) => row.relationships.tags.data,
+    field: (row: ITrack) => row.relationships.tags.data,
     sortable: true
   }, {
     name: 'duration',
     required: true,
     label: 'Duration',
     align: 'right' as const,
-    field: (row: Track) => row.duration,
+    field: (row: ITrack) => row.duration,
     sortable: true,
     style: 'width: 130px'
   }
 ])
-const tracks = ref<Track[]>([])
+const tracks = ref<ITrack[]>([])
 const loading = ref(true)
 
 const pagination = ref<Pagination>({
@@ -148,7 +128,7 @@ const getTracks = async (filters?: Record<string, unknown>): Promise<void> => {
   })
 }
 
-const initPlay = (track: Track) => {
+const initPlay = (track: ITrack) => {
   // Replacing playlist with new track
   if (!musicPlayer.playlist.includes(track)) {
     musicPlayer.setPlaylist(tracks.value)

@@ -46,23 +46,7 @@ import MusicArtistCard from 'src/components/client/Music/MusicArtistCard.vue'
 import MusicArtistCardRow from 'src/components/client/Music/MusicArtistCardRow.vue'
 import MusicArtistCardRowSkeleton from 'src/components/client/Music/MusicArtistCardRowSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
-
-interface Tag {
-  id: string
-  name: string
-}
-
-interface Artist {
-  id: string
-  name: string
-  image: string
-  content: string
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { IArtist } from 'src/components/client/Music/types'
 
 interface Pagination {
   perPage: number
@@ -72,7 +56,7 @@ interface Pagination {
 }
 
 const props = defineProps<{
-  artists: Artist[],
+  artists: IArtist[],
   pagination: Pagination,
   cardMode: string
 }>()

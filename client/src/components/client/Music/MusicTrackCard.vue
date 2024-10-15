@@ -151,27 +151,7 @@ import { ref, computed, watch } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { ITrack } from 'src/components/client/Music/types'
 
 interface PlaylistTrack {
   id: string
@@ -230,7 +210,7 @@ interface GetPlaylistsApiResponse {
 
 const emit = defineEmits(['play', 'remove'])
 const props = defineProps<{
-  track: Track
+  track: ITrack
   actions?: string[]
   playlistId?: string
 }>()
@@ -246,7 +226,7 @@ const availableActions: Action[] = [{
   icon: 'delete'
 }]
 
-const track = ref<Track>({ ...props.track, rate: props.track.rate ?? 0 })
+const track = ref<ITrack>({ ...props.track, rate: props.track.rate ?? 0 })
 const showPlaylistModal = ref(false)
 const playlists = ref<Playlist[]>([])
 const playlistsLoading = ref(false)

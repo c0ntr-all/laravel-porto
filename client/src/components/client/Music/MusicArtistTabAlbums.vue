@@ -23,23 +23,16 @@ import { api } from 'src/boot/axios'
 import { handleApiError } from 'src/utils/jsonapi'
 import AlbumCard from 'src/components/client/Music/MusicAlbumCard.vue'
 import ArtistTabAlbumsSkeleton from 'src/components/client/Music/MusicArtistTabAlbumsSkeleton.vue'
+import { IAlbum } from 'src/components/client/Music/types'
 
-interface Album {
-  id: string
-  name: string
-  description: string
-  image: string
-  date: string
-}
-
-interface Relation {
+interface IRelation {
   data: {
     type: string
     id: string
   }
 }
 
-interface ResponseAlbum {
+interface IResponseAlbum {
   type: string
   id: string
   attributes: {
@@ -48,13 +41,13 @@ interface ResponseAlbum {
     date: string
   }
   relationships: {
-    artists: Relation[]
-    tags: Relation[]
+    artists: IRelation[]
+    tags: IRelation[]
   }
 }
 
-interface GetArtistAlbumsApiResponse {
-  data: ResponseAlbum[]
+interface IGetArtistAlbumsResponse {
+  data: IResponseAlbum[]
   meta: {
     albums_count: number
   }
@@ -64,19 +57,19 @@ const props = defineProps<{
   artistId: string,
 }>()
 const loading = ref(true)
-const albums = ref<Album[]>()
+const albums = ref<IAlbum[]>()
 const albumsCount = ref(0)
 
 const getAlbums = async (id: string): Promise<void> => {
-  await api.get<GetArtistAlbumsApiResponse>(`v1/music/artists/${id}/albums`)
+  await api.get<IGetArtistAlbumsResponse>(`v1/music/artists/${id}/albums`)
     .then(response => {
-      albums.value = response.data.data.map((responseAlbum: ResponseAlbum) => {
+      albums.value = response.data.data.map((responseAlbum: IResponseAlbum) => {
         return {
           id: responseAlbum.id,
           name: responseAlbum.attributes.name,
           image: responseAlbum.attributes.image,
           date: responseAlbum.attributes.date
-        } as Album
+        } as IAlbum
       })
       albumsCount.value = response.data.meta.albums_count
     }).catch((error: AxiosError) => {

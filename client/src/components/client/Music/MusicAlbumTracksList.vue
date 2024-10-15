@@ -17,44 +17,24 @@
 import { ref } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { ITrack } from 'src/components/client/Music/types'
 
 interface Props {
   tracks?: {
-    data: Track[]
+    data: ITrack[]
   }
 }
 
 const props = withDefaults(defineProps<Props>(), {
   tracks: () => ({
-    data: [] as Track[]
+    data: [] as ITrack[]
   })
 })
 const musicPlayer = useMusicPlayer()
 const albumActions = ['addToPlaylist']
 const tracks = ref(props.tracks.data)
 
-const initPlay = (track: Track) => {
+const initPlay = (track: ITrack) => {
   if (!musicPlayer.playlist.includes(track)) {
     musicPlayer.setPlaylist(tracks.value)
   }

@@ -28,26 +28,10 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue'
-
-interface Tag {
-  id: string
-  name: string
-}
-
-interface Artist {
-  id: string
-  name: string
-  image: string
-  content: string
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { IArtist } from 'src/components/client/Music/types'
 
 const props = defineProps<{
-  artist: Artist
+  artist: IArtist
 }>()
 const artist = ref(props.artist)
 </script>

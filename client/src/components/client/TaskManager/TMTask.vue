@@ -90,73 +90,43 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useQuasar } from 'quasar'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-import { handleApiError } from 'src/utils/jsonapi'
+import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { IComment, ITask } from 'src/components/client/TaskManager/types'
 
-interface Comment {
-  id: string
-  user_name: string
-  content: string
-  created_at: string
+interface ICreateCommentResponse {
+  comments: IComment[]
 }
-
-interface Task {
-  id: string
-  title: string
-  content?: string
-  completed: boolean
-  relationships: {
-    comments: {
-      data: Comment[],
-      meta: {
-        count: number
-      }
-    }
-  }
-}
-
-interface ApiResponse {
-  comments: Comment[]
-}
-
-interface TaskAttributes {
-  title: string
-  completed: boolean
-  content?: string
-  created_at?: string
-  comments?: Comment[]
-}
-
-interface UpdateTaskResponse {
+interface IUpdateTaskResponse {
   data: {
     type: string
     id: string
-    attributes: TaskAttributes
+    attributes: {
+      title: string
+      completed: boolean
+      content?: string
+      created_at?: string
+      comments?: IComment[]
+    }
   },
   meta: {
     message?: string
   }
 }
 
-const props = defineProps<{ task: Task }>()
-const $q = useQuasar()
-
+const props = defineProps<{ task: ITask }>()
 const showModal = ref(false)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
-const task = ref<Task>(props.task)
-const comment = ref('')
+const task = ref<ITask>(props.task)
+const comment = ref<string>('')
 
 const updateTitle = (value: string) => {
-  api.patch<UpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
     title: value
   }).then(response => {
-    $q.notify({
-      type: 'positive',
-      message: response?.data.meta.message || 'Task title successfully updated!'
-    })
+    handleApiSuccess(response)
     titlePopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
@@ -165,13 +135,10 @@ const updateTitle = (value: string) => {
 }
 
 const updateContent = (value: string) => {
-  api.patch<UpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
     content: value
   }).then(response => {
-    $q.notify({
-      type: 'positive',
-      message: response?.data.meta.message || 'Task content successfully updated!'
-    })
+    handleApiSuccess(response)
     contentPopup.value?.set()
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
@@ -180,7 +147,7 @@ const updateContent = (value: string) => {
 }
 
 const createComment = () => {
-  api.post<ApiResponse>('v1/comments/store', {
+  api.post<ICreateCommentResponse>('v1/comments', {
     commentable_id: task.value.id,
     commentable_type: 'task',
     content: comment.value
@@ -188,10 +155,7 @@ const createComment = () => {
     task.value.relationships.comments.data = task.value.relationships.comments.data || []
     task.value.relationships.comments.data.push(response.data.comments[0])
 
-    $q.notify({
-      type: 'positive',
-      message: 'Комментарий успешно добавлен!'
-    })
+    handleApiSuccess(response)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

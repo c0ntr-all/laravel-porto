@@ -29,23 +29,24 @@ import { ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 
+interface IUploadArtistResponse {
+  meta: {
+    message: string
+  }
+}
+
 const fullPath = ref<string | null>(null)
 const fullPathRef = ref()
-const artistData = ref([])
-const showArtistDataModal = ref(false)
 const processLoading = ref(false)
 
 const uploadArtist = async () => {
   processLoading.value = true
   fullPathRef.value.validate()
 
-  await api.post('v1/music/artists/upload', {
+  await api.post<IUploadArtistResponse>('v1/music/artists/upload', {
     path: fullPath.value,
     is_preview: true
   }).then(response => {
-    artistData.value = response.data.data
-    showArtistDataModal.value = true
-
     handleApiSuccess(response)
   }).catch(error => {
     handleApiError(error)

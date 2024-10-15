@@ -50,27 +50,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { ITagShort, ITrack } from 'src/components/admin/Music/types'
 
 interface Col {
   name: string
@@ -78,7 +58,7 @@ interface Col {
 }
 
 interface RowProps {
-  row: Track
+  row: ITrack
   cols: Col[]
 }
 
@@ -86,7 +66,7 @@ const props = defineProps<{
   rowProps: RowProps
 }>()
 const emit = defineEmits<{
-  (e: 'play', value: Track): void
+  (e: 'play', value: ITrack): void
 }>()
 const row = ref(props.rowProps.row)
 const musicPlayer = useMusicPlayer()
@@ -94,7 +74,7 @@ const hovered = ref(false)
 const icon = musicPlayer.status === 'paused' || (musicPlayer.status === 'playing' && musicPlayer.track.id !== props.rowProps.row.id)
   ? 'play_arrow'
   : 'pause'
-const tagsToString = (tagsArray: Tag[], isBase: boolean = true) => {
+const tagsToString = (tagsArray: ITagShort[], isBase: boolean = true) => {
   tagsArray.filter(tag => tag.is_base === isBase).join(', ')
 }
 

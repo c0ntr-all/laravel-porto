@@ -37,15 +37,7 @@
 import { inject, ref, watch, watchEffect } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-
-interface Tag {
-  id: string
-  name: string
-  content: string | null
-  is_base: boolean
-  parent_id: string | null
-  tags: Tag[]
-}
+import { ITag } from 'src/components/admin/Music/types'
 
 interface TagPropCreateChild {
   id: string
@@ -90,7 +82,7 @@ const model = ref<TagModel>({
   is_base: props.tag.parentTag.is_base || true
 })
 
-const addNewTagToList = inject<{(tag: Tag): void}>('addNewTagToList')!
+const addNewTagToList = inject<{(tag: ITag): void}>('addNewTagToList')!
 
 const createTag = async () => {
   const postData = {

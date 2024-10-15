@@ -23,15 +23,15 @@ import { ref, watch, watchEffect } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 
-interface TagProp {
+interface ITagProp {
   id: string
   name: string
   content: string | null
   is_base: boolean
-  parentTag?: TagProp
+  parentTag?: ITagProp
 }
 
-interface DeleteTagApiResponse {
+interface IDeleteTagResponse {
   data: {
     id: string
     attributes: {
@@ -46,17 +46,17 @@ interface DeleteTagApiResponse {
 
 const props = defineProps<{
   modelValue: any,
-  tag: TagProp
+  tag: ITagProp
 }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'deleted', value: string): void
 }>()
 const show = ref(props.modelValue)
-const tag = ref<TagProp>(props.tag)
+const tag = ref<ITagProp>(props.tag)
 
 const deleteTag = async () => {
-  await api.delete<DeleteTagApiResponse>(`v1/music/tags/${tag.value.id}`)
+  await api.delete<IDeleteTagResponse>(`v1/music/tags/${tag.value.id}`)
     .then(response => {
       emit('deleted', tag.value.id)
 

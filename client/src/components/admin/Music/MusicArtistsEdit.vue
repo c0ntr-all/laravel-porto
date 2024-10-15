@@ -55,13 +55,13 @@
             <div v-else-if="col.name === 'tags'" class="artist-row__tags">
               <div class="artist-row__tag">
                 <span
-                  v-for="tag in col.value.filter((tag: Tag) => tag.is_base)"
+                  v-for="tag in col.value.filter((tag: ITagShort) => tag.is_base)"
                   :key="tag.id"
                 >{{ tag.name }}</span>
               </div>
               <div class="artist-row__tag">
                 <span
-                  v-for="tag in col.value.filter((tag: Tag) => !tag.is_base)"
+                  v-for="tag in col.value.filter((tag: ITagShort) => !tag.is_base)"
                   :key="tag.id"
                 >{{ tag.name }}</span>
               </div>
@@ -83,38 +83,15 @@
     />
   </div>
 </template>
+
 <script lang="ts" setup>
 import { onMounted, provide, ref } from 'vue'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
 import MusicArtistsUpdateDialog from 'src/components/admin/Music/MusicArtistsUpdateDialog.vue'
+import { ITagShort, IArtist, IRelationshipItem, IIncludedItem } from 'src/components/admin/Music/types'
 
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Artist {
-  id: string
-  name: string
-  image: string
-  description: string | null
-  created_at: string
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
-
-interface RelationshipItem {
-  type: string
-  id: string
-  meta?: Record<string, any>
-}
-
-interface ResponseArtist {
+interface IResponseArtist {
   type: string
   id: string
   attributes: {
@@ -125,24 +102,17 @@ interface ResponseArtist {
   }
   relationships: {
     tags: {
-      data: RelationshipItem
+      data: IRelationshipItem
     }
   }
 }
 
-interface IncludedItem {
-  type: string
-  id: string
-  attributes: Record<string, any>
-  relationships?: any
-}
-
 interface GetArtistApiResponse {
-  data: ResponseArtist[]
+  data: IResponseArtist[]
   meta: {
     artists_count: number
   }
-  included: IncludedItem[]
+  included: IIncludedItem[]
 }
 
 const columns = ref([{
@@ -150,7 +120,7 @@ const columns = ref([{
   required: true,
   label: 'ID',
   align: 'left' as const,
-  field: (row: Artist) => row.id,
+  field: (row: IArtist) => row.id,
   sortable: true,
   style: 'width: 40px'
 }, {
@@ -158,7 +128,7 @@ const columns = ref([{
   required: true,
   label: 'Image',
   align: 'center' as const,
-  field: (row: Artist) => row.image,
+  field: (row: IArtist) => row.image,
   sortable: false,
   style: 'width: 60px'
 }, {
@@ -166,28 +136,28 @@ const columns = ref([{
   required: true,
   label: 'Name',
   align: 'left' as const,
-  field: (row: Artist) => row.name,
+  field: (row: IArtist) => row.name,
   sortable: true
 }, {
   name: 'tags',
   required: true,
   label: 'Tags',
   align: 'center' as const,
-  field: (row: Artist) => row.relationships.tags.data,
+  field: (row: IArtist) => row.relationships.tags.data,
   sortable: false
 }, {
   name: 'createdAt',
   required: true,
   label: 'Created at',
   align: 'left' as const,
-  field: (row: Artist) => row.created_at,
+  field: (row: IArtist) => row.created_at,
   sortable: true
 }])
 const total = ref(0)
 const search = ref('')
-const artists = ref<Artist[]>([])
+const artists = ref<IArtist[]>([])
 const showUpdateDialog = ref(false)
-const artistForEdit = ref<Artist>({
+const artistForEdit = ref<IArtist>({
   id: '',
   name: '',
   image: '',
@@ -212,14 +182,14 @@ const getArtists = async (searchText: string = '', page: number = 0) => {
     .then(response => {
       artists.value = response.data.data.map(responseArtist => {
         return transformArtistFromResponse(responseArtist, response.data)
-      }) as Artist[]
+      }) as IArtist[]
       total.value = response.data.meta.artists_count
     }).catch(error => {
       handleApiError(error)
     })
 }
 
-const transformArtistFromResponse = (responseArtist: ResponseArtist, responseData: any): Artist => {
+const transformArtistFromResponse = (responseArtist: IResponseArtist, responseData: any): IArtist => {
   return {
     id: responseArtist.id,
     name: responseArtist.attributes.name,
@@ -227,17 +197,17 @@ const transformArtistFromResponse = (responseArtist: ResponseArtist, responseDat
     description: responseArtist.attributes.description,
     created_at: responseArtist.attributes.created_at,
     relationships: {
-      tags: getIncluded('tags', responseArtist.relationships, responseData.included) as {data: Tag[]}
+      tags: getIncluded('tags', responseArtist.relationships, responseData.included) as {data: ITagShort[]}
     }
   }
 }
 
-const initArtistEdit = (artist: Artist) => {
+const initArtistEdit = (artist: IArtist) => {
   artistForEdit.value = artist
   showUpdateDialog.value = true
 }
 
-const refreshArtists = (artist: Artist) => {
+const refreshArtists = (artist: IArtist) => {
   for (const key in artists.value) {
     if (artists.value[key].id === artist.id) {
       artists.value[key] = artist
@@ -251,6 +221,7 @@ onMounted(() => {
   getArtists()
 })
 </script>
+
 <style lang="scss" scoped>
 .artist {
   &-edit {

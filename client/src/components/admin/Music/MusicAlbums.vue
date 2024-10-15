@@ -47,57 +47,19 @@
     </q-table>
   </template>
 </template>
+
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
-
-interface Tag {
-  id: string
-  name: string
-}
-
-interface Album {
-  id: string
-  image: string
-  year: number
-  name: string
-  artist_name: string
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
-
-interface ResponseAlbum {
-  type: string
-  id: string
-  attributes: {
-    name: string
-    image: string
-    year: number
-    artist_name: string
-    relationships: {
-      tags: {
-        data: Tag[]
-      }
-    }
-  }
-  relationships: any
-}
-
-interface GetAlbumsApiResponse {
-  data: ResponseAlbum[]
-  included: any
-}
+import { ITagShort, IAlbum, IGetAlbumsResponse, IResponseAlbum } from 'src/components/admin/Music/types'
 
 const columns = ref([{
   name: 'image',
   required: true,
   label: 'Изображение',
   align: 'center' as const,
-  field: (row: Album) => row.image,
+  field: (row: IAlbum) => row.image,
   sortable: false,
   style: 'width: 60px'
 }, {
@@ -105,7 +67,7 @@ const columns = ref([{
   required: true,
   label: 'Год',
   align: 'left' as const,
-  field: (row: Album) => row.year,
+  field: (row: IAlbum) => row.year,
   sortable: true,
   style: 'width: 60px'
 }, {
@@ -113,7 +75,7 @@ const columns = ref([{
   required: true,
   label: 'Имя',
   align: 'left' as const,
-  field: (row: Album) => row.name,
+  field: (row: IAlbum) => row.name,
   sortable: true,
   style: 'width: 60px'
 }, {
@@ -121,23 +83,23 @@ const columns = ref([{
   required: true,
   label: 'Исполнитель',
   align: 'left' as const,
-  field: (row: Album) => row.artist_name,
+  field: (row: IAlbum) => row.artist_name,
   sortable: true
 }, {
   name: 'tags',
   required: true,
   label: 'Теги',
   align: 'center' as const,
-  field: (row: Album) => row.relationships.tags.data,
+  field: (row: IAlbum) => row.relationships.tags.data,
   sortable: false
 }])
 const loading = ref(false)
-const albums = ref<Album[]>([])
+const albums = ref<IAlbum[]>([])
 
 const getAlbums = async (): Promise<void> => {
-  await api.get<GetAlbumsApiResponse>('v1/music/albums')
+  await api.get<IGetAlbumsResponse>('v1/music/albums')
     .then(response => {
-      albums.value = response.data.data.map((responseAlbum: ResponseAlbum) => {
+      albums.value = response.data.data.map((responseAlbum: IResponseAlbum) => {
         return {
           id: responseAlbum.id,
           image: responseAlbum.attributes.image,
@@ -146,7 +108,7 @@ const getAlbums = async (): Promise<void> => {
           artist_name: responseAlbum.attributes.artist_name,
           relationships: {
             tags: {
-              data: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as Tag[]
+              data: getIncluded<ITagShort>('tags', responseAlbum.relationships, response.data.included) as ITagShort[]
             }
           }
         }
@@ -161,8 +123,8 @@ const getAlbums = async (): Promise<void> => {
 onMounted(() => {
   getAlbums()
 })
-
 </script>
+
 <style lang="scss" scoped>
 .album-row {
   &__image {

@@ -59,29 +59,9 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
 import MusicTrackTableRow from 'src/components/admin/Music/MusicTrackTableRow.vue'
+import { IRelationshipItem, ITagShort, ITrack } from 'src/components/admin/Music/types'
 
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
-
-interface ResponseTrack {
+interface IResponseTrack {
   id: string
   type: string
   attributes: {
@@ -93,13 +73,13 @@ interface ResponseTrack {
   }
   relationships: {
     tags: {
-      data: Tag[]
+      data: IRelationshipItem[]
     }
   }
 }
 
-interface GetTracksApiResponse {
-  data: ResponseTrack[]
+interface IGetTracksResponse {
+  data: IResponseTrack[]
   included?: any
 }
 
@@ -109,14 +89,14 @@ const columns = ref([{
   required: true,
   label: '#',
   align: 'left' as const,
-  field: (row: Track) => row.number,
+  field: (row: ITrack) => row.number,
   sortable: true
 }, {
   name: 'id',
   required: true,
   label: 'id',
   align: 'center' as const,
-  field: (row: Track) => row.id,
+  field: (row: ITrack) => row.id,
   sortable: true,
   style: 'width: 70px'
 }, {
@@ -124,7 +104,7 @@ const columns = ref([{
   required: true,
   label: 'Image',
   align: 'left' as const,
-  field: (row: Track) => row.image,
+  field: (row: ITrack) => row.image,
   sortable: true,
   style: 'width: 40px'
 }, {
@@ -132,32 +112,31 @@ const columns = ref([{
   required: true,
   label: 'Имя',
   align: 'left' as const,
-  field: (row: Track) => row.name,
+  field: (row: ITrack) => row.name,
   sortable: true
 }, {
   name: 'tags',
   required: true,
   label: 'Tags',
   align: 'left' as const,
-  field: (row: Track) => row.relationships.tags.data,
+  field: (row: ITrack) => row.relationships.tags.data,
   sortable: true
 }, {
   name: 'duration',
   required: true,
   label: 'Duration',
   align: 'right' as const,
-  field: (row: Track) => row.duration,
+  field: (row: ITrack) => row.duration,
   sortable: true,
   style: 'width: 130px'
 }])
-
-const tracks = ref<Track[]>([])
+const tracks = ref<ITrack[]>([])
 const loading = ref(true)
 
 const getTracks = async (): Promise<void> => {
-  await api.get<GetTracksApiResponse>('v1/music/tracks?include=tags')
+  await api.get<IGetTracksResponse>('v1/music/tracks?include=tags')
     .then(response => {
-      tracks.value = response.data.data.map((responseTrack: ResponseTrack) => {
+      tracks.value = response.data.data.map((responseTrack: IResponseTrack) => {
         return {
           id: responseTrack.id,
           name: responseTrack.attributes.name,
@@ -169,7 +148,7 @@ const getTracks = async (): Promise<void> => {
           relationships: {
             tags: {
               data: responseTrack.relationships.tags.data.length
-                ? getIncluded<Tag>('tags', responseTrack.relationships, response.data.included, false) as Tag[]
+                ? getIncluded<ITagShort>('tags', responseTrack.relationships, response.data.included, false) as ITagShort[]
                 : []
             }
           }
@@ -182,7 +161,7 @@ const getTracks = async (): Promise<void> => {
     })
 }
 
-const initPlay = (track: Track) => {
+const initPlay = (track: ITrack) => {
   if (!musicPlayer.playlist.includes(track)) {
     musicPlayer.setPlaylist(tracks.value)
   }

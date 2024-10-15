@@ -50,13 +50,13 @@
   <MusicTagsUpdateDialog
     v-if="showUpdateDialog"
     v-model="showUpdateDialog"
-    :tag="tagProp as TagPropBase"
+    :tag="tagProp as ITagPropBase"
   />
 
   <MusicTagsDeleteDialog
     v-if="showDeleteDialog"
     v-model="showDeleteDialog"
-    :tag="tagProp as TagPropBase"
+    :tag="tagProp as ITagPropBase"
   />
 </template>
 <script lang="ts" setup>
@@ -64,29 +64,21 @@ import { ref } from 'vue'
 import MusicTagsCreateChildDialog from 'src/components/admin/Music/MusicTagsCreateChildTagDialog.vue'
 import MusicTagsUpdateDialog from 'src/components/admin/Music/MusicTagsUpdateDialog.vue'
 import MusicTagsDeleteDialog from 'src/components/admin/Music/MusicTagsDeleteDialog.vue'
+import { ITag } from 'src/components/admin/Music/types'
 
-interface Tag {
+interface ITagPropBase {
   id: string
   name: string
   content: string | null
   is_base: boolean
-  parent_id: number | null
-  tags: Tag[] | []
+  parentTag?: ITagPropBase
 }
 
-interface TagPropBase {
-  id: string
-  name: string
-  content: string | null
-  is_base: boolean
-  parentTag?: TagPropBase
-}
-
-interface TagPropCreateChild extends TagPropBase{
+interface TagPropCreateChild extends ITagPropBase{
   parentTag: TagPropCreateChild
 }
 
-type TagProp = TagPropBase | TagPropCreateChild
+type TagProp = ITagPropBase | TagPropCreateChild
 
 const props = defineProps<{
   nodes: any[]
@@ -103,22 +95,22 @@ const showCreateChildDialog = ref(false)
 const showUpdateDialog = ref(false)
 const showDeleteDialog = ref(false)
 
-const openCreateChildDialog = (tag: Tag) => {
+const openCreateChildDialog = (tag: ITag) => {
   showCreateChildDialog.value = true
   tagProp.value.parentTag = tag
 }
 
-const openUpdateDialog = (tag: Tag) => {
+const openUpdateDialog = (tag: ITag) => {
   showUpdateDialog.value = true
   tagProp.value = tag
 }
 
-const openDeleteDialog = (tag: Tag) => {
+const openDeleteDialog = (tag: ITag) => {
   showDeleteDialog.value = true
   tagProp.value = tag
 }
 
-const filterMethod = (node: Tag, text: string) => {
+const filterMethod = (node: ITag, text: string) => {
   return node.name.toLowerCase().includes(text.toLowerCase())
 }
 </script>

@@ -37,21 +37,21 @@ import { ref, watch, watchEffect } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 
-interface TagProp {
+interface ITagProp {
   id: string
   name: string
   content: string | null
   is_base: boolean
-  parentTag?: TagProp
+  parentTag?: ITagProp
 }
 
-interface TagModel {
+interface ITagModel {
   name: string
   content: string | null
   is_base: boolean
 }
 
-interface UpdateTagApiResponse {
+interface IUpdateTagResponse {
   data: {
     id: string
     attributes: {
@@ -68,20 +68,20 @@ interface UpdateTagApiResponse {
 
 const props = defineProps<{
   modelValue: any,
-  tag: TagProp
+  tag: ITagProp
 }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
 const show = ref(props.modelValue)
-const model = ref<TagModel>({
+const model = ref<ITagModel>({
   name: props.tag.name,
   content: props.tag.content,
   is_base: props.tag.is_base
 })
 
 const updateTag = async () => {
-  await api.patch<UpdateTagApiResponse>(`v1/music/tags/${props.tag.id}`, {
+  await api.patch<IUpdateTagResponse>(`v1/music/tags/${props.tag.id}`, {
     name: model.value.name,
     content: model.value.content
   }).then(response => {

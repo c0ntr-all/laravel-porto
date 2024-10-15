@@ -54,15 +54,7 @@
 import { nextTick, ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-
-interface Tag {
-  id: string
-  name: string
-  content: string | null
-  is_base: boolean
-  parent_id: string | null
-  tags: Tag[]
-}
+import { ITag } from 'src/components/admin/Music/types'
 
 interface TagModel {
   name?: string
@@ -70,7 +62,7 @@ interface TagModel {
   is_base: boolean
 }
 
-interface CreateTagApiResponse {
+interface ICreateTagResponse {
   data: {
     type: string
     id: string
@@ -89,7 +81,7 @@ interface CreateTagApiResponse {
 }
 
 const emit = defineEmits<{
-  (e: 'created', tag: Tag): void
+  (e: 'created', tag: ITag): void
 }>()
 
 const show = ref<boolean>(false)
@@ -102,7 +94,7 @@ const createTag = async () => {
     content: model.value.content
   }
 
-  await api.post<CreateTagApiResponse>('v1/music/tags', postData).then(response => {
+  await api.post<ICreateTagResponse>('v1/music/tags', postData).then(response => {
     const newTagResponse = response.data.data
 
     const newTag = {

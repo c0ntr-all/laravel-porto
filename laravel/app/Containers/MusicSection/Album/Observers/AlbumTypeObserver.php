@@ -1,8 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\MusicSection\Album\Observers;
 
-use App\Models\Music\AlbumType;
+use App\Containers\MusicSection\Album\Models\AlbumType;
 use Illuminate\Support\Facades\Cache;
 
 class AlbumTypeObserver

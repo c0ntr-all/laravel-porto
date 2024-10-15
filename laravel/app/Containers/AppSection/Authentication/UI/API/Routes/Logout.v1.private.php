@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 use App\Containers\AppSection\Authentication\UI\Actions\LogoutAction;
 use Illuminate\Support\Facades\Route;

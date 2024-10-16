@@ -14,7 +14,7 @@ class TaskListRepository
      */
     public function getTaskLists(): Collection
     {
-        return TaskList::with(['tasks'])->get();
+        return TaskList::with(['tasks.comments.user'])->get();
     }
 
     /**

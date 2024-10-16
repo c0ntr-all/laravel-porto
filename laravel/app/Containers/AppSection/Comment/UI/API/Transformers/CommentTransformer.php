@@ -5,6 +5,7 @@ namespace App\Containers\AppSection\Comment\UI\API\Transformers;
 use App\Containers\AppSection\Comment\Models\Comment;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use League\Fractal\Resource\Collection;
+use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
 class CommentTransformer extends TransformerAbstract
@@ -22,8 +23,8 @@ class CommentTransformer extends TransformerAbstract
         ];
     }
 
-    public function includeUser(Comment $comment): Collection
+    public function includeUser(Comment $comment): Item
     {
-        return $this->collection($comment->user, new UserTransformer(), 'user');
+        return $this->item($comment->user, new UserTransformer(), 'user');
     }
 }

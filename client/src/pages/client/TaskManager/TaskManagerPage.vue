@@ -1,5 +1,5 @@
 <template>
-  <TaskManagerPageSkeleton v-if="loading" />
+  <TaskManagerPageSkeleton v-if="loading"/>
   <template v-else>
     <q-btn
       v-if="!showAddForm"
@@ -20,8 +20,8 @@
         dense
         outlined
       />
-      <q-btn @click="createList" label="Create a list" color="primary" class="q-mr-sm" no-caps />
-      <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense />
+      <q-btn @click="createList" label="Create a list" color="primary" class="q-mr-sm" no-caps/>
+      <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense/>
     </div>
     <div class="task-lists row items-start q-gutter-md q-mb-lg">
       <AppTaskList
@@ -41,40 +41,9 @@ import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
+import { ITask, ITaskList } from 'src/components/client/TaskManager/types'
 
-interface Comment {
-  id: string
-  user_name: string
-  content: string
-  created_at: string
-}
-
-interface Task {
-  id: string
-  title: string
-  content?: string
-  completed: boolean
-  relationships: {
-    comments: {
-      data: Comment[],
-      meta: {
-        count: number
-      }
-    }
-  }
-}
-
-interface TaskList {
-  id: string
-  title: string
-  relationships: {
-    tasks?: {
-      data: Task[]
-    }
-  }
-}
-
-interface ResponseTaskList {
+interface IResponseTaskList {
   type: string
   id: string
   attributes: {
@@ -91,15 +60,15 @@ interface ResponseTaskList {
   }
 }
 
-interface RelationshipData {
+interface IRelationshipData {
   type: string
   id: string
   attributes: object
 }
 
-interface Relationships {
+interface IRelationships {
   [key: string]: {
-    data: RelationshipData[]
+    data: IRelationshipData[]
   }
 }
 
@@ -107,11 +76,11 @@ interface IncludedItem {
   type: string
   id: string
   attributes: object
-  relationships?: Relationships
+  relationships?: IRelationships
 }
 
 interface GetListApiResponse {
-  data: ResponseTaskList[]
+  data: IResponseTaskList[]
   attributes: {
     title: string
     created_at: string
@@ -141,7 +110,7 @@ interface CreateListApiResponse {
 const $q = useQuasar()
 
 const showAddForm = ref<boolean>(false)
-const taskLists = ref<TaskList[]>([])
+const taskLists = ref<ITaskList[]>([])
 const listsCount = ref<number>(0)
 const loading = ref<boolean>(true)
 const listAddTextarea = ref<HTMLElement | null>(null)
@@ -169,7 +138,7 @@ const createList = async (): Promise<void> => {
       message: response.data.meta.message || 'Task list successfully created!'
     })
 
-    const newTaskList: TaskList = {
+    const newTaskList: ITaskList = {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
       relationships: {
@@ -189,14 +158,14 @@ const getTaskLists = async (): Promise<void> => {
   loading.value = true
   await api.get<GetListApiResponse>('v1/task-manager/task-lists')
     .then(response => {
-      taskLists.value = response.data.data.map((responseTaskList: ResponseTaskList) => {
+      taskLists.value = response.data.data.map((responseTaskList: IResponseTaskList) => {
         return {
           id: responseTaskList.id,
           title: responseTaskList.attributes.title,
           relationships: {
-            tasks: getIncluded('tasks.comments', responseTaskList.relationships, response.data.included || [])
+            tasks: getIncluded<ITask>('tasks.comments.user', responseTaskList.relationships, response.data.included || []) as { data: ITask[] }
           }
-        } as TaskList
+        } as ITaskList
       })
 
       listsCount.value = response.data.meta.task_lists_count

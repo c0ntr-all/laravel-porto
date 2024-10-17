@@ -1,3 +1,14 @@
+export interface IRelationshipItem {
+  type: string
+  id: string
+  meta?: Record<string, any>
+}
+export interface IIncludedItem {
+  type: string
+  id: string
+  attributes: Record<string, any>
+  relationships?: any
+}
 export interface ITagShort {
   id: string
   name: string

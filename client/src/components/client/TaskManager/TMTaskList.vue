@@ -57,17 +57,8 @@ import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import AppTask from 'src/components/client/TaskManager/TMTask.vue'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IComment, ITask } from 'src/components/client/TaskManager/types'
+import { IComment, ITask, ITaskList } from 'src/components/client/TaskManager/types'
 
-interface TaskList {
-  id: string
-  title: string
-  relationships: {
-    tasks?: {
-      data: ITask[]
-    }
-  }
-}
 interface CreateTaskResponse {
   data: {
     type: string
@@ -77,7 +68,11 @@ interface CreateTaskResponse {
       completed: boolean
       content?: string
       created_at?: string
-      comments?: IComment[]
+      relationships: {
+        comments: {
+          data: IComment[]
+        }
+      }
     }
   },
   meta: {
@@ -85,7 +80,7 @@ interface CreateTaskResponse {
   }
 }
 
-const props = defineProps<{ list: TaskList }>()
+const props = defineProps<{ list: ITaskList }>()
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
 const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])

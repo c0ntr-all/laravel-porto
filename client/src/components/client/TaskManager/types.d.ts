@@ -1,10 +1,17 @@
+export interface IUser {
+  id: string
+  name: string
+}
 export interface IComment {
   id: string
-  user_name: string
   content: string
   created_at: string
+  relationships: {
+    user: {
+      data: IUser
+    }
+  }
 }
-
 export interface ITask {
   id: string
   title: string
@@ -16,6 +23,15 @@ export interface ITask {
       meta: {
         count: number
       }
+    }
+  }
+}
+export interface ITaskList {
+  id: string
+  title: string
+  relationships: {
+    tasks?: {
+      data: ITask[]
     }
   }
 }

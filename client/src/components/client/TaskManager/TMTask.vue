@@ -73,7 +73,7 @@
           <div v-if="task?.relationships?.comments?.data" class="comments-list column q-gutter-sm">
             <q-card v-for="comment in task.relationships.comments.data" :key="comment.id">
               <q-card-section class="flex justify-between">
-                <span>{{ comment.user_name }}</span>
+                <span>{{ comment.relationships.user.data.name }}</span>
                 <time class="time">{{ comment.created_at }}</time>
               </q-card-section>
               <q-card-section>
@@ -93,11 +93,30 @@ import { ref } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IComment, ITask } from 'src/components/client/TaskManager/types'
+import { IComment, ITask, IUser } from 'src/components/client/TaskManager/types'
+import { IIncludedItem } from 'src/components/client/Music/types'
 
 interface ICreateCommentResponse {
-  comments: IComment[]
+  data: {
+    type: string
+    id: string
+    attributes: {
+      name: string
+      content: string
+      created_at: string
+    }
+    relationships: {
+      user: {
+        data: IUser
+      }
+    }
+  },
+  included: IIncludedItem[]
+  meta: {
+    message?: string
+  }
 }
+
 interface IUpdateTaskResponse {
   data: {
     type: string
@@ -153,7 +172,23 @@ const createComment = () => {
     content: comment.value
   }).then((response) => {
     task.value.relationships.comments.data = task.value.relationships.comments.data || []
-    task.value.relationships.comments.data.push(response.data.comments[0])
+    const responseData = response.data.data
+
+    const comment = {
+      id: responseData.id,
+      content: responseData.attributes.content,
+      created_at: responseData.attributes.created_at,
+      relationships: {
+        user: {
+          data: {
+            id: responseData.relationships.user.data.id,
+            name: response.data.included.filter(included => included.type === 'user' && included.id === responseData.relationships.user.data.id)[0].attributes.name as string
+          }
+        }
+      }
+    }
+
+    task.value.relationships.comments.data.push(comment)
 
     handleApiSuccess(response)
   }).catch((error: AxiosError<{ message: string }>) => {

@@ -1,21 +1,38 @@
 import { Notify } from 'quasar'
 import { AxiosError } from 'axios'
 
-interface RelationshipItem {
+interface IRelationshipData {
   type: string
   id: string
-  meta?: Record<string, any>
+  attributes: {
+    [key: string]: any
+  }
 }
-
+interface IRelationshipValue {
+  data: IRelationshipData[]
+}
+interface IRelationshipItem {
+  [key: string]: IRelationshipValue
+}
 interface IncludedItem {
   type: string
   id: string
-  attributes: Record<string, any>
-  relationships?: any
+  attributes: {
+    [key: string]: any
+  }
+  relationships?: IRelationshipItem
 }
-
-interface ResolvedResource<T> {
+interface IProcessItem {
+  id: string
+  [key: string]: any
+  relationships: IRelationshipItem | undefined
+}
+interface IResolvedCollection<T> {
   data: T[]
+  meta?: Record<string, any>
+}
+interface IResolvedItem<T> {
+  data: T
   meta?: Record<string, any>
 }
 
@@ -24,41 +41,36 @@ export function getIncluded<T>(
   relationships: any,
   included: IncludedItem[],
   enableWrapping: boolean = true
-): ResolvedResource<T> | T[] {
+): IResolvedCollection<T> | IResolvedItem<T> | T[] | T {
   const chainArray = chain.split('.')
   const initRelationName = chainArray[0]
   const firstLevelRelations = relationships[initRelationName]
 
   if (!firstLevelRelations || !firstLevelRelations.data) {
     return enableWrapping ? { data: [] } : []
+    // weird javascript typeof result "object" on Array with objects
+  } else if (!Array.isArray(firstLevelRelations.data) && typeof firstLevelRelations.data === 'object') {
+    const groupedItem = processItem(initRelationName, firstLevelRelations.data, included)
+
+    return enableWrapping ? { data: groupedItem as T } : groupedItem as T
   }
 
-  const result = firstLevelRelations.data.map((item: RelationshipItem) => {
-    const includedItem = included.find((include: IncludedItem) => include.type === initRelationName && include.id === item.id)
-
-    if (!includedItem) {
-      return []
-    }
-
-    const groupedItem: Record<string, any> = {
-      id: includedItem.id,
-      ...includedItem.attributes
-    }
+  const result = firstLevelRelations.data.map((item: IRelationshipItem) => {
+    const groupedItem = processItem(initRelationName, item, included)
 
     if (chainArray.length > 1) {
       let remainingRelations = chainArray.slice(1).join('.')
       let nextRelationName = chainArray[1]
-      if (includedItem.relationships) {
+      if (groupedItem.relationships) {
         if (remainingRelations === '*') {
           remainingRelations = chainArray.join('.')
           nextRelationName = chainArray[0]
         }
 
-        const nestedRelationships = getIncluded(remainingRelations, includedItem.relationships, included, enableWrapping)
+        const nestedRelationships = getIncluded(remainingRelations, groupedItem.relationships, included, enableWrapping)
 
         if (enableWrapping) {
-          groupedItem.relationships = {}
-          groupedItem.relationships[nextRelationName] = nestedRelationships
+          groupedItem.relationships[nextRelationName] = nestedRelationships as IRelationshipValue
         } else {
           groupedItem[nextRelationName] = nestedRelationships
         }
@@ -75,6 +87,18 @@ export function getIncluded<T>(
     }
   } else {
     return result
+  }
+}
+
+const processItem = (relationName: string, relationItem: IRelationshipItem, included: IncludedItem[]): IProcessItem => {
+  const includedItem = included.find((include: IncludedItem) => {
+    return include.type === relationName && include.id === (relationItem as any).id
+  }) as IncludedItem
+
+  return {
+    id: includedItem.id,
+    ...includedItem.attributes,
+    relationships: includedItem.relationships
   }
 }
 

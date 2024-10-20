@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\MusicSection\UploadHistory\Data\Repositories;
+namespace App\Containers\MusicSection\Upload\Data\Repositories;
 
-use App\Containers\MusicSection\UploadHistory\Data\DTO\CreateMusicUploadHistoryDto;
+use App\Containers\MusicSection\Upload\Data\DTO\CreateMusicUploadHistoryDto;
 use App\Containers\MusicSection\UploadHistory\Models\MusicUploadHistory;
 
 class MusicUploadHistoryRepository

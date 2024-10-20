@@ -1,18 +1,18 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\MusicSection\Artist\Tasks;
+namespace App\Containers\MusicSection\Album\Tasks;
 
 use App\Ship\Helpers\ImageUpload;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Http\UploadedFile;
 
-class UploadArtistCoverTask extends ParentTask
+class UploadAlbumCoverTask extends ParentTask
 {
-    public function run(UploadedFile $file, string $name, string $artistId): string
+    public function run(UploadedFile $file, string $name, int $artistId): string
     {
         return ImageUpload::make()
                           ->setDiskName('public')
-                          ->setFolder("music/artists/{$artistId}/images")
+                          ->setFolder("music/artists/{$artistId}/covers")
                           ->setSourceName($name)
                           ->upload($file);
     }

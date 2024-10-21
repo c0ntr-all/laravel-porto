@@ -53,4 +53,9 @@ class TrackRepository
             'lyrics' => $dto->lyrics,
         ]);
     }
+
+    public function syncArtistsWithoutDetaching(Track $track, array $artistsIds): array
+    {
+        return $track->artists()->syncWithoutDetaching($artistsIds);
+    }
 }

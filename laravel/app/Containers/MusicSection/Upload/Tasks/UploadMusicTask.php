@@ -6,9 +6,13 @@ use App\Containers\MusicSection\Album\Data\DTO\CreateAlbumDto;
 use App\Containers\MusicSection\Album\Tasks\ListAlbumsByNameTask;
 use App\Containers\MusicSection\Album\Tasks\UpdateOrCreateAlbumTask;
 use App\Containers\MusicSection\Artist\Data\DTO\CreateArtistDto;
+use App\Containers\MusicSection\Artist\Tasks\SyncAlbumsForArtistTask;
 use App\Containers\MusicSection\Artist\Tasks\UpdateOrCreateArtistTask;
+use App\Containers\MusicSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\MusicSection\Tag\Tasks\ListTagsShortTask;
+use App\Containers\MusicSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
+use App\Containers\MusicSection\Track\Tasks\SyncArtistsForTrackTask;
 use App\Containers\MusicSection\Track\Tasks\UpdateOrCreateTrackTask;
 use App\Containers\MusicSection\Upload\Data\DTO\CreateMusicUploadHistoryDto;
 use App\Ship\Parents\Tasks\Task as ParentTask;
@@ -23,6 +27,9 @@ class UploadMusicTask extends ParentTask
         private readonly ListAlbumsByNameTask $listAlbumsByNameTask,
         private readonly UpdateOrCreateAlbumTask $updateOrCreateAlbumTask,
         private readonly UpdateOrCreateTrackTask $updateOrCreateTrackTask,
+        private readonly SyncAlbumsForArtistTask $syncAlbumsForArtistTask,
+        private readonly SyncArtistsForTrackTask $syncArtistsForTrackTask,
+        private readonly SyncTagsTask $syncTagsTask
     ){
     }
 
@@ -30,9 +37,14 @@ class UploadMusicTask extends ParentTask
      * Returns the path to the cover in the folder, if there is one
      *
      * @param array $data
-     * @return string|null
+     * @return array|null
      */
-    public function run(array $data): ?string
+    public function run(array $data): ?array
+    {
+        return $this->saveData($data);
+    }
+
+    private function saveData(array $data)
     {
         return DB::transaction(function () use ($data) {
             $existingTags = $this->listTagsShortTask->run();
@@ -56,7 +68,8 @@ class UploadMusicTask extends ParentTask
                     }
 
                     $album = $this->updateOrCreateAlbumTask->run($artist, $albumDto);
-                    $artist->albums()->syncWithoutDetaching([$album->id]);
+
+                    $this->syncAlbumsForArtistTask->run($artist, [$album->id]);
 
                     foreach($albumData['tracks'] as $trackData) {
                         $trackDto = CreateTrackDto::from($trackData);
@@ -65,13 +78,14 @@ class UploadMusicTask extends ParentTask
 
                         $track = $this->updateOrCreateTrackTask->run($album, $trackDto);
 
-                        //todo: Move to tasks and repositories
-                        $track->artists()->syncWithoutDetaching([$artist->id]);
+                        $this->syncArtistsForTrackTask->run($track, [$artist->id]);
 
                         if ($trackData['genre'] && array_key_exists($trackData['genre'], $existingTags)) {
-                            $track->tags()->syncWithoutDetaching($existingTags[$trackData['genre']]);
-                            $album->tags()->syncWithoutDetaching($existingTags[$trackData['genre']]);
-                            $artist->tags()->syncWithoutDetaching($existingTags[$trackData['genre']]);
+                            $tagsForSync = ['tags' => [$existingTags[$trackData['genre']]]];
+
+                            $this->syncTagsTask->run($track, SyncTagsDto::from($tagsForSync));
+                            $this->syncTagsTask->run($album, SyncTagsDto::from($tagsForSync));
+                            $this->syncTagsTask->run($artist, SyncTagsDto::from($tagsForSync));
                         }
                         //todo: Info to sockets
                     }

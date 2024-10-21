@@ -7,7 +7,7 @@ use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
-class PrepareUploadingMusicTreeTask extends ParentTask
+class PrepareUploadMusicTreeTask extends ParentTask
 {
     private string $path;
 
@@ -35,11 +35,11 @@ class PrepareUploadingMusicTreeTask extends ParentTask
     /**
      * @throws Exception
      */
-    public function run(array $data): array
+    public function run(string $path): array
     {
-        $this->path = $data['path'];
+        $this->path = $path;
 
-        $allTracksPaths = $this->parseTracksFromFolderTask->run($data['path']);
+        $allTracksPaths = $this->parseTracksFromFolderTask->run($path);
         $allTracksInfo = $this->getTracksInfoTask->run($allTracksPaths);
 
         $library = $this->makeLibraryTree($allTracksInfo);

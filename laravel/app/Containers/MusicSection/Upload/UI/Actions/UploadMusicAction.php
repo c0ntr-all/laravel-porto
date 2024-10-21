@@ -3,12 +3,12 @@
 namespace App\Containers\MusicSection\Upload\UI\Actions;
 
 use App\Containers\MusicSection\Artist\Models\Artist;
-use App\Containers\MusicSection\Upload\Tasks\PrepareUploadingMusicTreeTask;
+use App\Containers\MusicSection\Upload\Tasks\PrepareUploadMusicTreeTask;
 use App\Containers\MusicSection\Upload\Tasks\UploadMusicTask;
 use App\Containers\MusicSection\Upload\UI\API\Requests\UploadRequest;
-use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UploadMusicAction
@@ -16,7 +16,7 @@ class UploadMusicAction
     use AsAction;
 
     public function __construct(
-        private readonly PrepareUploadingMusicTreeTask $prepareUploadingMusicTreeTask,
+        private readonly PrepareUploadMusicTreeTask $prepareUploadingMusicTreeTask,
         private readonly UploadMusicTask $uploadMusicTask
     )
     {
@@ -27,7 +27,13 @@ class UploadMusicAction
      */
     public function handle(array $data): array
     {
-        return $this->prepareUploadingMusicTreeTask->run($data);
+        $musicData = $this->prepareUploadingMusicTreeTask->run($data['path']);
+
+        if (!empty($data['is_preview'])) {
+            return $musicData;
+        } else {
+            return $this->uploadMusicTask->run($musicData);
+        }
     }
 
     /**
@@ -40,12 +46,15 @@ class UploadMusicAction
     {
         $result = $this->handle($request->validated());
 
-        dd($result);
+        $artists = $result['artists'];
 
-//        return fractal($updatedArtist, new ArtistTransformer())
-//            ->parseIncludes(['tags'])
-//            ->withResourceName('artists')
-//            ->addMeta(['message' => 'Artist updated successfully!'])
-//            ->respond(200, [], JSON_PRETTY_PRINT);
+        $response = empty($request->is_preview) ? [
+            'data' => $result,
+            'meta' => [
+                'message' => 'Artists ' . $artists->implode(',', 'name') . ' successfully uploaded!'
+            ]
+        ] : $result;
+
+        return response()->json($response);
     }
 }

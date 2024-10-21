@@ -7,7 +7,7 @@ use App\Containers\MusicSection\Album\Data\Repositories\AlbumRepository;
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\File;
 
 class UpdateOrCreateAlbumTask extends Task
 {
@@ -20,7 +20,9 @@ class UpdateOrCreateAlbumTask extends Task
     public function run(Artist $artist, CreateAlbumDto $dto): Album
     {
         if ($dto->image) {
-            $dto->image = $this->uploadAlbumCoverTask->run($dto->image, $dto->name, $artist->id);
+            $image = new File($dto->image);
+
+            $dto->image = $this->uploadAlbumCoverTask->run($image, $dto->name, $artist->id);
         }
 
         return $this->albumRepository->updateOrCreate($dto);

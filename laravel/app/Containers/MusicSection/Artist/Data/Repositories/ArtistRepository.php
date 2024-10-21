@@ -44,4 +44,16 @@ class ArtistRepository
 
         return $artist;
     }
+
+    /**
+     * Synchronize albums for artist
+     *
+     * @param Artist $artist
+     * @param array $albumIds
+     * @return array
+     */
+    public function syncAlbumsWithoutDetaching(Artist $artist, array $albumIds): array
+    {
+        return $artist->albums()->syncWithoutDetaching($albumIds);
+    }
 }

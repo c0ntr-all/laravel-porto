@@ -3,7 +3,7 @@
 namespace App\Containers\MusicSection\Upload\Data\Repositories;
 
 use App\Containers\MusicSection\Upload\Data\DTO\CreateMusicUploadHistoryDto;
-use App\Containers\MusicSection\UploadHistory\Models\MusicUploadHistory;
+use App\Containers\MusicSection\Upload\Models\MusicUploadHistory;
 
 class MusicUploadHistoryRepository
 {

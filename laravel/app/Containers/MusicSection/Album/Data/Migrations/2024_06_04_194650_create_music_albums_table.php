@@ -25,9 +25,10 @@ return new class extends Migration
             $table->longText('description')
                   ->nullable()
                   ->default(NULL);
-            $table->string('edition')
+            $table->json('attributes')
                   ->nullable()
-                  ->default(NULL);
+                  ->default(NULL)
+                  ->comment('Тонкая информация об альбоме');
             $table->date('date')
                   ->nullable()
                   ->default(NULL);

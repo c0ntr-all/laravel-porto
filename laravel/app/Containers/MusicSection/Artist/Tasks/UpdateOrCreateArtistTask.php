@@ -6,6 +6,7 @@ use App\Containers\MusicSection\Artist\Data\DTO\CreateArtistDto;
 use App\Containers\MusicSection\Artist\Data\Repositories\ArtistRepository;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\Tasks\Task as ParentTask;
+use Illuminate\Http\File;
 
 class UpdateOrCreateArtistTask extends ParentTask
 {
@@ -23,7 +24,9 @@ class UpdateOrCreateArtistTask extends ParentTask
     public function run(CreateArtistDto $dto): Artist
     {
         if ($dto->image) {
-            $dto->image = $this->uploadArtistCoverTask->run($dto->image, $dto->name, $dto->name);
+            $image = new File($dto->image);
+
+            $dto->image = $this->uploadArtistCoverTask->run($image, $dto->name, $dto->name);
         }
 
         return $this->repository->updateOrCreate($dto);

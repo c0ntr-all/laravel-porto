@@ -13,7 +13,7 @@ class GetAlbumAction
 
     public function handle(Album $album): Album
     {
-        return $album;
+        return $album->load(['media']);
     }
 
     public function asController(Album $album): JsonResponse
@@ -21,6 +21,7 @@ class GetAlbumAction
         $album = $this->handle($album);
 
         return fractal($album, new AlbumTransformer())
+            ->parseIncludes(['media'])
             ->withResourceName('albums')
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

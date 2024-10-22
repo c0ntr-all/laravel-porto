@@ -2,8 +2,10 @@
 
 namespace App\Containers\GallerySection\Album\Models;
 
+use App\Containers\GallerySection\Media\Models\Media;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 
@@ -11,11 +13,10 @@ use Illuminate\Support\Carbon;
  * App\Containers\GallerySection\Album\Models
  *
  * @property int $id
- * @property int $parent_id
+ * @property int $user_id
  * @property string $name
  * @property string $description
  * @property string|null $image
- * @property string $path
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $full_image
@@ -45,4 +46,9 @@ class Album extends Model
     protected $table = 'gallery_albums';
 
     protected $guarded = [];
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(Media::class);
+    }
 }

@@ -8,7 +8,6 @@ use App\Containers\MusicSection\Upload\Tasks\UploadMusicTask;
 use App\Containers\MusicSection\Upload\UI\API\Requests\UploadRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UploadMusicAction

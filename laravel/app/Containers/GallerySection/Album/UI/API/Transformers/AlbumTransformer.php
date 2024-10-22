@@ -2,9 +2,11 @@
 
 namespace App\Containers\GallerySection\Album\UI\API\Transformers;
 
+use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Media\UI\API\Transformers\MediaTransformer;
 use League\Fractal\Resource\Collection;
+use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
 /**
@@ -13,7 +15,7 @@ use League\Fractal\TransformerAbstract;
 class AlbumTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'media'
+        'media', 'user'
     ];
 
     public function transform(Album $album): array
@@ -25,6 +27,11 @@ class AlbumTransformer extends TransformerAbstract
             'image' => $album->full_image,
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function includeUser(Album $album): Item
+    {
+        return $this->item($album->user, new UserTransformer(), 'user');
     }
 
     public function includeMedia(Album $album): Collection

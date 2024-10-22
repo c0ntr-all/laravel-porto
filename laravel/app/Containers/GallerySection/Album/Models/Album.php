@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Album\Models;
 
+use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Media\Models\Media;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,8 @@ use Illuminate\Support\Carbon;
  */
 class Album extends Model
 {
-    use HasImage;
+    use HasImage,
+        HasUser;
 
     protected $table = 'gallery_albums';
 

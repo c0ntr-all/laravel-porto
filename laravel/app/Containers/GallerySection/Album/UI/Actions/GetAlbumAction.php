@@ -21,7 +21,7 @@ class GetAlbumAction
         $album = $this->handle($album);
 
         return fractal($album, new AlbumTransformer())
-            ->parseIncludes(['media'])
+            ->parseIncludes(['media', 'user'])
             ->withResourceName('albums')
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

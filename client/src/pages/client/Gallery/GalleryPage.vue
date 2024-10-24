@@ -2,11 +2,11 @@
   <q-card class="content-container q-mb-md" flat>
     <q-card-section class="content-container__section">
       <div class="row q-gutter-md">
-        <q-card v-for="media in mediaList" :key="media.id" class="album-card col-2">
-          <q-img :src="media.image" :alt="media.name" :height="'100%'">
+        <q-card v-for="album in albums" :key="album.id" class="album-card col-2">
+          <q-img :src="album.image" :alt="album.name" :height="'100%'">
             <div class="absolute-bottom text-h6">
-              <router-link :to="`/gallery/albums/${media.id}`" class="album-card__link">
-                {{ media.name }}
+              <router-link :to="`/gallery/albums/${album.id}`" class="album-card__link">
+                {{ album.name }}
               </router-link>
             </div>
           </q-img>
@@ -17,15 +17,60 @@
 </template>
 
 <script lang="ts" setup>
-const mediaList = [{
-  id: 1,
-  image: 'https://img.freepik.com/free-photo/3d-rendering-hydraulic-elements_23-2149333332.jpg',
-  name: 'test'
-}, {
-  id: 2,
-  image: 'https://img.freepik.com/free-photo/top-view-kettle-with-tea-with-cinnamon-fresh-black-tea-dark-background-color-table-morning-breakfast-coffee-photo-meal-egg-food_140725-157622.jpg',
-  name: 'test 2'
-}]
+import { onMounted, ref } from 'vue'
+import { api } from 'src/boot/axios'
+import { getIncluded, handleApiError } from 'src/utils/jsonapi'
+import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
+import { IIncludeItem, IRelationshipData } from 'src/components/types'
+
+interface IResponseAlbum {
+  type: string
+  id: string
+  attributes: {
+    name: string
+    image: string
+    description: string | null
+    created_at: string
+  }
+  relationships: {
+    media: {
+      data: IRelationshipData[]
+    }
+  }
+}
+
+interface IGetAlbumsApiResponse {
+  data: IResponseAlbum[],
+  included: IIncludeItem[]
+}
+
+const albums = ref<IAlbum[]>()
+const loading = ref(true)
+
+const getAlbums = async (): Promise<void> => {
+  await api.get<IGetAlbumsApiResponse>('v1/gallery/albums')
+    .then(response => {
+      albums.value = response.data.data.map((responseAlbum: IResponseAlbum) => {
+        return {
+          id: responseAlbum.id,
+          ...responseAlbum.attributes,
+          relationships: {
+            media: getIncluded<IMediaItem>('media', responseAlbum.relationships, response.data.included) as {
+              data: IMediaItem[]
+            }
+          }
+        }
+      })
+    }).catch(error => {
+      handleApiError(error)
+    }).finally(() => {
+      loading.value = false
+    })
+}
+
+onMounted(() => {
+  getAlbums()
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,6 +1,7 @@
 <template>
   <q-card class="media-card col-2">
     <q-img
+      class="media-card__image"
       :src="media.path"
       :alt="media.name"
       :height="'100%'"
@@ -10,14 +11,21 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { MediaItem } from 'src/components/client/Gallery/types'
+import { IMediaItem } from 'src/components/client/Gallery/types'
 
 const props = defineProps<{
-  media: MediaItem,
+  media: IMediaItem,
 }>()
 const media = ref(props.media)
 </script>
 
 <style lang="scss" scoped>
-
+.media-card {
+  &:hover {
+    cursor: pointer;
+  }
+  &__image {
+    max-height: 176px;
+  }
+}
 </style>

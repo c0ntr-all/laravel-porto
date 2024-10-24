@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [{
     alias: '/task-manager'
   }, {
     path: '/music',
-    component: () => import('layouts/MusicLayout.vue'),
+    component: () => import('layouts/PageLayout.vue'),
     meta: {
       title: 'Music',
       icon: 'music_note',
@@ -84,6 +84,25 @@ const routes: RouteRecordRaw[] = [{
       meta: {
         title: 'Playlists'
       }
+    }]
+  }, {
+    path: '/gallery',
+    component: () => import('layouts/PageLayout.vue'),
+    meta: {
+      title: 'Gallery',
+      icon: 'collections',
+      menu: true
+    },
+    children: [{
+      path: '/gallery',
+      component: () => import('pages/client/Gallery/GalleryPage.vue'),
+      name: 'gallery',
+      props: true
+    }, {
+      path: '/gallery/albums/:id',
+      component: () => import('pages/client/Gallery/AlbumPage.vue'),
+      name: 'gallery-album',
+      props: true
     }]
   }, {
     path: '/admin/music',

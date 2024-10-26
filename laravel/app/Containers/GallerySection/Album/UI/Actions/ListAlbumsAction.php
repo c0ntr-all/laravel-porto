@@ -26,11 +26,12 @@ class ListAlbumsAction
 
     public function asController(ListAlbumsRequest $request): JsonResponse
     {
-        $album = $this->handle();
+        $albums = $this->handle();
 
-        return fractal($album, new AlbumTransformer())
+        return fractal($albums, new AlbumTransformer())
             ->parseIncludes(['user'])
             ->withResourceName('albums')
+            ->addMeta(['count' => $albums->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -1,19 +1,24 @@
 <template>
-  <q-card class="content-container q-mb-md" flat>
-    <q-card-section class="content-container__section">
-      <div class="row q-gutter-md">
-        <q-card v-for="album in albums" :key="album.id" class="album-card col-2">
-          <q-img :src="album.image" :alt="album.name" :height="'100%'">
-            <div class="absolute-bottom text-h6">
-              <router-link :to="`/gallery/albums/${album.id}`" class="album-card__link">
-                {{ album.name }}
-              </router-link>
-            </div>
-          </q-img>
-        </q-card>
-      </div>
-    </q-card-section>
-  </q-card>
+  <template v-if="albums">
+    <q-card class="content-container q-mb-md" flat>
+      <q-card-section class="content-container__section">
+        <div class="row q-gutter-md">
+          <q-card v-for="album in albums" :key="album.id" class="album-card col-2">
+            <q-img :src="album.image" :alt="album.name" :height="'100%'">
+              <div class="absolute-bottom text-h6">
+                <router-link :to="`/gallery/albums/${album.id}`" class="album-card__link">
+                  {{ album.name }}
+                </router-link>
+              </div>
+            </q-img>
+          </q-card>
+        </div>
+      </q-card-section>
+    </q-card>
+  </template>
+  <template v-else>
+    <GalleryPageSkeleton/>
+  </template>
 </template>
 
 <script lang="ts" setup>
@@ -22,6 +27,7 @@ import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
 import { IIncludeItem, IRelationshipData } from 'src/components/types'
+import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
 
 interface IResponseAlbum {
   type: string

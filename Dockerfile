@@ -1,38 +1,34 @@
+# Dockerfile
 FROM php:8.3-fpm
 
-WORKDIR /var/www/
-
-COPY laravel/composer.lock laravel/composer.json /var/www/
-
+# Установка зависимостей
 RUN apt-get update && apt-get install -y \
-  build-essential \
-  libpng-dev \
-  libjpeg62-turbo-dev \
-  libfreetype6-dev \
-  locales \
-  zip \
-  jpegoptim optipng pngquant gifsicle \
-  vim \
-  unzip \
-  git \
-  curl \
-  libpq-dev \
-  libonig-dev \
-  libzip-dev
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo_mysql
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Установка Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
+# Настройка рабочей директории
+WORKDIR /var/www/laravel
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Копируем все файлы проекта
+COPY ./laravel /var/www/laravel
 
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
+# Настройка прав доступа
+RUN chown -R www-data:www-data /var/www/laravel \
+    && chmod -R 755 /var/www/laravel
 
-COPY . /var/www
-COPY --chown=www:www . /var/www
+# Установка переменных окружения
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1" \
+    PHP_OPCACHE_MEMORY_CONSUMPTION="128"
 
-USER www
-
+# Экспонируем порт для доступа
 EXPOSE 9000
-CMD ["php-fpm"]

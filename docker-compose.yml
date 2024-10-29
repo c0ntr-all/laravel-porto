@@ -1,57 +1,64 @@
+version: '3.8'
+
 services:
-    laravel.home_portal:
+    app:
         build:
             context: .
             dockerfile: Dockerfile
-        container_name: laravel.home_portal_v2
-        restart: unless-stopped
-        tty: true
-        environment:
-            SERVICE_NAME: laravel.home_portal_v2
-            SERVICE_TAGS: dev
-        working_dir: /var/www
+        container_name: php-app
+        volumes:
+            - ./laravel:/var/www/laravel
         networks:
-            - laravel.home_portal_v2-network
+            - app-network
+        environment:
+            - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
+            - PHP_OPCACHE_MEMORY_CONSUMPTION=128
         depends_on:
             - mysql
             - redis
+
     mysql:
         image: mysql:8.2
-        volumes:
-            - ./mysql:/var/lib/mysql
-        container_name: mysql
-        restart: unless-stopped
-        tty: true
+        container_name: mysql-db
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root_password
+            MYSQL_DATABASE: home_portal_v2
+            MYSQL_USER: app_user
+            MYSQL_PASSWORD: app_password
         ports:
             - "3306:3306"
-        environment:
-            SERVICE_TAGS: dev
-            SERVICE_NAME: mysql
-            MYSQL_ROOT_PASSWORD: root
-        networks:
-            - laravel.home_portal_v2-network
-    webserver:
-        image: nginx:alpine
-        container_name: webserver
-        restart: unless-stopped
-        tty: true
-        ports:
-            - "80:80"
-            - "443:443"
         volumes:
-            - /home/username/unreal_serg:/var/www
-            - ./nginx/conf.d:/etc/nginx/conf.d
+            - mysql_data:/var/lib/mysql
         networks:
-            - laravel.home_portal_v2-network
-        depends_on:
-            - laravel.home_portal_v2
+            - app-network
+
     redis:
-        image: redis:7.0
-        container_name: redis
+        image: redis:alpine
+        container_name: redis-cache
+        restart: always
         ports:
             - "6379:6379"
         networks:
-            - laravel.home_portal_v2-network
+            - app-network
+
+    nginx:
+        image: nginx:alpine
+        container_name: nginx-web
+        restart: always
+        ports:
+            - "80:80"
+        volumes:
+            - ./laravel:/var/www/laravel
+            - ./docker/nginx/conf.d:/etc/nginx/conf.d
+        networks:
+            - app-network
+        depends_on:
+            - app
+
+volumes:
+    mysql_data:
+
 networks:
-    laravel.home_portal-network:
+    app-network:
         driver: bridge

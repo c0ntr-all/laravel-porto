@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -35,7 +36,7 @@ class EventServiceProvider extends ServiceProvider
         AlbumType::observe(AlbumTypeObserver::class);
 
         // Initialize cache if not exists
-        if (!Cache::has('album_types')) {
+        if (!Cache::has('album_types') && Schema::hasTable((new AlbumType())->getTable())) {
             Cache::put('album_types', AlbumType::all(), now()->addDay());
         }
     }

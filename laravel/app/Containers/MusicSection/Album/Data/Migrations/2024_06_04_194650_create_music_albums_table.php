@@ -29,6 +29,9 @@ return new class extends Migration
                   ->nullable()
                   ->default(NULL)
                   ->comment('Тонкая информация об альбоме');
+            $table->string('edition')
+                  ->nullable()
+                  ->default(NULL);
             $table->date('date')
                   ->nullable()
                   ->default(NULL);

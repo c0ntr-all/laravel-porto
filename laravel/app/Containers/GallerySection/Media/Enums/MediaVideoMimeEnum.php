@@ -4,10 +4,11 @@ namespace App\Containers\GallerySection\Media\Enums;
 
 use App\Ship\Enums\Traits\Arrayable;
 
-enum MediaTypeEnum: string
+enum MediaVideoMimeEnum: string
 {
     use Arrayable;
 
-    case PHOTO = 'image';
-    case VIDEO = 'video';
+    case AVI = 'avi';
+    case MP4 = 'mp4';
+    case MKV = 'mkv';
 }

@@ -123,4 +123,5 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'windows_images_root_folder' => env('WINDOWS_IMAGES_ROOT_FOLDER', 'F:\\Images\\'),
 ];

@@ -5,8 +5,8 @@ namespace App\Containers\GallerySection\Media\Tasks;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Media\Data\DTO\CreateMediaDto;
 use App\Containers\GallerySection\Media\Data\Repositories\MediaRepository;
+use App\Containers\GallerySection\Media\Models\Media;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Database\Eloquent\Collection;
 
 class CreateMediaInAlbumTask extends Task
 {
@@ -16,7 +16,7 @@ class CreateMediaInAlbumTask extends Task
     {
     }
 
-    public function run(Album $album, CreateMediaDto $createMediaDto): Collection
+    public function run(Album $album, CreateMediaDto $createMediaDto): Media
     {
         return $this->mediaRepository->create($album, $createMediaDto);
     }

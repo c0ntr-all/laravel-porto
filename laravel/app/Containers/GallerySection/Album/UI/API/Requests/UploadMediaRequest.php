@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Album\UI\API\Requests;
 
+use App\Containers\GallerySection\Media\Rules\ValidateMediaExistence;
 use App\Containers\GallerySection\Media\Rules\ValidateMediaExtension;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,9 +26,8 @@ class UploadMediaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'media_names' => 'required|array',
-            'media_names.*' => ['required', 'string', new ValidateMediaExtension()],
-            'media_folder' => 'required|string'
+            'media_paths' => 'required|array',
+            'media_paths.*' => ['required', 'string', new ValidateMediaExtension(), new ValidateMediaExistence()]
         ];
     }
 }

@@ -7,8 +7,7 @@ use Spatie\LaravelData\Data;
 class UploadMediaDto extends Data
 {
     public int $user_id;
-    public array $media_names;
-    public string $media_folder_path;
+    public array $media_paths;
     public function __construct()
     {
     }

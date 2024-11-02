@@ -35,6 +35,7 @@ class UploadMediaToAlbumAction
 
         return fractal($media, new MediaTransformer())
             ->withResourceName('media')
+            ->addMeta('Media successfully uploaded!')
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Containers\GallerySection\Media\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
-use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
@@ -22,7 +21,7 @@ use Illuminate\Support\Carbon;
  * @property boolean $is_web
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read string $full_image
+ * @property-read string $full_path
  * @method static Builder|Media newModelQuery()
  * @method static Builder|Media newQuery()
  * @method static Builder|Media onlyTrashed()
@@ -44,8 +43,7 @@ use Illuminate\Support\Carbon;
  */
 class Media extends Model
 {
-    use HasImage,
-        HasUser;
+    use HasUser;
 
     protected $table = 'gallery_media';
 
@@ -54,5 +52,10 @@ class Media extends Model
     public function album(): BelongsTo
     {
         return $this->belongsTo(Album::class);
+    }
+
+    public function getFullPathAttribute(): string
+    {
+        return !$this->is_web ? url('') . '/windows/media/' . $this->path : $this->path;
     }
 }

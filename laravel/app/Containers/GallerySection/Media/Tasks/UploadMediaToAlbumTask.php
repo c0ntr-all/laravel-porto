@@ -20,14 +20,14 @@ class UploadMediaToAlbumTask extends Task
     //todo: It might be better to insert all the entries at once by raw query
     public function run(Album $album, UploadMediaDto $uploadMediaDto): Collection
     {
-        $folderPath = rtrim(rtrim($uploadMediaDto->media_folder_path, '\\'), '/');
+        $windowsImagesRootFolder = config('app.windows_images_root_folder');
 
         $result = collect();
-        foreach($uploadMediaDto->media_names as $name) {
+        foreach($uploadMediaDto->media_paths as $path) {
             $createMediaDto = CreateMediaDto::from([
                 'user_id' => $uploadMediaDto->user_id,
-                'type' => $this->defineMediaTypeTask->run($name),
-                'path' => $folderPath . '\\' . $name,
+                'type' => $this->defineMediaTypeTask->run($path),
+                'path' => str_replace($windowsImagesRootFolder, '', $path),
                 'is_web' => false
             ]);
 

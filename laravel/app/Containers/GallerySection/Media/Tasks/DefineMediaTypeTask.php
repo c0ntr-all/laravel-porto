@@ -10,14 +10,14 @@ class DefineMediaTypeTask extends Task
 {
     public function run(string $name): ?string
     {
-        $basename = pathinfo($name);
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
 
-        if ($basename['extension']) {
-            return match($basename['extension']) {
-                implode(',', MediaImageMimeEnum::toArray()) => 'image',
-                implode(',', MediaVideoMimeEnum::toArray()) => 'video',
-                default => null
-            };
+        if ($extension) {
+            $imageMimeTypes = MediaImageMimeEnum::toArray();
+            $videoMimeTypes = MediaVideoMimeEnum::toArray();
+
+            return in_array($extension, $imageMimeTypes, true) ? 'image' :
+                (in_array($extension, $videoMimeTypes, true) ? 'video' : null);
         }
 
         return null;

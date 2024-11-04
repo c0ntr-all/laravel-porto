@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\GallerySection\Album\UI\API\Requests;
+namespace App\Containers\GallerySection\Media\UI\API\Requests;
 
 use App\Containers\GallerySection\Media\Rules\ValidateMediaExistence;
 use App\Containers\GallerySection\Media\Rules\ValidateMediaExtension;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadMediaRequest extends FormRequest
+class UploadMediaFromWindowsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,9 +25,17 @@ class UploadMediaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $windowsImagesRootFolder = config('app.windows_images_root_folder');
+
         return [
-            'media_paths' => 'required|array',
-            'media_paths.*' => ['required', 'string', new ValidateMediaExtension(), new ValidateMediaExistence()]
+            'paths' => 'required|array',
+            'paths.*' => [
+                'required',
+                'string',
+                'starts_with:' . $windowsImagesRootFolder,
+                new ValidateMediaExtension(),
+                new ValidateMediaExistence()
+            ]
         ];
     }
 }

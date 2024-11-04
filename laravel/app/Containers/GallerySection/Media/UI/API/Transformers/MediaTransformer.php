@@ -15,7 +15,7 @@ class MediaTransformer extends TransformerAbstract
         return [
             'id' => $media->id,
             'type' => $media->type,
-            'is_web' => $media->is_web,
+            'source' => $media->source,
             'path' => $media->full_path,
             'description' => $media->description,
             'created_at' => $media->created_at->format('Y-m-d H:i:s'),

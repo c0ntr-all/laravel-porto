@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use App\Containers\GallerySection\Media\Enums\MediaSourceEnum;
 use App\Containers\GallerySection\Media\Enums\MediaTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -18,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('album_id');
             $table->enum('type', MediaTypeEnum::toArray());
             $table->string('path');
-            $table->boolean('is_web');
+            $table->enum('source', MediaSourceEnum::toArray());
             $table->longText('description')
                   ->nullable()
                   ->default(NULL);

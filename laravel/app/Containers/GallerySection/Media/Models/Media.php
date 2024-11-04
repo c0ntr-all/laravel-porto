@@ -4,6 +4,7 @@ namespace App\Containers\GallerySection\Media\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
+use App\Containers\GallerySection\Media\Enums\MediaSourceEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
@@ -18,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $type
  * @property string $path
  * @property string $description
- * @property boolean $is_web
+ * @property string $source
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $full_path
@@ -56,6 +57,9 @@ class Media extends Model
 
     public function getFullPathAttribute(): string
     {
-        return !$this->is_web ? url('') . '/windows/media/' . $this->path : $this->path;
+        return match($this->source) {
+            MediaSourceEnum::WINDOWS->value => url('') . '/windows/media/' . $this->path,
+            MediaSourceEnum::WEB->value, MediaSourceEnum::DEVICE->value => $this->path,
+        };
     }
 }

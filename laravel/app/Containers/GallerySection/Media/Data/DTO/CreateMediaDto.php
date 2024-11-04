@@ -12,7 +12,7 @@ class CreateMediaDto extends Data
     #[In([MediaTypeEnum::PHOTO, MediaTypeEnum::VIDEO])]
     public string $type;
     public string $path;
-    public bool $is_web;
+    public string $source;
     public ?string $description = null;
 
     public function __construct()

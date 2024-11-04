@@ -13,6 +13,7 @@ class DefineMediaTypeTask extends Task
         $extension = pathinfo($name, PATHINFO_EXTENSION);
 
         if ($extension) {
+            $extension = mb_strtolower($extension);
             $imageMimeTypes = MediaImageMimeEnum::toArray();
             $videoMimeTypes = MediaVideoMimeEnum::toArray();
 

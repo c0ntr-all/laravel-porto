@@ -59,7 +59,8 @@ class Media extends Model
     {
         return match($this->source) {
             MediaSourceEnum::WINDOWS->value => url('') . '/windows/media/' . $this->path,
-            MediaSourceEnum::WEB->value, MediaSourceEnum::DEVICE->value => $this->path,
+            MediaSourceEnum::DEVICE->value => url('') . '/storage/' . $this->path,
+            MediaSourceEnum::WEB->value => $this->path
         };
     }
 }

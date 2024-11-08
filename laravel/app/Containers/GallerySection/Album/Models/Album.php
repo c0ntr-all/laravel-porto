@@ -48,6 +48,9 @@ class Album extends Model
     protected $table = 'gallery_albums';
 
     protected $guarded = [];
+    protected $casts = [
+        'id' => 'string'
+    ];
 
     public function media(): HasMany
     {

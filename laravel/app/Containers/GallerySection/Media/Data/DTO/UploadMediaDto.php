@@ -2,12 +2,13 @@
 
 namespace App\Containers\GallerySection\Media\Data\DTO;
 
+use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Data;
 
 class UploadMediaDto extends Data
 {
     public int $user_id;
-    public array $files;
+    public UploadedFile $file;
     public function __construct()
     {
     }

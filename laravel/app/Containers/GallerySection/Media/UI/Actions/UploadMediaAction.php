@@ -5,6 +5,7 @@ namespace App\Containers\GallerySection\Media\UI\Actions;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Media\Data\DTO\CreateMediaDto;
 use App\Containers\GallerySection\Media\Data\DTO\UploadMediaDto;
+use App\Containers\GallerySection\Media\Models\Media;
 use App\Containers\GallerySection\Media\Tasks\CreateMediaInAlbumTask;
 use App\Containers\GallerySection\Media\Tasks\UploadMediaTask;
 use App\Containers\GallerySection\Media\UI\API\Requests\UploadMediaRequest;
@@ -23,25 +24,19 @@ class UploadMediaAction
     {
     }
 
-    public function handle(Album $album, UploadMediaDto $uploadMediaDto): array
+    public function handle(Album $album, UploadMediaDto $uploadMediaDto): Media
     {
-        $files = $uploadMediaDto->files;
-        $result = [];
+        $file = $uploadMediaDto->file;
+        $filePath = $this->uploadMediaTask->run($file, $album->id);
 
-        foreach ($files as $file) {
-            $filePath = $this->uploadMediaTask->run($file, $album->id);
+        $createMediaDto = CreateMediaDto::from([
+            'user_id' => $uploadMediaDto->user_id,
+            'type' => 'image',
+            'path' => $filePath,
+            'source' => 'device'
+        ]);
 
-            $createMediaDto = CreateMediaDto::from([
-                'user_id' => $uploadMediaDto->user_id,
-                'type' => 'image',
-                'path' => $filePath,
-                'source' => 'device'
-            ]);
-
-            $result[] = $this->createMediaInAlbumTask->run($album, $createMediaDto);
-        }
-
-        return $result;
+        return $this->createMediaInAlbumTask->run($album, $createMediaDto);
     }
 
     public function asController(Album $album, UploadMediaRequest $request): JsonResponse

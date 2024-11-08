@@ -22,7 +22,7 @@ class UploadMediaWebTask extends Task
             'user_id' => $uploadMediaDto->user_id,
             //todo: Define media type from web
             'type' => 'image',
-            'path' => $uploadMediaDto->path,
+            'path' => $uploadMediaDto->link,
             'source' => 'web'
         ]);
 

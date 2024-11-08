@@ -7,7 +7,7 @@ use Spatie\LaravelData\Data;
 class UploadMediaFromWebDto extends Data
 {
     public int $user_id;
-    public string $path;
+    public string $link;
     public function __construct()
     {
     }

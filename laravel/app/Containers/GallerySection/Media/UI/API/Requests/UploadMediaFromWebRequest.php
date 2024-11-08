@@ -24,7 +24,7 @@ class UploadMediaFromWebRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'path' => 'required|string',
+            'link' => 'required|string',
         ];
     }
 }

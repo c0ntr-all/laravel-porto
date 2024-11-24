@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * App\Containers\GallerySection\Album\Models
  *
- * @property int $id
+ * @property string $id
  * @property int $user_id
  * @property string $name
  * @property string $description

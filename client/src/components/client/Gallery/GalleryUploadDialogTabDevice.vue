@@ -4,6 +4,7 @@
     ref="uploader"
     :url="uploadEndpoint"
     :headers="uploadHeaders"
+    @uploaded="processNewItems"
     field-name="file"
     multiple
   >
@@ -50,7 +51,13 @@
 </template>
 
 <script setup lang="ts">
-const uploadEndpoint = `${process.env.host}/v1/gallery/albums/1/media/upload`
+import { inject } from 'vue'
+import { IMediaItem } from 'src/components/client/Gallery/types'
+
+const albumId = inject<string>('albumId')
+const addMediaToAlbum = inject<{(media: IMediaItem[]): void }>('addMediaToAlbum')
+
+const uploadEndpoint = `${process.env.host}/v1/gallery/albums/${albumId}/media/upload`
 const uploadHeaders = [{
   name: 'Authorization',
   value: `Bearer ${localStorage.access_token}`
@@ -58,6 +65,16 @@ const uploadHeaders = [{
   name: 'accept',
   value: 'application/json'
 }]
+
+const processNewItems = (info: any) => {
+  const jsonResponse = JSON.parse(info.xhr.responseText)
+  if (addMediaToAlbum) {
+    addMediaToAlbum([{
+      id: jsonResponse.data.id,
+      ...jsonResponse.data.attributes
+    }])
+  }
+}
 </script>
 
 <style scoped lang="scss">

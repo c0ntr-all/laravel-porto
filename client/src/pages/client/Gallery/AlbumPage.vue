@@ -104,7 +104,6 @@ const props = defineProps<{
   id: string
 }>()
 const album = ref<IAlbum | null>(null)
-
 const total = ref(0)
 const loading = ref<boolean>(true)
 const showCarousel = ref(false)
@@ -169,7 +168,9 @@ const openCarousel = (id: string) => {
   showCarousel.value = true
 }
 
+provide('albumId', props.id)
 provide('uploadMedia', uploadMedia)
+provide('addMediaToAlbum', addMediaToAlbum)
 
 onMounted(() => {
   getAlbum(props.id)

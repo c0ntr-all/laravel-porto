@@ -23,7 +23,7 @@
             v-for="media in album.relationships.media.data"
             :key="media.id"
             :media="media"
-            @click="handleCarousel(media)"
+            @click="openCarousel(media.id)"
           />
         </div>
       </q-card-section>
@@ -74,7 +74,27 @@ interface IGetAlbumApiResponse {
   },
   included: IIncludeItem[]
 }
-interface IUploadImagesResponse {
+
+interface IResponseMediaItem {
+  id: string
+  type: string
+  attributes: {
+    type: 'photo' | 'video'
+    name: string
+    description: string
+    path: string
+  }
+}
+
+interface IUploadApiResponse {
+  data: IResponseMediaItem[]
+  meta: {
+    message: string
+  }
+}
+
+interface IWebUploadApiResponse {
+  data: IResponseMediaItem
   meta: {
     message: string
   }
@@ -83,12 +103,12 @@ interface IUploadImagesResponse {
 const props = defineProps<{
   id: string
 }>()
-const album = ref<IAlbum>()
+const album = ref<IAlbum | null>(null)
 
 const total = ref(0)
 const loading = ref<boolean>(true)
 const showCarousel = ref(false)
-const currentSlide = ref()
+const currentSlide = ref<string>('')
 
 const getAlbum = async (id: string): Promise<void> => {
   await api.get<IGetAlbumApiResponse>(`v1/gallery/albums/${id}`)
@@ -111,41 +131,45 @@ const getAlbum = async (id: string): Promise<void> => {
     })
 }
 
-const uploadImages = async (data: [] | string, type: string): Promise<void> => {
-  switch(type) {
-    case 'windows':
-      await api.post<IUploadImagesResponse>(`v1/gallery/albums/${album.value.id}/media/upload-windows`, {
-        paths: data
-      }).then(response => {
-        handleApiSuccess(response)
-      }).catch(error => {
-        handleApiError(error)
-      })
-      break
-    case 'web':
-      await api.post<IUploadImagesResponse>(`v1/gallery/albums/${album.value.id}/media/upload-web`, {
-        link: data
-      }).then(response => {
-        handleApiSuccess(response)
-      }).catch(error => {
-        handleApiError(error)
-      })
-      break
+const uploadMedia = async (data: [] | string, type: string): Promise<void> => {
+  const endpoints: Record<typeof type, string> = {
+    windows: `v1/gallery/albums/${album.value!.id}/media/upload-windows`,
+    web: `v1/gallery/albums/${album.value!.id}/media/upload-web`
   }
+
+  await api.post<IUploadApiResponse | IWebUploadApiResponse>(
+    endpoints[type],
+    type === 'windows' ? { paths: data } : { link: data }
+  ).then(response => {
+    const responseData = response.data.data
+
+    const newMedia = Array.isArray(responseData)
+      ? responseData.map(formatMediaItem)
+      : [formatMediaItem(responseData)]
+
+    addMediaToAlbum(newMedia)
+
+    handleApiSuccess(response)
+  }).catch(error => {
+    handleApiError(error)
+  })
 }
 
-const handleCarousel = (media: IMediaItem) => {
-  currentSlide.value = media.id
+const formatMediaItem = (item: IResponseMediaItem): IMediaItem => ({
+  id: item.id,
+  ...item.attributes
+})
+
+const addMediaToAlbum = (media: IMediaItem[]) => {
+  album.value?.relationships.media.data.push(...media)
+}
+
+const openCarousel = (id: string) => {
+  currentSlide.value = id
   showCarousel.value = true
 }
 
-const addNewMediaToAlbum = (data: IMediaItem[]) => {
-  if (album.value) {
-    album.value.relationships.media.data.push(...data)
-  }
-}
-
-provide('uploadImages', uploadImages)
+provide('uploadMedia', uploadMedia)
 
 onMounted(() => {
   getAlbum(props.id)

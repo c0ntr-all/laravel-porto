@@ -51,7 +51,7 @@
 import { ref } from 'vue'
 
 const emit = defineEmits<{
-  (e: 'initUpload', data: array, type: string): void
+  (e: 'initUpload', data: [], type: string): void
 }>()
 const files = ref()
 const folderPath = ref('')
@@ -61,8 +61,8 @@ const imagePreview = (image: any) => {
 }
 
 const initUpload = () => {
-  const data = files.value.map(item => {
-    return folderPath.value + '\\' + item.name
+  const data = files.value.map((file: File) => {
+    return folderPath.value + '\\' + file.name
   })
 
   emit('initUpload', data, 'windows')

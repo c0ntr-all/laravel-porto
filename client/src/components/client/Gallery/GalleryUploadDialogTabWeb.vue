@@ -23,7 +23,7 @@
 import { ref } from 'vue'
 
 const emit = defineEmits<{
-  (e: 'initUpload', data: boolean): void
+  (e: 'initUpload', data: string, type: string): void
 }>()
 const file = ref('')
 

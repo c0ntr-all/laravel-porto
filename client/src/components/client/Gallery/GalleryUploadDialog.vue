@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="show" @hide="clearModel">
+  <q-dialog v-model="show">
     <q-card class="gallery-upload" style="width: 700px; max-width: 80vw;">
       <q-tabs
         v-model="tab"
@@ -21,15 +21,15 @@
         animated
       >
         <q-tab-panel name="windows">
-          <GalleryUploadDialogTabWindows @initUpload="uploadImages" />
+          <GalleryUploadDialogTabWindows @initUpload="uploadMedia" />
         </q-tab-panel>
 
         <q-tab-panel name="web">
-          <GalleryUploadDialogTabWeb @initUpload="uploadImages" />
+          <GalleryUploadDialogTabWeb @initUpload="uploadMedia" />
         </q-tab-panel>
 
         <q-tab-panel name="upload">
-          <GalleryUploadDialogTabDevice @initUpload="uploadImages" />
+          <GalleryUploadDialogTabDevice @initUpload="uploadMedia" />
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
@@ -53,7 +53,7 @@ const props = defineProps<Props>()
 const show = ref(props.modelValue)
 const tab = ref('windows')
 
-const uploadImages = inject<{(data: [] | string, type: string): Promise<void>}>('uploadImages')
+const uploadMedia = inject<{(data: [] | string, type: string): Promise<void>}>('uploadMedia')
 
 watchEffect(() => {
   show.value = props.modelValue

@@ -112,7 +112,7 @@ export function handleApiError(error: AxiosError) {
 }
 
 export function handleApiSuccess(response: any) {
-  const message = response.data.meta.message || 'The action was done!'
+  const message = response.data?.meta?.message || 'The action was done!'
 
   Notify.create({
     type: 'positive',

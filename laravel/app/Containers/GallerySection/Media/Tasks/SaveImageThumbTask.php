@@ -6,16 +6,17 @@ use App\Ship\Helpers\ImageUpload;
 use App\Ship\Parents\Tasks\Task;
 use Illuminate\Http\UploadedFile;
 
-class UploadMediaTask extends Task
+class SaveImageThumbTask extends Task
 {
-    public function run(UploadedFile $file, int $userId, string $albumID): string
+    public function run(UploadedFile $file, string $userId, string $albumID, $thumbType): string
     {
-        $filename = $file->getClientOriginalName();
+        $filename = $file->getFilename() . '_' . $thumbType . '_thumbnail';
 
         return ImageUpload::make()
                           ->setDiskName('public')
-                          ->setFolder("userfiles/{$userId}/gallery/{$albumID}")
+                          ->setFolder("userfiles/{$userId}/gallery/{$albumID}/thumbnails")
                           ->setSourceName($filename)
                           ->upload($file);
+
     }
 }

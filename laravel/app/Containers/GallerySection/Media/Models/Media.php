@@ -17,7 +17,9 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $album_id
  * @property string $type
- * @property string $path
+ * @property string $original_path
+ * @property string $list_thumb_path
+ * @property string $preview_thumb_path
  * @property string $description
  * @property string $source
  * @property Carbon|null $created_at
@@ -55,6 +57,11 @@ class Media extends Model
         return $this->belongsTo(Album::class);
     }
 
+    /**
+     * todo: It should be deleted
+     *
+     * @return string
+     */
     public function getFullPathAttribute(): string
     {
         return match($this->source) {

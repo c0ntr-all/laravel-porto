@@ -11,7 +11,9 @@ class CreateMediaDto extends Data
     public int $user_id;
     #[In([MediaTypeEnum::PHOTO, MediaTypeEnum::VIDEO])]
     public string $type;
-    public string $path;
+    public string $original_path;
+    public string $list_thumb_path;
+    public string $preview_thumb_path;
     public string $source;
     public ?string $description = null;
 

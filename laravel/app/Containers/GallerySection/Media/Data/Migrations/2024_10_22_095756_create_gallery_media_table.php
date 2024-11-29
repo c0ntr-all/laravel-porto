@@ -18,8 +18,10 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('album_id');
             $table->enum('type', MediaTypeEnum::toArray());
-            $table->string('path');
             $table->enum('source', MediaSourceEnum::toArray());
+            $table->string('original_path');
+            $table->string('list_thumb_path');
+            $table->string('preview_thumb_path');
             $table->longText('description')
                   ->nullable()
                   ->default(NULL);

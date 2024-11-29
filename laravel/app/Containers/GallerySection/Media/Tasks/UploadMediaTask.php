@@ -11,11 +11,19 @@ class UploadMediaTask extends Task
     public function run(UploadedFile $file, int $userId, string $albumID): string
     {
         $filename = $file->getClientOriginalName();
+        $filenameWithoutExtension = $this->deleteExtension($filename);
 
         return ImageUpload::make()
                           ->setDiskName('public')
                           ->setFolder("userfiles/{$userId}/gallery/{$albumID}")
-                          ->setSourceName($filename)
+                          ->setSourceName($filenameWithoutExtension)
                           ->upload($file);
+    }
+
+    private function deleteExtension(string $filename): string
+    {
+        $filenameParts = explode('.', $filename);
+
+        return $filenameParts[0];
     }
 }

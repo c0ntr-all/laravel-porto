@@ -21,15 +21,22 @@ class UploadMediaFromWindowsAction
     {
     }
 
-    public function handle(Album $album, UploadMediaFromWindowsDto $dto): Collection
+    public function handle(Album $album, UploadMediaFromWindowsDto $uploadMediaDto): Collection
     {
-        return $this->uploadMediaWindowsTask->run($album, $dto);
+        $result = collect();
+        foreach($uploadMediaDto->paths as $filePath) {
+            $savedMedia = $this->uploadMediaWindowsTask->run($album, $filePath, $uploadMediaDto->user_id);
+
+            $result->push($savedMedia);
+        }
+
+        return $result;
     }
 
     public function asController(Album $album, UploadMediaFromWindowsRequest $request): JsonResponse
     {
         $dto = UploadMediaFromWindowsDto::from($request->validated());
-        $dto->user_id = auth()->user()->id;
+        $dto->user_id = (string)auth()->user()->id;
 
         $media = $this->handle($album, $dto);
 

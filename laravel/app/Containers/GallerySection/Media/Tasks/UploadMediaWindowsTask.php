@@ -4,38 +4,43 @@ namespace App\Containers\GallerySection\Media\Tasks;
 
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Media\Data\DTO\CreateMediaDto;
-use App\Containers\GallerySection\Media\Data\DTO\UploadMediaFromWindowsDto;
+use App\Containers\GallerySection\Media\Enums\ImageThumbTypeEnum;
+use App\Containers\GallerySection\Media\Enums\MediaSourceEnum;
+use App\Containers\GallerySection\Media\Factories\ImageSourceFactory;
+use App\Containers\GallerySection\Media\Models\Media;
+use App\Containers\GallerySection\Media\Services\PathGenerationService;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Support\Collection;
 
 class UploadMediaWindowsTask extends Task
 {
+    private const string SOURCE_TYPE = MediaSourceEnum::WINDOWS->value;
+
     public function __construct(
         private readonly CreateMediaInAlbumTask $createMediaInAlbumTask,
-        private readonly DefineMediaTypeTask    $defineMediaTypeTask
+        private readonly DefineMediaTypeTask    $defineMediaTypeTask,
+        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
+        private readonly PathGenerationService $pathGenerationService
     )
     {
     }
 
-    //todo: It might be better to insert all the entries at once by raw query
-    public function run(Album $album, UploadMediaFromWindowsDto $uploadMediaDto): Collection
+    public function run(Album $album, string $filePath, string $userId): Media
     {
-        $windowsImagesRootFolder = config('app.windows_images_root_folder');
+        $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
+        $albumPath = $this->pathGenerationService->getAlbumFolderPath($userId, $album->id);
+        $thumbnails = $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
 
-        $result = collect();
-        foreach($uploadMediaDto->paths as $path) {
-            $createMediaDto = CreateMediaDto::from([
-                'user_id' => $uploadMediaDto->user_id,
-                'type' => $this->defineMediaTypeTask->run($path),
-                'path' => str_replace($windowsImagesRootFolder, '', $path),
-                'source' => 'windows'
-            ]);
+        $createMediaDto = CreateMediaDto::from([
+            'user_id' => $userId,
+            'type' => $this->defineMediaTypeTask->run($filePath),
+            'original_path' => $imageStrategy->getOriginalPath(),
+            'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
+            'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
+            'width' => $imageStrategy->getImage()->getWidth(),
+            'height' => $imageStrategy->getImage()->getHeight(),
+            'source' => self::SOURCE_TYPE,
+        ]);
 
-            $savedMedia = $this->createMediaInAlbumTask->run($album, $createMediaDto);
-
-            $result->push($savedMedia);
-        }
-
-        return $result;
+        return $this->createMediaInAlbumTask->run($album, $createMediaDto);
     }
 }

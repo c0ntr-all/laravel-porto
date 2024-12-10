@@ -16,7 +16,9 @@ class MediaTransformer extends TransformerAbstract
             'id' => $media->id,
             'type' => $media->type,
             'source' => $media->source,
-            'path' => url('') . '/storage/' . $media->list_thumb_path,
+            'original_path' => $media->full_path,
+            'list_thumb_path' => url('') . '/storage/' . $media->list_thumb_path,
+            'preview_thumb_path' => url('') . '/storage/' . $media->preview_thumb_path,
             'description' => $media->description,
             'created_at' => $media->created_at->format('Y-m-d H:i:s'),
         ];

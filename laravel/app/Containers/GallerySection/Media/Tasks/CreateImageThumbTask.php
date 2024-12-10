@@ -2,81 +2,48 @@
 
 namespace App\Containers\GallerySection\Media\Tasks;
 
+use App\Containers\GallerySection\Media\Contracts\ImageSourceContract;
 use App\Containers\GallerySection\Media\Enums\ImageThumbTypeEnum;
+use App\Containers\GallerySection\Media\Services\PathGenerationService;
 use App\Ship\Parents\Tasks\Task;
-use Exception;
-use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
-use Spatie\Image\Exceptions\CouldNotLoadImage;
-use Spatie\Image\Image;
 
 class CreateImageThumbTask extends Task
 {
+    public function __construct(
+        private readonly PathGenerationService $pathGenerationService
+    )
+    {
+    }
+
     /**
-     * @param string $pathToFile
+     * @param ImageSourceContract $imageStrategy
      * @param string $thumbType
+     * @param string $albumPath
      * @return string
-     * @throws CouldNotLoadImage
-     * @throws Exception
      */
-    public function run(string $pathToFile, string $thumbType): string
+    public function run(ImageSourceContract $imageStrategy, string $thumbType, string $albumPath): string
     {
         if (!ImageThumbTypeEnum::tryFrom($thumbType)) {
             throw new InvalidArgumentException("Invalid thumbnail type: {$thumbType}");
         }
 
-        [$width, $height] = $this->getSize($thumbType);
-        $fullPath = Storage::disk('public')->path($pathToFile);
-        $newFileName = $this->getNewFileName($fullPath, $thumbType);
-        $newFileFullPath = $this->getNewFileFullPath($fullPath, $newFileName);
+        $thumbTypeEnum = ImageThumbTypeEnum::from($thumbType);
+        [$width, $height] = $thumbTypeEnum->getSize();
 
-        Image::load($fullPath)->resize($width, $height)
-                              ->optimize()
-                              ->save($newFileFullPath);
+        $paths = $this->pathGenerationService->preparePathsForThumbnail(
+            $imageStrategy->getFullPath(),
+            $thumbType,
+            $albumPath
+        );
 
-        return $this->getNewFilePath($pathToFile, $newFileName);
+        $this->pathGenerationService->prepareFolder($paths['thumbs_folder_path']);
 
-    }
+        $imageStrategy->getImage()
+                      ->resize($width, $height)
+                      ->optimize()
+                      ->save($paths['thumb_full_path']);
 
-    private function getSize(string $thumbType): array
-    {
-        $thumbType = ImageThumbTypeEnum::from($thumbType);
-
-        return $thumbType->getSize();
-    }
-
-    private function getNewFileFullPath(string $fullPath, string $newFileName): string
-    {
-        $folder = $this->getThumbnailsFolder($fullPath);
-
-        $this->createThumbnailsFolder($folder);
-
-        return $folder . '/' . $newFileName;
-    }
-
-    private function getNewFileName(string $fullPath, string $thumbType): string
-    {
-        $info = pathinfo($fullPath);
-
-        return sprintf('%s_%s_thumbnail.%s', $info['filename'], $thumbType, $info['extension']);
-    }
-
-    private function createThumbnailsFolder(string $folder): void
-    {
-        if (!is_dir($folder)) {
-            mkdir($folder);
-        }
-    }
-
-    private function getNewFilePath(string $pathToFile, string $newFileName): string
-    {
-        $folder = $this->getThumbnailsFolder($pathToFile);
-
-        return $folder . '/' . $newFileName;
-    }
-
-    private function getThumbnailsFolder(string $fullPath): string
-    {
-        return dirname($fullPath) . '/thumbnails';
+        return $paths['thumb_path'];
     }
 }

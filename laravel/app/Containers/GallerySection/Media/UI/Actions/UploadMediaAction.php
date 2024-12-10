@@ -6,7 +6,10 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Media\Data\DTO\CreateMediaDto;
 use App\Containers\GallerySection\Media\Data\DTO\UploadMediaDto;
 use App\Containers\GallerySection\Media\Enums\ImageThumbTypeEnum;
+use App\Containers\GallerySection\Media\Enums\MediaSourceEnum;
+use App\Containers\GallerySection\Media\Factories\ImageSourceFactory;
 use App\Containers\GallerySection\Media\Models\Media;
+use App\Containers\GallerySection\Media\Services\PathGenerationService;
 use App\Containers\GallerySection\Media\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Media\Tasks\CreateMediaInAlbumTask;
 use App\Containers\GallerySection\Media\Tasks\UploadMediaTask;
@@ -19,10 +22,13 @@ class UploadMediaAction
 {
     use AsAction;
 
+    private const string SOURCE_TYPE = MediaSourceEnum::DEVICE->value;
+
     public function __construct(
         private readonly UploadMediaTask $uploadMediaTask,
         private readonly CreateMediaInAlbumTask $createMediaInAlbumTask,
-        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask
+        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
+        private readonly PathGenerationService $pathGenerationService
     )
     {
     }
@@ -30,9 +36,12 @@ class UploadMediaAction
     public function handle(Album $album, UploadMediaDto $uploadMediaDto): Media
     {
         $file = $uploadMediaDto->file;
-        $filePath = $this->uploadMediaTask->run($file, $uploadMediaDto->user_id, $album->id);
+        $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadMediaDto->user_id, $album->id);
+        $filePath = $this->uploadMediaTask->run($file, $albumPath);
 
-        $thumbnails = $this->createAllImageThumbsTask->run($filePath);
+        $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
+
+        $thumbnails = $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
 
         $createMediaDto = CreateMediaDto::from([
             'user_id' => $uploadMediaDto->user_id,
@@ -40,7 +49,9 @@ class UploadMediaAction
             'original_path' => $filePath,
             'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
             'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
-            'source' => 'device'
+            'width' => $imageStrategy->getImage()->getWidth(),
+            'height' => $imageStrategy->getImage()->getHeight(),
+            'source' => self::SOURCE_TYPE
         ]);
 
         return $this->createMediaInAlbumTask->run($album, $createMediaDto);
@@ -49,7 +60,7 @@ class UploadMediaAction
     public function asController(Album $album, UploadMediaRequest $request): JsonResponse
     {
         $uploadMediaDto = UploadMediaDto::from($request->validated());
-        $uploadMediaDto->user_id = auth()->user()->id;
+        $uploadMediaDto->user_id = (string)auth()->user()->id;
 
         $result = $this->handle($album, $uploadMediaDto);
 

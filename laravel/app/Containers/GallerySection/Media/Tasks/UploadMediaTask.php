@@ -8,14 +8,14 @@ use Illuminate\Http\UploadedFile;
 
 class UploadMediaTask extends Task
 {
-    public function run(UploadedFile $file, int $userId, string $albumID): string
+    public function run(UploadedFile $file, string $albumPath): string
     {
         $filename = $file->getClientOriginalName();
         $filenameWithoutExtension = $this->deleteExtension($filename);
 
         return ImageUpload::make()
                           ->setDiskName('public')
-                          ->setFolder("userfiles/{$userId}/gallery/{$albumID}")
+                          ->setFolder($albumPath)
                           ->setSourceName($filenameWithoutExtension)
                           ->upload($file);
     }

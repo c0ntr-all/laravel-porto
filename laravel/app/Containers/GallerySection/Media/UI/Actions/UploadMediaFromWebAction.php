@@ -29,7 +29,7 @@ class UploadMediaFromWebAction
     public function asController(Album $album, UploadMediaFromWebRequest $request): JsonResponse
     {
         $dto = UploadMediaFromWebDto::from($request->validated());
-        $dto->user_id = auth()->user()->id;
+        $dto->user_id = (string)auth()->user()->id;
 
         $media = $this->handle($album, $dto);
 

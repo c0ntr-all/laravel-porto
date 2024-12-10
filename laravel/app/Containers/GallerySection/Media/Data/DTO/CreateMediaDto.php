@@ -14,6 +14,8 @@ class CreateMediaDto extends Data
     public string $original_path;
     public string $list_thumb_path;
     public string $preview_thumb_path;
+    public int $width;
+    public int $height;
     public string $source;
     public ?string $description = null;
 

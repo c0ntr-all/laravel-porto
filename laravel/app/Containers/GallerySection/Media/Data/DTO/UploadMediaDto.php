@@ -7,7 +7,7 @@ use Spatie\LaravelData\Data;
 
 class UploadMediaDto extends Data
 {
-    public int $user_id;
+    public string $user_id;
     public UploadedFile $file;
     public function __construct()
     {

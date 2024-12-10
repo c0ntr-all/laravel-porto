@@ -58,16 +58,16 @@ class Media extends Model
     }
 
     /**
-     * todo: It should be deleted
+     * Full path from root for original path
      *
      * @return string
      */
     public function getFullPathAttribute(): string
     {
         return match($this->source) {
-            MediaSourceEnum::WINDOWS->value => url('') . '/windows/media/' . $this->path,
-            MediaSourceEnum::DEVICE->value => url('') . '/storage/' . $this->path,
-            MediaSourceEnum::WEB->value => $this->path
+            MediaSourceEnum::WINDOWS->value => url('') . '/windows/media/' . $this->original_path,
+            MediaSourceEnum::DEVICE->value => url('') . '/storage/' . $this->original_path,
+            MediaSourceEnum::WEB->value => $this->original_path
         };
     }
 }

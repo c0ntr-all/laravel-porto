@@ -23,12 +23,15 @@ class UpdateOrCreateArtistTask extends ParentTask
      */
     public function run(CreateArtistDto $dto): Artist
     {
+        $artist = $this->repository->updateOrCreate($dto);
+        $artistId = (string)$artist->id;
+
         if ($dto->image) {
             $image = new File($dto->image);
 
-            $dto->image = $this->uploadArtistCoverTask->run($image, $dto->name, $dto->name);
+            $dto->image = $this->uploadArtistCoverTask->run($image, $artistId);
         }
 
-        return $this->repository->updateOrCreate($dto);
+        return $artist;
     }
 }

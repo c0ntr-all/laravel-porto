@@ -13,15 +13,13 @@ class ImageUpload
 
     private string $folder;
     private string $diskName;
-    private string $sourceName;
+    private string $filename;
 
-    private const array BAD_SYMBOLS = [' ', '.', '/'];
-
-    public function __construct($sourceName = 'none', string $folder = 'unsorted', string $diskName = 'public')
+    public function __construct($filename = '404.jpg', string $folder = 'unsorted', string $diskName = 'public')
     {
         $this->setDiskName($diskName)
              ->setFolder($folder)
-             ->setSourceName($sourceName);
+             ->setFilename($filename);
     }
 
     /**
@@ -47,12 +45,12 @@ class ImageUpload
     }
 
     /**
-     * @param string $sourceName
+     * @param string $filename
      * @return $this
      */
-    public function setSourceName(string $sourceName): self
+    public function setFilename(string $filename): self
     {
-        $this->sourceName = $sourceName;
+        $this->filename = $filename;
 
         return $this;
     }
@@ -65,9 +63,7 @@ class ImageUpload
      */
     public function upload($image): string
     {
-        $filename = $this->generateFileName($this->sourceName, $image->extension());
-
-        return Storage::disk('public')->putFileAs($this->folder, $image, $filename);
+        return Storage::disk('public')->putFileAs($this->folder, $image, $this->filename);
     }
 
     /**
@@ -79,9 +75,7 @@ class ImageUpload
      */
     public function uploadFromUrl(string $url): bool|string
     {
-        $extension = pathinfo($url, PATHINFO_EXTENSION);
-        $fileName = $this->generateFileName($this->sourceName, $extension);
-        $path = $this->folder . '/' . $fileName;
+        $path = $this->folder . '/' . $this->filename;
 
         $image = Http::withHeaders([
             'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36',
@@ -92,10 +86,5 @@ class ImageUpload
         $isSaved = Storage::disk($this->diskName)->put($path, $image);
 
         return $isSaved ? $path : false;
-    }
-
-    private function generateFileName(string $sourceName, string $extension): string
-    {
-        return str_replace(static::BAD_SYMBOLS, '_', strtolower($sourceName)) . '_' . uniqid() . '.' . $extension;
     }
 }

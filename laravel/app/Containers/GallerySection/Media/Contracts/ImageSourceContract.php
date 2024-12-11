@@ -2,7 +2,7 @@
 
 namespace App\Containers\GallerySection\Media\Contracts;
 
-use App\Ship\Parents\Image\Image;
+use Intervention\Image\Image;
 
 interface ImageSourceContract
 {

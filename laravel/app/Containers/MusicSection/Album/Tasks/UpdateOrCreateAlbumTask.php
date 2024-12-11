@@ -22,7 +22,7 @@ class UpdateOrCreateAlbumTask extends Task
         if ($dto->image) {
             $image = new File($dto->image);
 
-            $dto->image = $this->uploadAlbumCoverTask->run($image, $dto->name, $artist->id);
+            $dto->image = $this->uploadAlbumCoverTask->run($image, $artist->id);
         }
 
         return $this->albumRepository->updateOrCreate($dto);

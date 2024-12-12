@@ -12,23 +12,25 @@ use App\Containers\GallerySection\Media\Models\Media;
 use App\Containers\GallerySection\Media\Services\PathGenerationService;
 use App\Containers\GallerySection\Media\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Media\Tasks\CreateMediaInAlbumTask;
-use App\Containers\GallerySection\Media\Tasks\UploadMediaTask;
+use App\Containers\GallerySection\Media\Tasks\DefineMediaTypeTask;
+use App\Containers\GallerySection\Media\Tasks\SaveUploadedImageTask;
 use App\Containers\GallerySection\Media\UI\API\Requests\UploadMediaRequest;
 use App\Containers\GallerySection\Media\UI\API\Transformers\MediaTransformer;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class UploadMediaAction
+class UploadMediaFromDeviceAction
 {
     use AsAction;
 
     private const string SOURCE_TYPE = MediaSourceEnum::DEVICE->value;
 
     public function __construct(
-        private readonly UploadMediaTask $uploadMediaTask,
-        private readonly CreateMediaInAlbumTask $createMediaInAlbumTask,
+        private readonly SaveUploadedImageTask    $saveUploadedImageTask,
+        private readonly CreateMediaInAlbumTask   $createMediaInAlbumTask,
+        private readonly DefineMediaTypeTask    $defineMediaTypeTask,
         private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
-        private readonly PathGenerationService $pathGenerationService
+        private readonly PathGenerationService    $pathGenerationService
     )
     {
     }
@@ -37,7 +39,7 @@ class UploadMediaAction
     {
         $file = $uploadMediaDto->file;
         $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadMediaDto->user_id, $album->id);
-        $filePath = $this->uploadMediaTask->run($file, $albumPath);
+        $filePath = $this->saveUploadedImageTask->run($file, $albumPath);
 
         $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
 
@@ -45,12 +47,12 @@ class UploadMediaAction
 
         $createMediaDto = CreateMediaDto::from([
             'user_id' => $uploadMediaDto->user_id,
-            'type' => 'image',
+            'type' => $this->defineMediaTypeTask->run($filePath),
             'original_path' => $filePath,
             'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
             'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
-            'width' => $imageStrategy->getImage()->getWidth(),
-            'height' => $imageStrategy->getImage()->getHeight(),
+            'width' => $imageStrategy->getImage()->width(),
+            'height' => $imageStrategy->getImage()->height(),
             'source' => self::SOURCE_TYPE
         ]);
 

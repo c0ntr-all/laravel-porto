@@ -16,7 +16,7 @@ class StringHelper {
         $filename = uniqid(bin2hex(random_bytes(8)));
 
         if ($extension) {
-            $filename .= $extension;
+            $filename .= '.' . $extension;
         }
 
         return $filename;

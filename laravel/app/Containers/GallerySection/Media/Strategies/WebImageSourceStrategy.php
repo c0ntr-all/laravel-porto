@@ -2,6 +2,6 @@
 
 namespace App\Containers\GallerySection\Media\Strategies;
 
-readonly class WebImageSourceSourceStrategy extends AbstractImageSourceStrategy
+class WebImageSourceStrategy extends AbstractImageSourceStrategy
 {
 }

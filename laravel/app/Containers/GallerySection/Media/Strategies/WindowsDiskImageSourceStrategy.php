@@ -2,7 +2,7 @@
 
 namespace App\Containers\GallerySection\Media\Strategies;
 
-readonly class WindowsDiskImageSourceSourceStrategy extends AbstractImageSourceStrategy
+class WindowsDiskImageSourceStrategy extends AbstractImageSourceStrategy
 {
     public function getOriginalPath(): string
     {

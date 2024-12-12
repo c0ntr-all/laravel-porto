@@ -3,8 +3,15 @@
 namespace App\Containers\GallerySection\Media\UI\Actions;
 
 use App\Containers\GallerySection\Album\Models\Album;
+use App\Containers\GallerySection\Media\Data\DTO\CreateMediaDto;
 use App\Containers\GallerySection\Media\Data\DTO\UploadMediaFromWindowsDto;
-use App\Containers\GallerySection\Media\Tasks\UploadMediaWindowsTask;
+use App\Containers\GallerySection\Media\Enums\ImageThumbTypeEnum;
+use App\Containers\GallerySection\Media\Enums\MediaSourceEnum;
+use App\Containers\GallerySection\Media\Factories\ImageSourceFactory;
+use App\Containers\GallerySection\Media\Services\PathGenerationService;
+use App\Containers\GallerySection\Media\Tasks\CreateAllImageThumbsTask;
+use App\Containers\GallerySection\Media\Tasks\CreateMediaInAlbumTask;
+use App\Containers\GallerySection\Media\Tasks\DefineMediaTypeTask;
 use App\Containers\GallerySection\Media\UI\API\Requests\UploadMediaFromWindowsRequest;
 use App\Containers\GallerySection\Media\UI\API\Transformers\MediaTransformer;
 use Illuminate\Http\JsonResponse;
@@ -15,8 +22,13 @@ class UploadMediaFromWindowsAction
 {
     use AsAction;
 
+    private const string SOURCE_TYPE = MediaSourceEnum::WINDOWS->value;
+
     public function __construct(
-        private readonly UploadMediaWindowsTask $uploadMediaWindowsTask
+        private readonly CreateMediaInAlbumTask $createMediaInAlbumTask,
+        private readonly DefineMediaTypeTask    $defineMediaTypeTask,
+        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
+        private readonly PathGenerationService $pathGenerationService
     )
     {
     }
@@ -25,7 +37,22 @@ class UploadMediaFromWindowsAction
     {
         $result = collect();
         foreach($uploadMediaDto->paths as $filePath) {
-            $savedMedia = $this->uploadMediaWindowsTask->run($album, $filePath, $uploadMediaDto->user_id);
+            $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
+            $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadMediaDto->user_id, $album->id);
+            $thumbnails = $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
+
+            $createMediaDto = CreateMediaDto::from([
+                'user_id' => $uploadMediaDto->user_id,
+                'type' => $this->defineMediaTypeTask->run($filePath),
+                'original_path' => $imageStrategy->getOriginalPath(),
+                'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
+                'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
+                'width' => $imageStrategy->getImage()->width(),
+                'height' => $imageStrategy->getImage()->height(),
+                'source' => self::SOURCE_TYPE,
+            ]);
+
+            $savedMedia = $this->createMediaInAlbumTask->run($album, $createMediaDto);
 
             $result->push($savedMedia);
         }

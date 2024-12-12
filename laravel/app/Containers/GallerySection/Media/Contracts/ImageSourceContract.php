@@ -14,6 +14,13 @@ interface ImageSourceContract
     public function getFullPath(): string;
 
     /**
+     * Get the path, that stored in DB like original
+     *
+     * @return string
+     */
+    public function getOriginalPath(): string;
+
+    /**
      * Get the real image object
      *
      * @return Image
@@ -21,9 +28,23 @@ interface ImageSourceContract
     public function getImage(): Image;
 
     /**
-     * Get the path, that stored in DB like original
+     * Get filename with extension like f4344de45.jpg
      *
      * @return string
      */
-    public function getOriginalPath(): string;
+    public function getBasename(): string;
+
+    /**
+     * Get filename without extension like f4344de45
+     *
+     * @return string
+     */
+    public function getFilename(): string;
+
+    /**
+     * Get the extension of uploading image
+     *
+     * @return string
+     */
+    public function getExtension(): string;
 }

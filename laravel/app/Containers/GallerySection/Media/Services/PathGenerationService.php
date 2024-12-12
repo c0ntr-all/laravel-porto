@@ -3,6 +3,7 @@
 namespace App\Containers\GallerySection\Media\Services;
 
 use Illuminate\Support\Facades\Storage;
+use JetBrains\PhpStorm\ArrayShape;
 
 class PathGenerationService
 {
@@ -11,9 +12,10 @@ class PathGenerationService
         return "userfiles/{$userId}/gallery/{$albumId}";
     }
 
-    public function preparePathsForThumbnail(string $fullPath, string $thumbType, string $albumPath): array
+    #[ArrayShape(['thumb_path' => 'string', 'thumbs_folder_path' => 'string', 'thumb_full_path' => 'string'])]
+    public function preparePathsForThumbnail(string $albumPath, string $basename, string $thumbType): array
     {
-        $info = pathinfo($fullPath);
+        $info = pathinfo($basename);
 
         $thumbName = sprintf('%s_%s_thumbnail.%s', $info['filename'], $thumbType, $info['extension']);
         $thumbsFolderPath = "{$albumPath}/thumbnails";

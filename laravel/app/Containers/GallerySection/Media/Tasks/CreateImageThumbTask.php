@@ -10,6 +10,8 @@ use InvalidArgumentException;
 
 class CreateImageThumbTask extends Task
 {
+    private const int DEFAULT_QUALITY = 75;
+
     public function __construct(
         private readonly PathGenerationService $pathGenerationService
     )
@@ -32,17 +34,16 @@ class CreateImageThumbTask extends Task
         [$width, $height] = $thumbTypeEnum->getSize();
 
         $paths = $this->pathGenerationService->preparePathsForThumbnail(
-            $imageStrategy->getFullPath(),
+            $albumPath,
+            $imageStrategy->getBasename(),
             $thumbType,
-            $albumPath
         );
 
         $this->pathGenerationService->prepareFolder($paths['thumbs_folder_path']);
 
         $imageStrategy->getImage()
                       ->resize($width, $height)
-                      ->optimize()
-                      ->save($paths['thumb_full_path']);
+                      ->save($paths['thumb_full_path'], self::DEFAULT_QUALITY);
 
         return $paths['thumb_path'];
     }

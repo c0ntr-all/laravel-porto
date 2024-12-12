@@ -4,7 +4,7 @@ namespace App\Containers\GallerySection\Media\Strategies;
 
 use Illuminate\Support\Facades\Storage;
 
-readonly class LaravelDiskImageSourceSourceStrategy extends AbstractImageSourceStrategy
+class LaravelDiskImageSourceStrategy extends AbstractImageSourceStrategy
 {
     public function getFullPath(): string
     {

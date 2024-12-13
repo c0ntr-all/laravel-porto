@@ -21,17 +21,6 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
         private readonly string $path
     )
     {
-        $info = pathinfo($this->path);
-
-        if (array_key_exists('extension', $info)) {
-            $this->extension = strtolower($info['extension']);
-        }
-        if (array_key_exists('filename', $info)) {
-            $this->filename = strtolower($info['filename']);
-        }
-        if (array_key_exists('basename', $info)) {
-            $this->basename = strtolower($info['basename']);
-        }
     }
 
     public function getFullPath(): string {
@@ -45,7 +34,13 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     public function getImage(): Image
     {
         if (!$this->image) {
-            $this->prepareImage();
+            $fullPath = $this->getFullPath();
+
+            try {
+                $this->image = ImageFacade::read($fullPath);
+            } catch (NotReadableException $e) {
+                throw new \RuntimeException("Unable to load image from path: {$fullPath}");
+            }
         }
 
         return $this->image;
@@ -57,7 +52,10 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     public function getBasename(): string
     {
         if (!$this->basename) {
-            $this->prepareBasename();
+            $filename = $this->getFilename();
+            $extension = $this->getExtension();
+
+            $this->basename = "{$filename}.{$extension}";
         }
 
         return $this->basename;
@@ -69,7 +67,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     public function getFilename(): string
     {
         if (!$this->filename) {
-            $this->prepareFilename();
+            $this->filename = StringHelper::generateFilename();
         }
 
         return $this->filename;
@@ -78,57 +76,14 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     public function getExtension(): string
     {
         if (!$this->extension) {
-            $this->prepareExtension();
-        }
-
-        return $this->extension;
-    }
-
-    private function prepareImage(): void
-    {
-        if (!$this->image) {
-            $fullPath = $this->getFullPath();
-
-            try {
-                $this->image = ImageFacade::read($fullPath);
-            } catch (NotReadableException $e) {
-                throw new \RuntimeException("Unable to load image from path: {$fullPath}");
-            }
-        }
-    }
-
-    /**
-     * @throws RandomException
-     */
-    private function prepareBasename(): void
-    {
-        if (!$this->basename) {
-            $filename = $this->getFilename();
-            $extension = $this->getExtension();
-
-            $this->basename = "{$filename}.{$extension}";
-        }
-    }
-
-    /**
-     * @throws RandomException
-     */
-    private function prepareFilename(): void
-    {
-        if (!$this->filename) {
-            $this->filename = StringHelper::generateFilename();
-        }
-    }
-
-    private function prepareExtension(): void
-    {
-        if (!$this->extension) {
-            $mime = $this->image->exif()->get('FILE.MimeType');
+            $mime = $this->getImage()->exif()->get('FILE.MimeType');
             if (!$mime) {
                 throw new \RuntimeException('Unable to determine MIME type of the image.');
             }
 
             $this->extension = MediaImageMimeEnum::getExtensionByMime($mime);
         }
+
+        return $this->extension;
     }
 }

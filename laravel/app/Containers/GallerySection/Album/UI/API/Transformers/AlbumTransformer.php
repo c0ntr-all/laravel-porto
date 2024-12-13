@@ -4,7 +4,7 @@ namespace App\Containers\GallerySection\Album\UI\API\Transformers;
 
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\GallerySection\Album\Models\Album;
-use App\Containers\GallerySection\Media\UI\API\Transformers\MediaTransformer;
+use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
@@ -15,7 +15,7 @@ use League\Fractal\TransformerAbstract;
 class AlbumTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'media', 'user'
+        'images', 'user'
     ];
 
     public function transform(Album $album): array
@@ -34,9 +34,9 @@ class AlbumTransformer extends TransformerAbstract
         return $this->item($album->user, new UserTransformer(), 'user');
     }
 
-    public function includeMedia(Album $album): Collection
+    public function includeImages(Album $album): Collection
     {
-        return $this->collection($album->media, new MediaTransformer(), 'media')
-                    ->setMeta(['count' => $album->media->count()]);
+        return $this->collection($album->images, new ImageTransformer(), 'images')
+                    ->setMeta(['count' => $album->images->count()]);
     }
 }

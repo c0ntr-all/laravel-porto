@@ -10,8 +10,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
+    locales \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql
+    && docker-php-ext-install gd pdo_mysql \
+    && locale-gen ru_RU.UTF-8 \
+    && update-locale LANG=ru_RU.UTF-8
 
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -28,7 +31,10 @@ RUN chown -R www-data:www-data /var/www/laravel \
 
 # Установка переменных окружения
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1" \
-    PHP_OPCACHE_MEMORY_CONSUMPTION="128"
+    PHP_OPCACHE_MEMORY_CONSUMPTION="128" \
+    LANG=ru_RU.UTF-8 \
+    LANGUAGE=ru_RU:ru \
+    LC_ALL=ru_RU.UTF-8
 
 # Экспонируем порт для доступа
 EXPOSE 9000

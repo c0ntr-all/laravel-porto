@@ -49,7 +49,7 @@ services:
         volumes:
             - ./laravel:/var/www/laravel
             - ./docker/nginx/conf.d:/etc/nginx/conf.d
-            - F:/Images:/usr/share/nginx/photos:ro
+            - F:/Images:/usr/share/nginx/images:ro
         networks:
             - app-network
         depends_on:

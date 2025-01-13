@@ -1,10 +1,43 @@
 <template>
   <div class="text task-item">
-    <a
-      href="#"
+    <div
       class="task-item__link"
+      :class="{'task-item__link--finished': isFinished}"
       @click.prevent="showModal = true"
-    >{{ task.title }}</a>
+    >
+      {{ task.title }}
+    </div>
+    <div class="task-item__actions-button">
+      <q-btn
+        icon="more_horiz"
+        label=""
+        size="sm"
+        dense
+        flat
+      >
+        <q-menu cover auto-close anchor="bottom left" self="top start">
+          <q-list dense>
+            <q-item
+              @click="finishTask"
+              clickable
+            >
+              <q-item-section>
+                <div class="flex items-center">
+                  <q-icon
+                    size="xs"
+                    name="check_circle"
+                    flat
+                    round
+                    dense
+                  />
+                  <div class="q-ml-xs">Finish</div>
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+    </div>
   </div>
 
   <q-dialog v-model="showModal">
@@ -89,7 +122,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
@@ -123,8 +156,8 @@ interface IUpdateTaskResponse {
     id: string
     attributes: {
       title: string
-      completed: boolean
       content?: string
+      finished_at: string
       created_at?: string
       comments?: IComment[]
     }
@@ -139,6 +172,9 @@ const showModal = ref(false)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const task = ref<ITask>(props.task)
+const isFinished = computed(() => {
+  return task.value.finished_at !== null
+})
 const comment = ref<string>('')
 
 const updateTitle = (value: string) => {
@@ -162,6 +198,17 @@ const updateContent = (value: string) => {
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
     contentPopup.value?.cancel()
+  })
+}
+
+const finishTask = () => {
+  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+    is_finished: true
+  }).then(response => {
+    task.value.finished_at = response.data.data.attributes.finished_at
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
   })
 }
 
@@ -197,7 +244,7 @@ const createComment = () => {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .task {
   &__header {
     display: flex;
@@ -222,6 +269,7 @@ const createComment = () => {
   }
 
   &-item {
+    position: relative;
     word-break: break-all;
     margin-bottom: 8px;
 
@@ -234,11 +282,39 @@ const createComment = () => {
       border-radius: 3px;
       box-shadow: 0 1px 0 #091e4240;
 
+      &--finished {
+        background-color: #c9ebbf;
+
+        &:hover {
+          background-color: #b0cfa7;
+        }
+      }
+
       &:hover {
+        cursor: pointer;
         background-color: #f4f5f7;
         border-bottom-color: #091e4240;
       }
     }
+    &__actions-button {
+      visibility: hidden;
+      position: absolute;
+      top: 50%;
+      margin-top: -11px;
+      right: 2px;
+      z-index: 10;
+
+      button {
+        border-radius: 50%;
+      }
+    }
+
+    &:hover {
+      .task-item__actions-button {
+        visibility: visible;
+      }
+    }
+
   }
 }
 

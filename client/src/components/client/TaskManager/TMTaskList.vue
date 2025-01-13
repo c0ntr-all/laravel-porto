@@ -6,7 +6,7 @@
     <q-separator dark/>
     <q-card-section class="list__body">
       <template v-if="tasks.length">
-        <AppTask
+        <TMTask
           v-for="task in tasks"
           :key="task.id"
           :task="task"
@@ -55,7 +55,7 @@
 import { ref, nextTick } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-import AppTask from 'src/components/client/TaskManager/TMTask.vue'
+import TMTask from 'src/components/client/TaskManager/TMTask.vue'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { IComment, ITask, ITaskList } from 'src/components/client/TaskManager/types'
 
@@ -113,7 +113,7 @@ const createTask = async (): Promise<void> => {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
       content: response.data.data.attributes.content,
-      completed: false,
+      finished_at: null,
       relationships: {
         comments: {
           data: [],

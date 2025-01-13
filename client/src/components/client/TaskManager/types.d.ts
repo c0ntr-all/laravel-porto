@@ -16,7 +16,7 @@ export interface ITask {
   id: string
   title: string
   content?: string
-  completed: boolean
+  finished_at: string | null
   relationships: {
     comments: {
       data: IComment[],

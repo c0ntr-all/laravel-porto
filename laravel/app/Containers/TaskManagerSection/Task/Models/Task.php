@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $list_id
  * @property string $title
  * @property string|null $content
+ * @property \Illuminate\Support\Carbon|null $finished_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
@@ -42,9 +43,14 @@ class Task extends Model
         'task_list_id',
         'title',
         'content',
+        'finished_at',
         'created_at',
         'updated_at',
         'deleted_at',
+    ];
+
+    protected $casts = [
+        'finished_at' => 'datetime'
     ];
 
     public function taskList(): BelongsTo

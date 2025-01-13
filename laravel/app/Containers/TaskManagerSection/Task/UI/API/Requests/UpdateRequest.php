@@ -27,6 +27,7 @@ class UpdateRequest extends FormRequest
             'task_list_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
             'title' => 'sometimes|string|max:30',
             'content' => 'sometimes|max:1000',
+            'is_finished' => 'sometimes|boolean',
         ];
     }
 }

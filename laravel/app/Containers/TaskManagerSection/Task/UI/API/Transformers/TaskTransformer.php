@@ -19,6 +19,7 @@ class TaskTransformer extends TransformerAbstract
             'id' => $task->id,
             'title' => $task->title,
             'content' => $task->content,
+            'finished_at' => $task->finished_at?->format('Y-m-d H:i:s'),
             'created_at' => $task->created_at->format('Y-m-d H:i:s'),
         ];
     }

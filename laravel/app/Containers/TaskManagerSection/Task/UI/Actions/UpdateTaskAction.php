@@ -8,6 +8,7 @@ use App\Containers\TaskManagerSection\Task\Tasks\UpdateTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\UpdateRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UpdateTaskAction
@@ -28,6 +29,7 @@ class UpdateTaskAction
     public function asController(Task $task, UpdateRequest $request): JsonResponse
     {
         $dto = TaskUpdateData::from($request->validated());
+        $dto->finished_at = $request->is_finished ? Carbon::now() : null;
 
         $task = $this->handle($task, $dto);
 

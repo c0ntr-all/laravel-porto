@@ -2,7 +2,7 @@
 
 namespace App\Containers\TaskManagerSection\TaskList\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class TaskListUpdateData extends Data
 {

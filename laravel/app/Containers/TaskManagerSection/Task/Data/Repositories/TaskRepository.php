@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Containers\TaskManagerSection\Task\Data\Repositories;
 
@@ -24,7 +24,7 @@ class TaskRepository
      */
     public function updateTask(Task $task, TaskUpdateData $dto): Task
     {
-        $task->update($dto->toArray());
+        $task->update($dto->toUpdatableArray());
 
         return $task;
     }

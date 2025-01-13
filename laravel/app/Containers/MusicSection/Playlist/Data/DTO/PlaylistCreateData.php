@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Playlist\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class PlaylistCreateData extends Data
 {

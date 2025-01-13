@@ -2,7 +2,7 @@
 
 namespace App\Containers\AppSection\Comment\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class CommentCreateData extends Data
 {

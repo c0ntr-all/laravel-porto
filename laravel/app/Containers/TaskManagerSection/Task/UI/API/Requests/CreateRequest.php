@@ -25,7 +25,7 @@ class CreateRequest extends FormRequest
     {
         return [
             'task_list_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
-            'title' => 'sometimes|string|max:30',
+            'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:1000',
         ];
     }

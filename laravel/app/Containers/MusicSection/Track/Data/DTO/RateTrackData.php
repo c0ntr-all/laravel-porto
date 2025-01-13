@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Track\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class RateTrackData extends Data
 {

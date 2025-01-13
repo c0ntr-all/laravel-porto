@@ -2,7 +2,7 @@
 
 namespace App\Containers\GallerySection\Image\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class UploadImageFromWebDto extends Data
 {

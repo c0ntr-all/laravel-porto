@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Tag\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class TagCreateData extends Data
 {

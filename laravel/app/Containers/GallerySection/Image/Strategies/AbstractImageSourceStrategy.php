@@ -21,6 +21,14 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
         private readonly string $path
     )
     {
+        if (!$this->extension) {
+            $ext = pathinfo($this->path, PATHINFO_EXTENSION);
+            $mimes = ImageMimeEnum::toArray();
+
+            if (in_array($mimes, $ext)) {
+                $this->extension = $ext;
+            }
+        }
     }
 
     public function getFullPath(): string {

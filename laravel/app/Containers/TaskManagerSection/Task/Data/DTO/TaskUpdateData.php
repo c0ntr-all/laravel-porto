@@ -2,13 +2,13 @@
 
 namespace App\Containers\TaskManagerSection\Task\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class TaskUpdateData extends Data
 {
-    public ?int $task_list_id = null;
-    public string $title;
-    public ?string $content = null;
+    public ?int $task_list_id;
+    public ?string $title;
+    public ?string $content;
 
     public function __construct(
     ) {

@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Artist\Data\DTO;
 
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class CreateArtistDto extends Data
 {

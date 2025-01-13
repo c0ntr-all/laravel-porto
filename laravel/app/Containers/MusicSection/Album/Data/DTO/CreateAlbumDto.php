@@ -4,7 +4,7 @@ namespace App\Containers\MusicSection\Album\Data\DTO;
 
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class CreateAlbumDto extends Data
 {

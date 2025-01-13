@@ -3,7 +3,7 @@
 namespace App\Containers\GallerySection\Image\Data\DTO;
 
 use Illuminate\Http\UploadedFile;
-use Spatie\LaravelData\Data;
+use App\Ship\Parents\DTO\Data;
 
 class UploadImageFromDeviceDto extends Data
 {

@@ -24,7 +24,7 @@ class TaskRepository
      */
     public function updateTask(Task $task, TaskUpdateData $dto): Task
     {
-        $task->update($dto->toUpdatableArray());
+        $task->update($dto->toUpdatableArray(['finished_at']));
 
         return $task;
     }

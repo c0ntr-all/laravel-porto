@@ -18,6 +18,7 @@
         <q-menu cover auto-close anchor="bottom left" self="top start">
           <q-list dense>
             <q-item
+              v-if="!isFinished"
               @click="finishTask"
               clickable
             >
@@ -25,12 +26,47 @@
                 <div class="flex items-center">
                   <q-icon
                     size="xs"
-                    name="check_circle"
+                    name="done"
                     flat
                     round
                     dense
                   />
                   <div class="q-ml-xs">Finish</div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-else
+              @click="unFinishTask"
+              clickable
+            >
+              <q-item-section>
+                <div class="flex items-center">
+                  <q-icon
+                    size="xs"
+                    name="remove_done"
+                    flat
+                    round
+                    dense
+                  />
+                  <div class="q-ml-xs">Unfinish</div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              @click="deleteTask"
+              clickable
+            >
+              <q-item-section>
+                <div class="flex items-center">
+                  <q-icon
+                    size="xs"
+                    name="delete"
+                    flat
+                    round
+                    dense
+                  />
+                  <div class="q-ml-xs">Delete</div>
                 </div>
               </q-item-section>
             </q-item>
@@ -167,6 +203,12 @@ interface IUpdateTaskResponse {
   }
 }
 
+interface IDeleteTaskResponse {
+  meta: {
+    message?: string
+  }
+}
+
 const props = defineProps<{ task: ITask }>()
 const showModal = ref(false)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
@@ -210,6 +252,28 @@ const finishTask = () => {
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })
+}
+
+const unFinishTask = () => {
+  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+    is_finished: false
+  }).then(response => {
+    task.value.finished_at = response.data.data.attributes.finished_at
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
+  })
+}
+
+const deleteTask = () => {
+  api.delete<IDeleteTaskResponse>(`v1/task-manager/tasks/${task.value.id}`)
+    .then(response => {
+      handleApiSuccess(response)
+      contentPopup.value?.set()
+    }).catch((error: AxiosError<{ message: string }>) => {
+      handleApiError(error)
+      contentPopup.value?.cancel()
+    })
 }
 
 const createComment = () => {
@@ -282,18 +346,18 @@ const createComment = () => {
       border-radius: 3px;
       box-shadow: 0 1px 0 #091e4240;
 
+      &:hover {
+        cursor: pointer;
+        background-color: #f4f5f7;
+        border-bottom-color: #091e4240;
+      }
+
       &--finished {
         background-color: #c9ebbf;
 
         &:hover {
           background-color: #b0cfa7;
         }
-      }
-
-      &:hover {
-        cursor: pointer;
-        background-color: #f4f5f7;
-        border-bottom-color: #091e4240;
       }
     }
     &__actions-button {

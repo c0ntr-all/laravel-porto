@@ -105,54 +105,105 @@
 
       <q-separator dark/>
 
-      <q-card-section>
-        <div v-if="task.content" v-html="task.content" class="task__content"></div>
-        <div v-else class="task__content text-grey-5">There is no description!</div>
-        <q-popup-edit
-          ref="contentPopup"
-          v-model="task.content"
-          v-slot="scope"
-        >
-          <q-editor
-            v-model="scope.value"
-            min-height="5rem"
-            autofocus
-            @keyup.enter.stop
-          />
-          <div class="q-pt-sm">
-            <q-btn @click="updateContent(scope.value)" label="Save" color="primary" flat/>
-            <q-btn @click="contentPopup?.cancel()" label="Cancel" color="primary" flat/>
-          </div>
-        </q-popup-edit>
-      </q-card-section>
+      <div class="row">
+        <div class="col-9">
+          <q-card-section>
+            <div v-if="task.content" v-html="task.content" class="task__content"></div>
+            <div v-else class="task__content text-grey-5">There is no description!</div>
+            <q-popup-edit
+              ref="contentPopup"
+              v-model="task.content"
+              v-slot="scope"
+            >
+              <q-editor
+                v-model="scope.value"
+                min-height="5rem"
+                autofocus
+                @keyup.enter.stop
+              />
+              <div class="q-pt-sm">
+                <q-btn @click="updateContent(scope.value)" label="Save" color="primary" flat/>
+                <q-btn @click="contentPopup?.cancel()" label="Cancel" color="primary" flat/>
+              </div>
+            </q-popup-edit>
+          </q-card-section>
 
-      <q-card-section>
-        <div class="comments">
-          <div class="text-h6 q-mb-sm">Comments</div>
-          <div class="comments-form q-mb-md">
-            <q-input
-              v-model="comment"
-              class="q-mb-sm"
-              placeholder="Write a comment..."
-              filled
-              autogrow
-            />
-            <q-btn @click="createComment" color="primary" label="Send"/>
-          </div>
-          <div v-if="task?.relationships?.comments?.data" class="comments-list column q-gutter-sm">
-            <q-card v-for="comment in task.relationships.comments.data" :key="comment.id">
-              <q-card-section class="flex justify-between">
-                <span>{{ comment.relationships.user.data.name }}</span>
-                <time class="time">{{ comment.created_at }}</time>
-              </q-card-section>
-              <q-card-section>
-                {{ comment.content }}
-              </q-card-section>
-            </q-card>
-          </div>
-          <p v-else class="text-grey-5">There are no comments!</p>
+          <q-card-section>
+            <div class="text-h6 q-mb-sm">Check list</div>
+            <q-list bordered separator>
+              <q-item v-for="item in checklistItems" :key="item.id" dense>
+                <q-item-section avatar>
+                  <q-checkbox
+                    v-model="selectedItems"
+                    :val="item.id"
+                    @click="sendToServer()"
+                  />
+                </q-item-section>
+                <q-item-section>{{ item.label }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
+
+          <q-card-section>
+            <div class="comments">
+              <div class="text-h6 q-mb-sm">Comments</div>
+              <div class="comments-form q-mb-md">
+                <q-input
+                  v-model="comment"
+                  class="q-mb-sm"
+                  placeholder="Write a comment..."
+                  filled
+                  autogrow
+                />
+                <q-btn @click="createComment" color="primary" label="Send"/>
+              </div>
+              <div v-if="task?.relationships?.comments?.data" class="comments-list column q-gutter-sm">
+                <q-card v-for="comment in task.relationships.comments.data" :key="comment.id">
+                  <q-card-section class="flex justify-between">
+                    <span>{{ comment.relationships.user.data.name }}</span>
+                    <time class="time">{{ comment.created_at }}</time>
+                  </q-card-section>
+                  <q-card-section>
+                    {{ comment.content }}
+                  </q-card-section>
+                </q-card>
+              </div>
+              <p v-else class="text-grey-5">There are no comments!</p>
+            </div>
+          </q-card-section>
         </div>
-      </q-card-section>
+        <div class="col-3">
+          <q-card-section class="column">
+            <q-btn
+              label="Add checklist"
+              color="secondary"
+              dense
+              unelevated
+            >
+              <q-menu>
+                <div class="row no-wrap q-pa-md">
+                  <div style="width: 250px">
+                    <div class="text-h6 q-mb-md">Adding checklist</div>
+                    <q-input
+                      v-model="checklistName"
+                      label="Checklist name"
+                      class="q-mb-sm"
+                      outlined
+                      dense
+                    />
+                    <q-btn
+                      class="q-mb-xs"
+                      label="Save"
+                      color="primary"
+                      unelevated
+                    />
+                  </div>
+                </div>
+              </q-menu>
+            </q-btn>
+          </q-card-section>
+        </div>
+      </div>
     </q-card>
   </q-dialog>
 </template>
@@ -218,6 +269,15 @@ const isFinished = computed(() => {
   return task.value.finished_at !== null
 })
 const comment = ref<string>('')
+let checklistName = ref('Check list')
+const checklistItems = ref([
+  { id: 1, label: "Задача 1" },
+  { id: 2, label: "Задача 2" }
+]);
+const selectedItems = ref<number[]>([])
+const sendToServer = () => {
+  console.log(selectedItems.value)
+};
 
 const updateTitle = (value: string) => {
   api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {

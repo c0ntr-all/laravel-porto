@@ -11,7 +11,7 @@ class ChecklistItemRepository
      * @param ChecklistItemCreateData $dto
      * @return mixed
      */
-    public function createTask(ChecklistItemCreateData $dto): ChecklistItem
+    public function create(ChecklistItemCreateData $dto): ChecklistItem
     {
         return ChecklistItem::create($dto->toArray());
     }

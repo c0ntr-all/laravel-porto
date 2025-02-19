@@ -4,7 +4,7 @@ namespace App\Containers\TaskManagerSection\Checklist\UI\API\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateRequest extends FormRequest
+class ChecklistItemCreateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\TaskManagerSection\Task\UI\API\Requests;
+namespace App\Containers\TaskManagerSection\Checklist\UI\API\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateRequest extends FormRequest
+class CreateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,10 +24,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'task_list_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
-            'title' => 'sometimes|string|max:70',
-            'content' => 'sometimes|max:1000',
-            'is_finished' => 'sometimes|boolean',
+            'title' => 'required|string|max:70'
         ];
     }
 }

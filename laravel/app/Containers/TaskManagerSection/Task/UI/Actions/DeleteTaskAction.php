@@ -5,7 +5,7 @@ namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\DeleteTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\DeleteRequest;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteTaskAction
@@ -23,10 +23,14 @@ class DeleteTaskAction
         return $this->deleteTaskTask->run($task);
     }
 
-    public function asController(Task $task, DeleteRequest $request): Response
+    public function asController(Task $task, DeleteRequest $request): JsonResponse
     {
         $this->handle($task);
 
-        return response()->noContent();
+        return response()->json(
+            ['meta' => [
+                'message' => 'Task successfully deleted!'
+            ]]
+        );
     }
 }

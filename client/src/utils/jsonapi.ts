@@ -36,6 +36,65 @@ interface IResolvedItem<T> {
   meta?: Record<string, any>
 }
 
+const processRelation = (mainRelData, included) => {
+  const includedItem = included.find((include: IncludedItem) => {
+    return include.type === mainRelData.type && include.id === mainRelData.id
+  }) as IncludedItem
+
+  const fullRelation = {
+    id: includedItem.id,
+    ...includedItem.attributes
+  }
+
+  if (includedItem.relationships) {
+    for (const relName in includedItem.relationships) {
+      const relData = includedItem.relationships[relName]
+
+      if (!fullRelation.relationships) {
+        fullRelation.relationships = {}
+      }
+
+      fullRelation.relationships[relName] = processRawRelation(relData, included)
+    }
+  }
+
+  return fullRelation
+}
+
+const processRawRelation = (mainRelData, included) => {
+  if (Array.isArray(mainRelData.data) ) {
+    if (mainRelData.data.length > 0) {
+      mainRelData.data = mainRelData.data.map((relItem: IRelationshipItem) => {
+        return processRelation(relItem, included)
+      })
+
+      return mainRelData
+    } else {
+      return mainRelData
+    }
+  } else {
+    return {
+      data: processRelation(mainRelData.data, included)
+    }
+  }
+}
+
+export function normalizeApiResponse(responseData) {
+  responseData.data = responseData.data.map((item) => {
+    if (item.relationships) {
+      for (const relName in item.relationships) {
+        const relData = item.relationships[relName]
+
+        item.relationships[relName] = processRawRelation(relData, responseData.included)
+      }
+    }
+
+    return item
+  })
+
+  return responseData
+}
+
 export function getIncluded<T>(
   chain: string,
   relationships: any,

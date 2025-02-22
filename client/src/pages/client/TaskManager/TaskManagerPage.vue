@@ -38,7 +38,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
+import { getIncluded, handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 import { ITask, ITaskList } from 'src/components/client/TaskManager/types'
@@ -158,17 +158,10 @@ const getTaskLists = async (): Promise<void> => {
   loading.value = true
   await api.get<GetListApiResponse>('v1/task-manager/task-lists')
     .then(response => {
-      taskLists.value = response.data.data.map((responseTaskList: IResponseTaskList) => {
-        return {
-          id: responseTaskList.id,
-          title: responseTaskList.attributes.title,
-          relationships: {
-            tasks: getIncluded<ITask>('tasks.comments.user', responseTaskList.relationships, response.data.included || []) as { data: ITask[] }
-          }
-        } as ITaskList
-      })
+      const normalizedResponse = normalizeApiResponse(response.data)
 
-      listsCount.value = response.data.meta.task_lists_count
+      taskLists.value = normalizedResponse.data
+      listsCount.value = response.data.meta.count
     }).catch(error => {
       handleApiError(error)
     }).finally(() => {

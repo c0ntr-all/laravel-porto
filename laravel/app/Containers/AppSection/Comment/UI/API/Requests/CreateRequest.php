@@ -26,7 +26,7 @@ class CreateRequest extends FormRequest
         return [
             'commentable_id' => 'required|numeric',
             'commentable_type' => 'required|string',
-            'content' => 'required|string|max:300'
+            'content' => 'required|string|max:1000'
         ];
     }
 }

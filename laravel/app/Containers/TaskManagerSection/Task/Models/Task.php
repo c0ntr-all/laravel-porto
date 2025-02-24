@@ -4,9 +4,11 @@ namespace App\Containers\TaskManagerSection\Task\Models;
 
 use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
+use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Tasks\Task
@@ -56,5 +58,10 @@ class Task extends Model
     public function taskList(): BelongsTo
     {
         return $this->belongsTo(TaskList::class);
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(Checklist::class);
     }
 }

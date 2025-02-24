@@ -26,7 +26,7 @@ class TaskListTransformer extends TransformerAbstract
     {
         return $this->collection($taskList->tasks, new TaskTransformer(), 'tasks')
                     ->setMeta([
-                        'tasks_count' => $taskList->tasks->count()
+                        'count' => $taskList->tasks->count()
                     ]);
     }
 }

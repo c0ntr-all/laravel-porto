@@ -1,7 +1,7 @@
 import { Notify } from 'quasar'
 import { AxiosError } from 'axios'
 
-interface IRelationshipData {
+interface IIncluded {
   type: string
   id: string
   attributes: {
@@ -9,10 +9,22 @@ interface IRelationshipData {
   }
 }
 interface IRelationshipValue {
-  data: IRelationshipData[]
+  data: IIncluded[]
 }
 interface IRelationshipItem {
   [key: string]: IRelationshipValue
+}
+interface IProcessItem {
+  id: string
+  relationships?: IRelationshipItem | undefined
+}
+interface IRawRelationItem {
+  id: string
+  type: string
+}
+interface IRawRelations {
+  data: IRawRelationItem[] | IProcessItem[]
+  meta?: any
 }
 interface IncludedItem {
   type: string
@@ -22,10 +34,13 @@ interface IncludedItem {
   }
   relationships?: IRelationshipItem
 }
-interface IProcessItem {
+interface IRawElement {
   id: string
-  [key: string]: any
-  relationships: IRelationshipItem | undefined
+  type: string
+  attributes: {
+    [key: string]: any
+  }
+  relationships?: any
 }
 interface IResolvedCollection<T> {
   data: T[]
@@ -35,20 +50,25 @@ interface IResolvedItem<T> {
   data: T
   meta?: Record<string, any>
 }
+interface IResponse {
+  data: IRawElement[]
+  included?: any
+  meta: any
+}
 
-const processRelation = (mainRelData, included) => {
+const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]) => {
   const includedItem = included.find((include: IncludedItem) => {
     return include.type === mainRelData.type && include.id === mainRelData.id
   }) as IncludedItem
 
-  const fullRelation = {
+  const fullRelation: IProcessItem = {
     id: includedItem.id,
     ...includedItem.attributes
   }
 
   if (includedItem.relationships) {
     for (const relName in includedItem.relationships) {
-      const relData = includedItem.relationships[relName]
+      const relData: IRawRelations = includedItem.relationships[relName]
 
       if (!fullRelation.relationships) {
         fullRelation.relationships = {}
@@ -61,8 +81,8 @@ const processRelation = (mainRelData, included) => {
   return fullRelation
 }
 
-const processRawRelation = (mainRelData, included) => {
-  if (Array.isArray(mainRelData.data) ) {
+const processRawRelation = (mainRelData: IRawRelations, included: IncludedItem[]) => {
+  if (Array.isArray(mainRelData.data)) {
     if (mainRelData.data.length > 0) {
       mainRelData.data = mainRelData.data.map((relItem: IRelationshipItem) => {
         return processRelation(relItem, included)
@@ -79,8 +99,8 @@ const processRawRelation = (mainRelData, included) => {
   }
 }
 
-export function normalizeApiResponse(responseData) {
-  responseData.data = responseData.data.map((item) => {
+export function normalizeApiResponse(responseData: IResponse) {
+  responseData.data = responseData.data.map((item: IRawElement) => {
     if (item.relationships) {
       for (const relName in item.relationships) {
         const relData = item.relationships[relName]

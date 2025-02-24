@@ -38,10 +38,10 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
-import { getIncluded, handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
+import { handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
-import { ITask, ITaskList } from 'src/components/client/TaskManager/types'
+import { ITaskList } from 'src/components/client/TaskManager/types'
 
 interface IResponseTaskList {
   type: string

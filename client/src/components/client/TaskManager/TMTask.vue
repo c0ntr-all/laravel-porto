@@ -128,21 +128,14 @@
             </q-popup-edit>
           </q-card-section>
 
-          <q-card-section>
-            <div class="text-h6 q-mb-sm">Check list</div>
-            <q-list bordered separator>
-              <q-item v-for="item in checklistItems" :key="item.id" dense>
-                <q-item-section avatar>
-                  <q-checkbox
-                    v-model="selectedItems"
-                    :val="item.id"
-                    @click="sendToServer()"
-                  />
-                </q-item-section>
-                <q-item-section>{{ item.label }}</q-item-section>
-              </q-item>
-            </q-list>
-          </q-card-section>
+          <template v-if="checklists.length">
+            <TMChecklist
+              v-for="checklist in checklists"
+              :key="checklist.id"
+              :checklist="checklist"
+              :task="task"
+            />
+          </template>
 
           <q-card-section>
             <div class="comments">
@@ -215,6 +208,7 @@ import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { IComment, ITask, IUser } from 'src/components/client/TaskManager/types'
 import { IIncludedItem } from 'src/components/client/Music/types'
+import TMChecklist from 'src/components/client/TaskManager/TMChecklist.vue'
 
 interface ICreateCommentResponse {
   data: {
@@ -269,15 +263,8 @@ const isFinished = computed(() => {
   return task.value.finished_at !== null
 })
 const comment = ref<string>('')
-let checklistName = ref('Check list')
-const checklistItems = ref([
-  { id: 1, label: "Задача 1" },
-  { id: 2, label: "Задача 2" }
-]);
-const selectedItems = ref<number[]>([])
-const sendToServer = () => {
-  console.log(selectedItems.value)
-};
+const checklistName = ref('Check list')
+const checklists = ref(task.value.relationships.checklists.data)
 
 const updateTitle = (value: string) => {
   api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
@@ -420,6 +407,7 @@ const createComment = () => {
         }
       }
     }
+
     &__actions-button {
       visibility: hidden;
       position: absolute;

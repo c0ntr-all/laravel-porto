@@ -1,7 +1,7 @@
 <template>
   <q-card class="list bg-grey-4">
     <q-card-section class="list__header">
-      <p>{{ list.title }}</p>
+      <p>{{ list.attributes.title }}</p>
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">
@@ -80,13 +80,17 @@ interface CreateTaskResponse {
   }
 }
 
-const props = defineProps<{ list: ITaskList }>()
+const props = defineProps<{
+  list: ITaskList
+}>()
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
 const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])
 const model = ref<{ newCardName: string }>({
   newCardName: ''
 })
+
+console.log(props.list)
 
 const openAddForm = () => {
   showAddForm.value = true

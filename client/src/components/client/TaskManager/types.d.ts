@@ -37,7 +37,7 @@ export interface ITask {
   content?: string
   finished_at: string | null
   relationships: {
-    checklists: {
+    checklists?: {
       data: IChecklist[],
       meta: {
         count: number
@@ -53,7 +53,9 @@ export interface ITask {
 }
 export interface ITaskList {
   id: string
-  title: string
+  attributes: {
+    title: string
+  }
   relationships: {
     tasks?: {
       data: ITask[]

@@ -128,7 +128,7 @@
             </q-popup-edit>
           </q-card-section>
 
-          <template v-if="checklists.length">
+          <template v-if="checklists?.length">
             <TMChecklist
               v-for="checklist in checklists"
               :key="checklist.id"
@@ -178,15 +178,16 @@
                   <div style="width: 250px">
                     <div class="text-h6 q-mb-md">Adding checklist</div>
                     <q-input
-                      v-model="checklistName"
+                      v-model="newChecklistTitle"
                       label="Checklist name"
                       class="q-mb-sm"
                       outlined
                       dense
                     />
                     <q-btn
+                      @click="createChecklist"
                       class="q-mb-xs"
-                      label="Save"
+                      label="Add"
                       color="primary"
                       unelevated
                     />
@@ -231,6 +232,21 @@ interface ICreateCommentResponse {
   }
 }
 
+interface ICreateChecklistResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      title: string
+      created_at: string
+    }
+  },
+  included: IIncludedItem[]
+  meta: {
+    message?: string
+  }
+}
+
 interface IUpdateTaskResponse {
   data: {
     type: string
@@ -263,8 +279,8 @@ const isFinished = computed(() => {
   return task.value.finished_at !== null
 })
 const comment = ref<string>('')
-const checklistName = ref('Check list')
-const checklists = ref(task.value.relationships.checklists.data)
+const newChecklistTitle = ref('Check list')
+const checklists = ref(task.value.relationships?.checklists?.data || [])
 
 const updateTitle = (value: string) => {
   api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
@@ -321,6 +337,37 @@ const deleteTask = () => {
       handleApiError(error)
       contentPopup.value?.cancel()
     })
+}
+
+const createChecklist = () => {
+  api.post<ICreateChecklistResponse>(`v1/task-manager/tasks/${task.value.id}/checklists`, {
+    title: newChecklistTitle.value,
+  }).then((response) => {
+    task.value.relationships.checklists = {
+      data: task.value?.relationships?.checklists?.data || []
+    }
+    const responseData = response.data.data
+
+    const checklist = {
+      id: responseData.id,
+      title: responseData.attributes.title,
+      created_at: responseData.attributes.created_at,
+      relationships: {
+        checklistItems: {
+          data: [],
+          meta: {
+            count: 1
+          }
+        }
+      }
+    }
+
+    checklists.value.push(checklist)
+
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
+  })
 }
 
 const createComment = () => {

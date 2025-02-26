@@ -3,7 +3,7 @@
     <div class="text-h6 q-mb-sm">{{ checklist.title }}</div>
     <template v-if="checklist.relationships.checklistItems.data.length">
       <q-list class="q-mb-md" bordered separator>
-        <q-item v-for="checklistItem in checklist.relationships.checklistItems.data" :key="checklistItem.id"
+        <q-item v-for="checklistItem in checklist?.relationships?.checklistItems?.data" :key="checklistItem.id"
                 dense>
           <q-item-section avatar>
             <q-checkbox

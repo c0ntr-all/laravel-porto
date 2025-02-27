@@ -1,10 +1,22 @@
 <template>
-  <q-card-section>
+  <q-card-section class="checklist">
     <div class="text-h6 q-mb-sm">{{ checklist.title }}</div>
+    <div class="checklist-progress">
+      <q-badge color="white" text-color="accent" :label="progressLabel" />
+      <q-linear-progress
+        size="15px"
+        :value="progress"
+        color="accent"
+        animation-speed="500"
+      />
+    </div>
     <template v-if="checklist.relationships.checklistItems.data.length">
       <q-list class="q-mb-md" bordered separator>
-        <q-item v-for="checklistItem in checklist?.relationships?.checklistItems?.data" :key="checklistItem.id"
-                dense>
+        <q-item
+          v-for="checklistItem in checklist?.relationships?.checklistItems?.data"
+          :key="checklistItem.id"
+          dense
+        >
           <q-item-section avatar>
             <q-checkbox
               v-model="selectedItems"
@@ -24,7 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-import { provide, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
@@ -54,7 +66,17 @@ const props = defineProps<{
 const checklist = ref(props.checklist)
 const activeChecklistFormId = ref<string | null>(null)
 provide('activeFormId', activeChecklistFormId)
-const selectedItems = ref<number[]>([])
+const checklistItems = ref(checklist.value.relationships.checklistItems.data)
+const selectedItems = ref(
+  checklist.value.relationships.checklistItems.data
+  .filter(item => item.finished_at !== null)
+  .map(item => item.id)
+)
+const progress = computed(() => {
+  if (checklistItems.value.length === 0) return 0
+  return selectedItems.value.length / checklistItems.value.length
+})
+const progressLabel = computed(() => (progress.value * 100) + '%')
 
 const setActiveForm = (id: string | null) => {
   activeChecklistFormId.value = id
@@ -85,5 +107,10 @@ const updateChecklistItem = () => {
 </script>
 
 <style scoped>
-
+.checklist-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
 </style>

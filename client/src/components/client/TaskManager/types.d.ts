@@ -6,7 +6,7 @@ export interface IChecklistItem {
   id: string
   title: string
   created_at: string
-  finished_at: string
+  finished_at: string | null
 }
 export interface IChecklist {
   id: string

@@ -90,8 +90,6 @@ const model = ref<{ newCardName: string }>({
   newCardName: ''
 })
 
-console.log(props.list)
-
 const openAddForm = () => {
   showAddForm.value = true
   nextTick(() => {

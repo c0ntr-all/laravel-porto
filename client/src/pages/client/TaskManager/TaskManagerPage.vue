@@ -87,7 +87,7 @@ interface GetListApiResponse {
   }
   included?: IncludedItem[]
   meta: {
-    task_lists_count: number
+    count: number
     message?: string
   }
 }
@@ -102,7 +102,7 @@ interface CreateListApiResponse {
   }
   included?: IncludedItem[]
   meta: {
-    task_lists_count: number
+    count: number
     message?: string
   }
 }

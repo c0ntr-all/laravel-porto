@@ -51,11 +51,11 @@ const emit = defineEmits<{
 const formText = ref<HTMLElement | null>(null)
 const model = ref<string | null>(null)
 const activeFormId = inject('activeFormId', ref<string | null>(null))
-const setActiveForm = inject<{(id: string | null): void}>('setActiveForm')!
+const setActiveChecklistForm = inject<{(id: string | null): void}>('setActiveChecklistForm')!
 const isActive = computed(() => activeFormId.value === props.checklistId)
 
 const openForm = () => {
-  setActiveForm(props.checklistId)
+  setActiveChecklistForm(props.checklistId)
 
   nextTick(() => {
     formText.value?.focus()
@@ -63,7 +63,7 @@ const openForm = () => {
 }
 const closeForm = () => {
   if (activeFormId.value === props.checklistId) {
-    setActiveForm(null)
+    setActiveChecklistForm(null)
   }
 }
 

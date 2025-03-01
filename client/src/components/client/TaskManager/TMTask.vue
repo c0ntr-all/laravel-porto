@@ -203,7 +203,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
@@ -281,6 +281,14 @@ const isFinished = computed(() => {
 const comment = ref<string>('')
 const newChecklistTitle = ref('Check list')
 const checklists = ref(task.value.relationships?.checklists?.data || [])
+const activeChecklistFormId = ref<string | null>(null)
+provide('activeFormId', activeChecklistFormId)
+
+// Only one form should be opened
+const setActiveChecklistForm = (id: string | null) => {
+  activeChecklistFormId.value = id
+}
+provide('setActiveChecklistForm', setActiveChecklistForm)
 
 const updateTitle = (value: string) => {
   api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {

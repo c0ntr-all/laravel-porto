@@ -37,6 +37,10 @@ class ChecklistItem extends Model
         'updated_at'
     ];
 
+    protected $casts = [
+        'finished_at' => 'datetime'
+    ];
+
     public function checklist(): BelongsTo
     {
         return $this->belongsTo(Checklist::class);

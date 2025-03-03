@@ -104,11 +104,11 @@ const createChecklistItem = async (data: any) => {
   })
 }
 
-const updateChecklistItemTitle = async (checklistItem: IChecklistItem, title: string) => {
+const updateChecklistItem = async (checklistItem: IChecklistItem, data: {title?: string, is_finished?: boolean}) => {
   return await api.patch<IUpdateChecklistItemResponse>(
     `v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}/items/${checklistItem.id}`,
     {
-    title: title
+    ...data
   }).then(response => {
     handleApiSuccess(response)
 
@@ -124,7 +124,7 @@ const updateChecklistItemTitle = async (checklistItem: IChecklistItem, title: st
     handleApiError(error)
   })
 }
-provide('updateChecklistItemTitle', updateChecklistItemTitle)
+provide('updateChecklistItem', updateChecklistItem)
 </script>
 
 <style scoped>

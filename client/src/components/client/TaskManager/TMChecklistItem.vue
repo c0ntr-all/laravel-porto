@@ -4,7 +4,7 @@
       <q-checkbox
         v-model="selectedItems"
         :val="item.id"
-        @click="updateChecklistItemStatus()"
+        @click="updateStatus(item.id)"
       />
     </q-item-section>
     <q-item-section>
@@ -56,7 +56,7 @@ const props = defineProps<{
 const checklistItem = ref(props.item)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const selectedItems = defineModel<string[]>({ required: true })
-const updateChecklistItemTitle = inject<{(checklistItem: IChecklistItem, title: string): Promise<IUpdateChecklistItemResponse>}>('updateChecklistItemTitle')!
+const updateChecklistItem = inject<{(checklistItem: IChecklistItem, data: {title?: string, is_finished?: boolean}): Promise<IUpdateChecklistItemResponse>}>('updateChecklistItem')!
 const closePopup = () => {
   if (titlePopup.value) {
     titlePopup.value.cancel()
@@ -65,7 +65,7 @@ const closePopup = () => {
 
 const updateTitle = (newTitle: string) => {
   if (newTitle !== props.item.title) {
-    updateChecklistItemTitle(props.item, newTitle)
+    updateChecklistItem(props.item, {title: newTitle})
       .then((response: IUpdateChecklistItemResponse) => {
         const responseData = response.data
         checklistItem.value.title = responseData.attributes.title
@@ -73,6 +73,20 @@ const updateTitle = (newTitle: string) => {
         closePopup()
       })
   }
+}
+
+const updateStatus = (id: string) => {
+  const status = !selectedItems.value.includes(id)
+  updateChecklistItem(props.item, {is_finished: status})
+    .catch(() => {
+      const idx = selectedItems.value.filter(item => item === id).indexOf(id)
+      if (idx) {
+        selectedItems.value.splice(idx, 1)
+      }
+    })
+    .finally(() => {
+    closePopup()
+  })
 }
 
 const updateChecklistItemStatus = () => {

@@ -24,7 +24,7 @@ class ChecklistItemUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:70',
+            'title' => 'sometimes|string|max:70',
             'is_finished' => 'sometimes|boolean',
         ];
     }

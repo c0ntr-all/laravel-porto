@@ -31,7 +31,9 @@ class UpdateChecklistItemAction
     public function asController(Task $task, Checklist $checklist, ChecklistItem $checklistItem, ChecklistItemUpdateRequest $request): JsonResponse
     {
         $dto = ChecklistItemUpdateData::from($request->validated());
-        $dto->finished_at = $request->is_finished ? Carbon::now() : null;
+        if (isset($request->is_finished)) {
+            $dto->finished_at = $request->is_finished === true ? Carbon::now() : null;
+        }
 
         $checklistItem = $this->handle($checklistItem, $dto);
 

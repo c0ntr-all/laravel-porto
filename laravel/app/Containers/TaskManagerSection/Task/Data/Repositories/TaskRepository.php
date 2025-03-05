@@ -22,9 +22,9 @@ class TaskRepository
      * @param TaskUpdateData $dto
      * @return Task
      */
-    public function updateTask(Task $task, TaskUpdateData $dto): Task
+    public function update(Task $task, TaskUpdateData $dto): Task
     {
-        $task->update($dto->toUpdatableArray(['finished_at']));
+        $task->update($dto->toArray());
 
         return $task;
     }

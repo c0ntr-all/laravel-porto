@@ -6,14 +6,15 @@ use App\Ship\Parents\DTO\Data;
 use Illuminate\Support\Carbon;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
+use Spatie\LaravelData\Optional;
 
 class TaskUpdateData extends Data
 {
-    public ?int $task_list_id;
-    public ?string $title;
-    public ?string $content;
+    public int|Optional|null $task_list_id;
+    public string|Optional|null $title;
+    public string|Optional|null $content;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]
-    public ?Carbon $finished_at;
+    public Carbon|Optional|null $finished_at;
 
     public function __construct(
     ) {

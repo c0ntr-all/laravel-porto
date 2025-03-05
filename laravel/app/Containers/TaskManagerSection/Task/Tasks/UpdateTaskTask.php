@@ -22,6 +22,6 @@ class UpdateTaskTask extends ParentTask
      */
     public function run(Task $task, TaskUpdateData $dto): Task
     {
-        return $this->taskRepository->updateTask($task, $dto);
+        return $this->taskRepository->update($task, $dto);
     }
 }

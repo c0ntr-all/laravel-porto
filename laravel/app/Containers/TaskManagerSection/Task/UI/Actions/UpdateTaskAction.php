@@ -29,7 +29,9 @@ class UpdateTaskAction
     public function asController(Task $task, UpdateRequest $request): JsonResponse
     {
         $dto = TaskUpdateData::from($request->validated());
-        $dto->finished_at = $request->is_finished ? Carbon::now() : null;
+        if (isset($request->is_finished)) {
+            $dto->finished_at = $request->is_finished === true ? Carbon::now() : null;
+        }
 
         $task = $this->handle($task, $dto);
 

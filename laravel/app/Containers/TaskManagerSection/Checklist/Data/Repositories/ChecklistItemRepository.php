@@ -24,7 +24,7 @@ class ChecklistItemRepository
      */
     public function update(ChecklistItem $checklistItem, ChecklistItemUpdateData $dto): ChecklistItem
     {
-        $checklistItem->update($dto->toUpdatableArray(['finished_at']));
+        $checklistItem->update($dto->toArray());
 
         return $checklistItem;
     }

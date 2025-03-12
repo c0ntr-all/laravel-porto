@@ -16,12 +16,12 @@ class UpdateChecklistItemTask extends ParentTask
     }
 
     /**
-     * @param ChecklistItem $task
+     * @param ChecklistItem $checklistItem
      * @param ChecklistItemUpdateData $dto
      * @return ChecklistItem
      */
-    public function run(ChecklistItem $task, ChecklistItemUpdateData $dto): ChecklistItem
+    public function run(ChecklistItem $checklistItem, ChecklistItemUpdateData $dto): ChecklistItem
     {
-        return $this->checklistItemRepository->update($task, $dto);
+        return $this->checklistItemRepository->update($checklistItem, $dto);
     }
 }

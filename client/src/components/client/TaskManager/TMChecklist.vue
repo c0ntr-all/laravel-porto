@@ -1,6 +1,26 @@
 <template>
   <q-card-section class="checklist">
-    <div class="text-h6 q-mb-sm">{{ checklist.title }}</div>
+    <div class="text-h6 q-mb-sm">
+      {{ checklist.title }}
+      <q-popup-edit
+        ref="checklistTitlePopup"
+        v-model="checklist.title"
+        v-slot="scope"
+        auto-save
+      >
+        <q-input
+          v-model="scope.value"
+          @keyup.enter="updateChecklistTitle(scope.value)"
+          dense
+          autofocus
+          counter
+        />
+        <div class="q-pt-sm">
+          <q-btn @click="updateChecklistTitle(scope.value)" label="Save" color="primary" flat/>
+          <q-btn @click="checklistTitlePopup?.cancel()" label="Cancel" color="primary" flat/>
+        </div>
+      </q-popup-edit>
+    </div>
     <div class="checklist-progress">
       <q-badge color="white" text-color="accent" :label="progressLabel" />
       <q-linear-progress
@@ -67,6 +87,21 @@ interface IUpdateChecklistItemResponse {
   }
 }
 
+interface IUpdateChecklistResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      title: string
+      created_at: string
+      updated_at: string
+    }
+  },
+  meta: {
+    message?: string
+  }
+}
+
 const props = defineProps<{
   checklist: IChecklist,
   task: ITask,
@@ -76,15 +111,15 @@ const checklist = ref(props.checklist)
 const checklistItems = ref(checklist.value.relationships.checklistItems.data)
 const selectedItems = ref(
   checklist.value.relationships.checklistItems.data
-  .filter(item => item.finished_at !== null)
-  .map(item => item.id)
+    .filter(item => item.finished_at !== null)
+    .map(item => item.id)
 )
 const progress = computed(() => {
   if (checklistItems.value.length === 0) return 0
   return Number((selectedItems.value.length / checklistItems.value.length).toFixed(2))
 })
-
 const progressLabel = computed(() => (progress.value * 100) + '%')
+const checklistTitlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 
 const createChecklistItem = async (data: any) => {
   await api.post<ICreateChecklistItemResponse>(`v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}/items`, {
@@ -104,25 +139,51 @@ const createChecklistItem = async (data: any) => {
   })
 }
 
+const updateChecklistTitle = async (newTitle: string) => {
+  return await api.patch<IUpdateChecklistResponse>(
+    `v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}`,
+    {title: newTitle})
+    .then(response => {
+      handleApiSuccess(response)
+
+      const responseData = response.data.data
+      checklist.value.title = responseData.attributes.title
+      checklist.value.updated_at = responseData.attributes.updated_at
+
+      if (checklistTitlePopup?.value) {
+        checklistTitlePopup?.value.cancel()
+      }
+    })
+    .catch((error: AxiosError<{ message: string }>) => {
+      handleApiError(error)
+
+      return Promise.reject(error)
+    })
+}
+
 const updateChecklistItem = async (checklistItem: IChecklistItem, data: {title?: string, is_finished?: boolean}) => {
   return await api.patch<IUpdateChecklistItemResponse>(
     `v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}/items/${checklistItem.id}`,
     {
-    ...data
-  }).then(response => {
-    handleApiSuccess(response)
+      ...data
+    })
+    .then(response => {
+      handleApiSuccess(response)
 
-    const responseData = response.data.data
-    const checklistItemForChange = checklist.value.relationships.checklistItems.data.find(item => item.id === checklistItem.id)
+      const responseData = response.data.data
+      const checklistItemForChange = checklist.value.relationships.checklistItems.data.find(item => item.id === checklistItem.id)
 
-    if (checklistItemForChange) {
-      checklistItemForChange.title = responseData.attributes.title
-    } else {
-      throw new Error('Can\'t find needed task item')
-    }
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
-  })
+      if (checklistItemForChange) {
+        checklistItemForChange.title = responseData.attributes.title
+      } else {
+        return Promise.reject(new Error("Can't find needed task item"))
+      }
+    })
+    .catch((error: AxiosError<{ message: string }>) => {
+      handleApiError(error)
+
+      return Promise.reject(error)
+    })
 }
 provide('updateChecklistItem', updateChecklistItem)
 </script>

@@ -349,7 +349,7 @@ const deleteTask = () => {
 
 const createChecklist = () => {
   api.post<ICreateChecklistResponse>(`v1/task-manager/tasks/${task.value.id}/checklists`, {
-    title: newChecklistTitle.value,
+    title: newChecklistTitle.value
   }).then((response) => {
     task.value.relationships.checklists = {
       data: task.value?.relationships?.checklists?.data || []

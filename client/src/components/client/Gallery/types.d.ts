@@ -3,7 +3,11 @@ export interface IMediaItem {
   type: 'photo' | 'video'
   name: string
   description: string
-  path: string
+  original_path: string
+  list_thumb_path: string
+  preview_thumb_path: string
+  width: number
+  height: number
 }
 
 interface IAlbum {

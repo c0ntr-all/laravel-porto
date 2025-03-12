@@ -12,6 +12,7 @@ export interface IChecklist {
   id: string
   title: string
   created_at: string
+  updated_at: string
   relationships: {
     checklistItems: {
       data: IChecklistItem[],

@@ -162,7 +162,7 @@ const getTaskLists = async (): Promise<void> => {
     .then(response => {
       const normalizedResponse = normalizeApiResponse(response.data)
 
-      taskLists.value = normalizedResponse.data
+      taskLists.value = normalizedResponse.data as unknown as ITaskList[]
       listsCount.value = response.data.meta.count
     }).catch(error => {
       handleApiError(error)

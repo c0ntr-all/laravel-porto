@@ -239,6 +239,7 @@ interface ICreateChecklistResponse {
     attributes: {
       title: string
       created_at: string
+      updated_at: string
     }
   },
   included: IIncludedItem[]
@@ -352,7 +353,10 @@ const createChecklist = () => {
     title: newChecklistTitle.value
   }).then((response) => {
     task.value.relationships.checklists = {
-      data: task.value?.relationships?.checklists?.data || []
+      data: task.value?.relationships?.checklists?.data || [],
+      meta: {
+        count: 1
+      }
     }
     const responseData = response.data.data
 
@@ -360,6 +364,7 @@ const createChecklist = () => {
       id: responseData.id,
       title: responseData.attributes.title,
       created_at: responseData.attributes.created_at,
+      updated_at: responseData.attributes.updated_at,
       relationships: {
         checklistItems: {
           data: [],

@@ -17,6 +17,7 @@ interface IRelationshipItem {
 interface IProcessItem {
   id: string
   relationships?: IRelationshipItem | undefined
+  [key: string]: any
 }
 interface IRawRelationItem {
   id: string
@@ -74,7 +75,7 @@ const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]
         fullRelation.relationships = {}
       }
 
-      fullRelation.relationships[relName] = processRawRelation(relData, included)
+      fullRelation.relationships[relName] = <IRelationshipValue>processRawRelation(relData, included)
     }
   }
 
@@ -84,7 +85,10 @@ const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]
 const processRawRelation = (mainRelData: IRawRelations, included: IncludedItem[]) => {
   if (Array.isArray(mainRelData.data)) {
     if (mainRelData.data.length > 0) {
-      mainRelData.data = mainRelData.data.map((relItem: IRelationshipItem) => {
+      if (!isIRawRelationItemArray(mainRelData.data)) {
+        return mainRelData // Если данные уже IProcessItem[], просто возвращаем
+      }
+      mainRelData.data = mainRelData.data.map((relItem: IRawRelationItem) => {
         return processRelation(relItem, included)
       })
 
@@ -94,9 +98,13 @@ const processRawRelation = (mainRelData: IRawRelations, included: IncludedItem[]
     }
   } else {
     return {
-      data: processRelation(mainRelData.data, included)
+      data: processRelation(mainRelData.data as IRawRelationItem, included)
     }
   }
+}
+// Type Guard
+const isIRawRelationItemArray = (data: any[]): data is IRawRelationItem[] => {
+  return data.every(item => 'type' in item && 'id' in item && !('relationships' in item))
 }
 
 export function normalizeApiResponse(responseData: IResponse) {

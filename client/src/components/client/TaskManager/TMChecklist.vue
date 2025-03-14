@@ -142,7 +142,7 @@ const createChecklistItem = async (data: any) => {
 const updateChecklistTitle = async (newTitle: string) => {
   return await api.patch<IUpdateChecklistResponse>(
     `v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}`,
-    {title: newTitle})
+    { title: newTitle })
     .then(response => {
       handleApiSuccess(response)
 

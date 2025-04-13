@@ -11,6 +11,7 @@ export interface IChecklistItem {
 export interface IChecklist {
   id: string
   title: string
+  is_strong: boolean
   created_at: string
   updated_at: string
   relationships: {
@@ -21,6 +22,16 @@ export interface IChecklist {
       }
     }
   }
+}
+export interface IProgressItem {
+  id: string
+  task_id: string
+  title: string
+  content: string
+  is_final: boolean
+  finished_at: string
+  created_at: string
+  updated_at: string
 }
 export interface IComment {
   id: string
@@ -40,6 +51,12 @@ export interface ITask {
   relationships: {
     checklists?: {
       data: IChecklist[],
+      meta: {
+        count: number
+      }
+    },
+    progress?: {
+      data: IProgressItem[],
       meta: {
         count: number
       }

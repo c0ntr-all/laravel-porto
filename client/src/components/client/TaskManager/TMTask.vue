@@ -54,6 +54,23 @@
               </q-item-section>
             </q-item>
             <q-item
+              @click="cancelTask"
+              clickable
+            >
+              <q-item-section>
+                <div class="flex items-center">
+                  <q-icon
+                    size="xs"
+                    name="block"
+                    flat
+                    round
+                    dense
+                  />
+                  <div class="q-ml-xs">Will not be completed</div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
               @click="deleteTask"
               clickable
             >
@@ -137,6 +154,13 @@
             />
           </template>
 
+          <template v-if="progress?.length">
+            <TMTaskProgress
+              :progress="progress"
+              :task="task"
+            />
+          </template>
+
           <q-card-section>
             <div class="comments">
               <div class="text-h6 q-mb-sm">Comments</div>
@@ -166,7 +190,7 @@
           </q-card-section>
         </div>
         <div class="col-3">
-          <q-card-section class="column">
+          <q-card-section class="column q-gutter-sm">
             <q-btn
               label="Add checklist"
               color="secondary"
@@ -177,20 +201,95 @@
                 <div class="row no-wrap q-pa-md">
                   <div style="width: 250px">
                     <div class="text-h6 q-mb-md">Adding checklist</div>
-                    <q-input
-                      v-model="newChecklistTitle"
-                      label="Checklist name"
-                      class="q-mb-sm"
-                      outlined
-                      dense
-                    />
-                    <q-btn
-                      @click="createChecklist"
-                      class="q-mb-xs"
-                      label="Add"
-                      color="primary"
-                      unelevated
-                    />
+                    <div class="flex column q-gutter-sm">
+                      <q-input
+                        v-model="newChecklistTitle"
+                        label="Checklist name"
+                        outlined
+                        dense
+                      />
+
+                      <q-checkbox
+                        v-model="isStrongChecklist"
+                        label="Strong"
+                      />
+
+                      <q-btn
+                        @click="createChecklist"
+                        class="q-mb-xs"
+                        label="Add"
+                        color="primary"
+                        unelevated
+                      />
+                    </div>
+                  </div>
+                </div>
+              </q-menu>
+            </q-btn>
+            <q-btn
+              :disable="!isProgressAvailable"
+              label="Add progress"
+              color="secondary"
+              dense
+              unelevated
+            >
+              <q-menu ref="newProgressMenuRef">
+                <div class="row no-wrap q-pa-md">
+                  <div style="width: 250px">
+                    <div class="text-h6 q-mb-md">Adding progress</div>
+                    <div class="flex column q-gutter-sm">
+                      <q-checkbox
+                        v-model="newProgressIsFinal"
+                        label="Final"
+                      />
+                      <q-input
+                        v-model="newProgressTitle"
+                        type="text"
+                        label="Progress title"
+                        outlined
+                        dense
+                      />
+                      <q-input
+                        v-model="newProgressContent"
+                        type="textarea"
+                        label="Progress content"
+                        outlined
+                        dense
+                      />
+                      <q-input filled v-model="newProgressFinishedAt">
+                        <template v-slot:prepend>
+                          <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-date v-model="newProgressFinishedAt" mask="YYYY-MM-DD HH:mm">
+                                <div class="row items-center justify-end">
+                                  <q-btn v-close-popup label="Close" color="primary" flat />
+                                </div>
+                              </q-date>
+                            </q-popup-proxy>
+                          </q-icon>
+                        </template>
+
+                        <template v-slot:append>
+                          <q-icon name="access_time" class="cursor-pointer">
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-time v-model="newProgressFinishedAt" mask="YYYY-MM-DD HH:mm" format24h>
+                                <div class="row items-center justify-end">
+                                  <q-btn v-close-popup label="Close" color="primary" flat />
+                                </div>
+                              </q-time>
+                            </q-popup-proxy>
+                          </q-icon>
+                        </template>
+                      </q-input>
+
+                      <q-btn
+                        @click="createProgress"
+                        class="q-mb-xs"
+                        label="Add"
+                        color="primary"
+                        unelevated
+                      />
+                    </div>
                   </div>
                 </div>
               </q-menu>
@@ -210,6 +309,8 @@ import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { IComment, ITask, IUser } from 'src/components/client/TaskManager/types'
 import { IIncludedItem } from 'src/components/client/Music/types'
 import TMChecklist from 'src/components/client/TaskManager/TMChecklist.vue'
+import TMTaskProgress from 'src/components/client/TaskManager/TMTaskProgress.vue'
+import getCurrentDateTime from 'src/utils/datetime'
 
 interface ICreateCommentResponse {
   data: {
@@ -238,11 +339,31 @@ interface ICreateChecklistResponse {
     id: string
     attributes: {
       title: string
+      is_strong: boolean
       created_at: string
       updated_at: string
     }
   },
   included: IIncludedItem[]
+  meta: {
+    message?: string
+  }
+}
+
+interface ICreateProgressResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      task_id: string
+      title: string
+      content: string
+      is_final: boolean
+      finished_at: string
+      created_at: string
+      updated_at: string
+    }
+  },
   meta: {
     message?: string
   }
@@ -279,9 +400,19 @@ const task = ref<ITask>(props.task)
 const isFinished = computed(() => {
   return task.value.finished_at !== null
 })
+const isProgressAvailable = computed(() => {
+  return task.value?.relationships?.progress?.data.filter(item => item.is_final === true).length === 0
+})
 const comment = ref<string>('')
 const newChecklistTitle = ref('Check list')
+const isStrongChecklist = ref(false)
+const newProgressMenuRef = ref(null)
+const newProgressIsFinal = ref(false)
+const newProgressContent = ref('')
+const newProgressTitle = ref('')
+const newProgressFinishedAt = ref(getCurrentDateTime())
 const checklists = ref(task.value.relationships?.checklists?.data || [])
+const progress = ref(task.value.relationships?.progress?.data || [])
 const activeChecklistFormId = ref<string | null>(null)
 provide('activeFormId', activeChecklistFormId)
 
@@ -337,6 +468,17 @@ const unFinishTask = () => {
   })
 }
 
+const cancelTask = () => {
+  api.patch<ICancelTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+    is_finished: false
+  }).then(response => {
+    task.value.finished_at = response.data.data.attributes.finished_at
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
+  })
+}
+
 const deleteTask = () => {
   api.delete<IDeleteTaskResponse>(`v1/task-manager/tasks/${task.value.id}`)
     .then(response => {
@@ -350,7 +492,8 @@ const deleteTask = () => {
 
 const createChecklist = () => {
   api.post<ICreateChecklistResponse>(`v1/task-manager/tasks/${task.value.id}/checklists`, {
-    title: newChecklistTitle.value
+    title: newChecklistTitle.value,
+    is_strong: isStrongChecklist.value
   }).then((response) => {
     task.value.relationships.checklists = {
       data: task.value?.relationships?.checklists?.data || [],
@@ -363,6 +506,7 @@ const createChecklist = () => {
     const checklist = {
       id: responseData.id,
       title: responseData.attributes.title,
+      is_strong: responseData.attributes.is_strong,
       created_at: responseData.attributes.created_at,
       updated_at: responseData.attributes.updated_at,
       relationships: {
@@ -383,6 +527,40 @@ const createChecklist = () => {
   })
 }
 
+const createProgress = () => {
+  api.post<ICreateProgressResponse>(`v1/task-manager/tasks/${task.value.id}/progress`, {
+    is_final: newProgressIsFinal.value,
+    title: newProgressTitle.value,
+    content: newProgressContent.value,
+    finished_at: newProgressFinishedAt.value
+  }).then((response) => {
+    task.value.relationships.progress = {
+      data: task.value?.relationships?.progress?.data || [],
+      meta: {
+        count: 1
+      }
+    }
+    const responseData = response.data.data
+
+    const newProgressItem = {
+      id: responseData.id,
+      ...responseData.attributes
+    }
+
+    progress.value.push(newProgressItem)
+
+    clearProgressModel()
+
+    if (newProgressItem.is_final) {
+      newProgressMenuRef.value.hide()
+    }
+
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
+  })
+}
+
 const createComment = () => {
   api.post<ICreateCommentResponse>('v1/comments', {
     commentable_id: task.value.id,
@@ -392,7 +570,7 @@ const createComment = () => {
     task.value.relationships.comments.data = task.value.relationships.comments.data || []
     const responseData = response.data.data
 
-    const comment = {
+    const newComment = {
       id: responseData.id,
       content: responseData.attributes.content,
       created_at: responseData.attributes.created_at,
@@ -406,12 +584,25 @@ const createComment = () => {
       }
     }
 
-    task.value.relationships.comments.data.push(comment)
+    task.value.relationships.comments.data.push(newComment)
+
+    clearCommentModel()
 
     handleApiSuccess(response)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })
+
+  const clearCommentModel = () => {
+    comment.value = ''
+  }
+}
+
+const clearProgressModel = () => {
+  newProgressIsFinal.value = false
+  newProgressContent.value = ''
+  newProgressTitle.value = ''
+  newProgressFinishedAt.value = ''
 }
 </script>
 

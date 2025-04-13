@@ -26,11 +26,11 @@ class UpdateTaskProgressAction
         return $this->updateTaskProgressTask->run($taskProgress, $dto);
     }
 
-    public function asController(Task $task, TaskProgress $taskProgress, TaskProgressUpdateRequest $request): JsonResponse
+    public function asController(Task $task, TaskProgress $progress, TaskProgressUpdateRequest $request): JsonResponse
     {
         $dto = TaskProgressUpdateData::from($request->validated());
 
-        $taskProgress = $this->handle($taskProgress, $dto);
+        $taskProgress = $this->handle($progress, $dto);
 
         return fractal($taskProgress, new TaskProgressTransformer())
             ->withResourceName('task_progress')

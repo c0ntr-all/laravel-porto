@@ -24,7 +24,9 @@ class TaskProgressUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'sometimes|string|max:70'
+            'title' => 'sometimes|string|max:100',
+            'content' => 'sometimes|string|max:3000',
+            'is_final' => 'sometimes|bool',
         ];
     }
 }

@@ -13,8 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $task_id
+ * @property string $title
  * @property string $content
  * @property bool $is_final
+ * @property \Illuminate\Support\Carbon|null $finished_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @mixin \Eloquent
@@ -29,10 +31,16 @@ class TaskProgress extends Model
         'id',
         'user_id',
         'task_id',
+        'title',
         'content',
         'is_final',
+        'finished_at',
         'created_at',
         'updated_at'
+    ];
+
+    protected $casts = [
+        'finished_at' => 'datetime:Y-m-d H:i'
     ];
 
     public function task(): BelongsTo

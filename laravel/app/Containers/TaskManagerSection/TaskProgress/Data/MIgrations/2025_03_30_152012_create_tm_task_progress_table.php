@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')
                   ->constrained('users');
             $table->foreignId('task_id')
-                  ->constrained('tm_task_lists');
+                  ->constrained('tm_tasks');
+            $table->string('title');
             $table->text('content');
             $table->boolean('is_final');
+            $table->timestamp('finished_at');
             $table->timestamps();
         });
     }

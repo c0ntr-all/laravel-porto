@@ -214,11 +214,11 @@ const switchProgressItemFinality = async () => {
 
 watch(
   () => progressItem.value.is_final,
-  (newValue, oldValue) => {
+  (newValue) => {
     switchStatus(newValue)
   },
   { deep: false }
-);
+)
 </script>
 
 <style scoped lang="scss">

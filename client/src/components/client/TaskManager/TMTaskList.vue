@@ -116,6 +116,7 @@ const createTask = async (): Promise<void> => {
       title: response.data.data.attributes.title,
       content: response.data.data.attributes.content,
       finished_at: null,
+      is_declined: false,
       relationships: {
         comments: {
           data: [],

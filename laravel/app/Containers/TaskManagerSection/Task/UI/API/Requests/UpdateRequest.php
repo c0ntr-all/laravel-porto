@@ -28,6 +28,7 @@ class UpdateRequest extends FormRequest
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:3000',
             'is_finished' => 'sometimes|boolean',
+            'is_declined' => 'sometimes|boolean',
         ];
     }
 }

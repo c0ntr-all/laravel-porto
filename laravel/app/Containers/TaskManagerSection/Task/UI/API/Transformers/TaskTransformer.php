@@ -24,6 +24,7 @@ class TaskTransformer extends TransformerAbstract
             'title' => $task->title,
             'content' => $task->content,
             'finished_at' => $task->finished_at?->format('Y-m-d H:i:s'),
+            'is_declined' => $task->is_declined,
             'created_at' => $task->created_at->format('Y-m-d H:i:s'),
         ];
     }

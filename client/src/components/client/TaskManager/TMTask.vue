@@ -2,7 +2,10 @@
   <div class="text task-item">
     <div
       class="task-item__link"
-      :class="{'task-item__link--finished': isFinished}"
+      :class="{
+        'task-item__link--finished': isFinished,
+        'task-item__link--declined': isDeclined
+      }"
       @click.prevent="showModal = true"
     >
       {{ task.title }}
@@ -19,7 +22,7 @@
           <q-list dense>
             <q-item
               v-if="!isFinished"
-              @click="finishTask"
+              @click="switchTaskFinishing(true)"
               clickable
             >
               <q-item-section>
@@ -37,7 +40,7 @@
             </q-item>
             <q-item
               v-else
-              @click="unFinishTask"
+              @click="switchTaskFinishing(false)"
               clickable
             >
               <q-item-section>
@@ -54,7 +57,8 @@
               </q-item-section>
             </q-item>
             <q-item
-              @click="cancelTask"
+              v-if="!isDeclined"
+              @click="switchTaskDeclanation(true)"
               clickable
             >
               <q-item-section>
@@ -66,7 +70,25 @@
                     round
                     dense
                   />
-                  <div class="q-ml-xs">Will not be completed</div>
+                  <div class="q-ml-xs">Decline</div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-else
+              @click="switchTaskDeclanation(false)"
+              clickable
+            >
+              <q-item-section>
+                <div class="flex items-center">
+                  <q-icon
+                    size="xs"
+                    name="hide_source"
+                    flat
+                    round
+                    dense
+                  />
+                  <div class="q-ml-xs">Undecline</div>
                 </div>
               </q-item-section>
             </q-item>
@@ -392,6 +414,19 @@ interface IDeleteTaskResponse {
   }
 }
 
+interface IDeclineTaskResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      is_declined: boolean
+    }
+  },
+  meta: {
+    message?: string
+  }
+}
+
 const props = defineProps<{ task: ITask }>()
 const showModal = ref(false)
 const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
@@ -400,13 +435,16 @@ const task = ref<ITask>(props.task)
 const isFinished = computed(() => {
   return task.value.finished_at !== null
 })
+const isDeclined = computed(() => {
+  return task.value.is_declined === true
+})
 const isProgressAvailable = computed(() => {
   return task.value?.relationships?.progress?.data.filter(item => item.is_final === true).length === 0
 })
 const comment = ref<string>('')
 const newChecklistTitle = ref('Check list')
 const isStrongChecklist = ref(false)
-const newProgressMenuRef = ref(null)
+const newProgressMenuRef = ref()
 const newProgressIsFinal = ref(false)
 const newProgressContent = ref('')
 const newProgressTitle = ref('')
@@ -446,9 +484,9 @@ const updateContent = (value: string) => {
   })
 }
 
-const finishTask = () => {
+const switchTaskFinishing = (status: boolean) => {
   api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
-    is_finished: true
+    is_finished: status
   }).then(response => {
     task.value.finished_at = response.data.data.attributes.finished_at
     handleApiSuccess(response)
@@ -457,22 +495,11 @@ const finishTask = () => {
   })
 }
 
-const unFinishTask = () => {
-  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
-    is_finished: false
+const switchTaskDeclanation = (status: boolean) => {
+  api.patch<IDeclineTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
+    is_declined: status
   }).then(response => {
-    task.value.finished_at = response.data.data.attributes.finished_at
-    handleApiSuccess(response)
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
-  })
-}
-
-const cancelTask = () => {
-  api.patch<ICancelTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
-    is_finished: false
-  }).then(response => {
-    task.value.finished_at = response.data.data.attributes.finished_at
+    task.value.is_declined = response.data.data.attributes.is_declined
     handleApiSuccess(response)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
@@ -655,6 +682,14 @@ const clearProgressModel = () => {
 
         &:hover {
           background-color: #b0cfa7;
+        }
+      }
+
+      &--declined {
+        background-color: #ebbfbf;
+
+        &:hover {
+          background-color: #cfa7a7;
         }
       }
     }

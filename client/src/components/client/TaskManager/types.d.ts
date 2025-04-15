@@ -48,6 +48,7 @@ export interface ITask {
   title: string
   content?: string
   finished_at: string | null
+  is_declined: boolean
   relationships: {
     checklists?: {
       data: IChecklist[],

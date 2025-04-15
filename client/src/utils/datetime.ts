@@ -1,5 +1,5 @@
 function getCurrentDateTime() {
-  const now = new Date();
+  const now = new Date()
 
   const datePart = new Intl.DateTimeFormat('sv-SE').format(now)
 

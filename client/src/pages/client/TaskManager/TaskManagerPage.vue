@@ -151,6 +151,7 @@ const createList = async (): Promise<void> => {
     }
 
     taskLists.value.push(newTaskList)
+    clearModel()
   }).catch(error => {
     handleApiError(error)
   })
@@ -169,6 +170,10 @@ const getTaskLists = async (): Promise<void> => {
     }).finally(() => {
       loading.value = false
     })
+}
+
+const clearModel = () => {
+  model.value.newListName = ''
 }
 
 onMounted(() => {

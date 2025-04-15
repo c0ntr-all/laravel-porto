@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $list_id
  * @property string $title
  * @property string|null $content
+ * @property bool $is_declined
  * @property \Illuminate\Support\Carbon|null $finished_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -49,13 +50,15 @@ class Task extends Model
         'title',
         'content',
         'finished_at',
+        'is_declined',
         'created_at',
         'updated_at',
         'deleted_at',
     ];
 
     protected $casts = [
-        'finished_at' => 'datetime'
+        'finished_at' => 'datetime',
+        'is_declined' => 'bool',
     ];
 
     public function taskList(): BelongsTo

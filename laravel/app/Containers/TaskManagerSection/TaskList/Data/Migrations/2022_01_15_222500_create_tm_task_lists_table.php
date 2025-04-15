@@ -13,19 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('tm_task_lists', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('task_list_id')->nullable()->default(NULL);
             $table->string('title');
-            $table->text('content')->nullable()->default(NULL);
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('task_list_id')
-                  ->references('id')
-                  ->on('task_lists')
-                  ->cascadeOnDelete();
 
             $table->foreign('user_id')
                   ->references('id')
@@ -40,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('tm_task_lists');
     }
 };

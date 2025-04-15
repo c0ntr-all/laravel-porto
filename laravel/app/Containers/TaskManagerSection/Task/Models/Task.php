@@ -6,6 +6,7 @@ use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
+use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,6 +40,8 @@ class Task extends Model
     use HasUser,
         HasComments;
 
+    protected $table = 'tm_tasks';
+
     protected $fillable = [
         'id',
         'user_id',
@@ -63,5 +66,10 @@ class Task extends Model
     public function checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
+    }
+
+    public function progress(): HasMany
+    {
+        return $this->hasMany(TaskProgress::class);
     }
 }

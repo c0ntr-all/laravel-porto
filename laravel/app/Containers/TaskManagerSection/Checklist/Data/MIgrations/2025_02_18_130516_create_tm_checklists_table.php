@@ -8,17 +8,15 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
-        Schema::create('task_lists', function (Blueprint $table) {
+        Schema::create('tm_checklists', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('user_id');
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
             $table->string('title');
             $table->timestamps();
-            $table->softDeletes();
 
             $table->foreign('user_id')
                   ->references('id')
@@ -28,11 +26,9 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
-        Schema::dropIfExists('task_lists');
+        Schema::dropIfExists('tm_checklists');
     }
 };

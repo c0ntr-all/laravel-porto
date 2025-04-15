@@ -5,6 +5,7 @@ namespace App\Containers\TaskManagerSection\Task\UI\API\Transformers;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Containers\TaskManagerSection\TaskProgress\UI\API\Transformers\TaskProgressTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\TransformerAbstract;
 
@@ -12,7 +13,8 @@ class TaskTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
         'comments',
-        'checklists'
+        'checklists',
+        'progress',
     ];
 
     public function transform(Task $task): array
@@ -36,5 +38,11 @@ class TaskTransformer extends TransformerAbstract
     {
         return $this->collection($task->checklists, new ChecklistTransformer(), 'checklists')
                     ->setMeta(['count' => $task->checklists->count()]);
+    }
+
+    public function includeProgress(Task $task): Collection
+    {
+        return $this->collection($task->progress, new TaskProgressTransformer(), 'progress')
+                    ->setMeta(['count' => $task->progress->count()]);
     }
 }

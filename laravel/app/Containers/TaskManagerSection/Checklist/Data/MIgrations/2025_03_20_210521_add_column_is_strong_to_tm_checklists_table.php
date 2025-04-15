@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->datetime('finished_at')
-                  ->after('content')
-                  ->nullable()
-                  ->default(NULL);
+        Schema::table('tm_checklists', function (Blueprint $table) {
+            $table->addColumn('boolean', 'is_strong')
+                  ->default(false)
+                  ->after('task_id');
         });
     }
 
@@ -24,8 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->dropColumn('finished_at');
+        Schema::table('tm_checklists', function (Blueprint $table) {
+            $table->dropColumn('is_strong');
         });
     }
 };

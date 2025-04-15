@@ -36,6 +36,8 @@ class TaskList extends Model
 {
     use HasUser;
 
+    protected $table = 'tm_task_lists';
+
     protected $fillable = [
         'id',
         'user_id',

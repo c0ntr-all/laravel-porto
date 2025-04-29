@@ -6,11 +6,13 @@ services:
         container_name: php-app
         volumes:
             - ./laravel:/var/www/laravel
+            - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
         networks:
             - app-network
         environment:
             - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
             - PHP_OPCACHE_MEMORY_CONSUMPTION=128
+        restart: unless-stopped
         depends_on:
             - mysql
             - redis
@@ -49,11 +51,18 @@ services:
         volumes:
             - ./laravel:/var/www/laravel
             - ./docker/nginx/conf.d:/etc/nginx/conf.d
-            - F:/Images:/usr/share/nginx/images:ro
         networks:
             - app-network
         depends_on:
             - app
+#    quasar:
+#        build:
+#            context: .
+#            dockerfile: ./docker/client/Dockerfile
+#        ports:
+#            - "8080:80"
+#        networks:
+#            - app-network
 
 volumes:
     mysql_data:

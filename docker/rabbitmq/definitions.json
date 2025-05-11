@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "name": "user",
+      "password": "pass",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "queues": [
+    {
+      "name": "file_processing",
+      "vhost": "/",
+      "durable": true
+    }
+  ]
+}

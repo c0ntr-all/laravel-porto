@@ -33,12 +33,6 @@ class UploadMusicTask extends ParentTask
     ){
     }
 
-    /**
-     * Returns the path to the cover in the folder, if there is one
-     *
-     * @param array $data
-     * @return array|null
-     */
     public function run(array $data): ?array
     {
         return $this->saveData($data);
@@ -46,15 +40,16 @@ class UploadMusicTask extends ParentTask
 
     private function saveData(array $data)
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use (&$data) {
             $existingTags = $this->listTagsShortTask->run();
 
-            foreach ($data as $artistData) {
+            foreach ($data as $artistKey => &$artistData) {
                 $artistDto = CreateArtistDto::from($artistData);
                 $artistDto->user_id = auth()->user()->id;
+
                 $artist = $this->updateOrCreateArtistTask->run($artistDto);
 
-                foreach($artistData['albums'] as $albumData) {
+                foreach ($artistData['albums'] as $albumKey => &$albumData) {
                     $albumDto = CreateAlbumDto::from($albumData);
                     $albumDto->user_id = auth()->user()->id;
 
@@ -68,26 +63,31 @@ class UploadMusicTask extends ParentTask
                     }
 
                     $album = $this->updateOrCreateAlbumTask->run($artist, $albumDto);
-
                     $this->syncAlbumsForArtistTask->run($artist, [$album->id]);
 
-                    foreach($albumData['tracks'] as $trackData) {
+                    foreach ($albumData['tracks'] as $trackKey => &$trackData) {
                         $trackDto = CreateTrackDto::from($trackData);
                         $trackDto->user_id = auth()->user()->id;
                         $trackDto->image = $albumDto->image;
 
                         $track = $this->updateOrCreateTrackTask->run($album, $trackDto);
 
+                        if (!$track->wasRecentlyCreated) {
+                            unset($data[$artistKey]['albums'][$albumKey]['tracks'][$trackKey]);
+                            continue;
+                        }
+
                         $this->syncArtistsForTrackTask->run($track, [$artist->id]);
 
                         if ($trackData['genre'] && array_key_exists($trackData['genre'], $existingTags)) {
                             $tagsForSync = ['tags' => [$existingTags[$trackData['genre']]]];
-
                             $this->syncTagsTask->run($track, SyncTagsDto::from($tagsForSync));
                             $this->syncTagsTask->run($album, SyncTagsDto::from($tagsForSync));
                             $this->syncTagsTask->run($artist, SyncTagsDto::from($tagsForSync));
                         }
-                        //todo: Info to sockets
+                    }
+                    if (empty($albumData['tracks'])) {
+                        unset($artistData['albums'][$albumKey]);
                     }
                 }
             }

@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $name
  * @property string|null $country
- * @property string|null $content
+ * @property string|null $description
  * @property string|null $image
  * @property string $path
  * @property \Illuminate\Support\Carbon|null $created_at

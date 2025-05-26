@@ -2,7 +2,7 @@
 
 namespace App\Containers\MusicSection\Upload\UI\Actions;
 
-use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Upload\Helpers\PathHelper;
 use App\Containers\MusicSection\Upload\Tasks\PrepareUploadMusicTreeTask;
 use App\Containers\MusicSection\Upload\Tasks\UploadMusicTask;
 use App\Containers\MusicSection\Upload\UI\API\Requests\UploadRequest;
@@ -36,14 +36,16 @@ class UploadMusicAction
     }
 
     /**
-     * @param Artist $artist
      * @param UploadRequest $request
      * @return JsonResponse
      * @throws Exception
      */
-    public function asController(Artist $artist, UploadRequest $request): JsonResponse
+    public function asController(UploadRequest $request): JsonResponse
     {
-        $result = $this->handle($request->validated());
+        $linuxPath = PathHelper::windowsToLinux($request->input('path'));
+        $data = $request->validated();
+        $data['path'] = $linuxPath;
+        $result = $this->handle($data);
 
         $artists = $result['artists'];
 

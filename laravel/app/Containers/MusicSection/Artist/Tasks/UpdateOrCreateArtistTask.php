@@ -32,6 +32,9 @@ class UpdateOrCreateArtistTask extends ParentTask
             $dto->image = $this->uploadArtistCoverTask->run($image, $artistId);
         }
 
+        $artist->image = $dto->image;
+        $artist->save();
+
         return $artist;
     }
 }

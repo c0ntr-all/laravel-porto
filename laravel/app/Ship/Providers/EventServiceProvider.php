@@ -36,7 +36,7 @@ class EventServiceProvider extends ServiceProvider
         AlbumType::observe(AlbumTypeObserver::class);
 
         // Initialize cache if not exists
-        if (!Cache::has('album_types') && Schema::hasTable((new AlbumType())->getTable())) {
+        if (Schema::hasTable('cache') && Schema::hasTable((new AlbumType())->getTable()) && !Cache::has('album_types')) {
             Cache::put('album_types', AlbumType::all(), now()->addDay());
         }
     }

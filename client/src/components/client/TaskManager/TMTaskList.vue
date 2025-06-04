@@ -6,11 +6,19 @@
     <q-separator dark/>
     <q-card-section class="list__body">
       <template v-if="tasks.length">
-        <TMTask
+        <TMTaskListItem
           v-for="task in tasks"
           :key="task.id"
           :task="task"
+          @opened="openTask"
         />
+        <q-dialog v-model="isDialogOpen" @hide="closeTask">
+          <TMTask
+            v-if="selectedTask"
+            :task="selectedTask"
+            @closed="closeTask"
+          />
+        </q-dialog>
       </template>
     </q-card-section>
     <q-card-section class="list__footer">
@@ -55,30 +63,10 @@
 import { ref, nextTick } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-import TMTask from 'src/components/client/TaskManager/TMTask.vue'
+import TMTaskListItem from 'src/components/client/TaskManager/TMTaskListItem.vue'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IComment, ITask, ITaskList } from 'src/components/client/TaskManager/types'
-
-interface CreateTaskResponse {
-  data: {
-    type: string
-    id: string
-    attributes: {
-      title: string
-      completed: boolean
-      content?: string
-      created_at?: string
-      relationships: {
-        comments: {
-          data: IComment[]
-        }
-      }
-    }
-  },
-  meta: {
-    message?: string
-  }
-}
+import { ICreateTaskResponse, ITask, ITaskList } from 'src/components/client/TaskManager/types'
+import TMTask from 'src/components/client/TaskManager/TMTask.vue'
 
 const props = defineProps<{
   list: ITaskList
@@ -89,6 +77,17 @@ const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])
 const model = ref<{ newCardName: string }>({
   newCardName: ''
 })
+const selectedTask = ref<ITask | null>(null)
+const isDialogOpen = ref(false)
+
+const openTask = (task: ITask) => {
+  selectedTask.value = task
+  isDialogOpen.value = true
+}
+
+const closeTask = () => {
+  isDialogOpen.value = false
+}
 
 const openAddForm = () => {
   showAddForm.value = true
@@ -101,11 +100,14 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
+const clearModel = () => {
+  model.value.newCardName = ''
+}
+
 const createTask = async (): Promise<void> => {
   const cardName = model.value.newCardName
-  model.value.newCardName = ''
 
-  await api.post<CreateTaskResponse>('v1/task-manager/tasks', {
+  await api.post<ICreateTaskResponse>('v1/task-manager/tasks', {
     title: cardName,
     task_list_id: props.list.id
   }).then(response => {
@@ -128,6 +130,7 @@ const createTask = async (): Promise<void> => {
     }
 
     tasks.value.push(newTask)
+    clearModel()
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

@@ -3,8 +3,9 @@ export interface IRelationshipData {
   id: string
 }
 
-export interface IIncludeItem {
+export interface IIncludedItem {
   type: string
   id: string
-  attributes: object
+  attributes: Record<string, any>
+  relationships?: any
 }

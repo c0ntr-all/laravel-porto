@@ -62,7 +62,7 @@ module.exports = configure(function (ctx) {
       env: {
         mode: ctx.dev ? 'test' : 'prod',
         host: ctx.dev
-          ? 'http://home-portal-v2.test/api'
+          ? 'http://docker-porto.loc/api'
           : 'https://api.home-portal.prod'
       },
       // rawDefine: {}
@@ -99,7 +99,9 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
-      // https: true
+      host: 'docker-porto.loc',
+      port: 9000,
+      https: false,
       open: true // opens browser window automatically
     },
 

@@ -5,6 +5,7 @@ namespace App\Containers\TaskManagerSection\Task\Models;
 use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
+use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
 use Illuminate\Database\Eloquent\Model;
@@ -22,8 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $finished_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
- * @property-read int|null $comments_count
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @method static \Illuminate\Database\Eloquent\Builder|Task newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Task newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Task query()
@@ -74,5 +74,10 @@ class Task extends Model
     public function progress(): HasMany
     {
         return $this->hasMany(TaskProgress::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
     }
 }

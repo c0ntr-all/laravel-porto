@@ -39,6 +39,18 @@ export interface IProgressItem {
   updated_at: string
 }
 
+export interface IReminderItem {
+  id: string
+  task_id: string
+  user_id: string
+  is_active: boolean
+  interval: string
+  to_remind_before: string
+  datetime: string
+  created_at: string
+  updated_at: string
+}
+
 export interface IComment {
   id: string
   content: string
@@ -65,6 +77,12 @@ export interface ITask {
     },
     progress?: {
       data: IProgressItem[],
+      meta: {
+        count: number
+      }
+    },
+    reminders?: {
+      data: IReminderItem[],
       meta: {
         count: number
       }
@@ -197,6 +215,25 @@ interface ICreateProgressResponse {
       finished_at: string
       created_at: string
       updated_at: string
+    }
+  },
+  meta: {
+    message?: string
+  }
+}
+
+interface ICreateReminderResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      task_id: string
+      user_id: string
+      to_remind_before: string
+      interval: string
+      is_active: boolean
+      datetime: string
+      created_at: string
     }
   },
   meta: {

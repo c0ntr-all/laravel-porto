@@ -34,7 +34,8 @@ class ListTaskListsAction
             ->parseIncludes([
                 'tasks.comments.user',
                 'tasks.checklists.checklistItems',
-                'tasks.progress'
+                'tasks.progress',
+                'tasks.reminders'
             ])
             ->addMeta([
                 'count' => $taskLists->count()

@@ -11,6 +11,8 @@ class ReminderTransformer extends TransformerAbstract
     {
         return [
             'id' => $reminder->id,
+            'task_id' => $reminder->task_id,
+            'user_id' => $reminder->user_id,
             'is_active' => $reminder->is_active,
             'interval' => $reminder->interval,
             'to_remind_before' => $reminder->to_remind_before,

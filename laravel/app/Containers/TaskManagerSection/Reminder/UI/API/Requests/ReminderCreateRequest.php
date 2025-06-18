@@ -2,7 +2,9 @@
 
 namespace App\Containers\TaskManagerSection\Reminder\UI\API\Requests;
 
+use App\Containers\TaskManagerSection\Reminder\Enums\ReminderIntervalEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ReminderCreateRequest extends FormRequest
 {
@@ -24,9 +26,9 @@ class ReminderCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'interval' => 'required|string|max:50',
+            'interval' => ['sometimes', Rule::in(ReminderIntervalEnum::toArray())],
             'to_remind_before' => 'sometimes|string|max:50',
-            'is_active' => 'sometimes|boolean',
+            'is_active' => 'required|boolean',
             'datetime' => 'required|date_format:Y-m-d H:i'
         ];
     }

@@ -25,7 +25,7 @@
       <q-btn @click="closeTask" class="task__close" icon="close" size="md" flat rounded dense/>
     </q-card-section>
 
-    <q-separator dark/>
+    <q-separator/>
 
     <div class="row">
       <div class="col-9">
@@ -49,6 +49,15 @@
             </div>
           </q-popup-edit>
         </q-card-section>
+
+        <template v-if="reminders?.length">
+          <q-card-section class="reminders">
+            <div class="text-h6 q-mb-sm">Reminders</div>
+            <div v-for="reminder in reminders" :key="reminder.id">
+              {{ reminder.datetime }}
+            </div>
+          </q-card-section>
+        </template>
 
         <template v-if="checklists?.length">
           <TMChecklist
@@ -199,6 +208,78 @@
               </div>
             </q-menu>
           </q-btn>
+          <q-btn
+            label="Add reminder"
+            color="secondary"
+            dense
+            unelevated
+          >
+            <q-menu ref="newReminderMenuRef">
+              <div class="row no-wrap q-pa-md">
+                <div style="width: 250px">
+                  <div class="text-h6 q-mb-md">Adding reminder</div>
+                  <div class="flex column q-gutter-sm">
+                    <q-input filled v-model="reminderModel.datetime">
+                      <template v-slot:prepend>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-date v-model="reminderModel.datetime" mask="YYYY-MM-DD HH:mm">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat />
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+
+                      <template v-slot:append>
+                        <q-icon name="access_time" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-time v-model="reminderModel.datetime" mask="YYYY-MM-DD HH:mm" format24h>
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat />
+                              </div>
+                            </q-time>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                    <q-toggle
+                      v-model="reminderModel.is_regular"
+                      checked-icon="alarm"
+                      unchecked-icon="remove"
+                      label="Регулярное?"
+                      left-label
+                    />
+                    <div v-if="reminderModel.is_regular" class="relative-position q-gutter-sm">
+                      <q-select
+                        v-model="reminderModel.interval"
+                        :options="reminderIntervals"
+                        label="Интервал"
+                        :options-html="true"
+                        filled
+                      />
+                    </div>
+                    <q-toggle
+                      v-model="reminderModel.is_active"
+                      checked-icon="add"
+                      unchecked-icon="remove"
+                      label="Active"
+                      left-label
+                    />
+
+                    <q-btn
+                      @click="createReminder"
+                      class="q-mb-xs"
+                      label="Add"
+                      color="primary"
+                      unelevated
+                    />
+                  </div>
+                </div>
+              </div>
+            </q-menu>
+          </q-btn>
         </q-card-section>
       </div>
     </div>
@@ -212,7 +293,7 @@ import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import {
   ICreateChecklistResponse, ICreateCommentResponse,
-  ICreateProgressResponse,
+  ICreateProgressResponse, ICreateReminderResponse,
   ITask,
   IUpdateTaskResponse
 } from 'src/components/client/TaskManager/types'
@@ -238,9 +319,34 @@ const newProgressIsFinal = ref(false)
 const newProgressContent = ref('')
 const newProgressTitle = ref('')
 const newProgressFinishedAt = ref(getCurrentDateTime())
+const reminderModel = ref({
+  datetime: getCurrentDateTime(),
+  interval: null,
+  to_remind_before: null,
+  is_active: true,
+  is_regular: false
+})
+const reminderIntervals = [{
+  label: '1 час',
+  value: '1 hour'
+}, {
+  label: '1 день',
+  value: '1 day'
+}, {
+  label: '1 неделя',
+  value: '1 week'
+}, {
+  label: '1 месяц',
+  value: '1 month'
+}, {
+  label: '1 год',
+  value: '1 year'
+}]
 const checklists = ref(task.value.relationships?.checklists?.data || [])
 const progress = ref(task.value.relationships?.progress?.data || [])
+const reminders = ref(task.value.relationships?.reminders?.data || [])
 const activeChecklistFormId = ref<string | null>(null)
+
 provide('activeFormId', activeChecklistFormId)
 
 // Only one form should be opened
@@ -348,6 +454,44 @@ const createProgress = () => {
   })
 }
 
+const createReminder = () => {
+  const preparedRequestData = prepareRequestData()
+  api.post<ICreateReminderResponse>(`v1/task-manager/tasks/${task.value.id}/reminder`, {
+    ...preparedRequestData
+  }).then((response) => {
+    const responseData = response.data.data
+    const { id, attributes } = responseData
+
+    const newReminder = {
+      id: id,
+      ...attributes
+    }
+
+    task.value.relationships.reminder.data.push(newReminder)
+
+    clearReminderModel()
+    handleApiSuccess(response)
+  }).catch((error: AxiosError<{ message: string }>) => {
+    handleApiError(error)
+  })
+}
+
+const prepareRequestData = () => {
+  return Object.fromEntries(Object.entries(reminderModel.value)
+    .filter(([key]) => key !== 'is_regular')
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .filter(([key, _]) =>
+      key !== 'interval' || reminderModel.value.is_regular === true
+    ).filter(([key, value]) => value !== null)
+    .map(([key, val]) => {
+      if (key === 'interval') {
+        return [key, val.value]
+      }
+
+      return [key, val]
+    }))
+}
+
 const createComment = () => {
   api.post<ICreateCommentResponse>('v1/comments', {
     commentable_id: task.value.id,
@@ -379,9 +523,19 @@ const createComment = () => {
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })
+}
 
-  const clearCommentModel = () => {
-    comment.value = ''
+const clearCommentModel = () => {
+  comment.value = ''
+}
+
+const clearReminderModel = () => {
+  reminderModel.value = {
+    datetime: getCurrentDateTime(),
+    interval: null,
+    to_remind_before: null,
+    is_active: true,
+    is_regular: false
   }
 }
 

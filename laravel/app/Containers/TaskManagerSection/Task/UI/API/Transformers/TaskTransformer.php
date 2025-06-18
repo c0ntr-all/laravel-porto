@@ -4,6 +4,7 @@ namespace App\Containers\TaskManagerSection\Task\UI\API\Transformers;
 
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
+use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Transformers\TaskProgressTransformer;
 use League\Fractal\Resource\Collection;
@@ -15,6 +16,7 @@ class TaskTransformer extends TransformerAbstract
         'comments',
         'checklists',
         'progress',
+        'reminders'
     ];
 
     public function transform(Task $task): array
@@ -45,5 +47,11 @@ class TaskTransformer extends TransformerAbstract
     {
         return $this->collection($task->progress, new TaskProgressTransformer(), 'progress')
                     ->setMeta(['count' => $task->progress->count()]);
+    }
+
+    public function includeReminders(Task $task): Collection
+    {
+        return $this->collection($task->reminders, new ReminderTransformer(), 'reminders')
+                    ->setMeta(['count' => $task->reminders->count()]);
     }
 }

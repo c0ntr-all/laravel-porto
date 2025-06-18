@@ -44,8 +44,8 @@ class Reminder extends Model
         'deleted_at',
     ];
 
-    protected array $dates = [
-
+    protected $casts = [
+        'datetime' => 'datetime'
     ];
 
     public function task(): BelongsTo

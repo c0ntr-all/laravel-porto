@@ -40,7 +40,7 @@ class TaskProgress extends Model
     ];
 
     protected $casts = [
-        'finished_at' => 'datetime:Y-m-d H:i'
+        'finished_at' => 'datetime:Y-m-d H:i:s'
     ];
 
     public function task(): BelongsTo

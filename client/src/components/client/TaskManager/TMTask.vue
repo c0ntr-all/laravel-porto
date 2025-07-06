@@ -50,12 +50,13 @@
           </q-popup-edit>
         </q-card-section>
 
-        <template v-if="reminders?.length">
+        <template v-if="reminder">
           <q-card-section class="reminders">
-            <div class="text-h6 q-mb-sm">Reminders</div>
-            <div v-for="reminder in reminders" :key="reminder.id">
-              {{ reminder.datetime }}
-            </div>
+            <div class="text-h6 q-mb-sm">Event date</div>
+            <q-chip outline square color="grey" text-color="white" icon="alarm" :label="humanDatetime(reminder.datetime)" />
+            <span v-if="reminder.interval">
+              Every {{ reminder.interval }}
+            </span>
           </q-card-section>
         </template>
 
@@ -219,7 +220,7 @@
                 <div style="width: 250px">
                   <div class="text-h6 q-mb-md">Adding reminder</div>
                   <div class="flex column q-gutter-sm">
-                    <q-input filled v-model="reminderModel.datetime">
+                    <q-input dense filled v-model="reminderModel.datetime">
                       <template v-slot:prepend>
                         <q-icon name="event" class="cursor-pointer">
                           <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -244,22 +245,43 @@
                         </q-icon>
                       </template>
                     </q-input>
+                    <q-select
+                      v-model="reminderModel.interval"
+                      :options="reminderIntervals"
+                      label="Интервал"
+                      :options-html="true"
+                      filled
+                      dense
+                    />
                     <q-toggle
-                      v-model="reminderModel.is_regular"
-                      checked-icon="alarm"
+                      v-model="reminderModel.is_to_remind_before"
+                      checked-icon="add"
                       unchecked-icon="remove"
-                      label="Регулярное?"
+                      label="Напомнить"
                       left-label
                     />
-                    <div v-if="reminderModel.is_regular" class="relative-position q-gutter-sm">
-                      <q-select
-                        v-model="reminderModel.interval"
-                        :options="reminderIntervals"
-                        label="Интервал"
-                        :options-html="true"
-                        filled
-                      />
-                    </div>
+                    <template v-if="reminderModel.is_to_remind_before">
+                      <div class="row q-col-gutter-sm">
+                        <div class="col-6">
+                          <q-select
+                            v-model="reminderModel.when_to_remind_before_number"
+                            :options="whenToRemindBeforeNumberOptions"
+                            :options-html="true"
+                            filled
+                            dense
+                          />
+                        </div>
+                        <div class="col-6">
+                          <q-select
+                            v-model="reminderModel.when_to_remind_before_point"
+                            :options="whenToRemindBeforePointOptions"
+                            :options-html="true"
+                            filled
+                            dense
+                          />
+                        </div>
+                      </div>
+                    </template>
                     <q-toggle
                       v-model="reminderModel.is_active"
                       checked-icon="add"
@@ -288,6 +310,7 @@
 
 <script lang="ts" setup>
 import { computed, provide, ref } from 'vue'
+import { date } from 'quasar'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
@@ -319,14 +342,69 @@ const newProgressIsFinal = ref(false)
 const newProgressContent = ref('')
 const newProgressTitle = ref('')
 const newProgressFinishedAt = ref(getCurrentDateTime())
+
+const whenToRemindBeforePointOptions = [{
+  label: 'мин.',
+  value: 'minutes'
+}, {
+  label: 'ч.',
+  value: 'hours'
+}, {
+  label: 'дн.',
+  value: 'days'
+}, {
+  label: 'нед.',
+  value: 'weeks'
+}, {
+  label: 'мес.',
+  value: 'months'
+}]
+function range(start, end) {
+  const length = Math.abs(end - start) + 1
+  const direction = start < end ? 1 : -1
+
+  return Array.from({ length }, (_, index) => start + index * direction)
+}
+const minutesOptions = range(1, 60)
+const hoursOptions = range(1, 60)
+const daysOptions = range(1, 30)
+const weeksOptions = range(1, 4)
+const monthsOptions = range(1, 12)
+
+const whenToRemindBeforeNumberOptions = computed(() => {
+  const point = reminderModel.value.when_to_remind_before_point.value
+
+  switch (point) {
+    case 'minutes':
+      return minutesOptions
+    case 'hours':
+      return hoursOptions
+    case 'days':
+      return daysOptions
+    case 'weeks':
+      return weeksOptions
+    case 'months':
+      return monthsOptions
+    default:
+      return []
+  }
+})
+
 const reminderModel = ref({
   datetime: getCurrentDateTime(),
-  interval: null,
-  to_remind_before: null,
-  is_active: true,
-  is_regular: false
+  interval: {
+    label: 'Не повторять',
+    value: null
+  },
+  is_to_remind_before: false,
+  when_to_remind_before_number: ref(1),
+  when_to_remind_before_point: ref(whenToRemindBeforePointOptions[0]),
+  is_active: true
 })
 const reminderIntervals = [{
+  label: 'Не повторять',
+  value: null
+}, {
   label: '1 час',
   value: '1 hour'
 }, {
@@ -344,8 +422,21 @@ const reminderIntervals = [{
 }]
 const checklists = ref(task.value.relationships?.checklists?.data || [])
 const progress = ref(task.value.relationships?.progress?.data || [])
-const reminders = ref(task.value.relationships?.reminders?.data || [])
+const reminder = ref(task.value.relationships?.reminder?.data || null)
 const activeChecklistFormId = ref<string | null>(null)
+
+const currentDate = () => {
+  return new Date()
+}
+const humanDatetime = datetime => {
+  const year = date.formatDate(datetime, 'YYYY')
+  const currentYear = date.formatDate(currentDate(), 'YYYY')
+  let format = 'D MMM, H:m'
+  if (year < currentYear || year > currentYear) {
+    format = 'D MMM YYYY, H:m'
+  }
+  return date.formatDate(datetime, format)
+}
 
 provide('activeFormId', activeChecklistFormId)
 
@@ -455,7 +546,7 @@ const createProgress = () => {
 }
 
 const createReminder = () => {
-  const preparedRequestData = prepareRequestData()
+  const preparedRequestData = prepareRequestData(reminderModel.value)
   api.post<ICreateReminderResponse>(`v1/task-manager/tasks/${task.value.id}/reminder`, {
     ...preparedRequestData
   }).then((response) => {
@@ -476,20 +567,31 @@ const createReminder = () => {
   })
 }
 
-const prepareRequestData = () => {
-  return Object.fromEntries(Object.entries(reminderModel.value)
-    .filter(([key]) => key !== 'is_regular')
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .filter(([key, _]) =>
-      key !== 'interval' || reminderModel.value.is_regular === true
-    ).filter(([key, value]) => value !== null)
-    .map(([key, val]) => {
-      if (key === 'interval') {
-        return [key, val.value]
-      }
+const prepareRequestData = (object) => {
+  const fieldsToRemove = ['is_to_remind_before']
+  const labelValueFields = ['interval']
 
-      return [key, val]
-    }))
+  const result = JSON.parse(JSON.stringify(object))
+
+  if (result.is_to_remind_before) {
+    const number = result.when_to_remind_before_number?.value || result.when_to_remind_before_number
+    const point = result.when_to_remind_before_point?.value || result.when_to_remind_before_point
+
+    result.remind_before = `${number} ${point}`
+
+    delete result.when_to_remind_before_number
+    delete result.when_to_remind_before_point
+  }
+
+  fieldsToRemove.forEach(field => delete result[field])
+
+  labelValueFields.forEach(field => {
+    if (result[field] && typeof result[field] === 'object') {
+      result[field] = result[field].value
+    }
+  })
+
+  return result
 }
 
 const createComment = () => {

@@ -35,7 +35,7 @@ class ListTaskListsAction
                 'tasks.comments.user',
                 'tasks.checklists.checklistItems',
                 'tasks.progress',
-                'tasks.reminders'
+                'tasks.reminder'
             ])
             ->addMeta([
                 'count' => $taskLists->count()

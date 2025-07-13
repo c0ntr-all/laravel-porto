@@ -25,8 +25,6 @@ class TaskListTransformer extends TransformerAbstract
     public function includeTasks(TaskList $taskList): Collection
     {
         return $this->collection($taskList->tasks, new TaskTransformer(), 'tasks')
-                    ->setMeta([
-                        'count' => $taskList->tasks->count()
-                    ]);
+                    ->setMeta(['count' => $taskList->tasks->count()]);
     }
 }

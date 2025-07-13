@@ -205,6 +205,7 @@
             </q-menu>
           </q-btn>
           <q-btn
+            :disable="!isReminderAvailable"
             label="Add reminder"
             color="secondary"
             dense
@@ -328,6 +329,9 @@ const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null
 const task = ref<ITask>(props.task)
 const isProgressAvailable = computed(() => {
   return task.value?.relationships?.progress?.data.filter(item => item.is_final === true).length === 0
+})
+const isReminderAvailable = computed(() => {
+  return !task.value?.relationships?.reminder?.data
 })
 const comment = ref<string>('')
 const newChecklistTitle = ref('Check list')

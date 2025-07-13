@@ -11,6 +11,7 @@ use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * App\Models\Tasks\Task
@@ -76,8 +77,8 @@ class Task extends Model
         return $this->hasMany(TaskProgress::class);
     }
 
-    public function reminders(): HasMany
+    public function reminder(): HasOne
     {
-        return $this->hasMany(Reminder::class);
+        return $this->hasOne(Reminder::class);
     }
 }

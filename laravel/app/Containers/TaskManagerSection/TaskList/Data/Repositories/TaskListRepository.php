@@ -14,7 +14,12 @@ class TaskListRepository
      */
     public function getTaskLists(): Collection
     {
-        return TaskList::with(['tasks.comments.user'])->get();
+        return TaskList::with([
+            'tasks.reminder',
+            'tasks.comments.user',
+            'tasks.checklists.checklistItems',
+            'tasks.progress'
+        ])->get();
     }
 
     /**

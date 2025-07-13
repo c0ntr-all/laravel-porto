@@ -33,6 +33,15 @@ class ReminderCreateRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->task->reminder()->exists()) {
+                $validator->errors()->add('reminder', 'Task can have only one reminder.');
+            }
+        });
+    }
+
     public function messages(): array
     {
         return array_merge([

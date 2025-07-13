@@ -120,6 +120,12 @@ const createTask = async (): Promise<void> => {
       finished_at: null,
       is_declined: false,
       relationships: {
+        checklists: {
+          data: [],
+          meta: {
+            count: 0
+          }
+        },
         comments: {
           data: [],
           meta: {

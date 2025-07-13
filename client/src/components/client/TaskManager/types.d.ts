@@ -15,7 +15,6 @@ export interface IChecklistItem {
 export interface IChecklist {
   id: string
   title: string
-  is_strong: boolean
   created_at: string
   updated_at: string
   relationships: {
@@ -192,7 +191,6 @@ interface ICreateChecklistResponse {
     id: string
     attributes: {
       title: string
-      is_strong: boolean
       created_at: string
       updated_at: string
     }

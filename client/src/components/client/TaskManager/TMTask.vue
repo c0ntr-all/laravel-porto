@@ -124,11 +124,6 @@
                       dense
                     />
 
-                    <q-checkbox
-                      v-model="isStrongChecklist"
-                      label="Strong"
-                    />
-
                     <q-btn
                       @click="createChecklist"
                       class="q-mb-xs"
@@ -336,7 +331,6 @@ const isProgressAvailable = computed(() => {
 })
 const comment = ref<string>('')
 const newChecklistTitle = ref('Check list')
-const isStrongChecklist = ref(false)
 const newProgressMenuRef = ref()
 const newProgressIsFinal = ref(false)
 const newProgressContent = ref('')
@@ -476,8 +470,7 @@ const updateContent = (value: string) => {
 
 const createChecklist = () => {
   api.post<ICreateChecklistResponse>(`v1/task-manager/tasks/${task.value.id}/checklists`, {
-    title: newChecklistTitle.value,
-    is_strong: isStrongChecklist.value
+    title: newChecklistTitle.value
   }).then((response) => {
     task.value.relationships.checklists = {
       data: task.value?.relationships?.checklists?.data || [],
@@ -490,7 +483,6 @@ const createChecklist = () => {
     const checklist = {
       id: responseData.id,
       title: responseData.attributes.title,
-      is_strong: responseData.attributes.is_strong,
       created_at: responseData.attributes.created_at,
       updated_at: responseData.attributes.updated_at,
       relationships: {

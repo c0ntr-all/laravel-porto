@@ -24,7 +24,7 @@ class ChecklistCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:70'
+            'title' => 'required|string|max:100'
         ];
     }
 }

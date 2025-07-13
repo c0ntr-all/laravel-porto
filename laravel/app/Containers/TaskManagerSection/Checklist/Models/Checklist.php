@@ -26,7 +26,6 @@ class Checklist extends Model
     protected $table = 'tm_checklists';
 
     protected $fillable = [
-        'id',
         'user_id',
         'task_id',
         'title',

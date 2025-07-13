@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tm_checklists', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tm_tasks')->cascadeOnDelete();
             $table->string('title');
             $table->timestamps();
 

@@ -53,6 +53,7 @@ interface IUpdateChecklistItemResponse {
 const props = defineProps<{
   item: IChecklistItem
 }>()
+const emit = defineEmits(['update-status'])
 
 const checklistItem = ref(props.item)
 const checklistItemTitlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
@@ -64,6 +65,7 @@ const updateChecklistItem = inject<{
     is_finished?: boolean
   }): Promise<IUpdateChecklistItemResponse>
     }>('updateChecklistItem')!
+
 const closePopup = () => {
   if (checklistItemTitlePopup.value) {
     checklistItemTitlePopup.value.cancel()
@@ -85,6 +87,9 @@ const updateTitle = async (newTitle: string) => {
 const updateStatus = (id: string) => {
   const status = !selectedItems.value.includes(id)
   updateChecklistItem(props.item, { is_finished: status })
+    .then(() => {
+      emit('update-status', checklistItem.value.id)
+    })
     .catch(() => {
       const idx = selectedItems.value.filter(item => item === id).indexOf(id)
       if (idx !== -1) {
@@ -98,5 +103,4 @@ const updateStatus = (id: string) => {
 </script>
 
 <style lang="scss" scoped>
-
 </style>

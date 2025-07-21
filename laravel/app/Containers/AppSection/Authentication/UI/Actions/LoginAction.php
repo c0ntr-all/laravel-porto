@@ -19,7 +19,8 @@ class LoginAction
     {
         $credentials = $request->validated();
 
-        $response = Http::asForm()->post(config('api.url') . '/api/v1/oauth/token', [
+
+        $response = Http::asForm()->post(config('api.url') . '/v1/oauth/token', [
             'grant_type' => 'password',
             'client_id' => env('PASSPORT_CLIENT_ID'),
             'client_secret' => env('PASSPORT_CLIENT_SECRET'),

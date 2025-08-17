@@ -328,7 +328,8 @@ const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(
 const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const task = ref<ITask>(props.task)
 const isProgressAvailable = computed(() => {
-  return task.value?.relationships?.progress?.data.filter(item => item.is_final === true).length === 0
+  const progressData = task.value?.relationships?.progress?.data
+  return !progressData || progressData.filter(item => item.is_final === true).length === 0
 })
 const isReminderAvailable = computed(() => {
   return !task.value?.relationships?.reminder?.data
@@ -550,7 +551,7 @@ const createReminder = () => {
     const { id, attributes } = responseData
 
     const newReminder = {
-      id: id,
+      id,
       ...attributes
     }
 

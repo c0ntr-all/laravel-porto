@@ -8,7 +8,10 @@
       }"
       @click.prevent="openTask"
     >
-      {{ task.title }}
+      <div class="task-item__title">
+        {{ task.title }}
+      </div>
+      <TMTaskListItemPanel :task="task" />
     </div>
     <TMTaskListItemActionsButton
       :data="{ isFinished, isDeclined }"
@@ -24,6 +27,7 @@ import { computed } from 'vue'
 import TMTaskListItemActionsButton from 'src/components/client/TaskManager/TMTaskListItemActionsButton.vue'
 import { ITask } from 'src/components/client/TaskManager/types'
 import { useTaskApiRequests } from 'src/composables/client/TaskManager/useTaskApiRequests'
+import TMTaskListItemPanel from 'src/components/client/TaskManager/TMTaskListItemPanel.vue'
 
 const props = defineProps<{
   task: ITask
@@ -81,6 +85,9 @@ const openTask = () => emit('opened', task.value)
         background-color: #cfa7a7;
       }
     }
+  }
+  &__title {
+
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <q-card-section class="checklist">
+  <div class="progress">
     <div class="text-h6 q-mb-sm">Progress</div>
     <q-list bordered>
       <TMTaskProgressItem
@@ -9,7 +9,7 @@
         :isLast="isProgressItemLast(key)"
       />
     </q-list>
-  </q-card-section>
+  </div>
 </template>
 
 <script lang="ts" setup>

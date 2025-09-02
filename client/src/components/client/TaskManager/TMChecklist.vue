@@ -1,5 +1,5 @@
 <template>
-  <q-card-section class="checklist">
+  <div class="checklist">
     <div class="text-h6 q-mb-sm">
       {{ checklist.title }}
       <q-popup-edit
@@ -45,7 +45,7 @@
       @processed="createChecklistItem"
       :checklist-id="checklist.id"
     />
-  </q-card-section>
+  </div>
 </template>
 
 <script lang="ts" setup>

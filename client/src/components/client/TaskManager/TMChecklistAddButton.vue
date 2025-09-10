@@ -34,12 +34,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api } from 'src/boot/axios'
-import { IChecklist, ICreateChecklistResponse } from 'src/components/client/TaskManager/types'
+import { IChecklist, ICreateChecklistResponse } from 'src/types/TaskManager/task'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
 
 const props = defineProps<{
-  taskId: number,
+  taskId: string,
 }>()
 
 const emit = defineEmits<{

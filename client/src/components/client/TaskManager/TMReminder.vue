@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import { IReminderItem } from 'src/components/client/TaskManager/types'
+import { IReminderItem } from 'src/types/TaskManager/task'
 import TMReminderItem from 'src/components/client/TaskManager/TMReminderItem.vue'
 
 defineProps<{

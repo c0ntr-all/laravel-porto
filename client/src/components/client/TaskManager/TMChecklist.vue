@@ -54,7 +54,7 @@ import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
 import TMChecklistItemAddButton from 'src/components/client/TaskManager/TMChecklistItemAddButton.vue'
-import { IChecklist, IChecklistItem, ITask } from 'src/components/client/TaskManager/types'
+import { IChecklist, IChecklistItem, ITask } from 'src/types/TaskManager/task'
 import TMChecklistItem from 'src/components/client/TaskManager/TMChecklistItem.vue'
 
 interface ICreateChecklistItemResponse {

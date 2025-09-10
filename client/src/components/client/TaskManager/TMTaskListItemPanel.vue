@@ -20,7 +20,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { ITask } from 'src/components/client/TaskManager/types'
+import { ITask } from 'src/types/TaskManager/task'
 import { checkRelationExists } from 'src/utils/helpers'
 
 const props = defineProps<{

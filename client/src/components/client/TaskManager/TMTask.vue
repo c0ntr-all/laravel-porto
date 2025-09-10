@@ -1,27 +1,11 @@
 <template>
   <q-card class="task">
     <q-card-section class="task__header">
-      <div class="task__title text-h6">
-        {{ task.title }}
-        <q-popup-edit
-          ref="titlePopup"
-          v-model="task.title"
-          auto-save
-          v-slot="scope"
-        >
-          <q-input
-            v-model="scope.value"
-            @keyup.enter="updateTitle(scope.value)"
-            dense
-            autofocus
-            counter
-          />
-          <div class="q-pt-sm">
-            <q-btn @click="updateTitle(scope.value)" label="Save" color="primary" flat/>
-            <q-btn @click="titlePopup?.cancel()" label="Cancel" color="primary" flat/>
-          </div>
-        </q-popup-edit>
-      </div>
+      <TMTaskTitle
+        ref="taskTitleRef"
+        v-model:title="task.title"
+        @updated="handleUpdateTitle"
+      />
       <q-btn @click="closeTask" class="task__close" icon="close" size="md" flat rounded dense/>
     </q-card-section>
 
@@ -30,24 +14,11 @@
     <div class="row">
       <div class="col-9">
         <q-card-section class="task__body">
-          <div v-if="task.content" v-html="task.content" class="task__content"></div>
-          <div v-else class="task__content text-grey-5">There is no description!</div>
-          <q-popup-edit
-            ref="contentPopup"
-            v-model="task.content"
-            v-slot="scope"
-          >
-            <q-editor
-              v-model="scope.value"
-              min-height="5rem"
-              autofocus
-              @keyup.enter.stop
-            />
-            <div class="q-pt-sm">
-              <q-btn @click="updateContent(scope.value)" label="Save" color="primary" flat/>
-              <q-btn @click="contentPopup?.cancel()" label="Cancel" color="primary" flat/>
-            </div>
-          </q-popup-edit>
+          <TMTaskContent
+            ref="taskContentRef"
+            v-model:content="task.content"
+            @updated="handleUpdateContent"
+          />
         </q-card-section>
 
         <q-card-section v-if="reminder">
@@ -102,12 +73,6 @@
 
 <script lang="ts" setup>
 import { computed, provide, ref } from 'vue'
-import { AxiosError } from 'axios'
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import {
-  IChecklist, IComment, IProgressItem, IReminderItem, ITask, IUpdateTaskResponse
-} from 'src/components/client/TaskManager/types'
 import TMChecklist from 'src/components/client/TaskManager/TMChecklist.vue'
 import TMTaskProgress from 'src/components/client/TaskManager/TMTaskProgress.vue'
 import TMReminder from 'src/components/client/TaskManager/TMReminder.vue'
@@ -115,17 +80,22 @@ import TMTaskComments from 'src/components/client/TaskManager/TMTaskComments.vue
 import TMChecklistAddButton from 'src/components/client/TaskManager/TMChecklistAddButton.vue'
 import TMProgressAddButton from 'src/components/client/TaskManager/TMProgressAddButton.vue'
 import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAddButton.vue'
+import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
+import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
+import { useTaskStore } from 'src/stores/modules/TaskManager/taskStore'
+import { IChecklist, IComment, IProgressItem, IReminderItem, ITask } from 'src/types/TaskManager/task'
 
 const props = defineProps<{ task: ITask }>()
 const emit = defineEmits<{
   (e: 'closed'): void
 }>()
-const titlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
-const contentPopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const task = ref<ITask>(props.task)
+task.value.content = task.value.content || '' // null to string cast
+const taskTitleRef = ref(null)
+const taskContentRef = ref(null)
 const isProgressAvailable = computed(() => {
   const progressData = task.value?.relationships?.progress?.data
-  return !progressData || progressData.filter(item => item.is_final === true).length === 0
+  return !progressData || progressData.filter(item => item.is_final).length === 0
 })
 const isReminderAvailable = computed(() => {
   return !task.value?.relationships?.reminder?.data
@@ -136,6 +106,24 @@ const reminder = ref(task.value.relationships?.reminder?.data || null)
 const activeChecklistFormId = ref<string | null>(null)
 
 provide('activeFormId', activeChecklistFormId)
+
+const taskStore = useTaskStore()
+
+async function handleUpdateTitle(newTitle: string) {
+  await taskStore.updateTaskTitle(task.value.id, newTitle).then(() => {
+    taskTitleRef.value?.onUpdateSuccess()
+  }).catch(() => {
+    taskTitleRef.value?.onUpdateError()
+  })
+}
+
+async function handleUpdateContent(newContent: string) {
+  await taskStore.updateTaskContent(task.value.id, newContent).then(() => {
+    taskContentRef.value?.onUpdateSuccess()
+  }).catch(() => {
+    taskContentRef.value?.onUpdateError()
+  })
+}
 
 const onCommentCreated = (newComment: IComment) => {
   task.value.relationships.comments.data.push(newComment)
@@ -163,7 +151,7 @@ const onProgressCreated = (newProgressItem: IProgressItem) => {
 
 // TODO: Возможно, нужно убрать приставку Item
 const onReminderCreated = (newReminderItem: IReminderItem) => {
-  task.value.relationships.reminder.data.push(newReminderItem)
+  reminder.value = newReminderItem
 }
 
 // Only one form should be opened
@@ -174,30 +162,6 @@ provide('setActiveChecklistForm', setActiveChecklistForm)
 
 const closeTask = () => {
   emit('closed')
-}
-
-const updateTitle = (value: string) => {
-  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
-    title: value
-  }).then(response => {
-    handleApiSuccess(response)
-    titlePopup.value?.set()
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
-    titlePopup.value?.cancel()
-  })
-}
-
-const updateContent = (value: string) => {
-  api.patch<IUpdateTaskResponse>(`v1/task-manager/tasks/${task.value.id}`, {
-    content: value
-  }).then(response => {
-    handleApiSuccess(response)
-    contentPopup.value?.set()
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
-    contentPopup.value?.cancel()
-  })
 }
 </script>
 
@@ -210,22 +174,6 @@ const updateContent = (value: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-
-  &__title {
-    width: 100%;
-
-    &:hover {
-      cursor: pointer;
-      background: #f4f5f7;
-    }
-  }
-
-  &__content {
-    &:hover {
-      cursor: pointer;
-      background: #f4f5f7;
-    }
   }
 }
 </style>

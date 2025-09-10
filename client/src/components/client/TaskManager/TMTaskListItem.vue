@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import TMTaskListItemActionsButton from 'src/components/client/TaskManager/TMTaskListItemActionsButton.vue'
-import { ITask } from 'src/components/client/TaskManager/types'
+import { ITask } from 'src/types/TaskManager/task'
 import { useTaskApiRequests } from 'src/composables/client/TaskManager/useTaskApiRequests'
 import TMTaskListItemPanel from 'src/components/client/TaskManager/TMTaskListItemPanel.vue'
 

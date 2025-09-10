@@ -98,13 +98,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
-import { ICreateReminderResponse, IReminderItem } from 'src/components/client/TaskManager/types'
+import { ICreateReminderResponse, IReminderItem } from 'src/types/TaskManager/task'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
 
 const props = defineProps<{
-  taskId: number,
+  taskId: string,
   isReminderAvailable: boolean,
 }>()
 

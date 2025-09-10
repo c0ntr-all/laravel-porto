@@ -63,10 +63,10 @@
 import { ref, nextTick } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
-import TMTaskListItem from 'src/components/client/TaskManager/TMTaskListItem.vue'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { ICreateTaskResponse, ITask, ITaskList } from 'src/components/client/TaskManager/types'
+import { ICreateTaskResponse, ITask, ITaskList } from 'src/types/TaskManager/task'
 import TMTask from 'src/components/client/TaskManager/TMTask.vue'
+import TMTaskListItem from 'src/components/client/TaskManager/TMTaskListItem.vue'
 
 const props = defineProps<{
   list: ITaskList
@@ -75,7 +75,8 @@ const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
 const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])
 const model = ref<{ newCardName: string }>({
-  newCardName: ''
+  newCardName: '',
+  newCardContent: ''
 })
 const selectedTask = ref<ITask | null>(null)
 const isDialogOpen = ref(false)
@@ -116,7 +117,7 @@ const createTask = async (): Promise<void> => {
     const newTask: ITask = {
       id: response.data.data.id,
       title: response.data.data.attributes.title,
-      content: response.data.data.attributes.content,
+      content: response.data.data.attributes.content || '',
       finished_at: null,
       is_declined: false,
       relationships: {

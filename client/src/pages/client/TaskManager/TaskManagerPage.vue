@@ -41,7 +41,7 @@ import { api } from 'src/boot/axios'
 import { handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
-import { ITaskList } from 'src/components/client/TaskManager/types'
+import { ITaskList } from 'src/types/TaskManager/task'
 
 interface IResponseTaskList {
   type: string

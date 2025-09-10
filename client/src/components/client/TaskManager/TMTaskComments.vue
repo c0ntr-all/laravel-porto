@@ -29,13 +29,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api } from 'src/boot/axios'
-import { IComment, ICreateCommentResponse } from 'src/components/client/TaskManager/types'
+import { IComment, ICreateCommentResponse } from 'src/types/TaskManager/task'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
 
 const props = defineProps<{
   commentsData: IComment[],
-  taskId: number,
+  taskId: string,
 }>()
 
 const emit = defineEmits<{

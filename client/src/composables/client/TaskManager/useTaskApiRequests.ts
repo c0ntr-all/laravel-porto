@@ -1,13 +1,8 @@
 import { ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { AxiosError } from 'axios'
-import {
-  ITask,
-  IDeclineTaskResponse,
-  IDeleteTaskResponse,
-  IUpdateTaskResponse
-} from 'src/components/client/TaskManager/types'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { IDeclineTaskResponse, IDeleteTaskResponse, ITask, IUpdateTaskResponse } from 'src/types/TaskManager/task'
 
 export function useTaskApiRequests(initialTask: ITask) {
   const task = ref({ ...initialTask })

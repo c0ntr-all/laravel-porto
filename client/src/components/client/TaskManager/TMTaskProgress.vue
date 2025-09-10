@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ITask, IProgressItem } from 'src/components/client/TaskManager/types'
+import { ITask, IProgressItem } from 'src/types/TaskManager/task'
 import TMTaskProgressItem from 'src/components/client/TaskManager/TMTaskProgressItem.vue'
 
 const props = defineProps<{

@@ -20,7 +20,7 @@ const api = axios.create({ baseURL: `${process.env.host}/` })
 export default boot(({ app, router }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
   api.interceptors.request.use(config => {
-    config.headers.accept = 'application/json'
+    // config.headers.accept = 'application/json'
     if (localStorage.access_token) {
       config.headers.authorization = `Bearer ${localStorage.access_token}`
     }

@@ -88,7 +88,7 @@ import { ref, watch } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IProgressItem } from 'src/components/client/TaskManager/types'
+import { IProgressItem } from 'src/types/TaskManager/task'
 
 interface IUpdateChecklistResponse {
   data: {

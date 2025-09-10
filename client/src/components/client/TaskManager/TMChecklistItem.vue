@@ -33,7 +33,7 @@
 
 <script lang="ts" setup>
 import { inject, ref } from 'vue'
-import { IChecklistItem } from 'src/components/client/TaskManager/types'
+import { IChecklistItem } from 'src/types/TaskManager/task'
 
 interface IUpdateChecklistItemResponse {
   data: {

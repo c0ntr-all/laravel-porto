@@ -75,10 +75,10 @@ import { api } from 'src/boot/axios'
 import { AxiosError } from 'axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { getCurrentDateTime } from 'src/utils/datetime'
-import { ICreateProgressResponse, IProgressItem } from 'src/components/client/TaskManager/types'
+import { ICreateProgressResponse, IProgressItem } from 'src/types/TaskManager/task'
 
 const props = defineProps<{
-  taskId: number,
+  taskId: string,
   isProgressAvailable: boolean,
 }>()
 
@@ -86,20 +86,20 @@ const emit = defineEmits<{
   (e: 'created', value: IProgressItem): void
 }>()
 
-const progressModel = {
-  title: ref(''),
-  content: ref(''),
-  isFinal: ref(false),
-  finishedAt: ref(getCurrentDateTime())
-}
+const progressModel = ref({
+  title: '',
+  content: '',
+  isFinal: false,
+  finishedAt: getCurrentDateTime()
+})
 const menuRef = ref()
 
 const createProgress = () => {
   api.post<ICreateProgressResponse>(`v1/task-manager/tasks/${props.taskId}/progress`, {
-    title: progressModel.title.value,
-    content: progressModel.content.value,
-    is_final: progressModel.isFinal.value,
-    finished_at: progressModel.finishedAt.value
+    title: progressModel.value.title,
+    content: progressModel.value.content,
+    is_final: progressModel.value.isFinal,
+    finished_at: progressModel.value.finishedAt
   }).then((response) => {
     const responseData = response.data.data
 
@@ -123,10 +123,10 @@ const createProgress = () => {
 }
 
 const clearProgressModel = () => {
-  progressModel.title.value = ''
-  progressModel.content.value = ''
-  progressModel.isFinal.value = false
-  progressModel.finishedAt.value = ''
+  progressModel.value.title = ''
+  progressModel.value.content = ''
+  progressModel.value.isFinal = false
+  progressModel.value.finishedAt = ''
 }
 </script>
 

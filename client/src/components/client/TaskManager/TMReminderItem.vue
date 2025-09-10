@@ -4,7 +4,7 @@
 </template>
 
 <script lang="ts" setup>
-import { IReminderItem } from 'src/components/client/TaskManager/types'
+import { IReminderItem } from 'src/types/TaskManager/task'
 import { humanDatetime } from 'src/utils/datetime'
 
 defineProps<{

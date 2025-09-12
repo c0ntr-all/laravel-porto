@@ -1,9 +1,5 @@
 import { IIncludedItem } from 'src/components/types'
-
-export interface IUser {
-  id: string
-  name: string
-}
+import { IUser } from 'src/types/user'
 
 export interface IChecklistItem {
   id: string

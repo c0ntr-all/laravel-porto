@@ -16,6 +16,16 @@ const routes: RouteRecordRaw[] = [{
     name: 'dashboard',
     alias: '/dashboard'
   }, {
+    path: '/lifelog',
+    component: () => import('pages/client/LifeLogPage.vue'),
+    meta: {
+      title: 'Life log',
+      icon: 'history_edu',
+      menu: true
+    },
+    name: 'lifelog',
+    alias: '/lifelog'
+  }, {
     path: '/task-manager',
     component: () => import('pages/client/TaskManager/TaskManagerPage.vue'),
     meta: {

@@ -1,3 +1,5 @@
+import { date } from 'quasar'
+
 function getCurrentDateTime() {
   const now = new Date()
 
@@ -12,4 +14,14 @@ function getCurrentDateTime() {
   return `${datePart} ${timePart}`
 }
 
-export default getCurrentDateTime
+const humanDatetime = datetime => {
+  const year = date.formatDate(datetime, 'YYYY')
+  const currentYear = date.formatDate(new Date(), 'YYYY')
+  let format = 'D MMM, HH:mm'
+  if (year < currentYear || year > currentYear) {
+    format = 'D MMM YYYY, HH:mm'
+  }
+  return date.formatDate(datetime, format)
+}
+
+export { getCurrentDateTime, humanDatetime }

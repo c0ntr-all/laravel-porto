@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { postApi } from 'src/api/LifeLog/postApi'
 import { IPost } from 'src/types/LifeLog/post'
-import { normalizeApiResponse } from 'src/utils/jsonapi'
+import { handleApiSuccess, normalizeApiItemResponse, normalizeApiResponse } from 'src/utils/jsonapi'
 
 export const usePostStore = defineStore('post', {
   state: () => ({
@@ -33,11 +33,23 @@ export const usePostStore = defineStore('post', {
         this.isLoading = false
       }
     },
-    async createPost(id: string, payload: object) {
-      const created = await postApi.createPost(id, payload)
-      this.posts = this.posts.push(created)
-
-      return created
+    async createPost(payload: object) {
+      await postApi.createPost(payload).then(responseData => {
+        const normalizedResponse = normalizeApiItemResponse(responseData)
+        this.posts.unshift(normalizedResponse.data)
+        this.count += 1
+        handleApiSuccess(normalizedResponse)
+      })
+      // try {
+      //   const responseData = await postApi.createPost(payload)
+      //   const normalizedResponse = normalizeApiResponse(responseData)
+      //
+      //   this.posts.unshift(normalizedResponse.value)
+      //   this.count += 1
+      //   handleApiSuccess(responseData)
+      // } catch (err: any) {
+      //   this.error = err.message ?? 'Ошибка создания'
+      // }
     }
   }
 })

@@ -9,6 +9,7 @@ use App\Containers\GallerySection\Image\Models\Image;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 
@@ -44,14 +45,16 @@ use Illuminate\Support\Carbon;
  */
 class Post extends Model
 {
-    use HasImage,
+    use SoftDeletes,
+        HasImage,
         HasUser;
 
     protected $table = 'lifelog_posts';
 
     protected $guarded = [];
     protected $casts = [
-        'id' => 'string'
+        'id' => 'string',
+        'datetime' => 'datetime',
     ];
 
     public function images(): HasMany

@@ -3,11 +3,21 @@
     <div class="lifelog-post-form-wrap q-mb-md">
       <LifeLogPostForm />
     </div>
-    <LifeLogCard
-      v-for="post in posts"
-      :key="post.id"
-      :post="post"
-    />
+    <div class="lifelog-posts-wrap q-mb-md">
+      <div v-if="postStore.isLoading">loading...</div>
+      <template v-else>
+        <template v-if="postStore.count">
+          <LifeLogCard
+            v-for="post in posts"
+            :key="post.id"
+            :post="post"
+          />
+        </template>
+        <template v-else>
+          No Posts!
+        </template>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -31,6 +41,9 @@ onMounted(() => {
   max-width: 700px;
 
   .lifelog-post-form-wrap {
+    width: 100%;
+  }
+  .lifelog-posts-wrap {
     width: 100%;
   }
 }

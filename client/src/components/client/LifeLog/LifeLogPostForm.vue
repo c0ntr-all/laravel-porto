@@ -1,20 +1,29 @@
 <template>
   <div class="lifelog-post-form">
-    <div class="lifelog-post-form__editor">
+    <div class="lifelog-post-form__title">
+      <q-input v-model="model.title" label="Title" dense outlined />
+    </div>
+    <div class="lifelog-post-form__content">
       <q-editor
-        v-model="textModel"
+        v-model="model.content"
         min-height="5rem"
         style="border-radius: 0"
       />
     </div>
 
-    <div class="lifelog-post-form-actions flex justify-end q-pa-md">
+    <div class="lifelog-post-form-actions flex justify-between q-pa-md">
+      <div class="lifelog-post-form-actions__left">
+        <div class="lifelog-post-form__action">
+          <AppDatetimeField v-model="model.datetime" />
+        </div>
+      </div>
       <div class="lifelog-post-form-actions__right">
         <div class="lifelog-post-form__action">
           <q-btn
             label="Отправить"
             color="primary"
             :round="false"
+            @click="createPost()"
           />
         </div>
       </div>
@@ -24,8 +33,21 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
+import { getCurrentDateTime } from 'src/utils/datetime'
+import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
+import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 
-const textModel = ref<string>('')
+const postStore = usePostStore()
+
+const model = ref({
+  title: '',
+  content: '',
+  datetime: getCurrentDateTime()
+})
+
+const createPost = () => {
+  postStore.createPost(model.value)
+}
 
 </script>
 

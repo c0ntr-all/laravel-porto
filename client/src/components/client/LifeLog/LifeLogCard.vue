@@ -19,7 +19,7 @@ import { ref } from 'vue'
 import { IPost } from 'src/types/LifeLog/post'
 
 const props = defineProps<{
-  post: IPost[]
+  post: IPost
 }>()
 const post = ref(props.post)
 </script>

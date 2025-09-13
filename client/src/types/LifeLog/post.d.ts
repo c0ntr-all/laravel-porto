@@ -9,8 +9,8 @@ export interface IPost {
     created_at: string | null
   }
   relationships: {
-    user?: {
-      data: IUser[],
+    user: {
+      data: IUser,
     },
   }
 }

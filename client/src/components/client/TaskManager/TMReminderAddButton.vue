@@ -11,31 +11,7 @@
         <div style="width: 250px">
           <div class="text-h6 q-mb-md">Adding reminder</div>
           <div class="flex column q-gutter-sm">
-            <q-input dense filled v-model="reminderModel.datetime">
-              <template v-slot:prepend>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="reminderModel.datetime" mask="YYYY-MM-DD HH:mm">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-
-              <template v-slot:append>
-                <q-icon name="access_time" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-time v-model="reminderModel.datetime" mask="YYYY-MM-DD HH:mm" format24h>
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-time>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+            <AppDatetimeField v-model="reminderModel.datetime" />
             <q-select
               v-model="reminderModel.interval"
               :options="reminderIntervals"
@@ -102,6 +78,7 @@ import { ICreateReminderResponse, IReminderItem } from 'src/types/TaskManager/ta
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
+import AppDatetimeField from 'src/components/default/AppDatetimeField.vue';
 
 const props = defineProps<{
   taskId: string,

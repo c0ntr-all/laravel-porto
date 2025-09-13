@@ -29,31 +29,7 @@
               outlined
               dense
             />
-            <q-input filled v-model="progressModel.finishedAt">
-              <template v-slot:prepend>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="progressModel.finishedAt" mask="YYYY-MM-DD HH:mm">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-
-              <template v-slot:append>
-                <q-icon name="access_time" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-time v-model="progressModel.finishedAt" mask="YYYY-MM-DD HH:mm" format24h>
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-time>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+            <AppDatetimeField v-model="progressModel.finishedAt" />
 
             <q-btn
               @click="createProgress"
@@ -76,6 +52,7 @@ import { AxiosError } from 'axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { ICreateProgressResponse, IProgressItem } from 'src/types/TaskManager/task'
+import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 
 const props = defineProps<{
   taskId: string,
@@ -116,7 +93,7 @@ const createProgress = () => {
       menuRef.value.hide()
     }
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

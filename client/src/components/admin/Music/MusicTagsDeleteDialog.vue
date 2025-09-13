@@ -60,7 +60,7 @@ const deleteTag = async () => {
     .then(response => {
       emit('deleted', tag.value.id)
 
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     }).catch(error => {
       handleApiError(error)
     }).finally(() => {

@@ -13,7 +13,7 @@ export function useTaskApiRequests(initialTask: ITask) {
         is_finished: status
       })
       task.value.finished_at = response.data.data.attributes.finished_at
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     } catch (error) {
       handleApiError(error as AxiosError)
     }
@@ -25,7 +25,7 @@ export function useTaskApiRequests(initialTask: ITask) {
         is_declined: status
       })
       task.value.is_declined = response.data.data.attributes.is_declined
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     } catch (error) {
       handleApiError(error as AxiosError)
     }
@@ -34,7 +34,7 @@ export function useTaskApiRequests(initialTask: ITask) {
   const deleteTask = async () => {
     try {
       const response = await api.delete<IDeleteTaskResponse>(`v1/task-manager/tasks/${task.value.id}`)
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     } catch (error) {
       handleApiError(error as AxiosError)
     }

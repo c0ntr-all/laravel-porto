@@ -70,7 +70,7 @@ const createComment = () => {
 
     clearCommentModel()
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

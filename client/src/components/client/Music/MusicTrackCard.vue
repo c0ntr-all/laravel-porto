@@ -244,7 +244,7 @@ const rateTrack = async (value: number): Promise<void> => {
   await api.post(`v1/music/tracks/${track.value.id}/rate`, {
     rate: value
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch(error => {
     track.value.rate = previousRate ?? 0
     handleApiError(error)
@@ -298,7 +298,7 @@ const syncPlaylists = async (): Promise<void> => {
   await api.put(`v1/music/tracks/${track.value.id}/playlists`, {
     playlist_ids: selectedPlaylistsIds.value
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch(error => {
     handleApiError(error)
   }).finally(() => {
@@ -310,7 +310,7 @@ const deleteTrackFromPlaylist = async (): Promise<void> => {
   await api.delete(`v1/music/playlists/${props.playlistId}/tracks/${track.value.id}`)
     .then(response => {
       emit('remove', track.value.id)
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     }).catch(error => {
       handleApiError(error)
     })

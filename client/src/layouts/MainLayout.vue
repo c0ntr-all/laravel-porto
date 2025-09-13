@@ -156,7 +156,7 @@ const adminItems = computed((): Route[] => {
 
 const logout = (): void => {
   user.logout().then((response: { data: { message: string } }) => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
     $router.push('/login')
   })
 }

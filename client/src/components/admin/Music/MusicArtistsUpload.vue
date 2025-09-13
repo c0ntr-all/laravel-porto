@@ -46,7 +46,7 @@ const uploadArtist = async () => {
   await api.post<IUploadArtistResponse>('v1/music/upload', {
     path: fullPath.value
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch(error => {
     handleApiError(error)
   }).finally(() => {

@@ -138,7 +138,7 @@ const updateArtist = async () => {
     .then(response => {
       const artist = transformArtistFromResponse(response.data.data, response.data)
       emit('updated', artist)
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
     }).catch(error => {
       handleApiError(error)
     }).finally(() => {

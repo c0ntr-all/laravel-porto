@@ -56,6 +56,11 @@ interface IResponse {
   included?: any
   meta: any
 }
+interface IItemResponse {
+  data: IRawElement
+  included?: any
+  meta: any
+}
 
 const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]) => {
   const includedItem = included.find((include: IncludedItem) => {
@@ -119,6 +124,18 @@ export function normalizeApiResponse(responseData: IResponse) {
 
     return item
   })
+
+  return responseData
+}
+
+export function normalizeApiItemResponse(responseData: IItemResponse) {
+  if (responseData.data.relationships) {
+    for (const relName in responseData.data.relationships) {
+      const relData = responseData.data.relationships[relName]
+
+      responseData.data.relationships[relName] = processRawRelation(relData, responseData.included)
+    }
+  }
 
   return responseData
 }
@@ -199,7 +216,7 @@ export function handleApiError(error: AxiosError) {
 }
 
 export function handleApiSuccess(response: any) {
-  const message = response.data?.meta?.message || 'The action was done!'
+  const message = response.meta?.message || 'The action was done!'
 
   Notify.create({
     type: 'positive',

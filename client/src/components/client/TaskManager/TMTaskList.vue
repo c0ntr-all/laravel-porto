@@ -112,7 +112,7 @@ const createTask = async (): Promise<void> => {
     title: cardName,
     task_list_id: props.list.id
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
 
     const newTask: ITask = {
       id: response.data.data.id,

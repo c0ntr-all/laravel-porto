@@ -125,7 +125,7 @@ const createChecklistItem = async (data: any) => {
   await api.post<ICreateChecklistItemResponse>(`v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}/items`, {
     title: data.value
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
 
     const responseData = response.data.data
     checklist.value.relationships.checklistItems.data.push({
@@ -144,7 +144,7 @@ const updateChecklistTitle = async (newTitle: string) => {
     `v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}`,
     { title: newTitle })
     .then(response => {
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
 
       const responseData = response.data.data
       checklist.value.title = responseData.attributes.title
@@ -168,7 +168,7 @@ const updateChecklistItem = async (checklistItem: IChecklistItem, data: {title?:
       ...data
     })
     .then(response => {
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
 
       const responseData = response.data.data
       const checklistItemForChange = checklist.value.relationships.checklistItems.data.find(item => item.id === checklistItem.id)

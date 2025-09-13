@@ -108,7 +108,7 @@ const createTag = async () => {
 
     emit('created', newTag)
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
 
     clearTagModel()
     show.value = false

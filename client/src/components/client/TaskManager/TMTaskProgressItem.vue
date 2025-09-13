@@ -155,7 +155,7 @@ const updateProgressItemTitle = async (newTitle: string) => {
     `v1/task-manager/tasks/${progressItem.value.task_id}/progress/${progressItem.value.id}`,
     { title: newTitle })
     .then(response => {
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
 
       const responseData = response.data.data
       progressItem.value.title = responseData.attributes.title
@@ -177,7 +177,7 @@ const updateProgressItemContent = async (newContent: string) => {
     `v1/task-manager/tasks/${progressItem.value.task_id}/progress/${progressItem.value.id}`,
     { content: newContent })
     .then(response => {
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
 
       const responseData = response.data.data
       progressItem.value.content = responseData.attributes.content
@@ -199,7 +199,7 @@ const switchProgressItemFinality = async () => {
     `v1/task-manager/tasks/${progressItem.value.task_id}/progress/${progressItem.value.id}`,
     { is_final: !progressItem.value.is_final })
     .then(response => {
-      handleApiSuccess(response)
+      handleApiSuccess(response.data)
 
       const responseData = response.data.data
       progressItem.value.is_final = responseData.attributes.is_final

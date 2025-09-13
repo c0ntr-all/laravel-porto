@@ -71,7 +71,7 @@ const createChecklist = () => {
 
     emit('created', newChecklist)
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

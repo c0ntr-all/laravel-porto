@@ -243,7 +243,7 @@ const createReminder = () => {
     emit('created', newReminder)
 
     clearReminderModel()
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })

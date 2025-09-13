@@ -93,7 +93,7 @@ const createTag = async () => {
   await api.post<CreateTagApiResponse>('v1/music/tags', postData).then(response => {
     const responseTag = response.data.data
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
 
     addNewTagToList({
       id: responseTag.id,

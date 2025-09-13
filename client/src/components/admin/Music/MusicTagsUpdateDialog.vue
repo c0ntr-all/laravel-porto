@@ -85,7 +85,7 @@ const updateTag = async () => {
     name: model.value.name,
     content: model.value.content
   }).then(response => {
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
     show.value = false
   }).catch(error => {
     handleApiError(error)

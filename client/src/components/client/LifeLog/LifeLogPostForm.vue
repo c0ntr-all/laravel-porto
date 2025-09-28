@@ -19,10 +19,21 @@
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
+      <p>Выбранные:</p>
+      <LifeLogTag
+        v-for="tag in model.tags"
+        :key="tag.id"
+        :tag="tag"
+        @removed="handleRemoveTag"
+        removable
+      />
+      <p>Последние:</p>
       <LifeLogTag
         v-for="tag in tags"
         :key="tag.id"
         :tag="tag"
+        @selected="handleSelectTag"
+        clickable
       />
     </div>
 
@@ -54,6 +65,7 @@ import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
+import { ITag } from 'src/types/tag'
 
 interface IInputRef {
   resetValidation: () => void
@@ -64,9 +76,15 @@ const postStore = usePostStore()
 
 const { tags } = storeToRefs(tagStore)
 
-const model = ref({
+const model = ref<{
+  title: string,
+  content: string,
+  tags: ITag[],
+  datetime: string
+}>({
   title: '',
   content: '',
+  tags: [],
   datetime: getCurrentDateTime()
 })
 const titleRef = ref<IInputRef | null>(null)
@@ -87,6 +105,20 @@ const clearModel = () => {
       titleRef.value.resetValidation()
     }
   })
+}
+
+const handleSelectTag = (tag: ITag) => {
+  if (!model.value.tags.some((t: ITag) => t.id === tag.id)) {
+    tags.value = tags.value.filter((t: ITag) => t.id !== tag.id)
+    model.value.tags.push(tag)
+  }
+}
+
+const handleRemoveTag = (tag: ITag) => {
+  if (model.value.tags.some((t: ITag) => t.id === tag.id)) {
+    model.value.tags = model.value.tags.filter((t: ITag) => t.id !== tag.id)
+    tags.value.push(tag)
+  }
 }
 
 onMounted(() => {

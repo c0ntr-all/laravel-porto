@@ -114,7 +114,6 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/user'
-import { handleApiSuccess } from 'src/utils/jsonapi'
 
 defineOptions({
   name: 'MainLayout'
@@ -155,8 +154,8 @@ const adminItems = computed((): Route[] => {
 })
 
 const logout = (): void => {
-  user.logout().then((response: { data: { message: string } }) => {
-    handleApiSuccess(response.data)
+  user.logout().then(() => {
+    // Process logout
     $router.push('/login')
   })
 }

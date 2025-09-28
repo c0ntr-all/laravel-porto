@@ -16,7 +16,7 @@
       />
       <div class="q-pt-sm">
         <q-btn @click="updateTitle(scope.value)" label="Save" color="primary" flat/>
-        <q-btn @click="titlePopup?.cancel()" label="Cancel" color="primary" flat/>
+        <q-btn @click="cancelUpdate" label="Cancel" color="primary" flat/>
       </div>
     </q-popup-edit>
   </div>
@@ -42,6 +42,12 @@ defineExpose({
     titleEditorRef.value?.cancel()
   }
 })
+
+const cancelUpdate = () => {
+  if (titleEditorRef.value) {
+    titleEditorRef?.value.cancel()
+  }
+}
 
 const updateTitle = (value: string) => {
   emit('updated', value)

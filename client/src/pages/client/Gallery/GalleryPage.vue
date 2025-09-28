@@ -26,7 +26,7 @@ import { onMounted, ref } from 'vue'
 import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
-import { IIncludeItem, IRelationshipData } from 'src/components/types'
+import { IIncludedItem, IRelationshipData } from 'src/components/types'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
 
 interface IResponseAlbum {
@@ -47,7 +47,7 @@ interface IResponseAlbum {
 
 interface IGetAlbumsApiResponse {
   data: IResponseAlbum[],
-  included: IIncludeItem[]
+  included: IIncludedItem[]
 }
 
 const albums = ref<IAlbum[]>()

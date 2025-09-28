@@ -56,11 +56,11 @@ interface IResponse {
   included?: any
   meta: any
 }
-interface IItemResponse {
-  data: IRawElement
-  included?: any
-  meta: any
-}
+// interface IItemResponse {
+//   data: IRawElement
+//   included?: any
+//   meta: any
+// }
 
 const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]) => {
   const includedItem = included.find((include: IncludedItem) => {
@@ -113,12 +113,13 @@ const isIRawRelationItemArray = (data: any[]): data is IRawRelationItem[] => {
 }
 
 export function normalizeApiResponse(responseData: IResponse) {
-  responseData.data = responseData.data.map((item: IRawElement) => {
+  // TODO: any to clear type
+  responseData.data = responseData.data.map((item: any) => {
     if (item.relationships) {
       for (const relName in item.relationships) {
         const relData = item.relationships[relName]
 
-        item.relationships[relName] = processRawRelation(relData, responseData.included)
+        item[relName] = processRawRelation(relData, responseData.included)
       }
     }
 
@@ -128,12 +129,13 @@ export function normalizeApiResponse(responseData: IResponse) {
   return responseData
 }
 
-export function normalizeApiItemResponse(responseData: IItemResponse) {
+export function normalizeApiItemResponse(responseData: any) {
+  // TODO: any to clear type
   if (responseData.data.relationships) {
     for (const relName in responseData.data.relationships) {
       const relData = responseData.data.relationships[relName]
 
-      responseData.data.relationships[relName] = processRawRelation(relData, responseData.included)
+      responseData.data[relName] = processRawRelation(relData, responseData.included)
     }
   }
 

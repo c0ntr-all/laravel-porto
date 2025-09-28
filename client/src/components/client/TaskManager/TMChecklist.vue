@@ -30,10 +30,10 @@
         animation-speed="500"
       />
     </div>
-    <template v-if="checklist.relationships.checklistItems.data.length">
+    <template v-if="checklist.checklistItems.data.length">
       <q-list class="q-mb-md" bordered separator>
         <TMChecklistItem
-          v-for="checklistItem in checklist?.relationships?.checklistItems?.data"
+          v-for="checklistItem in checklist?.checklistItems?.data"
           :key="checklistItem.id"
           :item="checklistItem"
           v-model="selectedItems"
@@ -107,10 +107,10 @@ const props = defineProps<{
   task: ITask,
 }>()
 
-const checklist = ref(props.checklist)
-const checklistItems = ref(checklist.value.relationships.checklistItems.data)
+const checklist = ref<IChecklist>(props.checklist)
+const checklistItems = ref(checklist.value.checklistItems.data)
 const selectedItems = ref(
-  checklist.value.relationships.checklistItems.data
+  checklist.value.checklistItems.data
     .filter(item => item.finished_at !== null)
     .map(item => item.id)
 )
@@ -128,7 +128,7 @@ const createChecklistItem = async (data: any) => {
     handleApiSuccess(response.data)
 
     const responseData = response.data.data
-    checklist.value.relationships.checklistItems.data.push({
+    checklist.value.checklistItems.data.push({
       id: responseData.id,
       title: responseData.attributes.title,
       created_at: responseData.attributes.created_at,
@@ -171,7 +171,7 @@ const updateChecklistItem = async (checklistItem: IChecklistItem, data: {title?:
       handleApiSuccess(response.data)
 
       const responseData = response.data.data
-      const checklistItemForChange = checklist.value.relationships.checklistItems.data.find(item => item.id === checklistItem.id)
+      const checklistItemForChange = checklist.value.checklistItems.data.find(item => item.id === checklistItem.id)
 
       if (checklistItemForChange) {
         checklistItemForChange.title = responseData.attributes.title

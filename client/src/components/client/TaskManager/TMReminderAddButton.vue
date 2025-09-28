@@ -78,7 +78,8 @@ import { ICreateReminderResponse, IReminderItem } from 'src/types/TaskManager/ta
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { AxiosError } from 'axios'
-import AppDatetimeField from 'src/components/default/AppDatetimeField.vue';
+import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+import { list } from 'radash'
 
 const props = defineProps<{
   taskId: string,
@@ -89,17 +90,11 @@ const emit = defineEmits<{
   (e: 'created', value: IReminderItem): void
 }>()
 
-function range(start, end) {
-  const length = Math.abs(end - start) + 1
-  const direction = start < end ? 1 : -1
-
-  return Array.from({ length }, (_, index) => start + index * direction)
-}
-const minutesOptions = range(1, 60)
-const hoursOptions = range(1, 60)
-const daysOptions = range(1, 30)
-const weeksOptions = range(1, 4)
-const monthsOptions = range(1, 12)
+const minutesOptions = list(1, 60)
+const hoursOptions = list(1, 24)
+const daysOptions = list(1, 30)
+const weeksOptions = list(1, 4)
+const monthsOptions = list(1, 12)
 
 const whenToRemindBeforePointOptions = [{
   label: 'мин.',
@@ -136,12 +131,14 @@ const whenToRemindBeforeNumberOptions = computed(() => {
   }
 })
 
+const defaultInterval = {
+  label: 'Не повторять',
+  value: null
+}
+
 const reminderModel = ref({
   datetime: getCurrentDateTime(),
-  interval: {
-    label: 'Не повторять',
-    value: null
-  },
+  interval: defaultInterval,
   is_to_remind_before: false,
   when_to_remind_before_number: ref(1),
   when_to_remind_before_point: ref(whenToRemindBeforePointOptions[0]),
@@ -167,7 +164,7 @@ const reminderIntervals = [{
   value: '1 year'
 }]
 
-const prepareRequestData = (object) => {
+const prepareRequestData = (object: object) => {
   const fieldsToRemove = ['is_to_remind_before']
   const labelValueFields = ['interval']
 
@@ -197,10 +194,11 @@ const prepareRequestData = (object) => {
 const clearReminderModel = () => {
   reminderModel.value = {
     datetime: getCurrentDateTime(),
-    interval: null,
-    to_remind_before: null,
-    is_active: true,
-    is_regular: false
+    interval: defaultInterval,
+    is_to_remind_before: false,
+    when_to_remind_before_number: ref(1),
+    when_to_remind_before_point: ref(whenToRemindBeforePointOptions[0]),
+    is_active: true
   }
 }
 
@@ -212,7 +210,7 @@ const createReminder = () => {
     const responseData = response.data.data
     const { id, attributes } = responseData
 
-    const newReminder = {
+    const newReminder: IReminderItem = {
       id,
       ...attributes
     }

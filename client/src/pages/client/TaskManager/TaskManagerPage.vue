@@ -140,13 +140,9 @@ const createList = async (): Promise<void> => {
 
     const newTaskList: ITaskList = {
       id: response.data.data.id,
-      attributes: {
-        title: response.data.data.attributes.title
-      },
-      relationships: {
-        tasks: {
-          data: []
-        }
+      title: response.data.data.attributes.title,
+      tasks: {
+        data: []
       }
     }
 

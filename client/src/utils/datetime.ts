@@ -14,7 +14,7 @@ function getCurrentDateTime() {
   return `${datePart} ${timePart}`
 }
 
-const humanDatetime = datetime => {
+const humanDatetime = (datetime: string) => {
   const year = date.formatDate(datetime, 'YYYY')
   const currentYear = date.formatDate(new Date(), 'YYYY')
   let format = 'D MMM, HH:mm'

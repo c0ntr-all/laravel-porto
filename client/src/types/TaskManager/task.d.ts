@@ -13,12 +13,10 @@ export interface IChecklist {
   title: string
   created_at: string
   updated_at: string
-  relationships: {
-    checklistItems: {
-      data: IChecklistItem[],
-      meta: {
-        count: number
-      }
+  checklistItems: {
+    data: IChecklistItem[],
+    meta: {
+      count: number
     }
   }
 }
@@ -50,12 +48,27 @@ export interface IComment {
   id: string
   content: string
   created_at: string
-  relationships: {
-    user: {
-      data: IUser
-    }
+  user: {
+    data: IUser
   }
 }
+
+// export interface IResponseTask {
+//   type: string
+//   id: string
+//   data: {
+//     title: string
+//     content?: string
+//     finished_at: string | null
+//     is_declined: boolean
+//   },
+//   relationships: {
+//     checklists: IResponseHasManyRelationship,
+//     comments: IResponseHasManyRelationship,
+//     progress: IResponseHasManyRelationship,
+//     reminder: IResponseHasOneRelationship
+//   }
+// }
 
 export interface ITask {
   id: string
@@ -63,47 +76,36 @@ export interface ITask {
   content?: string
   finished_at: string | null
   is_declined: boolean
-  relationships: {
-    checklists?: {
-      data: IChecklist[],
-      meta: {
-        count: number
-      }
-    },
-    progress?: {
-      data: IProgressItem[],
-      meta: {
-        count: number
-      }
-    },
-    reminders?: {
-      data: IReminderItem[],
-      meta: {
-        count: number
-      }
-    },
-    comments: {
-      data: IComment[],
-      meta: {
-        count: number
-      }
+  checklists?: {
+    data: IChecklist[],
+    meta: {
+      count: number
+    }
+  },
+  progress?: {
+    data: IProgressItem[],
+    meta: {
+      count: number
+    }
+  },
+  reminder?: IReminderItem,
+  comments: {
+    data: IComment[],
+    meta: {
+      count: number
     }
   }
 }
 
 export interface ITaskList {
   id: string
-  attributes: {
-    title: string
-  }
-  relationships: {
-    tasks?: {
-      data: ITask[]
-    }
+  title: string
+  tasks?: {
+    data: ITask[]
   }
 }
 
-interface ICreateTaskResponse {
+export interface ICreateTaskResponse {
   data: {
     type: string
     id: string
@@ -124,7 +126,14 @@ interface ICreateTaskResponse {
   }
 }
 
-interface IUpdateTaskResponse {
+export interface IUpdateTaskPayload {
+  title?: string
+  content?: string
+  finished_at?: string | null
+  is_declined?: boolean
+}
+
+export interface IUpdateTaskResponse {
   data: {
     type: string
     id: string
@@ -133,7 +142,6 @@ interface IUpdateTaskResponse {
       content?: string
       finished_at: string
       created_at?: string
-      comments?: IComment[]
     }
   },
   meta: {
@@ -141,7 +149,7 @@ interface IUpdateTaskResponse {
   }
 }
 
-interface IDeclineTaskResponse {
+export interface IDeclineTaskResponse {
   data: {
     type: string
     id: string
@@ -154,13 +162,13 @@ interface IDeclineTaskResponse {
   }
 }
 
-interface IDeleteTaskResponse {
+export interface IDeleteTaskResponse {
   meta: {
     message?: string
   }
 }
 
-interface ICreateCommentResponse {
+export interface ICreateCommentResponse {
   data: {
     type: string
     id: string
@@ -181,7 +189,7 @@ interface ICreateCommentResponse {
   }
 }
 
-interface ICreateChecklistResponse {
+export interface ICreateChecklistResponse {
   data: {
     type: string
     id: string
@@ -197,7 +205,7 @@ interface ICreateChecklistResponse {
   }
 }
 
-interface ICreateProgressResponse {
+export interface ICreateProgressResponse {
   data: {
     type: string
     id: string
@@ -216,7 +224,7 @@ interface ICreateProgressResponse {
   }
 }
 
-interface ICreateReminderResponse {
+export interface ICreateReminderResponse {
   data: {
     type: string
     id: string
@@ -228,6 +236,7 @@ interface ICreateReminderResponse {
       is_active: boolean
       datetime: string
       created_at: string
+      updated_at: string
     }
   },
   meta: {

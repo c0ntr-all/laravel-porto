@@ -59,12 +59,10 @@ const createChecklist = () => {
       title: responseData.attributes.title,
       created_at: responseData.attributes.created_at,
       updated_at: responseData.attributes.updated_at,
-      relationships: {
-        checklistItems: {
-          data: [],
-          meta: {
-            count: 1
-          }
+      checklistItems: {
+        data: [],
+        meta: {
+          count: 1
         }
       }
     }

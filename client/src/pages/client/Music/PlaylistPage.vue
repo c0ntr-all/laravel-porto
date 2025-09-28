@@ -48,27 +48,7 @@ import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import MusicPlaylistTracksList from 'src/components/client/Music/MusicPlaylistTracksList.vue'
 import PlaylistPageSkeleton from 'src/pages/client/Music/PlaylistPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
+import { ITrack } from 'src/components/client/Music/types'
 
 interface Playlist {
   name: string
@@ -77,7 +57,7 @@ interface Playlist {
   date: string
   relationships: {
     tracks: {
-      data: Track[]
+      data: ITrack[]
     }
   }
 }
@@ -122,7 +102,7 @@ const getPlaylist = async (id: string | string[]): Promise<void> => {
       playlist.value = {
         ...responsePlaylist.attributes,
         relationships: {
-          tracks: getIncluded<Track>('tracks', responsePlaylist.relationships, response.data.included) as { data: Track[] }
+          tracks: getIncluded<ITrack>('tracks', responsePlaylist.relationships, response.data.included) as { data: ITrack[] }
         }
       }
     }).catch(error => {

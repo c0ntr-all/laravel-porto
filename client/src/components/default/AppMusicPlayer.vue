@@ -114,8 +114,9 @@
 </template>
 <script lang="ts" setup>
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-import AppSlider from 'src/components/extra/AppSlider.vue'
+import AppSlider from 'src/components/default/AppSlider.vue'
 import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
+import { ITrack } from 'src/components/client/Music/types'
 
 const musicPlayer = useMusicPlayer()
 
@@ -130,7 +131,7 @@ const changeVolume = (value: number) => {
   musicPlayer.audio.volume = value / 100 / 2
 }
 
-const initPlay = (track: any) => {
+const initPlay = (track: ITrack) => {
   musicPlayer.playTrack(track)
 }
 </script>

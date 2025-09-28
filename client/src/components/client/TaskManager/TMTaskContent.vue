@@ -28,7 +28,7 @@ const emit = defineEmits<{
   (e: 'updated', value: string): void
 }>()
 
-const content = defineModel<string>('content', {
+const content = defineModel<string | undefined>('content', {
   required: true
 })
 
@@ -36,7 +36,9 @@ const contentEditorRef = ref<InstanceType<typeof import('quasar').QPopupEdit> | 
 
 defineExpose({
   onUpdateSuccess: () => {
-    contentEditorRef.value?.set()
+    if (contentEditorRef.value) {
+      contentEditorRef.value.set()
+    }
   },
   onUpdateError: () => {
     cancelUpdate()
@@ -47,7 +49,9 @@ const updateContent = (newContent: string) => {
   emit('updated', newContent)
 }
 const cancelUpdate = () => {
-  contentEditorRef.value.cancel()
+  if (contentEditorRef.value) {
+    contentEditorRef?.value.cancel()
+  }
 }
 </script>
 

@@ -3,29 +3,9 @@ import { Notify } from 'quasar'
 import addZero from 'src/utils/addZero'
 import Timer from 'src/utils/timer'
 import { api } from 'src/boot/axios'
+import { ITrack } from 'src/components/client/Music/types'
 
 const DEFAULT_VOLUME = 0.01
-
-interface Tag {
-  id: string
-  name: string
-  is_base: boolean
-}
-
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
 
 export const useMusicPlayer = defineStore('musicPlayer', {
   state: () => ({
@@ -34,10 +14,16 @@ export const useMusicPlayer = defineStore('musicPlayer', {
       id: '0',
       number: 0,
       name: 'Track Name',
-      image: `${process.env.API}/storage/no-image.gif`,
+      image: '/storage/no-image.gif',
       duration: '00:03:00',
-      artist: 'Artist Name'
-    } as Track,
+      artist: 'Artist Name',
+      rate: 0,
+      relationships: {
+        tags: {
+          data: []
+        }
+      }
+    } as ITrack,
     startedAt: null as number | null,
     isScrobbled: false,
     stopScrobble: false,
@@ -48,7 +34,7 @@ export const useMusicPlayer = defineStore('musicPlayer', {
     rewindProgressWidth: 0,
     volumeProgressWidth: DEFAULT_VOLUME * 100,
     timer: new Timer(),
-    playlist: [] as Track[]
+    playlist: [] as ITrack[]
   }),
   actions: {
     init() {
@@ -82,15 +68,15 @@ export const useMusicPlayer = defineStore('musicPlayer', {
       this.status = 'paused'
       this.audio.pause()
     },
-    playTrack(track: Track) {
+    playTrack(track: ITrack) {
       this.setTrack(track)
       this.run()
     },
-    setTrack(track: Track) {
+    setTrack(track: ITrack) {
       if (this.track?.id !== track.id) {
         this.pause()
         this.track = track
-        this.audio.src = `${process.env.host}/api/music/tracks/${track.id}/play`
+        this.audio.src = `/api/music/tracks/${track.id}/play`
 
         this.timer.start(this.getSecondsToScrobble())
         this.isScrobbled = false
@@ -99,10 +85,10 @@ export const useMusicPlayer = defineStore('musicPlayer', {
 
       this.setPlaylistIndex(track)
     },
-    setPlaylist(playlist: Track[]) {
+    setPlaylist(playlist: ITrack[]) {
       this.playlist = [...playlist]
     },
-    addToPlaylist(playlist: Track[]) {
+    addToPlaylist(playlist: ITrack[]) {
       this.playlist.push(...playlist)
     },
     clearPlaylist() {
@@ -182,7 +168,7 @@ export const useMusicPlayer = defineStore('musicPlayer', {
     setAudioVolume() {
       this.audio.volume = DEFAULT_VOLUME
     },
-    setPlaylistIndex(track: Track) {
+    setPlaylistIndex(track: ITrack) {
       const index = this.playlist.findIndex(item => item.id === track.id)
       this.idx = index !== -1 ? index : 0
     },

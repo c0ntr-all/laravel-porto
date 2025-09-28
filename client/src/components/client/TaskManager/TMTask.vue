@@ -43,7 +43,7 @@
 
         <q-card-section>
           <TMTaskComments
-            :comments-data="task?.relationships?.comments?.data"
+            :comments-data="task?.comments?.data"
             :task-id="task.id"
             @created="onCommentCreated"
           />
@@ -85,24 +85,29 @@ import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
 import { useTaskStore } from 'src/stores/modules/TaskManager/taskStore'
 import { IChecklist, IComment, IProgressItem, IReminderItem, ITask } from 'src/types/TaskManager/task'
 
+interface ITaskPartsRef {
+  onUpdateError: () => void
+  onUpdateSuccess: () => void
+}
+
 const props = defineProps<{ task: ITask }>()
 const emit = defineEmits<{
   (e: 'closed'): void
 }>()
 const task = ref<ITask>(props.task)
 task.value.content = task.value.content || '' // null to string cast
-const taskTitleRef = ref(null)
-const taskContentRef = ref(null)
+const taskTitleRef = ref<ITaskPartsRef | null>(null)
+const taskContentRef = ref<ITaskPartsRef | null>(null)
 const isProgressAvailable = computed(() => {
-  const progressData = task.value?.relationships?.progress?.data
+  const progressData = task.value?.progress?.data
   return !progressData || progressData.filter(item => item.is_final).length === 0
 })
 const isReminderAvailable = computed(() => {
-  return !task.value?.relationships?.reminder?.data
+  return !task.value?.reminder
 })
-const checklists = ref(task.value.relationships?.checklists?.data || [])
-const progress = ref(task.value.relationships?.progress?.data || [])
-const reminder = ref(task.value.relationships?.reminder?.data || null)
+const checklists = ref<IChecklist[]>(task.value.checklists?.data || [])
+const progress = ref<IProgressItem[]>(task.value.progress?.data || [])
+const reminder = ref<IReminderItem | null>(task.value.reminder || null)
 const activeChecklistFormId = ref<string | null>(null)
 
 provide('activeFormId', activeChecklistFormId)
@@ -126,12 +131,12 @@ async function handleUpdateContent(newContent: string) {
 }
 
 const onCommentCreated = (newComment: IComment) => {
-  task.value.relationships.comments.data.push(newComment)
+  task.value.comments.data.push(newComment)
 }
 
 const onChecklistCreated = (newChecklist: IChecklist) => {
-  task.value.relationships.checklists = {
-    data: task.value?.relationships?.checklists?.data || [],
+  task.value.checklists = {
+    data: task.value?.checklists?.data || [],
     meta: {
       count: 1
     }
@@ -140,8 +145,8 @@ const onChecklistCreated = (newChecklist: IChecklist) => {
 }
 
 const onProgressCreated = (newProgressItem: IProgressItem) => {
-  task.value.relationships.progress = {
-    data: task.value?.relationships?.progress?.data || [],
+  task.value.progress = {
+    data: task.value?.progress?.data || [],
     meta: {
       count: 1
     }

@@ -1,7 +1,7 @@
 <template>
   <q-card class="list bg-grey-4">
     <q-card-section class="list__header">
-      <p>{{ list.attributes.title }}</p>
+      <p>{{ list.title }}</p>
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">
@@ -73,8 +73,8 @@ const props = defineProps<{
 }>()
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
-const tasks = ref<ITask[]>(props.list.relationships.tasks?.data || [])
-const model = ref<{ newCardName: string }>({
+const tasks = ref<ITask[]>(props.list.tasks?.data || [])
+const model = ref<{ newCardName: string, newCardContent: string }>({
   newCardName: '',
   newCardContent: ''
 })
@@ -120,18 +120,16 @@ const createTask = async (): Promise<void> => {
       content: response.data.data.attributes.content || '',
       finished_at: null,
       is_declined: false,
-      relationships: {
-        checklists: {
-          data: [],
-          meta: {
-            count: 0
-          }
-        },
-        comments: {
-          data: [],
-          meta: {
-            count: 0
-          }
+      checklists: {
+        data: [],
+        meta: {
+          count: 0
+        }
+      },
+      comments: {
+        data: [],
+        meta: {
+          count: 0
         }
       }
     }

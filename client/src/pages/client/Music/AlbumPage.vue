@@ -72,6 +72,7 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import AlbumPageSkeleton from 'src/pages/client/Music/AlbumPageSkeleton.vue'
 import MusicAlbumVersionsList from 'src/components/client/Music/MusicAlbumVersionsList.vue'
 import MusicAlbumTracksList from 'src/components/client/Music/MusicAlbumTracksList.vue'
+import { ITrack } from 'src/components/client/Music/types'
 
 interface Artist {
   id: string
@@ -92,21 +93,6 @@ interface Tag {
   is_base: boolean
 }
 
-interface Track {
-  id: string
-  name: string
-  number: number
-  artist: string
-  image: string
-  duration: string
-  rate: number
-  relationships: {
-    tags: {
-      data: Tag[]
-    }
-  }
-}
-
 interface Album {
   id: string
   name: string
@@ -121,7 +107,7 @@ interface Album {
       data: Tag[]
     }
     tracks: {
-      data: Track[]
+      data: ITrack[]
     }
     versions: {
       data: AlbumVersion[],
@@ -200,7 +186,7 @@ const getAlbum = async (id: string): Promise<void> => {
         relationships: {
           artists: getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included) as { data: Artist[] },
           tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as { data: Tag[] },
-          tracks: getIncluded<Track>('tracks', responseAlbum.relationships, response.data.included) as { data: Track[] },
+          tracks: getIncluded<ITrack>('tracks', responseAlbum.relationships, response.data.included) as { data: ITrack[] },
           versions: {
             ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included) as { data: AlbumVersion[] },
             meta: {

@@ -53,7 +53,7 @@ interface ErrorResponse {
 }
 
 const register = (): void => {
-  user.register(...model.value).then((): void => {
+  user.register(model.value).then((): void => {
     $q.notify({
       type: 'positive',
       message: 'Success Register'

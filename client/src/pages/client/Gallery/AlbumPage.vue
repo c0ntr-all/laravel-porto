@@ -46,7 +46,7 @@ import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { onMounted, provide, ref } from 'vue'
 import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
-import { IIncludeItem, IRelationshipData } from 'src/components/types'
+import { IIncludedItem, IRelationshipData } from 'src/components/types'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import GalleryMediaCard from 'src/components/client/Gallery/GalleryMediaCard.vue'
 import GalleryCarouselDialog from 'src/components/client/Gallery/GalleryCarouselDialog.vue'
@@ -72,7 +72,7 @@ interface IGetAlbumApiResponse {
       }
     }
   },
-  included: IIncludeItem[]
+  included: IIncludedItem[]
 }
 
 interface IResponseMediaItem {
@@ -82,7 +82,11 @@ interface IResponseMediaItem {
     type: 'photo' | 'video'
     name: string
     description: string
-    path: string
+    original_path: string
+    list_thumb_path: string
+    preview_thumb_path: string
+    width: number
+    height: number
   }
 }
 
@@ -132,8 +136,8 @@ const getAlbum = async (id: string): Promise<void> => {
 
 const uploadMedia = async (data: [] | string, type: string): Promise<void> => {
   const endpoints: Record<typeof type, string> = {
-    windows: `v1/gallery/albums/${album.value!.id}/media/upload-windows`,
-    web: `v1/gallery/albums/${album.value!.id}/media/upload-web`
+    windows: `v1/gallery/albums/${album.value!.id}/images/upload-windows`,
+    web: `v1/gallery/albums/${album.value!.id}/images/upload-web`
   }
 
   await api.post<IUploadApiResponse | IWebUploadApiResponse>(
@@ -148,7 +152,7 @@ const uploadMedia = async (data: [] | string, type: string): Promise<void> => {
 
     addMediaToAlbum(newMedia)
 
-    handleApiSuccess(response)
+    handleApiSuccess(response.data)
   }).catch(error => {
     handleApiError(error)
   })

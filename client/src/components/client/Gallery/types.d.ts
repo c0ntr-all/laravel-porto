@@ -10,7 +10,7 @@ export interface IMediaItem {
   height: number
 }
 
-interface IAlbum {
+export interface IAlbum {
   id: string
   name: string
   image: string

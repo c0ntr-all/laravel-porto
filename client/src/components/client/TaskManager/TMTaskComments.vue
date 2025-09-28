@@ -14,7 +14,7 @@
     <div v-if="commentsData" class="comments-list column q-gutter-sm">
       <q-card v-for="comment in commentsData" :key="comment.id">
         <q-card-section class="flex justify-between">
-          <span>{{ comment.relationships.user.data.name }}</span>
+          <span>{{ comment.user.data.name }}</span>
           <time class="time">{{ comment.created_at }}</time>
         </q-card-section>
         <q-card-section>
@@ -56,12 +56,13 @@ const createComment = () => {
       id: responseData.id,
       content: responseData.attributes.content,
       created_at: responseData.attributes.created_at,
-      relationships: {
-        user: {
-          data: {
-            id: responseData.relationships.user.data.id,
-            name: response.data.included.filter(included => included.type === 'user' && included.id === responseData.relationships.user.data.id)[0].attributes.name as string
-          }
+      user: {
+        data: {
+          id: responseData.relationships.user.data.id,
+          name: response.data.included.filter(
+            included => included.type === 'user' && included.id === responseData.relationships.user.data.id
+          )[0].attributes.name as string,
+          email: responseData.relationships.user.data.email
         }
       }
     }

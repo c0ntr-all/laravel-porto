@@ -18,6 +18,14 @@
       />
     </div>
 
+    <div class="lifelog-post-form__tags q-pa-md">
+      <LifeLogTag
+        v-for="tag in tags"
+        :key="tag.id"
+        :tag="tag"
+      />
+    </div>
+
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
         <div class="lifelog-post-form__action">
@@ -39,16 +47,22 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { getCurrentDateTime } from 'src/utils/datetime'
+import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 
 interface IInputRef {
   resetValidation: () => void
 }
 
+const tagStore = useTagStore()
 const postStore = usePostStore()
+
+const { tags } = storeToRefs(tagStore)
 
 const model = ref({
   title: '',
@@ -75,12 +89,21 @@ const clearModel = () => {
   })
 }
 
+onMounted(() => {
+  tagStore.getTags()
+})
+
 </script>
 
 <style lang="scss" scoped>
 .lifelog-post-form {
   width: 100%;
   background-color: #ffffff;
+
+  &__tags {
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+  }
 
   &-actions {
     background-color: #fbfbfb;

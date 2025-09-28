@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { postApi } from 'src/api/LifeLog/postApi'
-import { IPost } from 'src/types/LifeLog/post'
-import { handleApiSuccess, normalizeApiItemResponse, normalizeApiResponse } from 'src/utils/jsonapi'
+import { ICreatePostPayload, IPost } from 'src/types/LifeLog/post'
+import { handleApiSuccess } from 'src/utils/jsonapi'
+import { mapResponse } from 'src/utils/jsonApiMapper'
 
 export const usePostStore = defineStore('post', {
   state: () => ({
@@ -12,7 +13,7 @@ export const usePostStore = defineStore('post', {
   }),
 
   getters: {
-    getPostById: (state) => (id: number) => {
+    getPostById: (state) => (id: string) => {
       return state.posts.find(post => post.id === id)
     }
   },
@@ -23,33 +24,27 @@ export const usePostStore = defineStore('post', {
       this.error = null
       try {
         const response = await postApi.getPosts()
-        const normalizedResponse = normalizeApiResponse(response)
-
-        this.posts = normalizedResponse.data as unknown as IPost[]
-        this.count = response.meta.count
+        this.posts = mapResponse(response) as IPost[]
+        this.count = response.meta?.count || 0
       } catch (err: any) {
         this.error = err.message ?? 'Ошибка загрузки'
       } finally {
         this.isLoading = false
       }
     },
-    async createPost(payload: object) {
-      await postApi.createPost(payload).then(responseData => {
-        const normalizedResponse = normalizeApiItemResponse(responseData)
-        this.posts.unshift(normalizedResponse.data)
+    async createPost(payload: ICreatePostPayload) {
+      try {
+        const responseData = await postApi.createPost(payload)
+        const mappedResponse = mapResponse(responseData) as IPost[]
+        this.posts.unshift(...mappedResponse)
         this.count += 1
-        handleApiSuccess(normalizedResponse)
-      })
-      // try {
-      //   const responseData = await postApi.createPost(payload)
-      //   const normalizedResponse = normalizeApiResponse(responseData)
-      //
-      //   this.posts.unshift(normalizedResponse.value)
-      //   this.count += 1
-      //   handleApiSuccess(responseData)
-      // } catch (err: any) {
-      //   this.error = err.message ?? 'Ошибка создания'
-      // }
+
+        handleApiSuccess(responseData)
+
+        return mappedResponse
+      } catch (err: any) {
+        this.error = err.message ?? 'Ошибка создания'
+      }
     }
   }
 })

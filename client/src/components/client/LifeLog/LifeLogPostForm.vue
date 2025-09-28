@@ -1,7 +1,14 @@
 <template>
   <div class="lifelog-post-form">
     <div class="lifelog-post-form__title">
-      <q-input v-model="model.title" label="Title" dense outlined />
+      <q-input
+        ref="titleRef"
+        v-model="model.title"
+        label="Title"
+        :rules="[val => !!val || 'Field is required']"
+        dense
+        outlined
+      />
     </div>
     <div class="lifelog-post-form__content">
       <q-editor
@@ -32,10 +39,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+
+interface IInputRef {
+  resetValidation: () => void
+}
 
 const postStore = usePostStore()
 
@@ -44,9 +55,24 @@ const model = ref({
   content: '',
   datetime: getCurrentDateTime()
 })
+const titleRef = ref<IInputRef | null>(null)
 
 const createPost = () => {
-  postStore.createPost(model.value)
+  postStore.createPost(model.value).then(() => {
+    clearModel()
+  })
+}
+
+const clearModel = () => {
+  model.value.title = ''
+  model.value.content = ''
+  model.value.datetime = getCurrentDateTime()
+
+  nextTick(() => {
+    if (titleRef.value) {
+      titleRef.value.resetValidation()
+    }
+  })
 }
 
 </script>

@@ -1,15 +1,15 @@
 <template>
-  <q-card class="ll-card" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'" flat bordered>
+  <q-card class="ll-card bg-grey-2" flat bordered>
     <q-card-section>
       <div class="row items-center no-wrap">
         <div class="col">
-          <div class="text-h6">{{ post.attributes.title }}</div>
-          <div class="text-subtitle2">by {{ post.relationships.user.data.email }}</div>
+          <div class="text-h6">{{ post.title }}</div>
+          <div class="text-subtitle2">by {{ post.user.email }}</div>
         </div>
       </div>
     </q-card-section>
     <q-card-section>
-      {{ post.attributes.content }}
+      {{ post.content }}
     </q-card-section>
   </q-card>
 </template>

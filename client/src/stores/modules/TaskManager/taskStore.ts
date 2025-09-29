@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { taskApi } from 'src/api/taskApi'
+import { taskApi } from 'src/api/requests/taskApi'
 import { ITask, IUpdateTaskResponse } from 'src/types/TaskManager/task'
 
 export const useTaskStore = defineStore('task', {

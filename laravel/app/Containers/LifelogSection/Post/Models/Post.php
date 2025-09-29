@@ -2,6 +2,8 @@
 
 namespace App\Containers\LifelogSection\Post\Models;
 
+use App\Containers\AppSection\Tag\Models\Tag;
+use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\GallerySection\Album\Models\Album;
@@ -24,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property User $user
+ * @property Tag[] $tags
  * @method static Builder|Album newModelQuery()
  * @method static Builder|Album newQuery()
  * @method static Builder|Album onlyTrashed()
@@ -47,7 +50,8 @@ class Post extends Model
 {
     use SoftDeletes,
         HasImage,
-        HasUser;
+        HasUser,
+        HasTags;
 
     protected $table = 'lifelog_posts';
 

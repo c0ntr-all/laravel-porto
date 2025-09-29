@@ -2,8 +2,10 @@
 
 namespace App\Containers\LifelogSection\Post\UI\API\Transformers;
 
+use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\LifelogSection\Post\Models\Post;
+use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
@@ -13,7 +15,7 @@ use League\Fractal\TransformerAbstract;
 class PostTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'user'
+        'user', 'tags'
     ];
 
     public function transform(Post $post): array
@@ -30,5 +32,10 @@ class PostTransformer extends TransformerAbstract
     public function includeUser(Post $post): Item
     {
         return $this->item($post->user, new UserTransformer(), 'user');
+    }
+
+    public function includeTags(Post $post): Collection
+    {
+        return $this->collection($post->tags, new TagTransformer(), 'tags');
     }
 }

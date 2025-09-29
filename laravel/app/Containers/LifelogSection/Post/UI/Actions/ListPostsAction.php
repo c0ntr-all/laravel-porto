@@ -29,7 +29,7 @@ class ListPostsAction
         $posts = $this->handle();
 
         return fractal($posts, new PostTransformer())
-            ->parseIncludes(['user'])
+            ->parseIncludes(['user', 'tags'])
             ->withResourceName('posts')
             ->addMeta(['count' => $posts->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);

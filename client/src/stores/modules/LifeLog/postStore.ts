@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import { postApi } from 'src/api/LifeLog/postApi'
-import { ICreatePostPayload, IPost } from 'src/types/LifeLog/post'
+import { postApi } from 'src/api/requests/LifeLog/postApi'
+import { IPost, IPostModel } from 'src/types/LifeLog/post'
 import { handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
+import { mapPostFormToCreateDto } from 'src/api/mappers/post.mapper'
 
 export const usePostStore = defineStore('post', {
   state: () => ({
@@ -25,6 +26,7 @@ export const usePostStore = defineStore('post', {
       try {
         const response = await postApi.getPosts()
         this.posts = mapResponse(response) as IPost[]
+        console.log(this.posts)
         this.count = response.meta?.count || 0
       } catch (err: any) {
         this.error = err.message ?? 'Ошибка загрузки'
@@ -32,9 +34,10 @@ export const usePostStore = defineStore('post', {
         this.isLoading = false
       }
     },
-    async createPost(payload: ICreatePostPayload) {
+    async createPost(postModel: IPostModel) {
       try {
-        const responseData = await postApi.createPost(payload)
+        const postCreateDto = mapPostFormToCreateDto(postModel)
+        const responseData = await postApi.createPost(postCreateDto)
         const mappedResponse = mapResponse(responseData) as IPost[]
         this.posts.unshift(...mappedResponse)
         this.count += 1

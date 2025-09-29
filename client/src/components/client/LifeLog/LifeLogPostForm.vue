@@ -29,7 +29,7 @@
       />
       <p>Последние:</p>
       <LifeLogTag
-        v-for="tag in tags"
+        v-for="tag in availableTags"
         :key="tag.id"
         :tag="tag"
         @selected="handleSelectTag"
@@ -63,9 +63,10 @@ import { storeToRefs } from 'pinia'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
+import { ITag } from 'src/types/tag'
+import { IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
-import { ITag } from 'src/types/tag'
 
 interface IInputRef {
   resetValidation: () => void
@@ -75,13 +76,9 @@ const tagStore = useTagStore()
 const postStore = usePostStore()
 
 const { tags } = storeToRefs(tagStore)
+const availableTags = ref<ITag[]>([])
 
-const model = ref<{
-  title: string,
-  content: string,
-  tags: ITag[],
-  datetime: string
-}>({
+const model = ref<IPostModel>({
   title: '',
   content: '',
   tags: [],
@@ -92,6 +89,7 @@ const titleRef = ref<IInputRef | null>(null)
 const createPost = () => {
   postStore.createPost(model.value).then(() => {
     clearModel()
+    resetAvailableTags()
   })
 }
 
@@ -99,6 +97,7 @@ const clearModel = () => {
   model.value.title = ''
   model.value.content = ''
   model.value.datetime = getCurrentDateTime()
+  model.value.tags = []
 
   nextTick(() => {
     if (titleRef.value) {
@@ -107,9 +106,13 @@ const clearModel = () => {
   })
 }
 
+const resetAvailableTags = () => {
+  availableTags.value = [...tags.value]
+}
+
 const handleSelectTag = (tag: ITag) => {
   if (!model.value.tags.some((t: ITag) => t.id === tag.id)) {
-    tags.value = tags.value.filter((t: ITag) => t.id !== tag.id)
+    availableTags.value = availableTags.value.filter((t: ITag) => t.id !== tag.id)
     model.value.tags.push(tag)
   }
 }
@@ -117,12 +120,14 @@ const handleSelectTag = (tag: ITag) => {
 const handleRemoveTag = (tag: ITag) => {
   if (model.value.tags.some((t: ITag) => t.id === tag.id)) {
     model.value.tags = model.value.tags.filter((t: ITag) => t.id !== tag.id)
-    tags.value.push(tag)
+    availableTags.value.push(tag)
   }
 }
 
 onMounted(() => {
-  tagStore.getTags()
+  tagStore.getTags().then(() => {
+    availableTags.value = [...tags.value]
+  })
 })
 
 </script>

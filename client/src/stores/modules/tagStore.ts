@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { tagApi } from 'src/api/tagApi'
+import { tagApi } from 'src/api/requests/tagApi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { ITag } from 'src/types/tag'
 

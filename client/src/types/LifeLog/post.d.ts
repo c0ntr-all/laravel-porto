@@ -1,4 +1,5 @@
 import { IUser } from 'src/types/user'
+import { ITag } from 'src/types/tag'
 
 export interface IPost {
   id: string
@@ -7,10 +8,12 @@ export interface IPost {
   datetime: string | null
   created_at: string | null
   user: IUser
+  tags: ITag[]
 }
 
-interface ICreatePostPayload {
-  title?: string
-  content?: string
+export interface IPostModel {
+  title: string,
+  content: string,
+  tags: ITag[],
   datetime: string
 }

@@ -27,15 +27,20 @@ class CreatePostAction
 
     public function asController(CreateRequest $request): JsonResponse
     {
-        $dto = PostCreateData::from($request->validated());
+        $requestData = $request->validated();
+        $dto = PostCreateData::from($requestData);
         $dto->user_id = auth()->user()->id;
 
-        $task = $this->handle($dto);
+        $post = $this->handle($dto);
 
-        return fractal($task, new PostTransformer())
-            ->parseIncludes(['user'])
-            ->withResourceName('tasks')
-            ->addMeta(['message' => 'New task successfully created!'])
+        if (!empty($requestData['tags'])) {
+            $post->tags()->sync($requestData['tags']);
+        }
+
+        return fractal($post, new PostTransformer())
+            ->parseIncludes(['user', 'tags'])
+            ->withResourceName('posts')
+            ->addMeta(['message' => 'New post successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

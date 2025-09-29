@@ -4,6 +4,9 @@
     @remove="emitRemove"
     :clickable="clickable"
     :removable="removable"
+    :dense="dense"
+    :color="color"
+    :textColor="textColor"
   >
     {{ tag.name }}
   </q-chip>
@@ -16,10 +19,16 @@ import { ITag } from 'src/types/tag'
 const props = withDefaults(defineProps<{
   tag: ITag,
   removable?: boolean,
-  clickable?: boolean
+  clickable?: boolean,
+  dense?: boolean,
+  color?: string,
+  textColor?: string
 }>(), {
   removable: false,
-  clickable: false
+  clickable: false,
+  dense: false,
+  color: '',
+  textColor: ''
 })
 const emit = defineEmits<{
   (e: 'selected', tag: ITag): void

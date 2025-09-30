@@ -3,7 +3,7 @@
     <div class="lifelog-post-form-wrap q-mb-md">
       <LifeLogPostForm />
     </div>
-    <div class="lifelog-posts-wrap q-mb-md">
+    <div class="lifelog-posts-wrap q-mb-md q-gutter-sm">
       <div v-if="postStore.isLoading">loading...</div>
       <template v-else>
         <template v-if="postStore.count">

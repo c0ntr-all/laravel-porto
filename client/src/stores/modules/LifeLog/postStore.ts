@@ -26,7 +26,6 @@ export const usePostStore = defineStore('post', {
       try {
         const response = await postApi.getPosts()
         this.posts = mapResponse(response) as IPost[]
-        console.log(this.posts)
         this.count = response.meta?.count || 0
       } catch (err: any) {
         this.error = err.message ?? 'Ошибка загрузки'

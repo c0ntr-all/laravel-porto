@@ -1,5 +1,5 @@
 import { IUser } from 'src/types/user'
-import { ITag } from 'src/types/tag'
+import { INewTag, ITag } from 'src/types/tag'
 
 export interface IPost {
   id: string
@@ -15,5 +15,6 @@ export interface IPostModel {
   title: string,
   content: string,
   tags: ITag[],
+  newTags: INewTag[],
   datetime: string
 }

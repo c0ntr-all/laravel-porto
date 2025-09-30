@@ -6,3 +6,7 @@ export interface ITag {
   created_at: string
   updated_at: string
 }
+
+export interface INewTag {
+  name: string
+}

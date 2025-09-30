@@ -21,11 +21,14 @@
     <div class="lifelog-post-form__tags q-pa-md">
       <p>Выбранные:</p>
       <LifeLogTag
-        v-for="tag in model.tags"
-        :key="tag.id"
+        v-for="tag in selectedTags"
+        :key="getTagKey(tag)"
         :tag="tag"
         @removed="handleRemoveTag"
         removable
+      />
+      <AppAddButton
+        @created="handleAddTag"
       />
       <p>Последние:</p>
       <LifeLogTag
@@ -58,15 +61,17 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, markRaw, nextTick, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
-import { ITag } from 'src/types/tag'
+import { INewTag, ITag } from 'src/types/tag'
 import { IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
+import AppAddButton from 'src/components/default/AppAddButton.vue'
+import { unique } from 'radash'
 
 interface IInputRef {
   resetValidation: () => void
@@ -82,9 +87,16 @@ const model = ref<IPostModel>({
   title: '',
   content: '',
   tags: [],
+  newTags: [],
   datetime: getCurrentDateTime()
 })
 const titleRef = ref<IInputRef | null>(null)
+const selectedTags = computed(() => {
+  return unique(
+    [...model.value.tags, ...model.value.newTags],
+    item => item.id || item.name
+  )
+})
 
 const createPost = () => {
   postStore.createPost(model.value).then(() => {
@@ -98,6 +110,7 @@ const clearModel = () => {
   model.value.content = ''
   model.value.datetime = getCurrentDateTime()
   model.value.tags = []
+  model.value.newTags = []
 
   nextTick(() => {
     if (titleRef.value) {
@@ -106,8 +119,17 @@ const clearModel = () => {
   })
 }
 
+const getTagKey = (tag: ITag | INewTag) => {
+  return 'id' in tag ? `tag-${tag.id}` : `newtag-${tag.name}`
+}
 const resetAvailableTags = () => {
   availableTags.value = [...tags.value]
+}
+
+const handleAddTag = tagName => {
+  model.value.newTags.push(markRaw({
+    name: tagName
+  }))
 }
 
 const handleSelectTag = (tag: ITag) => {
@@ -117,10 +139,18 @@ const handleSelectTag = (tag: ITag) => {
   }
 }
 
-const handleRemoveTag = (tag: ITag) => {
-  if (model.value.tags.some((t: ITag) => t.id === tag.id)) {
-    model.value.tags = model.value.tags.filter((t: ITag) => t.id !== tag.id)
-    availableTags.value.push(tag)
+const handleRemoveTag = (tag: ITag | INewTag) => {
+  if (tag.id) {
+    const isTagExists = model.value.tags.some((t: ITag) => t.id === tag.id)
+    if (isTagExists) {
+      model.value.tags = model.value.tags.filter((t: ITag) => t.id !== tag.id)
+      availableTags.value.push(tag)
+    }
+  } else {
+    const isTagExists = model.value.newTags.some(t => t.name === tag.name)
+    if (isTagExists) {
+      model.value.newTags = model.value.newTags.filter(t => t.name !== tag.name)
+    }
   }
 }
 

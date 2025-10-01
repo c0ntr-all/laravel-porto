@@ -2,7 +2,7 @@
 
 namespace App\Containers\AppSection\Tag\UI\Actions;
 
-use App\Containers\AppSection\Tag\Data\DTO\TagCreateData;
+use App\Containers\AppSection\Tag\Data\DTO\TagCreateDto;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Tasks\CreateTagTask;
 use App\Containers\AppSection\Tag\UI\API\Requests\CreateRequest;
@@ -20,14 +20,14 @@ class CreateTagAction
     {
     }
 
-    public function handle(TagCreateData $dto): Tag
+    public function handle(TagCreateDto $dto): Tag
     {
         return $this->createTagTask->run($dto);
     }
 
     public function asController(Tag $tag, CreateRequest $request): JsonResponse
     {
-        $dto = TagCreateData::from($request->validated());
+        $dto = TagCreateDto::from($request->validated());
         $dto->user_id = auth()->user()->id;
 
         $tag = $this->handle($dto);

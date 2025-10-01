@@ -3,18 +3,21 @@
 namespace App\Containers\AppSection\Tag\Data\Repositories;
 
 use App\Containers\AppSection\Tag\Models\Tag;
+use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
 
 class TagRepository
 {
     public function get(): Collection
     {
-        return Tag::orderBy('name')->get();
+        return QueryBuilder::for(Tag::class)
+                           ->allowedSorts(['name', 'created_at', 'updated_at'])
+                           ->get();
     }
 
-    public function create($dto)
+    public function create(array $data)
     {
-        return Tag::create($dto->toArray());
+        return Tag::create($data);
     }
 
     public function delete(string $id): int

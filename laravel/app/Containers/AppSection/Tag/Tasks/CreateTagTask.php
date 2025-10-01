@@ -2,19 +2,27 @@
 
 namespace App\Containers\AppSection\Tag\Tasks;
 
-use App\Containers\AppSection\Tag\Data\DTO\TagCreateData;
+use App\Containers\AppSection\Tag\Data\DTO\TagCreateDto;
 use App\Containers\AppSection\Tag\Data\Repositories\TagRepository;
 use App\Ship\Parents\Tasks\Task;
+use Illuminate\Support\Str;
 
 class CreateTagTask extends Task
 {
     public function __construct(
-        private readonly TagRepository $tagRepository,
+        private readonly TagRepository $tagRepository
     ) {
     }
 
-    public function run(TagCreateData $dto)
+    public function run(TagCreateDto $dto)
     {
-        return $this->tagRepository->create($dto);
+        $dto->slug = Str::slug($dto->name);
+
+        return $this->tagRepository->create([
+            'user_id' => $dto->user_id,
+            'name' => $dto->name,
+            'slug' => $dto->slug,
+            'content' => $dto->content,
+        ]);
     }
 }

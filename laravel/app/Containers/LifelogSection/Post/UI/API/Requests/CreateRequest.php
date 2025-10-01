@@ -29,6 +29,8 @@ class CreateRequest extends FormRequest
             'datetime' => 'required|date_format:Y-m-d H:i',
             'tags' => 'sometimes|array',
             'tags.*' => 'sometimes|string',
+            'new_tags' => 'sometimes|array',
+            'new_tags.*' => 'sometimes|string|unique:App\Containers\AppSection\Tag\Models\Tag,name'
         ];
     }
 }

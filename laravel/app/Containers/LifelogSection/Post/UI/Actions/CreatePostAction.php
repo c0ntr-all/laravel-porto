@@ -2,6 +2,8 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
+use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
+use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateData;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
@@ -15,27 +17,39 @@ class CreatePostAction
     use AsAction;
 
     public function __construct(
-        private readonly CreatePostTask $createPostTask
+        private readonly CreatePostTask $createPostTask,
+        private readonly CreateTagsByNamesTask $createTagsByNamesTask
     )
     {
     }
 
     public function handle(PostCreateData $dto): Post
     {
-        return $this->createPostTask->run($dto);
+        $post = $this->createPostTask->run($dto);
+
+        if (!empty($dto->new_tags)) {
+            $newTagsDto = TagsCreateDto::from([
+                'user_id' => $dto->user_id,
+                'names' => $dto->new_tags
+            ]);
+            $newTags = $this->createTagsByNamesTask->run($newTagsDto);
+
+            $dto->tags = array_merge($dto->tags, $newTags->pluck('id')->toArray());
+        }
+
+        if (!empty($dto->tags)) {
+            $post->tags()->sync($dto->tags);
+        }
+
+        return $post;
     }
 
     public function asController(CreateRequest $request): JsonResponse
     {
-        $requestData = $request->validated();
-        $dto = PostCreateData::from($requestData);
+        $dto = PostCreateData::from($request->validated());
         $dto->user_id = auth()->user()->id;
 
         $post = $this->handle($dto);
-
-        if (!empty($requestData['tags'])) {
-            $post->tags()->sync($requestData['tags']);
-        }
 
         return fractal($post, new PostTransformer())
             ->parseIncludes(['user', 'tags'])

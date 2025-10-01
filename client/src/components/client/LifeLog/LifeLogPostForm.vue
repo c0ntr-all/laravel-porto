@@ -94,7 +94,7 @@ const titleRef = ref<IInputRef | null>(null)
 const selectedTags = computed(() => {
   return unique(
     [...model.value.tags, ...model.value.newTags],
-    item => item.id || item.name
+    (tag: ITag | INewTag) => 'id' in tag ? tag.id : tag.name
   )
 })
 
@@ -126,10 +126,16 @@ const resetAvailableTags = () => {
   availableTags.value = [...tags.value]
 }
 
-const handleAddTag = tagName => {
-  model.value.newTags.push(markRaw({
-    name: tagName
-  }))
+const handleAddTag = (tagName: string) => {
+  const existingTag = availableTags.value.find(t => t.name === tagName)
+
+  if (existingTag) {
+    handleSelectTag(existingTag)
+  } else {
+    model.value.newTags.push(markRaw({
+      name: tagName
+    }))
+  }
 }
 
 const handleSelectTag = (tag: ITag) => {
@@ -140,7 +146,7 @@ const handleSelectTag = (tag: ITag) => {
 }
 
 const handleRemoveTag = (tag: ITag | INewTag) => {
-  if (tag.id) {
+  if ('id' in tag) {
     const isTagExists = model.value.tags.some((t: ITag) => t.id === tag.id)
     if (isTagExists) {
       model.value.tags = model.value.tags.filter((t: ITag) => t.id !== tag.id)

@@ -21,6 +21,11 @@ class CreatePostTask extends ParentTask
      */
     public function run(PostCreateData $dto): Post
     {
-        return $this->postRepository->createPost($dto);
+        return $this->postRepository->createPost([
+            'user_id' => $dto->user_id,
+            'title' => $dto->title,
+            'content' => $dto->content,
+            'datetime' => $dto->datetime
+        ]);
     }
 }

@@ -18,11 +18,11 @@ class PostRepository
     }
 
     /**
-     * @param PostCreateData $dto
+     * @param array $data
      * @return mixed
      */
-    public function createPost(PostCreateData $dto): Post
+    public function createPost(array $data): Post
     {
-        return Post::create($dto->toArray());
+        return Post::create($data);
     }
 }

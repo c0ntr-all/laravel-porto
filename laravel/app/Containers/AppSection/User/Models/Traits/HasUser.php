@@ -21,6 +21,11 @@ trait HasUser
         });
     }
 
+    public function scopeWhereUser($query, string $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

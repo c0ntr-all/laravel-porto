@@ -14,6 +14,11 @@ use League\Fractal\TransformerAbstract;
  */
 class PostTransformer extends TransformerAbstract
 {
+    public function __construct(
+        private readonly int $userId
+    )
+    {
+    }
     protected array $availableIncludes = [
         'user', 'tags'
     ];
@@ -36,6 +41,6 @@ class PostTransformer extends TransformerAbstract
 
     public function includeTags(Post $post): Collection
     {
-        return $this->collection($post->tags, new TagTransformer(), 'tags');
+        return $this->collection($post->tagsForUser($this->userId)->get(), new TagTransformer(), 'tags');
     }
 }

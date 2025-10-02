@@ -2,8 +2,10 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
+use App\Containers\AppSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
+use App\Containers\AppSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateData;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
@@ -18,7 +20,8 @@ class CreatePostAction
 
     public function __construct(
         private readonly CreatePostTask $createPostTask,
-        private readonly CreateTagsByNamesTask $createTagsByNamesTask
+        private readonly CreateTagsByNamesTask $createTagsByNamesTask,
+        private readonly SyncTagsTask $syncTagsTask
     )
     {
     }
@@ -38,7 +41,12 @@ class CreatePostAction
         }
 
         if (!empty($dto->tags)) {
-            $post->tags()->sync($dto->tags);
+            $syncData = [];
+            foreach ($dto->tags as $tagId) {
+                $syncData[$tagId] = ['user_id' => $dto->user_id];
+            }
+            $syncTagsDto = SyncTagsDto::from(['tags' => $syncData]);
+            $this->syncTagsTask->run($post, $syncTagsDto);
         }
 
         return $post;
@@ -51,7 +59,7 @@ class CreatePostAction
 
         $post = $this->handle($dto);
 
-        return fractal($post, new PostTransformer())
+        return fractal($post, new PostTransformer($dto->user_id))
             ->parseIncludes(['user', 'tags'])
             ->withResourceName('posts')
             ->addMeta(['message' => 'New post successfully created!'])

@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
+use App\Containers\LifelogSection\Post\Data\DTO\PostListDto;
 use App\Containers\LifelogSection\Post\Tasks\ListPostsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\ListPostsRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
@@ -19,16 +20,19 @@ class ListPostsAction
     {
     }
 
-    public function handle(): Collection
+    public function handle(PostListDto $dto): Collection
     {
-        return $this->listPostsTask->run();
+        return $this->listPostsTask->run($dto);
     }
 
     public function asController(ListPostsRequest $request): JsonResponse
     {
-        $posts = $this->handle();
+        $dto = PostListDto::from($request->validated());
+        $dto->user_id = auth()->user()->id;
 
-        return fractal($posts, new PostTransformer())
+        $posts = $this->handle($dto);
+
+        return fractal($posts, new PostTransformer($dto->user_id))
             ->parseIncludes(['user', 'tags'])
             ->withResourceName('posts')
             ->addMeta(['count' => $posts->count()])

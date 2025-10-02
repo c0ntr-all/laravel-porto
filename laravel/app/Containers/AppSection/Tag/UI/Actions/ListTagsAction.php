@@ -2,6 +2,7 @@
 
 namespace App\Containers\AppSection\Tag\UI\Actions;
 
+use App\Containers\AppSection\Tag\Data\DTO\TagListDto;
 use App\Containers\AppSection\Tag\Data\Repositories\TagRepository;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
@@ -19,14 +20,16 @@ class ListTagsAction
     {
     }
 
-    public function handle(): Collection
+    public function handle(TagListDto $dto): Collection
     {
-        return $this->tagRepository->get();
+        return $this->tagRepository->getMostUsedTagsForUser($dto->user_id);
     }
 
     public function asController(Tag $tag): JsonResponse
     {
-        $tags = $this->handle();
+        $dto = TagListDto::from(['user_id' => auth()->user()->id]);
+
+        $tags = $this->handle($dto);
 
         return fractal($tags, new TagTransformer())
             ->withResourceName('tags')

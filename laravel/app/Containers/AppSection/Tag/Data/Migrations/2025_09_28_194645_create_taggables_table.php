@@ -14,12 +14,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('taggables', function (Blueprint $table) {
-            $table->unsignedBigInteger('tag_id');
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('taggable_id');
             $table->string('taggable_type');
             $table->timestamps();
 
-            $table->primary(['tag_id', 'taggable_id', 'taggable_type']);
+            $table->unique(['user_id', 'tag_id', 'taggable_id', 'taggable_type'], 'taggables_unique');
         });
     }
 

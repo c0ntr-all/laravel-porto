@@ -2,16 +2,15 @@
 
 namespace App\Containers\LifelogSection\Post\Data\Repositories;
 
-use App\Containers\LifelogSection\Post\Data\DTO\PostCreateData;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
 
 class PostRepository
 {
-    public function getPosts(): Collection
+    public function get(array $data): Collection
     {
-        return QueryBuilder::for(Post::class)
+        return QueryBuilder::for(Post::whereUserId($data['user_id']))
                            ->allowedSorts('datetime')
                            ->with(['user'])
                            ->get();

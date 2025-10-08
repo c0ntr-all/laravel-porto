@@ -1,6 +1,6 @@
 <template>
   <div class="lifelog-post-form">
-    <div class="lifelog-post-form__title">
+    <div class="lifelog-post-form__title q-pa-md">
       <q-input
         ref="titleRef"
         v-model="model.title"
@@ -10,7 +10,7 @@
         outlined
       />
     </div>
-    <div class="lifelog-post-form__content">
+    <div class="lifelog-post-form__content q-pa-md">
       <q-editor
         v-model="model.content"
         min-height="5rem"
@@ -52,7 +52,7 @@
             label="Отправить"
             color="primary"
             :round="false"
-            @click="createPost()"
+            @click="handleFunction"
           />
         </div>
       </div>
@@ -61,27 +61,29 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, nextTick, onMounted, ref } from 'vue'
+import { computed, markRaw, nextTick, onMounted, ref, toRaw } from 'vue'
 import { storeToRefs } from 'pinia'
+import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
 import { INewTag, ITag } from 'src/types/tag'
-import { IPostModel } from 'src/types'
+import { IPost, IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
-import { unique } from 'radash'
 
 interface IInputRef {
   resetValidation: () => void
 }
 
 const tagStore = useTagStore()
+const { tags } = storeToRefs(tagStore)
 const postStore = usePostStore()
 
-const { tags } = storeToRefs(tagStore)
-const availableTags = ref<ITag[]>([])
+const props = defineProps<{
+  post?: IPost
+}>()
 
 const model = ref<IPostModel>({
   title: '',
@@ -90,7 +92,12 @@ const model = ref<IPostModel>({
   newTags: [],
   datetime: getCurrentDateTime()
 })
+const originalPost = ref({})
+const availableTags = ref<ITag[]>([])
+
 const titleRef = ref<IInputRef | null>(null)
+
+const mode = computed(() => props.post ? 'edit' : 'create')
 const selectedTags = computed(() => {
   return unique(
     [...model.value.tags, ...model.value.newTags],
@@ -98,25 +105,23 @@ const selectedTags = computed(() => {
   )
 })
 
-const createPost = () => {
-  postStore.createPost(model.value).then(() => {
+const handleFunction = async () => {
+  if (mode.value === 'create') {
+    await createPost()
+  } else if (mode.value === 'edit') {
+    await updatePost()
+  }
+}
+
+const createPost = async () => {
+  await postStore.createPost().then(() => {
     clearModel()
     resetAvailableTags()
   })
 }
 
-const clearModel = () => {
-  model.value.title = ''
-  model.value.content = ''
-  model.value.datetime = getCurrentDateTime()
-  model.value.tags = []
-  model.value.newTags = []
-
-  nextTick(() => {
-    if (titleRef.value) {
-      titleRef.value.resetValidation()
-    }
-  })
+const updatePost = async () => {
+  await postStore.updatePost(props.post.id, model.value, originalPost.value)
 }
 
 const getTagKey = (tag: ITag | INewTag) => {
@@ -160,10 +165,46 @@ const handleRemoveTag = (tag: ITag | INewTag) => {
   }
 }
 
+const getEmptyPostModel = (): IPostModel => {
+  return {
+    title: '',
+    content: '',
+    tags: [],
+    newTags: [],
+    datetime: getCurrentDateTime()
+  }
+}
+
+const clearModel = () => {
+  model.value = getEmptyPostModel()
+
+  nextTick(() => {
+    if (titleRef.value) {
+      titleRef.value.resetValidation()
+    }
+  })
+}
+
 onMounted(() => {
   tagStore.getTags().then(() => {
     availableTags.value = [...tags.value]
   })
+
+  if (mode.value === 'edit' && props.post) {
+    const rawPost = toRaw(props.post)
+    const post = {
+      title: rawPost.title,
+      content: rawPost.content,
+      tags: rawPost.tags,
+      newTags: [],
+      datetime: rawPost.datetime
+    }
+    model.value = post
+    originalPost.value = structuredClone(post)
+  } else {
+    model.value = getEmptyPostModel()
+    originalPost.value = structuredClone(toRaw(model.value))
+  }
 })
 
 </script>
@@ -173,16 +214,8 @@ onMounted(() => {
   width: 100%;
   background-color: #ffffff;
 
-  &__tags {
-    border-right: 1px solid rgba(0, 0, 0, 0.12);
-    border-left: 1px solid rgba(0, 0, 0, 0.12);
-  }
-
   &-actions {
     background-color: #fbfbfb;
-    border-right: 1px solid rgba(0, 0, 0, 0.12);
-    border-left: 1px solid rgba(0, 0, 0, 0.12);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   }
 }
 </style>

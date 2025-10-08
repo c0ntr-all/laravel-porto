@@ -1,4 +1,4 @@
-export interface IPostCreateDto {
+export interface IPostUpdateDto {
   title?: string
   content?: string
   datetime: string | null

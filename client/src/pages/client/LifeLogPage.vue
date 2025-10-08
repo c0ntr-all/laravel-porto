@@ -6,7 +6,7 @@
     <div class="lifelog-posts-wrap q-mb-md q-gutter-sm">
       <div v-if="postStore.isLoading">loading...</div>
       <template v-else>
-        <template v-if="postStore.count">
+        <template v-if="postsCount">
           <LifeLogCard
             v-for="post in posts"
             :key="post.id"
@@ -29,7 +29,7 @@ import LifeLogPostForm from 'src/components/client/LifeLog/LifeLogPostForm.vue'
 import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 
 const postStore = usePostStore()
-const { posts } = storeToRefs(postStore)
+const { posts, postsCount } = storeToRefs(postStore)
 
 onMounted(() => {
   postStore.getPosts()

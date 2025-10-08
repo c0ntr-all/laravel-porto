@@ -7,6 +7,7 @@ use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
 use App\Ship\Models\Traits\HasImage;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
@@ -40,6 +41,7 @@ use Illuminate\Support\Carbon;
 class Post extends Model
 {
     use SoftDeletes,
+        HasFactory,
         HasImage,
         HasUser,
         HasTags;

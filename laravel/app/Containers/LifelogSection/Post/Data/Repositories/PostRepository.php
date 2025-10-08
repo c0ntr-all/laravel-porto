@@ -24,4 +24,15 @@ class PostRepository
     {
         return Post::create($data);
     }
+
+    /**
+     * @param array $data
+     * @return mixed
+     */
+    public function update(Post $post, array $data): Post
+    {
+        $post->update($data);
+
+        return $post;
+    }
 }

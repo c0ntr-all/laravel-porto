@@ -16,5 +16,5 @@ export interface IPostModel {
   content: string,
   tags: ITag[],
   newTags: INewTag[],
-  datetime: string
+  datetime: string | null
 }

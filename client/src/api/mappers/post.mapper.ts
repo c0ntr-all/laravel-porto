@@ -1,6 +1,7 @@
-import { IPostModel } from 'src/types'
+import { IPost, IPostModel } from 'src/types'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
+import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 
 export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
   const data: IPostCreateDto = {
@@ -14,4 +15,20 @@ export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
   }
 
   return data
+}
+
+export function mapPostFormToUpdateDto(original: IPost, edited: IPostModel): IPostUpdateDto {
+  const dto: Partial<IPostUpdateDto> = {}
+
+  if (edited.title !== original.title) dto.title = edited.title
+  if (edited.content !== original.content) dto.content = edited.content
+  if (edited.datetime !== original.datetime) dto.datetime = edited.datetime
+
+  const tagIds = edited.tags.map(t => t.id)
+  const originalIds = original.tags.map(t => t.id)
+  if (JSON.stringify(tagIds) !== JSON.stringify(originalIds)) dto.tags = tagIds
+
+  if (edited.newTags.length > 0) dto.new_tags = edited.newTags.map(t => t.name)
+
+  return dto
 }

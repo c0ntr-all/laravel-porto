@@ -2,12 +2,12 @@
 
 namespace App\Containers\LifelogSection\Post\Tasks;
 
-use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
+use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Data\Repositories\PostRepository;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 
-class CreatePostTask extends ParentTask
+class UpdatePostTask extends ParentTask
 {
     public function __construct(
         private readonly PostRepository $postRepository
@@ -16,16 +16,12 @@ class CreatePostTask extends ParentTask
     }
 
     /**
-     * @param PostCreateDto $dto
+     * @param Post $post
+     * @param PostUpdateDto $dto
      * @return Post
      */
-    public function run(PostCreateDto $dto): Post
+    public function run(Post $post, PostUpdateDto $dto): Post
     {
-        return $this->postRepository->createPost([
-            'user_id' => $dto->user_id,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'datetime' => $dto->datetime
-        ]);
+        return $this->postRepository->update($post, $dto->toArray());
     }
 }

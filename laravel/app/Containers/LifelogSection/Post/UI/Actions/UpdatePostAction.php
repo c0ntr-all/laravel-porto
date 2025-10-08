@@ -2,48 +2,45 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
-use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
-use App\Containers\AppSection\Tag\Tasks\SyncTagsTask;
-use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSaveDto;
+use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
-use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
-use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
+use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
+use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Spatie\LaravelData\Optional;
 
-class CreatePostAction
+class UpdatePostAction
 {
     use AsAction;
 
     public function __construct(
-        private readonly CreatePostTask $createPostTask,
-        private readonly CreateTagsByNamesTask $createTagsByNamesTask,
-        private readonly SyncTagsTask $syncTagsTask,
+        private readonly UpdatePostTask $updatePostTask,
         private readonly SyncPostTagsTask $syncPostTagsTask
     )
     {
     }
 
-    public function handle(PostCreateDto $postDto, PostTagsSaveDto $tagsDto): Post
+    public function handle(Post $post, PostUpdateDto $postDto, PostTagsSaveDto $tagsDto): Post
     {
-        $post = $this->createPostTask->run($postDto);
+        $updatedPost = $this->updatePostTask->run($post, $postDto);
 
         $this->syncPostTagsTask->run(
-            post: $post,
+            post: $updatedPost,
             userId: $tagsDto->user_id,
-            newTags: $tagsDto->new_tags ?? [],
-            existingTagIds: $tagsDto->tags ?? []
+            newTags: $tagsDto->new_tags,
+            existingTagIds: $tagsDto->tags
         );
 
-        return $post;
+        return $updatedPost;
     }
 
-    public function asController(CreateRequest $request): JsonResponse
+    public function asController(Post $post, UpdateRequest $request): JsonResponse
     {
-        $postDto = PostCreateDto::from([
+        $postDto = PostUpdateDto::from([
             ...$request->validated(),
             'user_id' => auth()->id(),
         ]);
@@ -53,12 +50,12 @@ class CreatePostAction
             'user_id' => $postDto->user_id,
         ]);
 
-        $post = $this->handle($postDto, $tagsDto);
+        $post = $this->handle($post, $postDto, $tagsDto);
 
         return fractal($post, new PostTransformer($postDto->user_id))
             ->parseIncludes(['user', 'tags'])
             ->withResourceName('posts')
-            ->addMeta(['message' => 'New post successfully created!'])
+            ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

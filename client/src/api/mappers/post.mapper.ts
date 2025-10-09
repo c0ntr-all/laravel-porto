@@ -24,9 +24,8 @@ export function mapPostFormToUpdateDto(original: IPost, edited: IPostModel): IPo
   if (edited.content !== original.content) dto.content = edited.content
   if (edited.datetime !== original.datetime) dto.datetime = edited.datetime
 
-  const tagIds = edited.tags.map(t => t.id)
-  const originalIds = original.tags.map(t => t.id)
-  if (JSON.stringify(tagIds) !== JSON.stringify(originalIds)) dto.tags = tagIds
+  // Tags will be synched in back
+  dto.tags = edited.tags.map(t => t.id)
 
   if (edited.newTags.length > 0) dto.new_tags = edited.newTags.map(t => t.name)
 

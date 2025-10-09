@@ -2,7 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\Tasks;
 
-use App\Containers\AppSection\Tag\Data\DTO\SyncTagsDto;
+use App\Containers\AppSection\Tag\Data\DTO\TagsSyncDto;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\AppSection\Tag\Tasks\SyncTagsTask;
@@ -13,7 +13,7 @@ class SyncPostTagsTask extends ParentTask
 {
     public function __construct(
         private readonly CreateTagsByNamesTask $createTagsByNamesTask,
-        private readonly SyncTagsTask $syncTagsTask,
+        private readonly SyncTagsTask          $syncTagsTask,
     )
     {
     }
@@ -21,29 +21,33 @@ class SyncPostTagsTask extends ParentTask
     /**
      * @param Post $post
      * @param int $userId
-     * @param array $newTags
-     * @param array $existingTagIds
+     * @param array|null $newTags
+     * @param array|null $existingTagIds
      * @return void
      */
-    public function run(Post $post, int $userId, array $newTags = [], array $existingTagIds = []): void
+    public function run(Post $post, int $userId, ?array $newTags, ?array $existingTagIds): void
     {
-        if (!empty($newTags)) {
+        $tagsIdsToSync = [];
+
+        if (!is_null($newTags)) {
             $newTagsDto = TagsCreateDto::from([
                 'user_id' => $userId,
                 'names' => $newTags,
             ]);
 
             $newTagsCollection = $this->createTagsByNamesTask->run($newTagsDto);
-            $existingTagIds = array_merge($existingTagIds, $newTagsCollection->pluck('id')->toArray());
+            $tagsIdsToSync = $newTagsCollection->pluck('id')->toArray();
         }
 
-        if (!empty($existingTagIds)) {
-            $syncData = collect($existingTagIds)
-                ->mapWithKeys(fn ($tagId) => [$tagId => ['user_id' => $userId]])
-                ->toArray();
-
-            $syncTagsDto = SyncTagsDto::from(['tags' => $syncData]);
-            $this->syncTagsTask->run($post, $syncTagsDto);
+        if (!is_null($existingTagIds)) {
+            $tagsIdsToSync = array_merge($tagsIdsToSync, $existingTagIds);
         }
+
+        $tagsIdsToSyncWithUserIds = collect($tagsIdsToSync)
+            ->mapWithKeys(fn($tagId) => [$tagId => ['user_id' => $userId]])
+            ->toArray();
+
+        $syncTagsDto = TagsSyncDto::from(['tags' => $tagsIdsToSyncWithUserIds]);
+        $this->syncTagsTask->run($post, $syncTagsDto);
     }
 }

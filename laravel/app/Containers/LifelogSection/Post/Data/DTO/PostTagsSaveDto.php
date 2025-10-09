@@ -8,8 +8,8 @@ use Spatie\LaravelData\Optional;
 class PostTagsSaveDto extends Data
 {
     public int $user_id;
-    public array|null $tags = [];
-    public array|null $new_tags = [];
+    public array|null $tags = null;
+    public array|null $new_tags = null;
 
     public function __construct(
     ) {

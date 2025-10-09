@@ -4,9 +4,9 @@ namespace App\Containers\AppSection\Tag\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
 
-class SyncTagsDto extends Data
+class TagsSyncDto extends Data
 {
-    public array $tags;
+    public array $tags = [];
 
     public function __construct(
     ) {

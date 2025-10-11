@@ -2,10 +2,18 @@ import { api } from 'src/boot/axios'
 import { IJsonApiResponse } from 'src/types'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
+import { buildFilterForUrl } from 'src/utils/jsonapi'
 
 export const postApi = {
-  async getPosts(): Promise<IJsonApiResponse> {
-    const response = await api.get('v1/lifelog/posts?sort=-datetime')
+  async getPosts(filters): Promise<IJsonApiResponse> {
+    const defaultSort: string = '-datetime'
+    let url: string = `v1/lifelog/posts?sort=${defaultSort}`
+    if (filters) {
+      const spatieFilters = buildFilterForUrl(filters)
+      url += `&${spatieFilters}`
+    }
+    const response = await api.get(url)
+
     return response.data
   },
   async createPost(postCreateDto: IPostCreateDto): Promise<IJsonApiResponse> {

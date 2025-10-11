@@ -23,8 +23,11 @@ export const useTagStore = defineStore('tag', {
       this.error = null
       try {
         const response = await tagApi.getTags()
-        this.tags = mapResponse(response) as ITag[]
+        const tags = mapResponse(response) as ITag[]
+        this.tags = tags
         this.count = response.meta?.count || 0
+
+        return tags
       } catch (err: any) {
         this.error = err.message ?? 'Ошибка загрузки'
       } finally {

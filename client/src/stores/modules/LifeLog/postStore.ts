@@ -14,11 +14,11 @@ export const usePostStore = defineStore('post', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  async function getPosts() {
+  async function getPosts(filters = {}) {
     isLoading.value = true
     error.value = null
     try {
-      const response = await postApi.getPosts()
+      const response = await postApi.getPosts(filters)
       posts.value = mapResponse(response) as IPost[]
       postsCount.value = response.meta?.count || 0
     } catch (err: any) {

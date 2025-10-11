@@ -225,3 +225,33 @@ export function handleApiSuccess(response: any) {
     message
   })
 }
+
+/**
+ * Строит URL с фильтрами в формате, совместимом со Spatie Query Builder (например: ?filter[tags]=1,2,3).
+ *
+ * @param {Record<string, any>} filters - Объект фильтров, где ключ — это имя фильтра, а значение — строка или массив значений.
+ * @returns {string} Полный URL с корректно сформированными query-параметрами.
+ *
+ * @example
+ * // Пример использования:
+ * const url = buildFilterUrl('v1/posts', { tags: [1, 2, 3], author: 'John' })
+ * // Результат: "filter[tags]=1,2,3&filter[author]=John"
+ *
+ * @remarks
+ * - Массивы значений объединяются через запятую.
+ * - Пустые, `null` и `undefined` значения игнорируются.
+ * - Используется `URLSearchParams` для корректного экранирования параметров.
+ */
+export function buildFilterForUrl(filters: Record<string, any>): string {
+  const params = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(filters)) {
+    if (Array.isArray(value)) {
+      params.append(`filter[${key}]`, value.join(','))
+    } else if (value !== undefined && value !== null && value !== '') {
+      params.append(`filter[${key}]`, String(value))
+    }
+  }
+
+  return params.toString()
+}

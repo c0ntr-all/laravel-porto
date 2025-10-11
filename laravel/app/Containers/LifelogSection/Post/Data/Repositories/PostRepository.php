@@ -2,9 +2,11 @@
 
 namespace App\Containers\LifelogSection\Post\Data\Repositories;
 
+use App\Containers\LifelogSection\Post\Data\Filters\TagsFilter;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class PostRepository
 {
@@ -12,6 +14,11 @@ class PostRepository
     {
         return QueryBuilder::for(Post::whereUserId($data['user_id']))
                            ->allowedSorts('datetime')
+                           ->allowedFilters([
+                               AllowedFilter::custom('tags', new TagsFilter()),
+                               // Filter exists only in tags scope
+                               AllowedFilter::exact('tags_mode')->ignore(['or', 'and']),
+                           ])
                            ->with(['user'])
                            ->get();
     }

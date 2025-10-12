@@ -4,6 +4,7 @@ namespace App\Ship\Providers;
 
 use App\Containers\AppSection\Authentication\Providers\AuthServiceProvider;
 use App\Containers\AppSection\Authentication\Providers\JwtServiceProvider;
+use App\Ship\Loaders\ConfigsLoaderTrait;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\App;
@@ -12,6 +13,8 @@ use Laravel\Passport\Passport;
 
 class ShipServiceProvider extends ServiceProvider
 {
+    use ConfigsLoaderTrait;
+
     private array $serviceProviders = [
         RouteServiceProvider::class,
         EventServiceProvider::class,
@@ -42,6 +45,8 @@ class ShipServiceProvider extends ServiceProvider
             'task' => 'App\Containers\TaskManagerSection\Task\Models\Task',
             'posts' => 'App\Containers\LifelogSection\Post\Models\Post'
         ]);
+
+        $this->runConfigLoader();
     }
 
     /**

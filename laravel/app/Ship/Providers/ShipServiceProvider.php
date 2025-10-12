@@ -4,6 +4,7 @@ namespace App\Ship\Providers;
 
 use App\Containers\AppSection\Authentication\Providers\AuthServiceProvider;
 use App\Containers\AppSection\Authentication\Providers\JwtServiceProvider;
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Loaders\ConfigsLoaderTrait;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -38,12 +39,12 @@ class ShipServiceProvider extends ServiceProvider
         Passport::ignoreRoutes();
 
         Relation::enforceMorphMap([
-            'artist' => 'App\Containers\MusicSection\Artist\Models\Artist',
-            'album' => 'App\Containers\MusicSection\Album\Models\Album',
-            'track' => 'App\Containers\MusicSection\Track\Models\Track',
-            'user' => 'App\Containers\AppSection\User\Models\User',
-            'task' => 'App\Containers\TaskManagerSection\Task\Models\Task',
-            'posts' => 'App\Containers\LifelogSection\Post\Models\Post'
+            ContainerAliasEnum::USER->value => 'App\Containers\AppSection\User\Models\User',
+            ContainerAliasEnum::ARTIST->value => 'App\Containers\MusicSection\Artist\Models\Artist',
+            ContainerAliasEnum::ALBUM->value => 'App\Containers\MusicSection\Album\Models\Album',
+            ContainerAliasEnum::TRACK->value => 'App\Containers\MusicSection\Track\Models\Track',
+            ContainerAliasEnum::TASK->value => 'App\Containers\TaskManagerSection\Task\Models\Task',
+            ContainerAliasEnum::POST->value => 'App\Containers\LifelogSection\Post\Models\Post'
         ]);
 
         $this->runConfigLoader();

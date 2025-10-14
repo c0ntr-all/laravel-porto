@@ -2,7 +2,7 @@
   <q-card class="media-card col-2">
     <q-img
       class="media-card__image"
-      :src="media.path"
+      :src="media.list_thumb_path"
       :alt="media.name"
       :height="'100%'"
     />

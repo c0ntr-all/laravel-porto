@@ -7,8 +7,20 @@ use Illuminate\Database\Eloquent\Collection;
 
 class AlbumRepository
 {
-    public function getAlbums(): Collection
+    /**
+     * @return Collection
+     */
+    public function getAll(): Collection
     {
         return Album::with(['user'])->get();
+    }
+
+    /**
+     * @param string $systemCode
+     * @return Album
+     */
+    public function getSystemAlbumByCode(string $systemCode): Album
+    {
+        return Album::withoutGlobalScopes()->where('system_code', $systemCode)->first();
     }
 }

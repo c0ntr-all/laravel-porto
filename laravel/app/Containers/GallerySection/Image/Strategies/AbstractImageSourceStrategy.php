@@ -25,7 +25,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
             $ext = pathinfo($this->path, PATHINFO_EXTENSION);
             $mimes = ImageMimeEnum::toArray();
 
-            if (in_array($mimes, $ext)) {
+            if (in_array($ext, $mimes)) {
                 $this->extension = $ext;
             }
         }
@@ -84,12 +84,20 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     public function getExtension(): string
     {
         if (!$this->extension) {
-            $mime = $this->getImage()->exif()->get('FILE.MimeType');
-            if (!$mime) {
-                throw new \RuntimeException('Unable to determine MIME type of the image.');
+            // 1️⃣ Попробуем взять из пути
+            $ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
+            if ($ext && in_array($ext, ImageMimeEnum::toArray())) {
+                $this->extension = $ext;
+                return $this->extension;
             }
 
+            // 2️⃣ Попробуем взять через mime от Intervention
+            $mime = $this->getImage()->mime();
             $this->extension = ImageMimeEnum::getExtensionByMime($mime);
+
+            if (!$this->extension) {
+                throw new \RuntimeException('Unable to determine extension of the image.');
+            }
         }
 
         return $this->extension;

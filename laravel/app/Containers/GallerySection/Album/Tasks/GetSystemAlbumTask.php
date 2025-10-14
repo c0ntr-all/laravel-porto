@@ -3,10 +3,10 @@
 namespace App\Containers\GallerySection\Album\Tasks;
 
 use App\Containers\GallerySection\Album\Data\Repositories\AlbumRepository;
+use App\Containers\GallerySection\Album\Models\Album;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Database\Eloquent\Collection;
 
-class ListAlbumsTask extends Task
+class GetSystemAlbumTask extends Task
 {
     public function __construct(
         private readonly AlbumRepository $albumRepository
@@ -14,8 +14,8 @@ class ListAlbumsTask extends Task
     {
     }
 
-    public function run(): Collection
+    public function run(string $code): Album
     {
-        return $this->albumRepository->getAll();
+        return $this->albumRepository->getSystemAlbumByCode($code);
     }
 }

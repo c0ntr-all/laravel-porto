@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Image\Services;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use JetBrains\PhpStorm\ArrayShape;
 
@@ -30,8 +31,12 @@ class PathGenerationService
 
     public function prepareFolder(string $folder): void
     {
-        if (!Storage::exists($folder)) {
-            Storage::makeDirectory($folder);
+        $disk = Storage::disk('public');
+
+        $absolutePath = $disk->path($folder);
+
+        if (!File::exists($absolutePath)) {
+            File::makeDirectory($absolutePath, 0755, true);
         }
     }
 }

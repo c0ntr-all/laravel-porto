@@ -4,7 +4,7 @@
     ref="uploader"
     :url="uploadEndpoint"
     :headers="uploadHeaders"
-    @uploaded="processNewItems"
+    @uploaded="addNewItemsToList"
     field-name="file"
     multiple
   >
@@ -57,7 +57,7 @@ import { IMediaItem } from 'src/components/client/Gallery/types'
 const albumId = inject<string>('albumId')
 const addMediaToAlbum = inject<{(media: IMediaItem[]): void }>('addMediaToAlbum')
 
-const uploadEndpoint = `${process.env.host}/v1/gallery/albums/${albumId}/media/upload`
+const uploadEndpoint = `${process.env.host}/v1/gallery/albums/${albumId}/images/upload`
 const uploadHeaders = [{
   name: 'Authorization',
   value: `Bearer ${localStorage.access_token}`
@@ -66,7 +66,7 @@ const uploadHeaders = [{
   value: 'application/json'
 }]
 
-const processNewItems = (info: any) => {
+const addNewItemsToList = (info: any) => {
   const jsonResponse = JSON.parse(info.xhr.responseText)
   if (addMediaToAlbum) {
     addMediaToAlbum([{

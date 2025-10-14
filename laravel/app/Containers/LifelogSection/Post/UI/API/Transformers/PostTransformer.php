@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\UI\API\Transformers;
 
+use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\LifelogSection\Post\Models\Post;
@@ -20,7 +21,9 @@ class PostTransformer extends TransformerAbstract
     {
     }
     protected array $availableIncludes = [
-        'user', 'tags'
+        'user',
+        'tags',
+        'attachments',
     ];
 
     public function transform(Post $post): array
@@ -42,5 +45,10 @@ class PostTransformer extends TransformerAbstract
     public function includeTags(Post $post): Collection
     {
         return $this->collection($post->tagsForUser($this->userId)->get(), new TagTransformer(), 'tags');
+    }
+
+    public function includeAttachments(Post $post): Collection
+    {
+        return $this->collection($post->attachments, new AttachmentTransformer(), 'attachments');
     }
 }

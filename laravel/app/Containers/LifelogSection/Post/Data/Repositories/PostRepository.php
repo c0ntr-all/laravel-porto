@@ -19,7 +19,7 @@ class PostRepository
                                // Filter exists only in tags scope
                                AllowedFilter::exact('tags_mode')->ignore(['or', 'and']),
                            ])
-                           ->with(['user'])
+                           ->with(['user', 'attachments.fileable'])
                            ->get();
     }
 
@@ -33,6 +33,7 @@ class PostRepository
     }
 
     /**
+     * @param Post $post
      * @param array $data
      * @return mixed
      */

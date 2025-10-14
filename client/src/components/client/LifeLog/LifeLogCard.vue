@@ -12,6 +12,17 @@
     </q-avatar>
     <q-card class="ll-card bg-grey-2" flat bordered>
       <q-card-section class="q-pa-sm">
+        <template v-if="post.attachments">
+          <div class="row q-col-gutter-xs">
+            <div class="col" v-for="attachment in post.attachments" :key="attachment.id">
+              <LifeLogCardImage
+                :image="attachment"
+              />
+            </div>
+          </div>
+        </template>
+      </q-card-section>
+      <q-card-section class="q-pa-sm">
         <div class="row items-center no-wrap">
           <div class="col">
             <div class="text-h6">{{ post.title }}</div>
@@ -74,6 +85,7 @@ import { computed, ref, toRefs } from 'vue'
 import { IPost } from 'src/types/LifeLog/post'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import LifeLogPostForm from 'src/components/client/LifeLog/LifeLogPostForm.vue'
+import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 
 interface Action {
   fn: () => void

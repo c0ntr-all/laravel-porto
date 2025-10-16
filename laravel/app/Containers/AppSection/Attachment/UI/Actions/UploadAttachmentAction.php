@@ -5,7 +5,6 @@ namespace App\Containers\AppSection\Attachment\UI\Actions;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentCreateDto;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsCreateDto;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentTask;
-use App\Containers\AppSection\Attachment\Tasks\StoreFileTask;
 use App\Containers\AppSection\Attachment\UI\API\Requests\UploadRequest;
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Containers\GallerySection\Album\Enums\SystemAlbumsEnum;
@@ -21,7 +20,6 @@ class UploadAttachmentAction
     use AsAction;
 
     public function __construct(
-        private readonly StoreFileTask $storeFileTask,
         private readonly CreateAttachmentTask $createAttachmentTask,
         private readonly GetSystemAlbumTask $getSystemAlbumTask,
         private readonly UploadImageFromDeviceAction $uploadImageFromDeviceAction

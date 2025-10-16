@@ -42,7 +42,7 @@ class CreateImageThumbTask extends Task
         $this->pathGenerationService->prepareFolder($paths['thumbs_folder_path']);
 
         $imageStrategy->getImage()
-                      ->resize($width, $height)
+                      ->scale(null, $height)
                       ->save($paths['thumb_full_path'], self::DEFAULT_QUALITY);
 
         return $paths['thumb_path'];

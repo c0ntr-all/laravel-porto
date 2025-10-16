@@ -6,6 +6,8 @@ use App\Ship\Traits\Makeable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
+use phpDocumentor\Reflection\Exception;
 
 class ImageUpload
 {
@@ -60,10 +62,20 @@ class ImageUpload
      *
      * @param $image
      * @return string
+     * @throws Exception
      */
     public function upload($image): string
     {
-        return Storage::disk('public')->putFileAs($this->folder, $image, $this->filename);
+        $pathToReturn = $this->folder . '/' . $this->filename;
+        $pathToSave = Storage::path('public') . '/' . $pathToReturn;
+
+        try {
+            Image::read($image)->save($pathToSave);
+        } catch (Exception $e) {
+            throw new Exception('Unable to save image: ' . $pathToSave . '. Because: ' . $e->getMEssage());
+        }
+
+        return $pathToReturn;
     }
 
     /**

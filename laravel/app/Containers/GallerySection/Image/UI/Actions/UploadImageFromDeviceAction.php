@@ -8,7 +8,7 @@ use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
 use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
-use App\Containers\GallerySection\Image\Models\Image;
+use App\Containers\GallerySection\Image\Models\Image as GalleryImage;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
@@ -33,7 +33,7 @@ class UploadImageFromDeviceAction
     {
     }
 
-    public function handle(Album $album, UploadImageFromDeviceDto $uploadImageDto): Image
+    public function handle(Album $album, UploadImageFromDeviceDto $uploadImageDto): GalleryImage
     {
         $file = $uploadImageDto->file;
         $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadImageDto->user_id, $album->id);

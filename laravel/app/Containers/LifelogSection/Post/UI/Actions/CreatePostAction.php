@@ -57,7 +57,7 @@ class CreatePostAction
 
         return fractal($post, new PostTransformer($postDto->user_id))
             ->parseIncludes(['user', 'tags'])
-            ->withResourceName('posts')
+            ->withResourceName('ll_posts')
             ->addMeta(['message' => 'New post successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

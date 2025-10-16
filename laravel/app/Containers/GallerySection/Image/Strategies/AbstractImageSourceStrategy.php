@@ -45,7 +45,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
             $fullPath = $this->getFullPath();
 
             try {
-                $this->image = ImageFacade::read($fullPath);
+                $this->image = ImageFacade::read($fullPath)->orient();
             } catch (NotReadableException $e) {
                 throw new \RuntimeException("Unable to load image from path: {$fullPath}");
             }

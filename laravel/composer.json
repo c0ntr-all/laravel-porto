@@ -16,7 +16,8 @@
         "spatie/laravel-data": "^4.7",
         "spatie/laravel-fractal": "^6.2",
         "spatie/laravel-permission": "^6.9",
-        "spatie/laravel-query-builder": "^6.0"
+        "spatie/laravel-query-builder": "^6.0",
+        "ext-exif": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "*",

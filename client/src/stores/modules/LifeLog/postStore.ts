@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/LifeLog/postApi'
+import { useAttachmentStore } from 'src/stores/modules/attachmentStore'
 import { IPost } from 'src/types/LifeLog/post'
 import { handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
@@ -28,19 +29,31 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
-  async function createPost(postModel) {
+  async function createPost(postModel: any, attachmentModel: any): Promise<IPost> {
     try {
       const postCreateDto = mapPostFormToCreateDto(postModel)
       const responseData = await postApi.createPost(postCreateDto)
       const mappedResponse = mapResponse(responseData) as IPost[]
-      posts.value.unshift(...mappedResponse)
+      const newPost = mappedResponse[0]
+
+      if (attachmentModel?.length) {
+        const attachmentStore = useAttachmentStore()
+        newPost.attachments = await attachmentStore.createAttachment({
+          files: attachmentModel,
+          attachable_type: newPost.type,
+          attachable_id: newPost.id
+        })
+      }
+
+      posts.value.unshift(newPost)
       postsCount.value += 1
 
       handleApiSuccess(responseData)
 
-      return mappedResponse
+      return newPost
     } catch (err: any) {
       error.value = err.message ?? 'Ошибка создания'
+      throw err
     }
   }
 
@@ -54,7 +67,6 @@ export const usePostStore = defineStore('post', () => {
 
       const index = posts.value.findIndex(p => p.id === updatedPost.id)
       if (index !== -1) {
-        // ✅ реактивный способ обновления
         posts.value.splice(index, 1, updatedPost)
       }
 

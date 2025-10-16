@@ -1,21 +1,52 @@
 <template>
   <div class="lifelog-post-form">
-    <div class="lifelog-post-form__title q-pa-md">
+    <div class="lifelog-post-form__title q-px-md q-pt-md q-pb-sm">
       <q-input
         ref="titleRef"
         v-model="model.title"
+        class="q-pa-none"
         label="Title"
         :rules="[val => !!val || 'Field is required']"
         dense
         outlined
       />
     </div>
-    <div class="lifelog-post-form__content q-pa-md">
+    <div class="lifelog-post-form__content q-px-md q-pt-md q-pb-sm">
       <q-editor
         v-model="model.content"
         min-height="5rem"
         style="border-radius: 0"
       />
+    </div>
+    <div class="lifelog-post-form__files q-pa-md">
+      <q-file
+        v-model="attachmentModel"
+        label="Pick files"
+        outlined
+        use-chips
+        multiple
+        clearable
+        dense
+      />
+
+      <div class="row q-gutter-x-xs" style="border-left: 2px solid black">
+        <template v-if="attachmentModel?.length">
+          <div
+            class="col-md-2 lifelog-post-form__files-item"
+            v-for="file in attachmentModel"
+            :key="file"
+          >
+            <div class="lifelog-post-form__file">
+              <img :src="getImagePreview(file)" alt="">
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div style="color: #ccc">
+            There are no selected files
+          </div>
+        </template>
+      </div>
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -61,7 +92,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, nextTick, onMounted, ref, toRaw } from 'vue'
+import { computed, markRaw, nextTick, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
@@ -92,6 +123,32 @@ const model = ref<IPostModel>({
   newTags: [],
   datetime: getCurrentDateTime()
 })
+const attachmentModel = ref([])
+
+// === Локальное хранилище ObjectURL, чтобы потом освободить ===
+const objectUrls: string[] = []
+
+/**
+ * Создаёт превью для File и сохраняет URL для последующей очистки
+ */
+const getImagePreview = (file: File): string => {
+  const url = URL.createObjectURL(file)
+  objectUrls.push(url)
+  return url
+}
+
+/**
+ * Удаляет файл из files
+ */
+// const removeImage = (index: number): void => {
+//   console.log(index)
+//   return
+//   const removed = attachmentModel.splice(index, 1)
+//   // Удаляем preview, если он был создан
+//   if (removed[0]) {
+//     objectUrls.forEach(url => URL.revokeObjectURL(url))
+//   }
+// }
 const originalPost = ref({})
 const availableTags = ref<ITag[]>([])
 
@@ -114,8 +171,9 @@ const handleFunction = async () => {
 }
 
 const createPost = async () => {
-  await postStore.createPost().then(() => {
+  await postStore.createPost(model.value, attachmentModel.value).then(() => {
     clearModel()
+    clearAttachmentModel()
     resetAvailableTags()
   })
 }
@@ -171,7 +229,8 @@ const getEmptyPostModel = (): IPostModel => {
     content: '',
     tags: [],
     newTags: [],
-    datetime: getCurrentDateTime()
+    datetime: getCurrentDateTime(),
+    files: []
   }
 }
 
@@ -184,6 +243,21 @@ const clearModel = () => {
     }
   })
 }
+
+const clearAttachmentModel = () => {
+  attachmentModel.value = []
+}
+
+/**
+ * Следим за изменениями списка изображений, чтобы очищать старые превью
+ */
+watch(
+  () => attachmentModel,
+  () => {
+    objectUrls.forEach(URL.revokeObjectURL)
+    objectUrls.length = 0
+  }
+)
 
 onMounted(() => {
   tagStore.getTags().then(() => {
@@ -207,12 +281,22 @@ onMounted(() => {
   }
 })
 
+onUnmounted(() => {
+  objectUrls.forEach(URL.revokeObjectURL)
+})
+
 </script>
 
 <style lang="scss" scoped>
 .lifelog-post-form {
   width: 100%;
   background-color: #ffffff;
+
+  &__file {
+    img {
+      width: 100px;
+    }
+  }
 
   &-actions {
     background-color: #fbfbfb;

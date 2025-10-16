@@ -1,11 +1,11 @@
 <template>
   <q-img
     :src="image.preview_thumb_path"
-    style="max-width: 222px"
+    style="max-height: 150px"
   >
     <template v-slot:error>
       <div class="absolute-full flex flex-center bg-negative text-white">
-        Cannot load image
+        Error
       </div>
     </template>
   </q-img>

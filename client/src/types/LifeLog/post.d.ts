@@ -1,5 +1,6 @@
 import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
+import { IAttachment } from 'src/types/attachment'
 
 export interface IPost {
   id: string
@@ -9,6 +10,7 @@ export interface IPost {
   created_at: string | null
   user: IUser
   tags: ITag[]
+  attachments?: IAttachment[]
 }
 
 export interface IPostModel {

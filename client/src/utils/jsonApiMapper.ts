@@ -11,6 +11,7 @@ export function mapEntity(
 ): MappedEntity {
   const entity: MappedEntity = {
     id: res.id,
+    type: res.type,
     ...res.attributes
   }
 

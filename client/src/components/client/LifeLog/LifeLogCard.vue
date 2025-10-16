@@ -12,21 +12,9 @@
     </q-avatar>
     <q-card class="ll-card bg-grey-2" flat bordered>
       <q-card-section class="q-pa-sm">
-        <template v-if="post.attachments">
-          <div class="row q-col-gutter-xs">
-            <div class="col" v-for="attachment in post.attachments" :key="attachment.id">
-              <LifeLogCardImage
-                :image="attachment"
-              />
-            </div>
-          </div>
-        </template>
-      </q-card-section>
-      <q-card-section class="q-pa-sm">
         <div class="row items-center no-wrap">
           <div class="col">
             <div class="text-h6">{{ post.title }}</div>
-            <div class="text-subtitle2">Дата события: {{ post.datetime }}</div>
           </div>
           <div class="col-auto">
             <q-btn color="grey-7" round flat icon="more_vert">
@@ -54,6 +42,22 @@
                 </q-list>
               </q-menu>
             </q-btn>
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-section v-if="post.attachments?.length" class="q-pa-sm">
+        <div class="row q-col-gutter-xs">
+          <div class="col-2 flex column justify-end" v-for="attachment in post.attachments" :key="attachment.id">
+            <LifeLogCardImage
+              :image="attachment"
+            />
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-section class="q-pa-sm">
+        <div class="row items-center no-wrap">
+          <div class="col">
+            <div class="text-subtitle2">Дата события: {{ post.datetime }}</div>
           </div>
         </div>
       </q-card-section>

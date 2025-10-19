@@ -2,22 +2,33 @@
 
 namespace App\Containers\GallerySection\Image\Tasks;
 
+use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Ship\Helpers\ImageUpload;
-use App\Ship\Helpers\StringHelper;
 use App\Ship\Parents\Tasks\Task;
 use Illuminate\Http\UploadedFile;
-use Random\RandomException;
+use phpDocumentor\Reflection\Exception;
 
 class SaveUploadedImageTask extends Task
 {
+    public function __construct(
+        private readonly PathGenerationService $pathGenerationService
+    )
+    {
+    }
+
     /**
-     * @throws RandomException
+     * @param UploadedFile $file
+     * @param string $basePath - Абсолютный путь до файла (без расширения)
+     * @return string
+     * @throws Exception
      */
-    public function run(UploadedFile $file, string $folder): string
+    public function run(UploadedFile $file, string $basePath): string
     {
         $extension = $file->getClientOriginalExtension();
+        $filename = basename($basePath) . '.' . $extension;
+        $folder = dirname($basePath);
 
-        $filename = StringHelper::generateFilename($extension);
+        $this->pathGenerationService->prepareFolder($folder);
 
         return ImageUpload::make()
                           ->setDiskName('public')

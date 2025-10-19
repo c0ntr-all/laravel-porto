@@ -5,6 +5,7 @@ namespace App\Containers\GallerySection\Image\Models;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
@@ -45,7 +46,8 @@ use Illuminate\Support\Carbon;
  */
 class Image extends Model
 {
-    use HasUser;
+    use HasUuids,
+        HasUser;
 
     protected $table = 'gallery_images';
 

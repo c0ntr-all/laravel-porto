@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gallery_images', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('album_id');
             $table->enum('source', ImageSourceEnum::toArray());

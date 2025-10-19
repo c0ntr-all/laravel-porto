@@ -6,6 +6,7 @@ class StringHelper {
 
     /**
      * Generates default unique name for file
+     * TODO: Надо перенести в PathGenerationService т.к. это специфичное для бизнес логики формирование имени файла
      *
      * @param string|null $extension
      * @return string

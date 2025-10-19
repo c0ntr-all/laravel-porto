@@ -22,11 +22,16 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     )
     {
         if (!$this->extension) {
-            $ext = pathinfo($this->path, PATHINFO_EXTENSION);
+            $info = pathinfo($this->path);
+            $filename = $info['filename'];
+            $extension = $info['extension'];
+
+            $this->filename = $filename;
+
             $mimes = ImageMimeEnum::toArray();
 
-            if (in_array($ext, $mimes)) {
-                $this->extension = $ext;
+            if (in_array($extension, $mimes)) {
+                $this->extension = $extension;
             }
         }
     }
@@ -51,7 +56,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
             }
         }
 
-        return $this->image;
+        return clone $this->image;
     }
 
     /**

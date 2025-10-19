@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/LifeLog/postApi'
 import { useAttachmentStore } from 'src/stores/modules/attachmentStore'
-import { IPost } from 'src/types/LifeLog/post'
+import { IPost, IPostFilter } from 'src/types/LifeLog/post'
 import { handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
@@ -15,7 +15,7 @@ export const usePostStore = defineStore('post', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  async function getPosts(filters = {}) {
+  async function getPosts(filters: IPostFilter = {}) {
     isLoading.value = true
     error.value = null
     try {

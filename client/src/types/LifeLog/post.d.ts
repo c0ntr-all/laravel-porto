@@ -20,3 +20,9 @@ export interface IPostModel {
   newTags: INewTag[],
   datetime: string | null
 }
+
+export interface IPostFilter {
+  filter?: {
+    [key: string]: string | number
+  }
+}

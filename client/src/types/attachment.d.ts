@@ -12,5 +12,7 @@ export interface IAttachment {
 }
 
 export interface IAttachmentModel {
+  attachable_type: string,
+  attachable_id: string,
   files: File[]
 }

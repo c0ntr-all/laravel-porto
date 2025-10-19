@@ -1,7 +1,6 @@
 import { IAttachmentModel } from 'src/types/attachment'
-import { IAttachmentCreateDto } from 'src/api/DTO/AttachmentCreateDto'
 
-export function mapAttachmentModelToCreateDto(attachmentModel: IAttachmentModel): IAttachmentCreateDto {
+export function mapAttachmentModelToCreateDto(attachmentModel: IAttachmentModel): FormData {
   const formData = new FormData()
 
   formData.append('attachable_type', attachmentModel.attachable_type)

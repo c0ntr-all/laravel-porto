@@ -17,6 +17,7 @@ use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromDeviceReq
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Ramsey\Uuid\Uuid;
 
 class UploadImageFromDeviceAction
 {
@@ -35,15 +36,19 @@ class UploadImageFromDeviceAction
 
     public function handle(Album $album, UploadImageFromDeviceDto $uploadImageDto): GalleryImage
     {
+        $uuid = Uuid::uuid4()->toString();
+
         $file = $uploadImageDto->file;
         $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadImageDto->user_id, $album->id);
-        $filePath = $this->saveUploadedImageTask->run($file, $albumPath);
+        $basePath = $albumPath . '/' . $uuid;
+        $filePath = $this->saveUploadedImageTask->run($file, $basePath);
 
         $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
 
         $thumbnails = $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
 
         $createImageDto = CreateImageDto::from([
+            'id' => $uuid,
             'user_id' => $uploadImageDto->user_id,
             'original_path' => $filePath,
             'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],

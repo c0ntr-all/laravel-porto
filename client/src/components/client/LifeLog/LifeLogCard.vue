@@ -47,12 +47,21 @@
       </q-card-section>
       <q-card-section v-if="post.attachments?.length" class="q-pa-sm">
         <div class="row q-col-gutter-xs">
-          <div class="col-2 flex column justify-end" v-for="attachment in post.attachments" :key="attachment.id">
+          <div class="col-2 flex column justify-end"
+               v-for="attachment in post.attachments"
+               :key="attachment.id"
+               @click="openCarousel(attachment.id)"
+          >
             <LifeLogCardImage
               :image="attachment"
             />
           </div>
         </div>
+        <LifeLogCardCarousel
+          v-model="showCarousel"
+          :slides="post.attachments"
+          :current-slide-id="currentSlideId"
+        />
       </q-card-section>
       <q-card-section class="q-pa-sm">
         <div class="row items-center no-wrap">
@@ -90,6 +99,7 @@ import { IPost } from 'src/types/LifeLog/post'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import LifeLogPostForm from 'src/components/client/LifeLog/LifeLogPostForm.vue'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
+import LifeLogCardCarousel from 'src/components/client/LifeLog/LifeLogCardCarousel.vue'
 
 interface Action {
   fn: () => void
@@ -104,6 +114,8 @@ const props = defineProps<{
 const { post } = toRefs<IPost>(props)
 const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
+const showCarousel = ref<boolean>(false)
+const currentSlideId = ref<string>('')
 
 const userAvatar = computed(() => post.value.user.name.substring(0, 1))
 
@@ -120,6 +132,10 @@ const availableActions: Action[] = [{
   label: 'Delete Post',
   icon: 'delete'
 }]
+const openCarousel = (id: string) => {
+  currentSlideId.value = id
+  showCarousel.value = true
+}
 </script>
 
 <style scoped lang="scss">

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/LifeLog/postApi'
 import { useAttachmentStore } from 'src/stores/modules/attachmentStore'
-import { IPost, IPostFilter } from 'src/types/LifeLog/post'
+import { IPost, IPostFilter, IPostUpdateModel } from 'src/types/LifeLog/post'
 import { handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
@@ -57,14 +57,29 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
-  async function updatePost(id: string, postModel, originalPost) {
-    if (!postModel) return
+  async function updatePost(
+    id: string,
+    postModel: IPostUpdateModel,
+    originalPost,
+    attachmentModel
+  ) {
+    if (!postModel || !originalPost) return
 
     try {
-      const postUpdateDto: IPostUpdateDto = mapPostFormToUpdateDto(originalPost, postModel)
+      const postUpdateDto: IPostUpdateDto = mapPostFormToUpdateDto(postModel, originalPost)
       const responseData: IJsonApiResponse = await postApi.updatePost(id, postUpdateDto)
       const updatedPost: IPost[] = mapResponse(responseData)[0] as IPost
 
+      if (attachmentModel?.length) {
+        const attachmentStore = useAttachmentStore()
+        updatedPost.attachments = await attachmentStore.createAttachment({
+          files: attachmentModel,
+          attachable_type: updatedPost.type,
+          attachable_id: updatedPost.id
+        })
+      }
+
+      // add to main list of posts
       const index = posts.value.findIndex(p => p.id === updatedPost.id)
       if (index !== -1) {
         posts.value.splice(index, 1, updatedPost)

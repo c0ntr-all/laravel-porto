@@ -88,7 +88,7 @@
     </q-card>
 
     <q-dialog v-model="showEditPostModal">
-      <LifeLogPostForm :post="post" />
+      <PostFormEdit :post="post" />
     </q-dialog>
   </div>
 </template>
@@ -97,7 +97,7 @@
 import { computed, ref, toRefs } from 'vue'
 import { IPost } from 'src/types/LifeLog/post'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
-import LifeLogPostForm from 'src/components/client/LifeLog/LifeLogPostForm.vue'
+import PostFormEdit from 'src/components/client/LifeLog/forms/PostFormEdit.vue'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import LifeLogCardCarousel from 'src/components/client/LifeLog/LifeLogCardCarousel.vue'
 

@@ -1,7 +1,7 @@
 <template>
   <div class="row lifelog-container">
     <div class="lifelog-post-form-wrap q-mb-md">
-      <LifeLogPostForm />
+      <PostFormCreate />
     </div>
     <div class="lifelog-filter-wrap q-mb-md">
       <LifeLogPostsFilter
@@ -32,7 +32,7 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { isEmpty } from 'radash'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
-import LifeLogPostForm from 'src/components/client/LifeLog/LifeLogPostForm.vue'
+import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
 import LifeLogPostsFilter from 'src/components/client/LifeLog/LifeLogPostsFilter.vue'
 import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 import { ITag } from 'src/types/tag'

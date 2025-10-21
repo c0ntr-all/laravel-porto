@@ -53,6 +53,7 @@
         outlined
         dense
       />
+      <!--TODO: Вывести в компонент ACTIONS-->
       <div class="flex justify-end q-gutter-md" style="width: 100%">
         <q-btn class="q-mt-none q-ml-none" color="grey" label="Reset" @click="resetFilter" outline/>
         <q-btn class="q-mt-none" color="primary" label="Filter" @click="submitFilter"/>

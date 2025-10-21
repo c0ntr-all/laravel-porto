@@ -4,4 +4,5 @@ export interface IPostUpdateDto {
   datetime: string | null
   tags?: string[]
   new_tags?: string[]
+  deleted_files?: string[]
 }

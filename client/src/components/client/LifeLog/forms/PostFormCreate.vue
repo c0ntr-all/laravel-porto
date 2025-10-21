@@ -83,7 +83,7 @@
             label="Отправить"
             color="primary"
             :round="false"
-            @click="handleFunction"
+            @click="createPost"
           />
         </div>
       </div>
@@ -112,7 +112,7 @@ const tagStore = useTagStore()
 const { tags } = storeToRefs(tagStore)
 const postStore = usePostStore()
 
-const props = defineProps<{
+defineProps<{
   post?: IPost
 }>()
 
@@ -123,7 +123,7 @@ const model = ref<IPostModel>({
   newTags: [],
   datetime: getCurrentDateTime()
 })
-const attachmentModel = ref([])
+const attachmentModel = ref<File[]>([])
 
 // === Локальное хранилище ObjectURL, чтобы потом освободить ===
 const objectUrls: string[] = []
@@ -154,7 +154,6 @@ const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
 
-const mode = computed(() => props.post ? 'edit' : 'create')
 const selectedTags = computed(() => {
   return unique(
     [...model.value.tags, ...model.value.newTags],
@@ -162,24 +161,12 @@ const selectedTags = computed(() => {
   )
 })
 
-const handleFunction = async () => {
-  if (mode.value === 'create') {
-    await createPost()
-  } else if (mode.value === 'edit') {
-    await updatePost()
-  }
-}
-
 const createPost = async () => {
   await postStore.createPost(model.value, attachmentModel.value).then(() => {
     clearModel()
     clearAttachmentModel()
     resetAvailableTags()
   })
-}
-
-const updatePost = async () => {
-  await postStore.updatePost(props.post.id, model.value, originalPost.value)
 }
 
 const getTagKey = (tag: ITag | INewTag) => {
@@ -263,22 +250,8 @@ onMounted(() => {
   tagStore.getTags().then(() => {
     availableTags.value = [...tags.value]
   })
-
-  if (mode.value === 'edit' && props.post) {
-    const rawPost = toRaw(props.post)
-    const post = {
-      title: rawPost.title,
-      content: rawPost.content,
-      tags: rawPost.tags,
-      newTags: [],
-      datetime: rawPost.datetime
-    }
-    model.value = post
-    originalPost.value = structuredClone(post)
-  } else {
-    model.value = getEmptyPostModel()
-    originalPost.value = structuredClone(toRaw(model.value))
-  }
+  model.value = getEmptyPostModel()
+  originalPost.value = structuredClone(toRaw(model.value))
 })
 
 onUnmounted(() => {

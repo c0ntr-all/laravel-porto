@@ -1,6 +1,6 @@
 import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
-import { IAttachment } from 'src/types/attachment'
+import { IAttachment, IAttachmentWithState } from 'src/types/attachment'
 
 export interface IPost {
   id: string
@@ -13,12 +13,20 @@ export interface IPost {
   attachments?: IAttachment[]
 }
 
+type IPostWithAttachmentWithState = IAttachmentWithState & {
+  attachments?: IAttachmentWithState[]
+}
+
 export interface IPostModel {
   title: string,
   content: string,
   tags: ITag[],
   newTags: INewTag[],
   datetime: string | null
+}
+
+type IPostUpdateModel = IPostModel & {
+  attachments: IPostWithAttachmentWithState[]
 }
 
 export interface IPostFilter {

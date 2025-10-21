@@ -51,14 +51,6 @@ const currentSlideId = ref<string>(props.currentSlideId)
 
 const sceneRef = ref<HTMLElement | null>(null)
 const viewport = ref({ width: window.innerWidth, height: window.innerHeight })
-const minContainerParams = ref<{height: number; width: number}>({
-  height: 450,
-  width: 600
-})
-const maxContainerParams = ref<{height: number; width: number}>({
-  height: 881,
-  width: 1530
-})
 const COMMENTS_WIDTH = 350
 const FOOTER_HEIGHT = 100
 

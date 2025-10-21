@@ -11,6 +11,10 @@ export interface IAttachment {
   preview_thumb_path: string
 }
 
+type IAttachmentWithState = IAttachment & {
+  is_deleted?: boolean
+}
+
 export interface IAttachmentModel {
   attachable_type: string,
   attachable_id: string,

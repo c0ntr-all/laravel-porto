@@ -6,6 +6,7 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostListDto;
 use App\Containers\LifelogSection\Post\Tasks\ListPostsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\ListPostsRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -34,7 +35,7 @@ class ListPostsAction
 
         return fractal($posts, new PostTransformer($dto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
-            ->withResourceName('posts')
+            ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['count' => $posts->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

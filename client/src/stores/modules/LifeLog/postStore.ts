@@ -72,11 +72,12 @@ export const usePostStore = defineStore('post', () => {
 
       if (attachmentModel?.length) {
         const attachmentStore = useAttachmentStore()
-        updatedPost.attachments = await attachmentStore.createAttachment({
+        const uploadedAttachments = await attachmentStore.createAttachment({
           files: attachmentModel,
           attachable_type: updatedPost.type,
           attachable_id: updatedPost.id
         })
+        updatedPost.attachments.push(...uploadedAttachments)
       }
 
       // add to main list of posts

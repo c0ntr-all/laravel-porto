@@ -11,6 +11,7 @@ use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -70,7 +71,7 @@ class UpdatePostAction
 
         return fractal($post, new PostTransformer($postDto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
-            ->withResourceName('posts')
+            ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

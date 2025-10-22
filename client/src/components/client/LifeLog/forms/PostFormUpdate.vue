@@ -19,6 +19,7 @@
       />
     </div>
     <div class="lifelog-post-form__files q-pa-md">
+      <p>Управление существующими файлами</p>
       <TransitionGroup
         name="fade-scale"
         tag="div"
@@ -46,8 +47,13 @@
         </div>
       </TransitionGroup>
       <div v-if="model.attachments.length === 0" style="color: #ccc">
-        There are no selected files
+        There are no attached files
       </div>
+    </div>
+
+    <div class="lifelog-post-form__files q-pa-md">
+      <p>Загрузить новые файлы</p>
+      <PostFormFilesUpload v-model="newAttachmentsModel" />
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -105,6 +111,7 @@ import { IAttachmentWithState } from 'src/types/attachment'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
+import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
 
 interface IInputRef {
   resetValidation: () => void
@@ -147,6 +154,7 @@ const updatePost = async () => {
     newAttachmentsModel.value
   ).then(updatedPost => {
     mapPostToModel(updatedPost)
+    clearAttachmentModel()
   })
 }
 
@@ -213,6 +221,10 @@ const mapPostToModel = (post: IPost) => {
     }))
   }
   originalPost.value = structuredClone(preparedPost)
+}
+
+const clearAttachmentModel = () => {
+  newAttachmentsModel.value = []
 }
 
 onMounted(() => {

@@ -19,34 +19,7 @@
       />
     </div>
     <div class="lifelog-post-form__files q-pa-md">
-      <q-file
-        v-model="attachmentModel"
-        label="Pick files"
-        outlined
-        use-chips
-        multiple
-        clearable
-        dense
-      />
-
-      <div class="row q-gutter-x-xs" style="border-left: 2px solid black">
-        <template v-if="attachmentModel?.length">
-          <div
-            class="col-md-2 lifelog-post-form__files-item"
-            v-for="file in attachmentModel"
-            :key="file"
-          >
-            <div class="lifelog-post-form__file">
-              <img :src="getImagePreview(file)" alt="">
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <div style="color: #ccc">
-            There are no selected files
-          </div>
-        </template>
-      </div>
+      <PostFormFilesUpload v-model="attachmentModel" />
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -92,7 +65,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, nextTick, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
+import { computed, markRaw, nextTick, onMounted, ref, toRaw } from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
@@ -103,19 +76,23 @@ import { IPost, IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
+import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
 
 interface IInputRef {
   resetValidation: () => void
 }
 
+// --- Store ---
 const tagStore = useTagStore()
 const { tags } = storeToRefs(tagStore)
 const postStore = usePostStore()
 
+// --- Props ---
 defineProps<{
   post?: IPost
 }>()
 
+// --- Models ---
 const model = ref<IPostModel>({
   title: '',
   content: '',
@@ -125,35 +102,14 @@ const model = ref<IPostModel>({
 })
 const attachmentModel = ref<File[]>([])
 
-// === Локальное хранилище ObjectURL, чтобы потом освободить ===
-const objectUrls: string[] = []
-
-/**
- * Создаёт превью для File и сохраняет URL для последующей очистки
- */
-const getImagePreview = (file: File): string => {
-  const url = URL.createObjectURL(file)
-  objectUrls.push(url)
-  return url
-}
-
-/**
- * Удаляет файл из files
- */
-// const removeImage = (index: number): void => {
-//   console.log(index)
-//   return
-//   const removed = attachmentModel.splice(index, 1)
-//   // Удаляем preview, если он был создан
-//   if (removed[0]) {
-//     objectUrls.forEach(url => URL.revokeObjectURL(url))
-//   }
-// }
+// --- State ---
 const originalPost = ref({})
 const availableTags = ref<ITag[]>([])
 
+// --- Refs ---
 const titleRef = ref<IInputRef | null>(null)
 
+// --- Computed ---
 const selectedTags = computed(() => {
   return unique(
     [...model.value.tags, ...model.value.newTags],
@@ -161,21 +117,20 @@ const selectedTags = computed(() => {
   )
 })
 
+// --- Methods ---
 const createPost = async () => {
   await postStore.createPost(model.value, attachmentModel.value).then(() => {
     clearModel()
-    clearAttachmentModel()
+    // clearAttachmentModel()
     resetAvailableTags()
   })
 }
-
 const getTagKey = (tag: ITag | INewTag) => {
   return 'id' in tag ? `tag-${tag.id}` : `newtag-${tag.name}`
 }
 const resetAvailableTags = () => {
   availableTags.value = [...tags.value]
 }
-
 const handleAddTag = (tagName: string) => {
   const existingTag = availableTags.value.find(t => t.name === tagName)
 
@@ -187,14 +142,12 @@ const handleAddTag = (tagName: string) => {
     }))
   }
 }
-
 const handleSelectTag = (tag: ITag) => {
   if (!model.value.tags.some((t: ITag) => t.id === tag.id)) {
     availableTags.value = availableTags.value.filter((t: ITag) => t.id !== tag.id)
     model.value.tags.push(tag)
   }
 }
-
 const handleRemoveTag = (tag: ITag | INewTag) => {
   if ('id' in tag) {
     const isTagExists = model.value.tags.some((t: ITag) => t.id === tag.id)
@@ -209,7 +162,6 @@ const handleRemoveTag = (tag: ITag | INewTag) => {
     }
   }
 }
-
 const getEmptyPostModel = (): IPostModel => {
   return {
     title: '',
@@ -220,7 +172,6 @@ const getEmptyPostModel = (): IPostModel => {
     files: []
   }
 }
-
 const clearModel = () => {
   model.value = getEmptyPostModel()
 
@@ -231,21 +182,7 @@ const clearModel = () => {
   })
 }
 
-const clearAttachmentModel = () => {
-  attachmentModel.value = []
-}
-
-/**
- * Следим за изменениями списка изображений, чтобы очищать старые превью
- */
-watch(
-  () => attachmentModel,
-  () => {
-    objectUrls.forEach(URL.revokeObjectURL)
-    objectUrls.length = 0
-  }
-)
-
+// --- Lifecycle ---
 onMounted(() => {
   tagStore.getTags().then(() => {
     availableTags.value = [...tags.value]
@@ -253,23 +190,12 @@ onMounted(() => {
   model.value = getEmptyPostModel()
   originalPost.value = structuredClone(toRaw(model.value))
 })
-
-onUnmounted(() => {
-  objectUrls.forEach(URL.revokeObjectURL)
-})
-
 </script>
 
 <style lang="scss" scoped>
 .lifelog-post-form {
   width: 100%;
   background-color: #ffffff;
-
-  &__file {
-    img {
-      width: 100px;
-    }
-  }
 
   &-actions {
     background-color: #fbfbfb;

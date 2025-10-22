@@ -13,6 +13,7 @@ use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
 use App\Containers\GallerySection\Image\UI\Actions\UploadImageFromDeviceAction;
 use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UploadAttachmentAction
@@ -27,7 +28,7 @@ class UploadAttachmentAction
     {
     }
 
-    public function handle(AttachmentsCreateDto $attachmentsCreateDto)
+    public function handle(AttachmentsCreateDto $attachmentsCreateDto): Collection
     {
         $uploadsGalleryAlbum = $this->getSystemAlbumTask->run(SystemAlbumsEnum::UPLOAD->value);
         $attachments = [];

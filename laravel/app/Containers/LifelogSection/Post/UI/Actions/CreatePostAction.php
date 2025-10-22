@@ -5,7 +5,7 @@ namespace App\Containers\LifelogSection\Post\UI\Actions;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\AppSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
-use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSaveDto;
+use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSyncDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
@@ -27,7 +27,7 @@ class CreatePostAction
     {
     }
 
-    public function handle(PostCreateDto $postDto, PostTagsSaveDto $tagsDto): Post
+    public function handle(PostCreateDto $postDto, PostTagsSyncDto $tagsDto): Post
     {
         $post = $this->createPostTask->run($postDto);
 
@@ -48,7 +48,7 @@ class CreatePostAction
             'user_id' => auth()->id(),
         ]);
 
-        $tagsDto = PostTagsSaveDto::from([
+        $tagsDto = PostTagsSyncDto::from([
             ...$request->validated(),
             'user_id' => $postDto->user_id,
         ]);

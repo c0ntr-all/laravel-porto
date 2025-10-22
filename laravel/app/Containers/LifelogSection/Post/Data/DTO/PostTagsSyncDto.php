@@ -3,9 +3,8 @@
 namespace App\Containers\LifelogSection\Post\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
-use Spatie\LaravelData\Optional;
 
-class PostTagsSaveDto extends Data
+class PostTagsSyncDto extends Data
 {
     public int $user_id;
     public array|null $tags = null;

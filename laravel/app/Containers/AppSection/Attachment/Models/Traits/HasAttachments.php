@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait HasAttachments
 {
+    protected static function bootHasAttachments(): void
+    {
+        static::deleting(fn($item) => $item->attachments()->detach());
+    }
+
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');

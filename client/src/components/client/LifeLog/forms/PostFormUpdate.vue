@@ -19,33 +19,34 @@
       />
     </div>
     <div class="lifelog-post-form__files q-pa-md">
-      <div class="row q-gutter-x-xs" style="border-left: 2px solid black">
-        <template v-if="model.attachments.length">
-          <div
-            class="lifelog-post-form__files-item"
-            v-for="file in model.attachments"
-            :key="file.id"
-          >
-            <div class="lifelog-post-form__file" :class="{'lifelog-post-form__file--deleted': file.is_deleted}">
-              <div class="lifelog-post-form__file-remove" :class="file.is_deleted ? 'text-red' : 'text-grey'">
-                <q-icon
-                  size="sm"
-                  name="cancel"
-                  role="button"
-                  class="file-remove"
-                  :class="{'file-remove--restore': file.is_deleted}"
-                  @click="handleSwitchRemoveFile(file)"
-                />
-              </div>
-              <img :src="file.list_thumb_path" alt="">
+      <TransitionGroup
+        name="fade-scale"
+        tag="div"
+        class="row q-gutter-x-xs"
+        style="border-left: 2px solid black"
+      >
+        <div
+          class="lifelog-post-form__files-item"
+          v-for="file in model.attachments"
+          :key="file.id"
+        >
+          <div class="lifelog-post-form__file" :class="{'lifelog-post-form__file--deleted': file.is_deleted}">
+            <div class="lifelog-post-form__file-remove" :class="file.is_deleted ? 'text-red' : 'text-grey'">
+              <q-icon
+                size="sm"
+                name="cancel"
+                role="button"
+                class="file-remove"
+                :class="{'file-remove--restore': file.is_deleted}"
+                @click="handleSwitchRemoveFile(file)"
+              />
             </div>
+            <img :src="file.list_thumb_path" alt="">
           </div>
-        </template>
-        <template v-else>
-          <div style="color: #ccc">
-            There are no selected files
-          </div>
-        </template>
+        </div>
+      </TransitionGroup>
+      <div v-if="model.attachments.length === 0" style="color: #ccc">
+        There are no selected files
       </div>
     </div>
 
@@ -144,7 +145,9 @@ const updatePost = async () => {
     model.value,
     originalPost.value,
     newAttachmentsModel.value
-  )
+  ).then(updatedPost => {
+    mapPostToModel(updatedPost)
+  })
 }
 
 const getTagKey = (tag: ITag | INewTag) => {
@@ -189,14 +192,10 @@ const handleRemoveTag = (tag: ITag | INewTag) => {
   }
 }
 
-onMounted(() => {
-  tagStore.getTags().then(() => {
-    availableTags.value = [...tags.value]
-  })
+const mapPostToModel = (post: IPost) => {
+  const rawPost = toRaw(post)
 
-  const rawPost = toRaw(props.post)
-
-  const post = {
+  const preparedPost = {
     title: rawPost.title,
     content: rawPost.content,
     tags: rawPost.tags,
@@ -205,15 +204,23 @@ onMounted(() => {
     attachments: rawPost.attachments
   }
 
-  model.value = post
+  model.value = preparedPost
   if (model.value.attachments.length) {
-    // Подготавливка состояния файлов на случай удаления
+    // Подготовка состояния файлов на случай удаления
     model.value.attachments = toRaw(model.value.attachments.map((item: IAttachmentWithState) => {
       item.is_deleted = false
       return toRaw(item)
     }))
   }
-  originalPost.value = structuredClone(post)
+  originalPost.value = structuredClone(preparedPost)
+}
+
+onMounted(() => {
+  tagStore.getTags().then(() => {
+    availableTags.value = [...tags.value]
+  })
+
+  mapPostToModel(props.post)
 })
 
 onUnmounted(() => {
@@ -274,5 +281,24 @@ onUnmounted(() => {
   color: inherit;
   background: transparent;
   padding: 0;
+}
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+/* Важно: оставляем элемент на своем месте во время анимации */
+.fade-scale-leave-active {
+  position: static !important;
 }
 </style>

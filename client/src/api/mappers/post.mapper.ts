@@ -24,9 +24,11 @@ export function mapPostFormToUpdateDto(edited: IPostUpdateModel, original: IPost
   if (edited.content !== original.content) dto.content = edited.content
   if (edited.datetime !== original.datetime) dto.datetime = edited.datetime
 
-  const deletedAttachments: IPostWithAttachmentWithState[] = edited.attachments.filter(file => file.is_deleted === true)
-  if (deletedAttachments.length) {
-    dto.deleted_files = deletedAttachments.map((file: IPostWithAttachmentWithState[]) => file.id)
+  const existingAttachments: IPostWithAttachmentWithState[] = edited.attachments.filter(
+    file => file.is_deleted === true
+  )
+  if (existingAttachments.length) {
+    dto.deleted_attachments_ids = existingAttachments.map((file: IPostWithAttachmentWithState[]) => file.id)
   }
 
   // Tags will be synched in back

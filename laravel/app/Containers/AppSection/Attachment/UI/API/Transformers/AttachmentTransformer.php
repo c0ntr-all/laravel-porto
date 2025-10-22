@@ -3,9 +3,6 @@
 namespace App\Containers\AppSection\Attachment\UI\API\Transformers;
 
 use App\Containers\AppSection\Attachment\Models\Attachment;
-use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
-use League\Fractal\Resource\Collection;
-use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
 class AttachmentTransformer extends TransformerAbstract

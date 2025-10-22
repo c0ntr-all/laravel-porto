@@ -22,6 +22,7 @@ class ShipServiceProvider extends ServiceProvider
         MigrationServiceProvider::class,
         AuthServiceProvider::class,
         JwtServiceProvider::class,
+        TelescopeServiceProvider::class
     ];
 
     /**
@@ -40,11 +41,12 @@ class ShipServiceProvider extends ServiceProvider
 
         Relation::enforceMorphMap([
             ContainerAliasEnum::USER->value => 'App\Containers\AppSection\User\Models\User',
-            ContainerAliasEnum::ARTIST->value => 'App\Containers\MusicSection\Artist\Models\Artist',
-            ContainerAliasEnum::ALBUM->value => 'App\Containers\MusicSection\Album\Models\Album',
-            ContainerAliasEnum::TRACK->value => 'App\Containers\MusicSection\Track\Models\Track',
-            ContainerAliasEnum::TASK->value => 'App\Containers\TaskManagerSection\Task\Models\Task',
-            ContainerAliasEnum::POST->value => 'App\Containers\LifelogSection\Post\Models\Post'
+            ContainerAliasEnum::MUSIC_ARTIST->value => 'App\Containers\MusicSection\Artist\Models\Artist',
+            ContainerAliasEnum::MUSIC_ALBUM->value => 'App\Containers\MusicSection\Album\Models\Album',
+            ContainerAliasEnum::MUSIC_TRACK->value => 'App\Containers\MusicSection\Track\Models\Track',
+            ContainerAliasEnum::TM_TASK->value => 'App\Containers\TaskManagerSection\Task\Models\Task',
+            ContainerAliasEnum::LL_POST->value => 'App\Containers\LifelogSection\Post\Models\Post',
+            ContainerAliasEnum::GALLERY_IMAGE->value => 'App\Containers\GallerySection\Image\Models\Image'
         ]);
 
         $this->runConfigLoader();

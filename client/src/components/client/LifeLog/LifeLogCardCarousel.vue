@@ -42,11 +42,13 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { IAttachment } from 'src/types/attachment'
+
 const props = defineProps<{
-  slides: any
+  slides: IAttachment[]
   currentSlideId: string
 }>()
-const show = defineModel()
+const show = defineModel<boolean>()
 const currentSlideId = ref<string>(props.currentSlideId)
 
 const sceneRef = ref<HTMLElement | null>(null)
@@ -55,7 +57,7 @@ const COMMENTS_WIDTH = 350
 const FOOTER_HEIGHT = 100
 
 const currentSlide = computed(() => {
-  return props.slides.find(slide => slide.id === currentSlideId.value)
+  return props.slides.find((slide: IAttachment) => slide.id === currentSlideId.value)
 })
 const imageStyle = computed(() => {
   if (!currentSlide.value) return {}

@@ -39,18 +39,19 @@ import { useTagStore } from 'src/stores/modules/tagStore'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import { ITag } from 'src/types/tag'
 import { unique } from 'radash'
+import { ITagsFilterData } from 'src/types'
 
 const tagStore = useTagStore()
 
 const emit = defineEmits<{
   (e: 'reset'): void
-  (e: 'submit', value: string[]): void
+  (e: 'submit', value: ITagsFilterData): void
 }>()
 
 const originalTags = ref<ITag[]>([])
 const availableTags = ref<ITag[]>([])
 const model = ref<ITag[]>([])
-const tagsModeModel = ref<string>('and')
+const tagsModeModel = ref<'or' | 'and'>('and')
 const tagsModes = ['or', 'and']
 
 const selectedTags = computed(() => unique([...model.value], (tag: ITag) => tag.id))
@@ -82,8 +83,10 @@ const submitFilter = () => {
 
 onMounted(() => {
   tagStore.getTags().then((tags: ITag[]) => {
-    originalTags.value = [...tags]
-    availableTags.value = [...tags]
+    if (tags) {
+      originalTags.value = [...tags]
+      availableTags.value = [...tags]
+    }
   })
 })
 

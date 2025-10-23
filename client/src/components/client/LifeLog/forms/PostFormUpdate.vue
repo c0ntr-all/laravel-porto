@@ -80,7 +80,7 @@
 
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div class="lifelog-post-form__action">
+        <div v-if="model.datetime" class="lifelog-post-form__action">
           <AppDatetimeField v-model="model.datetime" />
         </div>
       </div>
@@ -122,7 +122,7 @@ const { tags } = storeToRefs(tagStore)
 const postStore = usePostStore()
 
 const props = defineProps<{
-  post?: IPost
+  post: IPost
 }>()
 
 const model = ref<IPostUpdateModel>({
@@ -134,7 +134,7 @@ const model = ref<IPostUpdateModel>({
   attachments: []
 })
 const newAttachmentsModel = ref<File[]>([])
-const originalPost = ref({})
+const originalPost = ref()
 const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
@@ -153,8 +153,10 @@ const updatePost = async () => {
     originalPost.value,
     newAttachmentsModel.value
   ).then(updatedPost => {
-    mapPostToModel(updatedPost)
-    clearAttachmentModel()
+    if (updatedPost) {
+      mapPostToModel(updatedPost)
+      clearAttachmentModel()
+    }
   })
 }
 
@@ -204,12 +206,8 @@ const mapPostToModel = (post: IPost) => {
   const rawPost = toRaw(post)
 
   const preparedPost = {
-    title: rawPost.title,
-    content: rawPost.content,
-    tags: rawPost.tags,
-    newTags: [],
-    datetime: rawPost.datetime,
-    attachments: rawPost.attachments
+    ...rawPost,
+    newTags: []
   }
 
   model.value = preparedPost

@@ -46,7 +46,7 @@
 
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div class="lifelog-post-form__action">
+        <div v-if="model.datetime" class="lifelog-post-form__action">
           <AppDatetimeField v-model="model.datetime" />
         </div>
       </div>
@@ -168,8 +168,7 @@ const getEmptyPostModel = (): IPostModel => {
     content: '',
     tags: [],
     newTags: [],
-    datetime: getCurrentDateTime(),
-    files: []
+    datetime: getCurrentDateTime()
   }
 }
 const clearModel = () => {

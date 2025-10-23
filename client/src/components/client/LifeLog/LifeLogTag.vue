@@ -14,10 +14,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { INewTag, ITag } from 'src/types/tag'
+import { ITag } from 'src/types/tag'
 
 const props = withDefaults(defineProps<{
-  tag: ITag | INewTag,
+  tag: any,
   removable?: boolean,
   clickable?: boolean,
   dense?: boolean,
@@ -31,8 +31,8 @@ const props = withDefaults(defineProps<{
   textColor: ''
 })
 const emit = defineEmits<{
-  (e: 'selected', tag: ITag): void
-  (e: 'removed', tag: ITag | INewTag): void
+  (e: 'selected', tag: any): void
+  (e: 'removed', tag: any): void
 }>()
 const tag = ref(props.tag)
 
@@ -40,6 +40,13 @@ const emitSelect = () => {
   emit('selected', tag.value as ITag) // Only ITag can be selected
 }
 const emitRemove = () => {
+  if ('id' in props.tag) {
+    // emit ITag
+    emit('removed', tag.value)
+  } else {
+    // emit INewTag
+    emit('removed', tag.value)
+  }
   emit('removed', tag.value)
 }
 </script>

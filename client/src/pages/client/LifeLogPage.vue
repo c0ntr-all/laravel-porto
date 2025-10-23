@@ -36,11 +36,7 @@ import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.v
 import LifeLogPostsFilter from 'src/components/client/LifeLog/LifeLogPostsFilter.vue'
 import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 import { ITag } from 'src/types/tag'
-
-interface ITagsFilterData {
-  tags: ITag[],
-  tags_mode: 'or' | 'and'
-}
+import { ITagsFilterData } from 'src/types'
 
 const postStore = usePostStore()
 const { posts, postsCount } = storeToRefs(postStore)
@@ -52,11 +48,21 @@ const onFilterReset = () => {
   reloadPosts()
 }
 
-const reloadPosts = (tagsFilterData: ITagsFilterData = {}) => {
-  if (!isEmpty(tagsFilterData)) {
-    tagsFilterData.tags = tagsFilterData.tags.map((tag: ITag) => tag.id)
+const reloadPosts = (tagsFilterData: ITagsFilterData | object = {}) => {
+  let filterData = {}
+
+  // Type guard для проверки наличия свойства tags
+  const hasTags = (data: any): data is ITagsFilterData => {
+    return 'tags' in data && Array.isArray(data.tags)
   }
-  postStore.getPosts(tagsFilterData)
+
+  if (!isEmpty(tagsFilterData) && hasTags(tagsFilterData)) {
+    filterData = {
+      ...tagsFilterData,
+      tags: tagsFilterData.tags.map((tag: ITag) => tag.id)
+    }
+  }
+  postStore.getPosts(filterData)
 }
 
 onMounted(() => {

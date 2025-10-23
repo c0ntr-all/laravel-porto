@@ -111,7 +111,7 @@ interface Action {
 const props = defineProps<{
   post: IPost
 }>()
-const { post } = toRefs<IPost>(props)
+const { post } = toRefs(props)
 const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
 const showCarousel = ref<boolean>(false)
@@ -124,12 +124,14 @@ const availableActions: Action[] = [{
     showEditPostModal.value = true
   },
   label: 'Edit Post',
+  name: 'edit_post',
   icon: 'edit'
 }, {
   fn: () => {
     showDeletePostModal.value = true
   },
   label: 'Delete Post',
+  name: 'delete_post',
   icon: 'delete'
 }]
 const openCarousel = (id: string) => {

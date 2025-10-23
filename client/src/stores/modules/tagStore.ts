@@ -18,7 +18,7 @@ export const useTagStore = defineStore('tag', {
   },
 
   actions: {
-    async getTags() {
+    async getTags(): Promise<ITag[]> {
       this.isLoading = true
       this.error = null
       try {
@@ -30,6 +30,7 @@ export const useTagStore = defineStore('tag', {
         return tags
       } catch (err: any) {
         this.error = err.message ?? 'Ошибка загрузки'
+        return []
       } finally {
         this.isLoading = false
       }

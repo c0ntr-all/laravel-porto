@@ -14,7 +14,7 @@
       <div
         class="col-md-2 post-form__files-item"
         v-for="file in attachmentModel"
-        :key="file"
+        :key="file.name"
       >
         <div class="post-form__file">
           <img :src="getImagePreview(file)" alt="">
@@ -32,7 +32,7 @@
 <script lang="ts" setup>
 import { onUnmounted, watch } from 'vue'
 
-const attachmentModel = defineModel()
+const attachmentModel = defineModel<File[]>()
 
 // Локальное хранилище ObjectURL, чтобы потом освободить
 const objectUrls: string[] = []

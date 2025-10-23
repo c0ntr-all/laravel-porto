@@ -59,8 +59,8 @@
         </div>
         <LifeLogCardCarousel
           v-model="showCarousel"
+          v-model:current-slide-id="currentSlideId"
           :slides="post.attachments"
-          :current-slide-id="currentSlideId"
         />
       </q-card-section>
       <q-card-section class="q-pa-sm">

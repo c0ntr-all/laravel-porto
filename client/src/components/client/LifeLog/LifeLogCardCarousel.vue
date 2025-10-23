@@ -3,15 +3,20 @@
     v-model="show"
     :backdrop-filter="'brightness(60%)'"
   >
-    <q-card style="max-width: 80vw;" class="flex">
-      <q-card-section :horizontal="false" class="carousel__scene" ref="sceneRef">
+    <q-card class="photo-viewer">
+      <q-card-section
+        :horizontal="false"
+        class="photo-viewer__scene"
+        ref="sceneRef"
+        :style="`width: ${minContainerWidth}px`"
+      >
         <q-carousel
+          ref="carousel"
           v-model="currentSlideId"
           class="carousel text-white shadow-1"
           transition-prev="scale"
           transition-next="scale"
           transition-duration="50"
-          control-color="primary"
           height="100%"
           style="max-width: none"
           swipeable
@@ -31,35 +36,55 @@
           </q-carousel-slide>
         </q-carousel>
       </q-card-section>
-      <q-card-section :horizontal="false">
-        <div class="carousel__metadata metadata">
-          zone for user, actions, comments, etc...
-        </div>
+      <q-card-section class="photo-viewer__metadata metadata" :horizontal="false">
+        zone for user, actions, comments, etc...
       </q-card-section>
     </q-card>
   </q-dialog>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IAttachment } from 'src/types/attachment'
 
+// --- Props ---
 const props = defineProps<{
   slides: IAttachment[]
-  currentSlideId: string
 }>()
-const show = defineModel<boolean>()
-const currentSlideId = ref<string>(props.currentSlideId)
 
+// --- Models ---
+const show = defineModel<boolean>()
+const currentSlideId = defineModel<string>('currentSlideId')
+
+// --- Refs ---
 const sceneRef = ref<HTMLElement | null>(null)
+
+// --- State ---
 const viewport = ref({ width: window.innerWidth, height: window.innerHeight })
 const COMMENTS_WIDTH = 350
 const FOOTER_HEIGHT = 100
+const INITIAL_SCENE_WIDTH = 600
+let minWidthState = INITIAL_SCENE_WIDTH
 
+// --- Computed ---
 const currentSlide = computed(() => {
   return props.slides.find((slide: IAttachment) => slide.id === currentSlideId.value)
 })
+const minContainerWidth = computed(() => {
+  if (imageSizes.value.width && imageSizes.value.width > minWidthState) {
+    minWidthState = imageSizes.value.width
+  }
+
+  return minWidthState
+})
 const imageStyle = computed(() => {
+  return {
+    width: `${imageSizes.value.width}px`,
+    height: `${imageSizes.value.height}px`
+  }
+})
+
+const imageSizes = computed(() => {
   if (!currentSlide.value) return {}
 
   const maxW = viewport.value.width - COMMENTS_WIDTH - 40
@@ -82,13 +107,15 @@ const imageStyle = computed(() => {
   }
 
   return {
-    width: `${width}px`,
-    height: `${height}px`
+    width: Math.round(width),
+    height: Math.round(height)
   }
 })
 
-watchEffect(() => {
-  currentSlideId.value = props.currentSlideId
+watch(show, (value) => {
+  if (!value) {
+    minWidthState = INITIAL_SCENE_WIDTH
+  }
 })
 
 // проверяем ориентацию всех слайдов
@@ -104,15 +131,25 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.carousel {
-  max-width: none;
-  max-height: none;
+.photo-viewer {
+  display: flex;
+  max-width: 95vw;
+  min-width: 910px;
 
   &__scene {
+    flex: 1 1 auto;
+    min-width: 600px;
+    min-height: 450px;
     padding: 0;
   }
   &__metadata {
+    flex: 0 0 auto;
     width: 310px;
   }
+}
+.carousel {
+  max-width: none;
+  max-height: none;
+  background: #222222 !important;
 }
 </style>

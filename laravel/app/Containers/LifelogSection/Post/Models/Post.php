@@ -7,9 +7,10 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\DBLoggableModel;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Post withTrashed()
  * @method static Builder|Post withoutTrashed()
  */
-class Post extends Model
+class Post extends DBLoggableModel
 {
     use SoftDeletes,
         HasFactory,
@@ -55,4 +56,5 @@ class Post extends Model
         'id' => 'string',
         'datetime' => 'datetime',
     ];
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::LL_POST;
 }

@@ -2,6 +2,9 @@
 
 namespace App\Ship\Providers;
 
+use App\Containers\AppSection\ActivityLog\Listeners\PostEventsSubscriber;
+use App\Containers\LifelogSection\Post\Models\Post;
+use App\Containers\LifelogSection\Post\Observers\PostObserver;
 use App\Containers\MusicSection\Album\Models\AlbumType;
 use App\Containers\MusicSection\Album\Observers\AlbumTypeObserver;
 use App\Containers\MusicSection\Tag\Models\MusicTag;
@@ -25,6 +28,16 @@ class EventServiceProvider extends ServiceProvider
         ],
     ];
 
+    protected $observers = [
+        MusicTag::class => [MusicTagObserver::class],
+        AlbumType::class => [AlbumTypeObserver::class],
+        Post::class => [PostObserver::class]
+    ];
+
+    protected $subscribe = [
+        PostEventsSubscriber::class
+    ];
+
     /**
      * Register any events for your application.
      *
@@ -32,9 +45,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        MusicTag::observe(MusicTagObserver::class);
-        AlbumType::observe(AlbumTypeObserver::class);
-
         // Initialize cache if not exists
         if (Schema::hasTable('cache') && Schema::hasTable((new AlbumType())->getTable()) && !Cache::has('album_types')) {
             Cache::put('album_types', AlbumType::all(), now()->addDay());

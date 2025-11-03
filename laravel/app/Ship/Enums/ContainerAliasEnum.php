@@ -17,4 +17,18 @@ enum ContainerAliasEnum: string
     case LL_POST = 'll_posts';
     //GallerySection
     case GALLERY_IMAGE = 'gallery_images';
+
+    public function getContainerMessage(): string
+    {
+        return match($this) {
+            self::USER => 'Пользователь',
+            self::TAG => 'Тег',
+            self::MUSIC_ARTIST => 'Исполнитель',
+            self::MUSIC_ALBUM => 'Альбом',
+            self::MUSIC_TRACK => 'Трек',
+            self::TM_TASK => 'Задача',
+            self::LL_POST => 'Пост',
+            self::GALLERY_IMAGE => 'Изображение',
+        };
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUserLogTask;
+use App\Containers\AppSection\ActivityLog\Tasks\ListSystemLogsByUuid;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\AppSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
@@ -11,7 +13,9 @@ use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
+use App\Ship\Helpers\Correlation;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreatePostAction
@@ -22,21 +26,48 @@ class CreatePostAction
         private readonly CreatePostTask $createPostTask,
         private readonly CreateTagsByNamesTask $createTagsByNamesTask,
         private readonly SyncTagsTask $syncTagsTask,
-        private readonly SyncPostTagsTask $syncPostTagsTask
+        private readonly SyncPostTagsTask $syncPostTagsTask,
+        private readonly CreateActivityUserLogTask $createActivityUserLogTask,
+        private readonly ListSystemLogsByUuid $listSystemLogsByUuid
     )
     {
     }
 
+    /**
+     * @throws \Exception
+     */
     public function handle(PostCreateDto $postDto, PostTagsSyncDto $tagsDto): Post
     {
-        $post = $this->createPostTask->run($postDto);
+        $correlationUuid = Correlation::init();
 
-        $this->syncPostTagsTask->run(
-            post: $post,
-            userId: $tagsDto->user_id,
-            newTags: $tagsDto->new_tags ?? [],
-            existingTagIds: $tagsDto->tags ?? []
-        );
+        DB::beginTransaction();
+
+        try {
+            $post = $this->createPostTask->run($postDto);
+
+            $this->syncPostTagsTask->run(
+                post: $post,
+                userId: $tagsDto->user_id,
+                newTags: $tagsDto->new_tags ?? [],
+                existingTagIds: $tagsDto->tags ?? [],
+            );
+
+            // TODO: Сюда перенести логику привязывания вложений т.к. это будет слой аггрегатор для микросервисов
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Correlation::clear();
+            throw $e;
+        }
+
+        // После успешного коммита формируем user_log
+        DB::afterCommit(function () use ($correlationUuid) {
+            $systemLogs = $this->listSystemLogsByUuid->run($correlationUuid);
+            $this->createActivityUserLogTask->run($systemLogs);
+            Correlation::clear();
+        });
 
         return $post;
     }

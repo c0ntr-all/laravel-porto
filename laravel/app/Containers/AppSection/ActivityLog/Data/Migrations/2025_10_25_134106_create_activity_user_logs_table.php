@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->uuid('correlation_uuid'); // не foreign key, для независимой связи сущностей
-            $table->morphs('loggable');
+            $table->string('loggable_type');
+            $table->string('loggable_id');
             $table->text('text');
             $table->timestamp('created_at');
 

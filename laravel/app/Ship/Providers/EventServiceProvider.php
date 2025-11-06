@@ -2,7 +2,11 @@
 
 namespace App\Ship\Providers;
 
-use App\Containers\AppSection\ActivityLog\Listeners\PostEventsSubscriber;
+use App\Containers\AppSection\ActivityLog\Listeners\ActivityLogEventsSubscriber;
+use App\Containers\AppSection\Tag\Models\Tag;
+use App\Containers\AppSection\Tag\Models\Taggable;
+use App\Containers\AppSection\Tag\Observers\TaggableObserver;
+use App\Containers\AppSection\Tag\Observers\TagObserver;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Observers\PostObserver;
 use App\Containers\MusicSection\Album\Models\AlbumType;
@@ -31,11 +35,13 @@ class EventServiceProvider extends ServiceProvider
     protected $observers = [
         MusicTag::class => [MusicTagObserver::class],
         AlbumType::class => [AlbumTypeObserver::class],
-        Post::class => [PostObserver::class]
+        Post::class => [PostObserver::class],
+        Tag::class => [TagObserver::class],
+        Taggable::class => [TaggableObserver::class]
     ];
 
     protected $subscribe = [
-        PostEventsSubscriber::class
+        ActivityLogEventsSubscriber::class
     ];
 
     /**

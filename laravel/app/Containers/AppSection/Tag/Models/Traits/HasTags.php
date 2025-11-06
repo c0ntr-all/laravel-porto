@@ -3,6 +3,7 @@
 namespace App\Containers\AppSection\Tag\Models\Traits;
 
 use App\Containers\AppSection\Tag\Models\Tag;
+use App\Containers\AppSection\Tag\Models\Taggable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -34,7 +35,8 @@ trait HasTags
             'taggables',
             'taggable_id',
             'tag_id'
-        )->withPivot('user_id')
+        )->using(Taggable::class)
+         ->withPivot('user_id')
          ->withTimestamps();
     }
 

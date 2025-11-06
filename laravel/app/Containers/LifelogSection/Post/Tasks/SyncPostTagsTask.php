@@ -48,6 +48,7 @@ class SyncPostTagsTask extends ParentTask
             ->toArray();
 
         $syncTagsDto = TagsSyncDto::from(['tags' => $tagsIdsToSyncWithUserIds]);
+        // TODO: Сделать слежение события синхронизации
         $this->syncTagsTask->run($post, $syncTagsDto);
     }
 }

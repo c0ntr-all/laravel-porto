@@ -2,8 +2,9 @@
 
 namespace App\Containers\AppSection\Tag\Models;
 
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\DBLoggableModel;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
@@ -29,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Tag extends Model
+class Tag extends DBLoggableModel
 {
     protected $table ='tags';
 
@@ -37,4 +38,5 @@ class Tag extends Model
     protected $casts = [
         'id' => 'string'
     ];
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TAG;
 }

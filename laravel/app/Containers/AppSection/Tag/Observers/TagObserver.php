@@ -2,23 +2,26 @@
 
 namespace App\Containers\AppSection\Tag\Observers;
 
+use App\Containers\AppSection\Tag\Events\CreatedEvent;
+use App\Containers\AppSection\Tag\Events\DeletedEvent;
+use App\Containers\AppSection\Tag\Events\UpdatedEvent;
 use App\Containers\AppSection\Tag\Models\Tag;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Event;
 
 class TagObserver
 {
-    public function creating(Tag $tag): void
+    public function created(Tag $tag): void
     {
-        $this->setSlug($tag);
+        Event::dispatch(new CreatedEvent($tag));
     }
 
-    public function updating(Tag $tag): void
+    public function updated(Tag $tag): void
     {
-        $this->setSlug($tag);
+        Event::dispatch(new UpdatedEvent($tag));
     }
 
-    protected function setSlug(Tag $tag): void
+    public function deleted(Tag $tag): void
     {
-        $tag->slug = Str::slug($tag->name);
+        Event::dispatch(new DeletedEvent($tag));
     }
 }

@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('activity_system_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('event_type', 64);
             $table->uuid('correlation_uuid'); // не foreign key, для независимой связи сущностей
-            $table->morphs('loggable');
+            $table->string('event_type', 64);
+            $table->string('main_type');
+            $table->string('main_id');
+            $table->string('related_type')->nullable();
+            $table->string('related_id')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamp('created_at');
 

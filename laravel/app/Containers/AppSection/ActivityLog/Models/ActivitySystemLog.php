@@ -14,6 +14,10 @@ class ActivitySystemLog extends Model
 
     const null UPDATED_AT = null;
 
+    protected $casts = [
+        'metadata' => 'array',
+    ];
+
     public function userLog(): BelongsTo
     {
         return $this->belongsTo(ActivityUserLog::class, 'correlation_id', 'correlation_id');

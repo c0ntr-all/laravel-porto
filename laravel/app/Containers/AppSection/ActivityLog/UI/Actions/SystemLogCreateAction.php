@@ -6,7 +6,7 @@ use App\Containers\AppSection\ActivityLog\Data\DTO\SystemLogCreateDto;
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivitySystemLogTask;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-final class ActivityLogCreateAction
+final class SystemLogCreateAction
 {
     use AsAction;
 

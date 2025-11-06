@@ -10,7 +10,6 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
 class CreateActivityUserLogTask extends ParentTask
 {
@@ -33,8 +32,8 @@ class CreateActivityUserLogTask extends ParentTask
         $userLogCreateDto = UserLogCreateDto::from([
             'user_id' => $firstLog->user_id,
             'correlation_uuid' => $firstLog->correlation_uuid,
-            'loggable_type' => $firstLog->loggable_type,
-            'loggable_id' => $firstLog->loggable_id,
+            'loggable_type' => $firstLog->main_type,
+            'loggable_id' => $firstLog->main_id,
             'text' => $text,
         ]);
 
@@ -46,8 +45,9 @@ class CreateActivityUserLogTask extends ParentTask
         $counts = [];
 
         $systemLogs->each(function (ActivitySystemLog $log) use (&$counts) {
-            $fullEventName = $log->loggable_type . '.' . $log->event_type;
-            $counts[$fullEventName] = ($counts[$log->event_type] ?? 0) + 1;
+            $modelType = $log->related_type ?? $log->main_type;
+            $fullEventName = $modelType . '.' . $log->event_type;
+            $counts[$fullEventName] = ($counts[$fullEventName] ?? 0) + 1;
         });
 
         $lines = [];

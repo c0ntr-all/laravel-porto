@@ -3,7 +3,7 @@
 namespace App\Containers\AppSection\Tag\Models;
 
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Models\DBLoggableModel;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Tag extends DBLoggableModel
+class Tag extends ActivityLoggableModel
 {
     protected $table ='tags';
 

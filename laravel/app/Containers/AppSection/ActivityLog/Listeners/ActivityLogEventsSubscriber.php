@@ -46,7 +46,7 @@ class ActivityLogEventsSubscriber
 
     private function handlePostEvents(PostEvent $event): void
     {
-        $uuid = Correlation::get();
+        $uuid = Correlation::getUuid();
         $post = $event->getPost();
         $eventType = $event->getEventType();
         $userId = auth()?->user()?->id;
@@ -70,7 +70,7 @@ class ActivityLogEventsSubscriber
 
     public function handleTagEvents(TagEvent $event): void
     {
-        $uuid = Correlation::get();
+        $uuid = Correlation::getUuid();
         $tag = $event->getTag();
         $eventType = $event->getEventType();
         $userId = auth()?->user()?->id;
@@ -89,7 +89,7 @@ class ActivityLogEventsSubscriber
 
     public function handleTaggableEvents(TaggableEvent $event): void
     {
-        $uuid = Correlation::get();
+        $uuid = Correlation::getUuid();
         $taggable = $event->getTaggable();
         $eventType = $event->getEventType();
         $userId = auth()?->user()?->id;

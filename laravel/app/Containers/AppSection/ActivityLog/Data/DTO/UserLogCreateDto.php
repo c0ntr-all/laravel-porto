@@ -10,7 +10,7 @@ class UserLogCreateDto extends Data
     public string $correlation_uuid;
     public string $loggable_type;
     public string $loggable_id;
-    public string $text;
+    public string $event_type;
 
     public function __construct(
     ) {}

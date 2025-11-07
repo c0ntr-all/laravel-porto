@@ -2,7 +2,7 @@
 
 namespace App\Containers\AppSection\ActivityLog\Data\Repositories;
 
-use App\Containers\AppSection\ActivityLog\Models\ActivityUserLog;
+use App\Containers\AppSection\ActivityLog\Models\ActivityUseCaseLog;
 
 class ActivityUserLogRepository
 {
@@ -10,8 +10,8 @@ class ActivityUserLogRepository
      * @param array $data
      * @return mixed
      */
-    public function create(array $data): ActivityUserLog
+    public function create(array $data): ActivityUseCaseLog
     {
-        return ActivityUserLog::create($data);
+        return ActivityUseCaseLog::create($data);
     }
 }

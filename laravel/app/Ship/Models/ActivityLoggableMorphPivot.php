@@ -6,7 +6,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\Interfaces\DBLoggable;
 use Illuminate\Database\Eloquent\Relations\MorphPivot;
 
-abstract class DBLoggableMorphPivot extends MorphPivot implements DBLoggable
+abstract class ActivityLoggableMorphPivot extends MorphPivot implements DBLoggable
 {
     protected ContainerAliasEnum $loggableType;
 

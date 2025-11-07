@@ -6,7 +6,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\Interfaces\DBLoggable;
 use Illuminate\Database\Eloquent\Model;
 
-abstract class DBLoggableModel extends Model implements DBLoggable
+abstract class ActivityLoggableModel extends Model implements DBLoggable
 {
     protected ContainerAliasEnum $loggableType;
 

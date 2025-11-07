@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('activity_user_logs', function (Blueprint $table) {
+        Schema::create('activity_use_case_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->uuid('correlation_uuid'); // не foreign key, для независимой связи сущностей
             $table->string('loggable_type');
             $table->string('loggable_id');
-            $table->text('text');
+            $table->string('event_type');
             $table->timestamp('created_at');
 
             $table->index('correlation_uuid');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('activity_user_logs');
+        Schema::dropIfExists('activity_use_case_logs');
     }
 };

@@ -2,8 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUserLogTask;
-use App\Containers\AppSection\ActivityLog\Tasks\ListSystemLogsByUuid;
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsDeleteDto;
 use App\Containers\AppSection\Attachment\Tasks\DeleteAttachmentsTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSyncDto;
@@ -14,25 +13,30 @@ use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Helpers\Correlation;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Lorisleiva\Actions\Concerns\AsAction;
 
-class UpdatePostAction
+class UpdatePostAction extends BaseAction
 {
-    use AsAction;
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::LL_POST;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
 
     public function __construct(
-        private readonly UpdatePostTask        $updatePostTask,
-        private readonly SyncPostTagsTask      $syncPostTagsTask,
-        private readonly DeleteAttachmentsTask $deleteAttachmentsTask,
-        private readonly CreateActivityUserLogTask $createActivityUserLogTask,
-        private readonly ListSystemLogsByUuid $listSystemLogsByUuid
+        private readonly UpdatePostTask            $updatePostTask,
+        private readonly SyncPostTagsTask          $syncPostTagsTask,
+        private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
+        parent::__construct();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function handle(
         Post                 $post,
         PostUpdateDto        $postDto,
@@ -40,8 +44,6 @@ class UpdatePostAction
         AttachmentsDeleteDto $attachmentsDeleteDto
     ): Post
     {
-        $correlationUuid = Correlation::init();
-
         DB::beginTransaction();
 
         try {
@@ -53,10 +55,10 @@ class UpdatePostAction
                 newTags: $tagsDto->new_tags,
                 existingTagIds: $tagsDto->tags
             );
-//            $this->deleteAttachmentsTask->run(
-//                model: $updatedPost,
-//                dto: $attachmentsDeleteDto
-//            );
+            $this->deleteAttachmentsTask->run(
+                model: $updatedPost,
+                dto: $attachmentsDeleteDto
+            );
 
             DB::commit();
 
@@ -67,15 +69,18 @@ class UpdatePostAction
         }
 
         // После успешного коммита формируем user_log
-        DB::afterCommit(function () use ($correlationUuid) {
-            $systemLogs = $this->listSystemLogsByUuid->run($correlationUuid);
-            $this->createActivityUserLogTask->run($systemLogs);
+        DB::afterCommit(function () use ($updatedPost) {
+            $this->createActivityUseCaseTask->run($updatedPost, $this->eventTypesEnum->value);
+
             Correlation::clear();
         });
 
         return $updatedPost;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function asController(Post $post, UpdateRequest $request): JsonResponse
     {
         $postDto = PostUpdateDto::from([

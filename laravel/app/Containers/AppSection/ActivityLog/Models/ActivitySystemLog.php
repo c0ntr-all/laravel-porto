@@ -20,6 +20,6 @@ class ActivitySystemLog extends Model
 
     public function userLog(): BelongsTo
     {
-        return $this->belongsTo(ActivityUserLog::class, 'correlation_id', 'correlation_id');
+        return $this->belongsTo(ActivityUseCaseLog::class, 'correlation_id', 'correlation_id');
     }
 }

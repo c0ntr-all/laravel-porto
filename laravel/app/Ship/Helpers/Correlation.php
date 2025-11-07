@@ -15,32 +15,58 @@ use Illuminate\Support\Str;
  */
 final class Correlation
 {
-    private const string CONTEXT_KEY = 'currentCorrelationId';
+    private const string UUID = 'currentCorrelationId';
+    private const string USE_CASE = 'currentCorrelationUseCase';
 
-    public static function init(): string
+    public static function init(): void
     {
         $uuid = (string) Str::uuid();
-        App::instance(self::CONTEXT_KEY, $uuid);
-
-        return $uuid;
+        App::instance(self::UUID, $uuid);
     }
 
-    public static function set(string $uuid): void
+    public static function setUuid(string $uuid): void
     {
-        App::instance(self::CONTEXT_KEY, $uuid);
+        App::instance(self::UUID, $uuid);
     }
 
-    public static function get(): ?string
+    public static function getUuid(): ?string
     {
-        return App::has(self::CONTEXT_KEY)
-            ? App::get(self::CONTEXT_KEY)
+        return App::has(self::UUID)
+            ? App::get(self::UUID)
             : null;
+    }
+
+    public static function setUseCase(string $useCase): void
+    {
+        App::instance(self::USE_CASE, $useCase);
+    }
+
+    public static function getUseCase(): ?string
+    {
+        return App::has(self::USE_CASE)
+            ? App::get(self::USE_CASE)
+            : null;
+    }
+
+    public static function makeUseCaseName(string $containerAliasValue, string $eventTypesValue): string
+    {
+        return $containerAliasValue . '.' . $eventTypesValue;
+    }
+
+    public static function isUseCase(string $containerAliasValue, string $eventTypesValue): bool
+    {
+        $expected = self::makeUseCaseName($containerAliasValue, $eventTypesValue);
+
+        return $expected === self::getUseCase();
     }
 
     public static function clear(): void
     {
-        if (App::has(self::CONTEXT_KEY)) {
-            App::forgetInstance(self::CONTEXT_KEY);
+        if (App::has(self::UUID)) {
+            App::forgetInstance(self::UUID);
+        }
+        if (App::has(self::USE_CASE)) {
+            App::forgetInstance(self::USE_CASE);
         }
     }
 }

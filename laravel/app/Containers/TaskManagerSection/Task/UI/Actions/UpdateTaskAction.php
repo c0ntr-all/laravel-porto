@@ -7,18 +7,22 @@ use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\UpdateTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\UpdateRequest;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
-class UpdateTaskAction
+class UpdateTaskAction extends BaseAction
 {
-    use AsAction;
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
 
     public function __construct(
         private readonly UpdateTaskTask $updateTaskTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(Task $task, TaskUpdateData $dto): Task

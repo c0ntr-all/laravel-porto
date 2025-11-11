@@ -17,6 +17,8 @@ use App\Containers\MusicSection\Album\Models\AlbumType;
 use App\Containers\MusicSection\Album\Observers\AlbumTypeObserver;
 use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\Observers\MusicTagObserver;
+use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Containers\TaskManagerSection\Task\Observers\TaskObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -40,6 +42,7 @@ class EventServiceProvider extends ServiceProvider
         MusicTag::class => [MusicTagObserver::class],
         AlbumType::class => [AlbumTypeObserver::class],
         Post::class => [PostObserver::class],
+        Task::class => [TaskObserver::class],
         GalleryImage::class => [GalleryImageObserver::class],
         Attachment::class => [AttachmentObserver::class],
         Tag::class => [TagObserver::class],

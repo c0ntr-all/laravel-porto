@@ -60,9 +60,6 @@ class UpdatePostAction extends BaseAction
                 model: $updatedPost,
                 dto: $attachmentsDeleteDto
             );
-            //TODO: Прокидываем correlation_uuid из поста через фронта в attachments
-            //TODO: Генерация и запись correlation_uuid вынести в middleware
-            //TODO: В будущем нацелиться на application layer
 
             DB::commit();
 

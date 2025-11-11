@@ -2,29 +2,47 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\TaskManagerSection\Task\Data\DTO\TaskCreateData;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\CreateTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\CreateRequest;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Helpers\Correlation;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Support\Facades\DB;
 
-class CreateTaskAction
+class CreateTaskAction extends BaseAction
 {
-    use AsAction;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;
 
     public function __construct(
-        private readonly CreateTaskTask $createTaskTask
+        private readonly CreateTaskTask $createTaskTask,
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(TaskCreateData $dto): Task
     {
-        return $this->createTaskTask->run($dto);
+        $createdTask = $this->createTaskTask->run($dto);
+
+        // После успешного коммита формируем user_log
+        DB::afterCommit(function () use ($createdTask) {
+            $this->createActivityUseCaseTask->run($createdTask, $this->eventTypesEnum->value);
+        });
+
+        return $createdTask;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function asController(CreateRequest $request): JsonResponse
     {
         $dto = TaskCreateData::from($request->validated());

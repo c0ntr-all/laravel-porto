@@ -5,17 +5,21 @@ namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\DeleteTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\DeleteRequest;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
 
-class DeleteTaskAction
+class DeleteTaskAction extends BaseAction
 {
-    use AsAction;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::DELETED;
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;
 
     public function __construct(
         private readonly DeleteTaskTask $deleteTaskTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(Task $task): bool

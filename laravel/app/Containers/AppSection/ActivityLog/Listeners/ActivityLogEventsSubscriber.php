@@ -22,6 +22,10 @@ use App\Containers\LifelogSection\Post\Events\CreatedEvent as PostCreatedEvent;
 use App\Containers\LifelogSection\Post\Events\DeletedEvent as PostDeletedEvent;
 use App\Containers\LifelogSection\Post\Events\PostEvent;
 use App\Containers\LifelogSection\Post\Events\UpdatedEvent as PostUpdatedEvent;
+use App\Containers\TaskManagerSection\Task\Events\CreatedEvent as TaskCreatedEvent;
+use App\Containers\TaskManagerSection\Task\Events\DeletedEvent as TaskDeletedEvent;
+use App\Containers\TaskManagerSection\Task\Events\TaskEvent;
+use App\Containers\TaskManagerSection\Task\Events\UpdatedEvent as TaskUpdatedEvent;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Helpers\Correlation;
 use Illuminate\Events\Dispatcher;
@@ -62,6 +66,13 @@ class ActivityLogEventsSubscriber
             AttachmentAttachedEvent::class,
             AttachmentDetachedEvent::class,
         ], $this->handleAttachmentsEvents(...));
+
+        // CRUD tasks
+        $events->listen([
+            TaskCreatedEvent::class,
+            TaskUpdatedEvent::class,
+            TaskDeletedEvent::class
+        ], $this->handleTaskEvents(...));
     }
 
     private function handlePostEvents(PostEvent $event): void
@@ -162,6 +173,30 @@ class ActivityLogEventsSubscriber
             'event_type' => $eventType,
             'main_type' => $galleryImage->getLoggableType(),
             'main_id' => $galleryImage->id,
+            'correlation_uuid' => $uuid,
+            'metadata' => $metadata,
+        ]);
+
+        SystemLogCreateAction::dispatchSync($systemLogDto);
+    }
+
+    private function handleTaskEvents(TaskEvent $event): void
+    {
+        $uuid = Correlation::getUuid();
+        $task = $event->getTask();
+        $eventType = $event->getEventType();
+        $userId = auth()?->user()?->id;
+        $metadata = $task->only(['title', 'content', 'finished_at', 'is_declined']);
+
+        if ($eventType === EventTypesEnum::UPDATED->value) {
+            $metadata = ['changes' => $task->getChanges()];
+        }
+
+        $systemLogDto = SystemLogCreateDto::from([
+            'user_id' => $userId,
+            'event_type' => $eventType,
+            'main_type' => $task->getLoggableType(),
+            'main_id' => $task->id,
             'correlation_uuid' => $uuid,
             'metadata' => $metadata,
         ]);

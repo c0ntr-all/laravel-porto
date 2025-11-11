@@ -8,7 +8,8 @@ use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -37,10 +38,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static \Illuminate\Database\Eloquent\Builder|Task whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Task extends Model
+class Task extends ActivityLoggableModel
 {
     use HasUser,
         HasComments;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_TASK;
 
     protected $table = 'tm_tasks';
 

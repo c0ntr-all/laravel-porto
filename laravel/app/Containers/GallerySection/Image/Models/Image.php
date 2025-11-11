@@ -5,8 +5,9 @@ namespace App\Containers\GallerySection\Image\Models;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -44,13 +45,14 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Image withTrashed()
  * @method static Builder|Image withoutTrashed()
  */
-class Image extends Model
+class Image extends ActivityLoggableModel
 {
     use HasUuids,
         HasUser;
 
-    protected $table = 'gallery_images';
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_IMAGE;
 
+    protected $table = 'gallery_images';
     protected $guarded = [];
 
     public function album(): BelongsTo

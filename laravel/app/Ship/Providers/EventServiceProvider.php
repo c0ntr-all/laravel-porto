@@ -3,10 +3,14 @@
 namespace App\Ship\Providers;
 
 use App\Containers\AppSection\ActivityLog\Listeners\ActivityLogEventsSubscriber;
+use App\Containers\AppSection\Attachment\Models\Attachment;
+use App\Containers\AppSection\Attachment\Observers\AttachmentObserver;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Taggable;
 use App\Containers\AppSection\Tag\Observers\TaggableObserver;
 use App\Containers\AppSection\Tag\Observers\TagObserver;
+use App\Containers\GallerySection\Image\Models\Image as GalleryImage;
+use App\Containers\GallerySection\Image\Observers\ImageObserver as GalleryImageObserver;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Observers\PostObserver;
 use App\Containers\MusicSection\Album\Models\AlbumType;
@@ -36,6 +40,8 @@ class EventServiceProvider extends ServiceProvider
         MusicTag::class => [MusicTagObserver::class],
         AlbumType::class => [AlbumTypeObserver::class],
         Post::class => [PostObserver::class],
+        GalleryImage::class => [GalleryImageObserver::class],
+        Attachment::class => [AttachmentObserver::class],
         Tag::class => [TagObserver::class],
         Taggable::class => [TaggableObserver::class]
     ];

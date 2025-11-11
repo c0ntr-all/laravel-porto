@@ -20,8 +20,10 @@ final class Correlation
 
     public static function init(): void
     {
-        $uuid = (string) Str::uuid();
-        App::instance(self::UUID, $uuid);
+        if (!self::getUuid()) {
+            $uuid = (string) Str::uuid();
+            App::instance(self::UUID, $uuid);
+        }
     }
 
     public static function setUuid(string $uuid): void

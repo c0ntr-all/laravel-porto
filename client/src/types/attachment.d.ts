@@ -18,5 +18,6 @@ type IAttachmentWithState = IAttachment & {
 export interface IAttachmentModel {
   attachable_type: string,
   attachable_id: string,
-  files: File[]
+  files: File[],
+  correlation_uuid?: string
 }

@@ -27,6 +27,7 @@ export interface IJsonApiResponse {
   data: IJsonApiResource | IJsonApiResource[];
   included?: IJsonApiResource[];
   meta?: {
-    count?: number
+    count?: number,
+    correlation_uuid?: string
   }
 }

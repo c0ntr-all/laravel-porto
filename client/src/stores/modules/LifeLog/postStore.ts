@@ -42,7 +42,8 @@ export const usePostStore = defineStore('post', () => {
         const newAttachments = await attachmentStore.createAttachment({
           files: attachmentModel,
           attachable_type: newPost.type,
-          attachable_id: newPost.id
+          attachable_id: newPost.id,
+          correlation_uuid: responseData.meta?.correlation_uuid
         })
 
         if (newAttachments) {

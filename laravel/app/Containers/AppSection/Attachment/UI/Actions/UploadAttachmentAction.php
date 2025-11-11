@@ -12,6 +12,7 @@ use App\Containers\GallerySection\Album\Tasks\GetSystemAlbumTask;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
 use App\Containers\GallerySection\Image\UI\Actions\UploadImageFromDeviceAction;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Helpers\Correlation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -34,11 +35,13 @@ class UploadAttachmentAction
         $attachments = [];
 
         foreach ($attachmentsCreateDto->files as $file) {
+            //TODO: убрать т.к. этот контейнер не должен знать про DTO других контейнеров
             $uploadImageDto = UploadImageFromDeviceDto::from([
                 'user_id' => $attachmentsCreateDto->user_id,
                 'file' => $file
             ]);
 
+            //Внешний вызов Action -> Action
             $image = $this->uploadImageFromDeviceAction->handle($uploadsGalleryAlbum, $uploadImageDto);
 
             $attachmentCreateDto = AttachmentCreateDto::from([
@@ -57,9 +60,15 @@ class UploadAttachmentAction
 
     public function asController(UploadRequest $request): JsonResponse
     {
+        $requestData = $request->validated();
+        //TODO: Вынести в middleware и Заголовки, а не request data
+        if (isset($requestData['correlation_uuid'])) {
+            Correlation::setUuid($requestData['correlation_uuid']);
+        }
+
         $attachmentDto = AttachmentsCreateDto::from([
             'user_id' => auth()->user()->id,
-            ...$request->validated()
+            ...$requestData
         ]);
 
         $attachments = $this->handle($attachmentDto);

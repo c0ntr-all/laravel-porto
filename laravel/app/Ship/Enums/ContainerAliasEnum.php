@@ -7,6 +7,7 @@ enum ContainerAliasEnum: string
     //AppSection
     case USER = 'users';
     case TAG = 'tags';
+    case ATTACHMENT = 'attachments';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';

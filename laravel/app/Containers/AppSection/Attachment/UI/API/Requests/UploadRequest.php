@@ -12,6 +12,7 @@ class UploadRequest extends FormRequest
         ContainerAliasEnum::LL_POST->value,
         ContainerAliasEnum::TM_TASK->value,
     ];
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -50,7 +51,8 @@ class UploadRequest extends FormRequest
                 'mimetypes:' . implode(',', $allowedMimes),
             ],
             'attachable_type' => ['required', Rule::in(static::ALLOWED_CONTAINERS)],
-            'attachable_id' => 'required|string'
+            'attachable_id' => 'required|string',
+            'correlation_uuid' => 'sometimes|uuid'
         ];
     }
 }

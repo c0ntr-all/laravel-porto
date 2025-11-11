@@ -61,7 +61,6 @@ class CreatePostAction extends BaseAction
         // После успешного коммита формируем user_log
         DB::afterCommit(function () use ($post) {
             $this->createActivityUseCaseTask->run($post, $this->eventTypesEnum->value);
-            Correlation::clear();
         });
 
         return $post;
@@ -87,7 +86,10 @@ class CreatePostAction extends BaseAction
         return fractal($post, new PostTransformer($postDto->user_id))
             ->parseIncludes(['user', 'tags'])
             ->withResourceName('ll_posts')
-            ->addMeta(['message' => 'New post successfully created!'])
+            ->addMeta([
+                'message' => 'New post successfully created!',
+                'correlation_uuid' => Correlation::getUuid()
+            ])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

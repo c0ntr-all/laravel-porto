@@ -55,10 +55,14 @@ class UpdatePostAction extends BaseAction
                 newTags: $tagsDto->new_tags,
                 existingTagIds: $tagsDto->tags
             );
+            //TODO: Сделать условие
             $this->deleteAttachmentsTask->run(
                 model: $updatedPost,
                 dto: $attachmentsDeleteDto
             );
+            //TODO: Прокидываем correlation_uuid из поста через фронта в attachments
+            //TODO: Генерация и запись correlation_uuid вынести в middleware
+            //TODO: В будущем нацелиться на application layer
 
             DB::commit();
 
@@ -71,8 +75,6 @@ class UpdatePostAction extends BaseAction
         // После успешного коммита формируем user_log
         DB::afterCommit(function () use ($updatedPost) {
             $this->createActivityUseCaseTask->run($updatedPost, $this->eventTypesEnum->value);
-
-            Correlation::clear();
         });
 
         return $updatedPost;
@@ -103,7 +105,10 @@ class UpdatePostAction extends BaseAction
         return fractal($post, new PostTransformer($postDto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
-            ->addMeta(['message' => 'Post successfully updated!'])
+            ->addMeta([
+                'message' => 'Post successfully updated!',
+                'correlation_uuid' => Correlation::getUuid()
+            ])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

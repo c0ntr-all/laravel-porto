@@ -14,8 +14,8 @@ class PostCreateDto extends Data
     public ?string $content = null;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i')]
     public Carbon $datetime;
-    public array $tags;
-    public array $new_tags;
+    public ?array $tags = null;
+    public ?array $new_tags = null;
 
     public function __construct(
     ) {

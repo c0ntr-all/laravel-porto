@@ -16,16 +16,16 @@ class CreatePostTask extends ParentTask
     }
 
     /**
-     * @param PostCreateDto $dto
+     * @param PostCreateDto $postCreateDto
      * @return Post
      */
-    public function run(PostCreateDto $dto): Post
+    public function run(PostCreateDto $postCreateDto): Post
     {
         return $this->postRepository->createPost([
-            'user_id' => $dto->user_id,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'datetime' => $dto->datetime
+            'user_id' => $postCreateDto->user_id,
+            'title' => $postCreateDto->title,
+            'content' => $postCreateDto->content,
+            'datetime' => $postCreateDto->datetime
         ]);
     }
 }

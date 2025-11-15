@@ -14,15 +14,20 @@ class CreateTagsByNamesTask extends Task
     ) {
     }
 
-    public function run(TagsCreateDto $dto): Collection
+    public function run(TagsCreateDto $tagsCreateDto): ?Collection
     {
-        return collect($dto->names)->map(function (string $name) use ($dto) {
-            $tagCreateDto = TagCreateDto::from([
-                'user_id' => $dto->user_id,
-                'name' => $name
-            ]);
+        if (!empty($tagsCreateDto->new_tags)) {
+            return collect($tagsCreateDto->new_tags)->map(function (string $name) use ($tagsCreateDto) {
+                $tagCreateDto = TagCreateDto::from([
+                    'user_id' => $tagsCreateDto->user_id,
+                    'name' => $name
+                ]);
 
-            return $this->createTagTask->run($tagCreateDto);
-        });
+                // TODO: cross-section dependency
+                return $this->createTagTask->run($tagCreateDto);
+            });
+        }
+
+        return null;
     }
 }

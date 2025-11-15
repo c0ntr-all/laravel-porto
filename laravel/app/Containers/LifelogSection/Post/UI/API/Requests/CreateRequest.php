@@ -30,7 +30,7 @@ class CreateRequest extends FormRequest
             'tags' => 'sometimes|array',
             'tags.*' => 'sometimes|string',
             'new_tags' => 'sometimes|array',
-            'new_tags.*' => 'sometimes|string|unique:App\Containers\AppSection\Tag\Models\Tag,name'
+            'new_tags.*' => 'sometimes|string|max:20'
         ];
     }
 }

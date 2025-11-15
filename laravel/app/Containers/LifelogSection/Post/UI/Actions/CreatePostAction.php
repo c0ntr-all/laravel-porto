@@ -3,9 +3,11 @@
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
+use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
+use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
-use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSyncDto;
 use App\Containers\LifelogSection\Post\Models\Post;
+use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
@@ -24,8 +26,10 @@ class CreatePostAction extends BaseAction
 
     public function __construct(
         private readonly CreatePostTask            $createPostTask,
+        private readonly ListTagsByNamesTask       $listTagsByNamesTask,
+        private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     )
     {
         parent::__construct();
@@ -34,31 +38,43 @@ class CreatePostAction extends BaseAction
     /**
      * @throws \Exception
      */
-    public function handle(PostCreateDto $postDto, PostTagsSyncDto $tagsDto): Post
+    public function handle(PostCreateDto $postCreateDto): Post
     {
-        DB::beginTransaction();
+        $post = DB::transaction(function() use ($postCreateDto) {
+            $post = $this->createPostTask->run($postCreateDto);
 
-        try {
-            $post = $this->createPostTask->run($postDto);
+            $tagsCreateDto = TagsCreateDto::from($postCreateDto->toArray());
+            $tagsIdsForSync = [];
 
-            $this->syncPostTagsTask->run(
-                post: $post,
-                userId: $tagsDto->user_id,
-                newTags: $tagsDto->new_tags ?? [],
-                existingTagIds: $tagsDto->tags ?? [],
-            );
+            // Проверяем существуют ли теги из тех, что присланы как новые
+            if (!empty($tagsCreateDto->new_tags)) {
+                $existingNewTags = $this->listTagsByNamesTask->run($tagsCreateDto->new_tags);
+                $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$tagsCreateDto) {
+                    $tagsIdsForSync[] = $existingTag->id;
+                    unset($tagsCreateDto->new_tags[array_search($existingTag->name, $tagsCreateDto->new_tags)]);
+                });
 
-            // TODO: Сюда перенести логику привязывания вложений т.к. это будет слой аггрегатор для микросервисов
+                // Остались еще теги посли проверки?
+                if (!empty($tagsCreateDto->new_tags)) {
+                    $newTags = $this->createTagsByNamesTask->run($tagsCreateDto);
 
-            DB::commit();
+                    if ($newTags) {
+                        $tagsIdsForSync = array_merge($tagsIdsForSync, $newTags->pluck('id')->toArray());
+                    }
+                }
+            }
+            if (!empty($postCreateDto->tags)) {
+                $tagsIdsForSync = array_merge($tagsIdsForSync, $postCreateDto->tags);
+            }
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Correlation::clear();
-            throw $e;
-        }
+            if (!empty($tagsIdsForSync)) {
+                $this->syncPostTagsTask->run($post, $postCreateDto->user_id, $tagsIdsForSync);
+            }
 
-        // После успешного коммита формируем user_log
+            return $post;
+        });
+
+        // Сделать Event запускающий таску
         DB::afterCommit(function () use ($post) {
             $this->createActivityUseCaseTask->run($post, $this->eventTypesEnum->value);
         });
@@ -71,19 +87,14 @@ class CreatePostAction extends BaseAction
      */
     public function asController(CreateRequest $request): JsonResponse
     {
-        $postDto = PostCreateDto::from([
+        $postCreateDto = PostCreateDto::from([
             ...$request->validated(),
             'user_id' => auth()->id(),
         ]);
 
-        $tagsDto = PostTagsSyncDto::from([
-            ...$request->validated(),
-            'user_id' => $postDto->user_id,
-        ]);
+        $post = $this->handle($postCreateDto);
 
-        $post = $this->handle($postDto, $tagsDto);
-
-        return fractal($post, new PostTransformer($postDto->user_id))
+        return fractal($post, new PostTransformer($postCreateDto->user_id))
             ->parseIncludes(['user', 'tags'])
             ->withResourceName('ll_posts')
             ->addMeta([

@@ -22,7 +22,7 @@ class ListTagsAction
 
     public function handle(TagListDto $dto): Collection
     {
-        return $this->tagRepository->getMostUsedTagsForUser($dto->user_id);
+        return $this->tagRepository->get();
     }
 
     public function asController(Tag $tag): JsonResponse

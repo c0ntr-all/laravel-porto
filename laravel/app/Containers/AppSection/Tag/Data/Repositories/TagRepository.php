@@ -2,17 +2,29 @@
 
 namespace App\Containers\AppSection\Tag\Data\Repositories;
 
+use App\Containers\AppSection\Tag\Data\Sorts\MostUsedSort;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\Enums\SortDirection;
 
 class TagRepository
 {
     public function get(): Collection
     {
+        //TODO: Убрать
+        $userId = auth()->user()->id;
+
         return QueryBuilder::for(Tag::class)
-                           ->allowedSorts(['name', 'created_at', 'updated_at'])
+                           ->allowedSorts([
+                               'name',
+                               'created_at',
+                               'updated_at',
+                               AllowedSort::custom('most_used', new MostUsedSort($userId))
+                                          ->defaultDirection(SortDirection::DESCENDING)
+                           ])
                            ->get();
     }
 

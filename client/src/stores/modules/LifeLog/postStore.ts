@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { postApi } from 'src/api/requests/LifeLog/postApi'
 import { useAttachmentStore } from 'src/stores/modules/attachmentStore'
 import { IPost, IPostFilter, IPostModel, IPostUpdateModel } from 'src/types/LifeLog/post'
-import { handleApiSuccess } from 'src/utils/jsonapi'
+import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
@@ -58,6 +58,7 @@ export const usePostStore = defineStore('post', () => {
 
       return newPost
     } catch (err: any) {
+      handleApiError(err)
       error.value = err.message ?? 'Ошибка создания'
       throw err
     }

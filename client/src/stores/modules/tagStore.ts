@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { tagApi } from 'src/api/requests/tagApi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { ITag } from 'src/types/tag'
+import { TagsModeEnum } from 'src/enums/LifeLog/TagsModeEnum'
 
 export const useTagStore = defineStore('tag', {
   state: () => ({
@@ -18,11 +19,12 @@ export const useTagStore = defineStore('tag', {
   },
 
   actions: {
-    async getTags(): Promise<ITag[]> {
+    async getTags(tagsMode: TagsModeEnum|null = null): Promise<ITag[]> {
       this.isLoading = true
       this.error = null
       try {
-        const response = await tagApi.getTags()
+        const sort = this.prepareSort(tagsMode)
+        const response = await tagApi.getTags(sort)
         const tags = mapResponse(response) as ITag[]
         this.tags = tags
         this.count = response.meta?.count || 0
@@ -34,6 +36,14 @@ export const useTagStore = defineStore('tag', {
       } finally {
         this.isLoading = false
       }
+    },
+    prepareSort(tagsMode: TagsModeEnum|null = null) {
+      const sortMap = {
+        [TagsModeEnum.MOST_USED]: '-most_used',
+        [TagsModeEnum.LAST]: '-created_at'
+      }
+
+      return tagsMode ? sortMap[tagsMode] : '-created_at'
     }
   }
 })

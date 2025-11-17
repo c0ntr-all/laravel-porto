@@ -123,7 +123,7 @@ const getTracks = async (filters?: Record<string, unknown>): Promise<void> => {
   }).catch((error: any) => {
     $q.notify({
       type: 'negative',
-      message: error.response.data.message || 'Error!'
+      message: error.response.data.message || error
     })
   })
 }

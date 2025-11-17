@@ -166,7 +166,7 @@ const getArtist = async (id: string): Promise<void> => {
     }).catch(error => {
       $q.notify({
         type: 'negative',
-        message: error.response.data.message || 'Error!'
+        message: error.response.data.message || error
       })
     })
 }

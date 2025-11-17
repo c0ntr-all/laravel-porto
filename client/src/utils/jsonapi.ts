@@ -209,7 +209,8 @@ const processItem = (relationName: string, relationItem: IRelationshipItem, incl
 }
 
 export function handleApiError(error: AxiosError) {
-  const message = (error.response?.data as { message?: string })?.message || 'Error!'
+  const message = (error.response?.data as { message?: string })?.message || error.message
+  console.error(error.message)
 
   Notify.create({
     type: 'negative',

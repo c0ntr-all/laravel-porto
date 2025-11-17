@@ -4,7 +4,7 @@ namespace App\Containers\LifelogSection\Post\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
 
-class PostTagsSyncDto extends Data
+class PostTagsUpdateDto extends Data
 {
     public int $user_id;
     public array|null $tags = null;

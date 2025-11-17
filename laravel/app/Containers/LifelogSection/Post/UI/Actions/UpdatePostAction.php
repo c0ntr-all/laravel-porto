@@ -5,9 +5,13 @@ namespace App\Containers\LifelogSection\Post\UI\Actions;
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsDeleteDto;
 use App\Containers\AppSection\Attachment\Tasks\DeleteAttachmentsTask;
-use App\Containers\LifelogSection\Post\Data\DTO\PostTagsSyncDto;
+use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
+use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
+use App\Containers\LifelogSection\Post\Data\DTO\PostTagsUpdateDto;
+use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
+use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
@@ -26,6 +30,8 @@ class UpdatePostAction extends BaseAction
 
     public function __construct(
         private readonly UpdatePostTask            $updatePostTask,
+        private readonly ListTagsByNamesTask       $listTagsByNamesTask,
+        private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
         private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
@@ -39,37 +45,53 @@ class UpdatePostAction extends BaseAction
      */
     public function handle(
         Post                 $post,
-        PostUpdateDto        $postDto,
-        PostTagsSyncDto      $tagsDto,
-        AttachmentsDeleteDto $attachmentsDeleteDto
+        PostUpdateContextDto $postUpdateContextDto
     ): Post
     {
-        DB::beginTransaction();
+        //TODO: SubAction
+        $updatedPost = DB::transaction(function() use ($post, $postUpdateContextDto) {
+            $postUpdateDto = PostUpdateDto::from($postUpdateContextDto->toArray());
+            $updatedPost = $this->updatePostTask->run($post, $postUpdateDto);
 
-        try {
-            $updatedPost = $this->updatePostTask->run($post, $postDto);
+            $tagsIdsForSync = [];
+            // Проверяем существуют ли теги из тех, что присланы как новые
+            if (!empty($postUpdateContextDto->new_tags)) {
+                $updateTagsDto = PostTagsUpdateDto::from($postUpdateContextDto->toArray());
+                $existingNewTags = $this->listTagsByNamesTask->run($updateTagsDto->new_tags);
+                $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$updateTagsDto) {
+                    $tagsIdsForSync[] = $existingTag->id;
+                    unset($updateTagsDto->new_tags[array_search($existingTag->name, $updateTagsDto->new_tags)]);
+                });
 
-            $this->syncPostTagsTask->run(
-                post: $updatedPost,
-                userId: $tagsDto->user_id,
-                newTags: $tagsDto->new_tags,
-                existingTagIds: $tagsDto->tags
-            );
+                // Остались еще теги посли проверки?
+                if (!empty($postUpdateDto->new_tags)) {
+                    $newTags = $this->createTagsByNamesTask->run(TagsCreateDto::from($postUpdateDto->toArray()));
+
+                    if ($newTags) {
+                        $tagsIdsForSync = array_merge($tagsIdsForSync, $newTags->pluck('id')->toArray());
+                    }
+                }
+            }
+            if (!empty($postUpdateDto->tags)) {
+                $tagsIdsForSync = array_merge($tagsIdsForSync, $postUpdateDto->tags);
+            }
+
+            if (!empty($tagsIdsForSync)) {
+                $this->syncPostTagsTask->run($post, $postUpdateDto->user_id, $tagsIdsForSync);
+            }
+
+            $attachmentsDeleteDto = AttachmentsDeleteDto::from($postUpdateContextDto->toArray());
+
             //TODO: Сделать условие
             $this->deleteAttachmentsTask->run(
                 model: $updatedPost,
                 dto: $attachmentsDeleteDto
             );
 
-            DB::commit();
+            return $updatedPost;
+        });
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Correlation::clear();
-            throw $e;
-        }
-
-        // После успешного коммита формируем user_log
+        // Сделать Event запускающий таску
         DB::afterCommit(function () use ($updatedPost) {
             $this->createActivityUseCaseTask->run($updatedPost, $this->eventTypesEnum->value);
         });
@@ -82,24 +104,14 @@ class UpdatePostAction extends BaseAction
      */
     public function asController(Post $post, UpdateRequest $request): JsonResponse
     {
-        $postDto = PostUpdateDto::from([
+        $postUpdateContextDto = PostUpdateContextDto::from([
             ...$request->validated(),
             'user_id' => auth()->id(),
         ]);
 
-        $tagsDto = PostTagsSyncDto::from([
-            ...$request->validated(),
-            'user_id' => $postDto->user_id,
-        ]);
+        $post = $this->handle($post, $postUpdateContextDto);
 
-        $attachmentsDeleteDto = AttachmentsDeleteDto::from([
-            ...$request->validated(),
-            'user_id' => $postDto->user_id,
-        ]);
-
-        $post = $this->handle($post, $postDto, $tagsDto, $attachmentsDeleteDto);
-
-        return fractal($post, new PostTransformer($postDto->user_id))
+        return fractal($post, new PostTransformer($postUpdateContextDto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta([

@@ -83,7 +83,8 @@ export const usePostStore = defineStore('post', () => {
         const uploadedAttachments = await attachmentStore.createAttachment({
           files: attachmentModel,
           attachable_type: updatedPost.type,
-          attachable_id: updatedPost.id
+          attachable_id: updatedPost.id,
+          correlation_uuid: responseData.meta?.correlation_uuid
         })
         if (uploadedAttachments) {
           updatedPost.attachments.push(...uploadedAttachments)

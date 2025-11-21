@@ -3,7 +3,7 @@
 namespace App\Containers\LifelogSection\Post\Tests\Unit;
 
 use App\Containers\AppSection\User\Models\User;
-use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
+use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,17 +18,21 @@ class UpdatePostTaskTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
+        Post::unsetEventDispatcher();
+
         $post = Post::factory()->create([
             'user_id' => $user->id,
             'title' => 'Old title',
             'content' => 'Old content',
+            'datetime' => fake()->dateTimeBetween('-2 months', 'now'),
         ]);
 
         $task = app(UpdatePostTask::class);
 
-        $dto = PostUpdateContextDto::from([
+        $dto = PostUpdateDto::from([
             'title' => 'New title',
             'content' => 'New content',
+            'datetime' => fake()->dateTimeBetween('-2 months', 'now'),
         ]);
 
         $updatedPost = $task->run($post, $dto);

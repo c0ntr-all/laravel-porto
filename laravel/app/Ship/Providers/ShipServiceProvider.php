@@ -6,6 +6,7 @@ use App\Containers\AppSection\Authentication\Providers\AuthServiceProvider;
 use App\Containers\AppSection\Authentication\Providers\JwtServiceProvider;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Loaders\ConfigsLoaderTrait;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\App;
@@ -57,6 +58,19 @@ class ShipServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Factory::guessFactoryNamesUsing(function (string $modelName) {
+            $parts = explode('\\', $modelName);
+            $class = array_pop($parts);
+            $last = array_pop($parts);
+
+            // Если структура не совпадает — падаем обратно на стандартную логику
+            if ($last !== 'Models') {
+                return 'Database\\Factories\\' . $class . 'Factory';
+            }
+
+            $base = implode('\\', $parts);
+
+            return $base . '\\Data\\Factories\\' . $class . 'Factory';
+        });
     }
 }

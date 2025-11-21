@@ -5,6 +5,7 @@ namespace App\Containers\AppSection\Tag\Models;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Carbon;
 
 /**
@@ -32,6 +33,8 @@ use Illuminate\Support\Carbon;
  */
 class Tag extends ActivityLoggableModel
 {
+    use HasFactory;
+
     protected $table ='tags';
 
     protected $guarded = [];

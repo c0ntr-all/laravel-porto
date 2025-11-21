@@ -64,16 +64,16 @@ class UpdatePostAction extends BaseAction
                 });
 
                 // Остались еще теги посли проверки?
-                if (!empty($postUpdateDto->new_tags)) {
-                    $newTags = $this->createTagsByNamesTask->run(TagsCreateDto::from($postUpdateDto->toArray()));
+                if (!empty($postUpdateContextDto->new_tags)) {
+                    $newTags = $this->createTagsByNamesTask->run(TagsCreateDto::from($postUpdateContextDto->toArray()));
 
                     if ($newTags) {
                         $tagsIdsForSync = array_merge($tagsIdsForSync, $newTags->pluck('id')->toArray());
                     }
                 }
             }
-            if (!empty($postUpdateDto->tags)) {
-                $tagsIdsForSync = array_merge($tagsIdsForSync, $postUpdateDto->tags);
+            if (!empty($postUpdateContextDto->tags)) {
+                $tagsIdsForSync = array_merge($tagsIdsForSync, $postUpdateContextDto->tags);
             }
 
             if (!empty($tagsIdsForSync)) {

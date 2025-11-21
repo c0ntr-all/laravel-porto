@@ -4,8 +4,6 @@ namespace App\Containers\LifelogSection\Post\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
 use Illuminate\Support\Carbon;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Optional;
 
 class PostUpdateDto extends Data

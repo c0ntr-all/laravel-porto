@@ -76,11 +76,7 @@ const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]
     for (const relName in includedItem.relationships) {
       const relData: IRawRelations = includedItem.relationships[relName]
 
-      if (!fullRelation.relationships) {
-        fullRelation.relationships = {}
-      }
-
-      fullRelation.relationships[relName] = <IRelationshipValue>processRawRelation(relData, included)
+      fullRelation[relName] = <IRelationshipValue>processRawRelation(relData, included)
     }
   }
 
@@ -121,6 +117,8 @@ export function normalizeApiResponse(responseData: IResponse) {
 
         item[relName] = processRawRelation(relData, responseData.included)
       }
+
+      delete item.relationships
     }
 
     return item

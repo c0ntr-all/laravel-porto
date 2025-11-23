@@ -96,6 +96,7 @@ const emit = defineEmits<{
 }>()
 const task = ref<ITask>(props.task)
 task.value.content = task.value.content || '' // null to string cast
+
 const taskTitleRef = ref<ITaskPartsRef | null>(null)
 const taskContentRef = ref<ITaskPartsRef | null>(null)
 const isProgressAvailable = computed(() => {

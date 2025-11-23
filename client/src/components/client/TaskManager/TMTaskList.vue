@@ -1,7 +1,7 @@
 <template>
   <q-card class="list bg-grey-4">
     <q-card-section class="list__header">
-      <p>{{ list.title }}</p>
+      <p>{{ list.attributes.title }}</p>
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">

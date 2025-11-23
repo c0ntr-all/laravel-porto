@@ -99,7 +99,9 @@ export interface ITask {
 
 export interface ITaskList {
   id: string
-  title: string
+  attributes: {
+    title: string
+  }
   tasks?: {
     data: ITask[]
   }

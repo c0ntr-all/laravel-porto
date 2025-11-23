@@ -24,7 +24,7 @@
       <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense/>
     </div>
     <div class="task-lists row items-start q-gutter-md q-mb-lg">
-      <AppTaskList
+      <TMTaskList
         v-for="list in taskLists"
         :list="list"
         :key="list.id"
@@ -40,7 +40,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
-import AppTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
+import TMTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 import { ITaskList } from 'src/types/TaskManager/task'
 
 interface IResponseTaskList {
@@ -140,7 +140,9 @@ const createList = async (): Promise<void> => {
 
     const newTaskList: ITaskList = {
       id: response.data.data.id,
-      title: response.data.data.attributes.title,
+      attributes: {
+        title: response.data.data.attributes.title
+      },
       tasks: {
         data: []
       }

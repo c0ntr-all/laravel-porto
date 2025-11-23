@@ -69,8 +69,13 @@ const closeForm = () => {
 
 const handleForm = () => {
   emit('processed', model)
-  model.value = null
 }
+
+defineExpose({
+  clearModel: () => {
+    model.value = null
+  }
+})
 </script>
 
 <style scoped>

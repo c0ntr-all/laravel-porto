@@ -3,7 +3,7 @@
     <div class="text-h6 q-mb-sm">
       {{ checklist.title }}
       <q-popup-edit
-        ref="checklistTitlePopup"
+        ref="checklistTitlePopupRef"
         v-model="checklist.title"
         v-slot="scope"
         auto-save
@@ -17,7 +17,7 @@
         />
         <div class="q-pt-sm">
           <q-btn @click="updateChecklistTitle(scope.value)" label="Save" color="primary" flat/>
-          <q-btn @click="checklistTitlePopup?.cancel()" label="Cancel" color="primary" flat/>
+          <q-btn @click="checklistTitlePopupRef?.cancel()" label="Cancel" color="primary" flat/>
         </div>
       </q-popup-edit>
     </div>
@@ -42,6 +42,7 @@
       </q-list>
     </template>
     <TMChecklistItemAddButton
+      ref="checklistItemAddRef"
       @processed="createChecklistItem"
       :checklist-id="checklist.id"
     />
@@ -56,6 +57,10 @@ import { AxiosError } from 'axios'
 import TMChecklistItemAddButton from 'src/components/client/TaskManager/TMChecklistItemAddButton.vue'
 import { IChecklist, IChecklistItem, ITask } from 'src/types/TaskManager/task'
 import TMChecklistItem from 'src/components/client/TaskManager/TMChecklistItem.vue'
+
+interface IChecklistItemAddRef {
+  clearModel: () => void
+}
 
 interface ICreateChecklistItemResponse {
   data: {
@@ -102,11 +107,13 @@ interface IUpdateChecklistResponse {
   }
 }
 
+// --- Props ---
 const props = defineProps<{
   checklist: IChecklist,
   task: ITask,
 }>()
 
+// --- State ---
 const checklist = ref<IChecklist>(props.checklist)
 const checklistItems = ref(checklist.value.checklistItems.data)
 const selectedItems = ref(
@@ -114,13 +121,19 @@ const selectedItems = ref(
     .filter(item => item.finished_at !== null)
     .map(item => item.id)
 )
+
+// --- Computed ---
 const progress = computed(() => {
   if (checklistItems.value.length === 0) return 0
   return Number((selectedItems.value.length / checklistItems.value.length).toFixed(2))
 })
 const progressLabel = computed(() => (progress.value * 100) + '%')
-const checklistTitlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 
+// --- Refs ---
+const checklistTitlePopupRef = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
+const checklistItemAddRef = ref<IChecklistItemAddRef | null>(null)
+
+// --- Methods ---
 const createChecklistItem = async (data: any) => {
   await api.post<ICreateChecklistItemResponse>(`v1/task-manager/tasks/${props.task.id}/checklists/${checklist.value.id}/items`, {
     title: data.value
@@ -134,6 +147,9 @@ const createChecklistItem = async (data: any) => {
       created_at: responseData.attributes.created_at,
       finished_at: responseData.attributes.finished_at
     })
+    if (checklistItemAddRef.value) {
+      checklistItemAddRef.value.clearModel()
+    }
   }).catch((error: AxiosError<{ message: string }>) => {
     handleApiError(error)
   })
@@ -150,8 +166,8 @@ const updateChecklistTitle = async (newTitle: string) => {
       checklist.value.title = responseData.attributes.title
       checklist.value.updated_at = responseData.attributes.updated_at
 
-      if (checklistTitlePopup?.value) {
-        checklistTitlePopup?.value.cancel()
+      if (checklistTitlePopupRef?.value) {
+        checklistTitlePopupRef?.value.cancel()
       }
     })
     .catch((error: AxiosError<{ message: string }>) => {

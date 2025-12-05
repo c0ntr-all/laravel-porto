@@ -5,8 +5,11 @@ namespace App\Containers\LifelogSection\Post\Tests\Functional;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\AppSection\Tag\Models\Tag;
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -137,6 +140,77 @@ class UpdatePostTest extends TestCase
                 'taggable_id' => $post->id,
             ]);
         });
+    }
+    public function test_user_can_update_post_with_attaching_images(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Post::unsetEventDispatcher();
+
+        $post = $this->createUpdateablePost($user->id);
+
+        $response = $this->patchJson("/api/v1/lifelog/posts/{$post->id}", []);
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'attributes' => [
+                        'title',
+                        'content',
+                        'datetime',
+                    ],
+                    'relationships' => [
+                        'user' => [
+                            'data' => [
+                                'id',
+                                'type'
+                            ],
+                        ],
+                    ],
+                ],
+                'included' => [[
+                    'type',
+                    'id',
+                    'attributes' => [
+                        'name',
+                        'email'
+                    ]
+                ]],
+                'meta' => [
+                    'correlation_uuid'
+                ]
+            ]);
+
+        $this->assertDatabaseHas('lifelog_posts', $post->toArray());
+
+        Storage::fake('public');
+        $file = UploadedFile::fake()->image('test-image.jpg');
+
+        $responseAttachables = $this->postJson("/api/v1/app/attachments/upload", [
+            'attachable_type' => ContainerAliasEnum::LL_POST->value,
+            'attachable_id' => $post->id,
+            'files' => [$file],
+            'correlation_uuid' => $response->json('meta.correlation_uuid'),
+        ]);
+        $responseAttachables->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'type',
+                    'id',
+                    'attributes' => [
+                        'attachment_type',
+                        'attachment_created_at',
+                        'source',
+                        'original_path',
+                        'list_thumb_path',
+                        'preview_thumb_path',
+                        'width',
+                        'height'
+                    ],
+                ]
+            ]);
     }
 
     private function createUpdateablePost($userId): Model

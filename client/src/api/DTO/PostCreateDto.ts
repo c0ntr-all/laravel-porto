@@ -1,7 +1,8 @@
 export interface IPostCreateDto {
   title?: string
   content?: string
-  datetime: string | null
+  date: string
+  time: string | null
   tags?: string[]
   new_tags?: string[]
 }

@@ -81,7 +81,13 @@
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
         <div v-if="model.datetime" class="lifelog-post-form__action">
-          <AppDatetimeField v-model="model.datetime" />
+          <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <q-checkbox
+            v-model="model.isNullTime"
+            name="не учитывать время"
+            label="не учитывать время"
+          />
         </div>
       </div>
       <div class="lifelog-post-form-actions__right">
@@ -99,7 +105,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, onMounted, onUnmounted, ref, toRaw } from 'vue'
+import {computed, markRaw, onMounted, onUnmounted, ref, toRaw, watch} from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
@@ -112,6 +118,7 @@ import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
+import AppDateField from "src/components/default/AppDateField.vue"
 
 interface IInputRef {
   resetValidation: () => void
@@ -131,7 +138,8 @@ const model = ref<IPostUpdateModel>({
   tags: [],
   newTags: [],
   datetime: getCurrentDateTime(),
-  attachments: []
+  attachments: [],
+  isNullTime: true
 })
 const newAttachmentsModel = ref<File[]>([])
 const originalPost = ref()
@@ -205,9 +213,11 @@ const handleRemoveTag = (tag: ITag | INewTag) => {
 const mapPostToModel = (post: IPost) => {
   const rawPost = toRaw(post)
 
-  const preparedPost = {
+  const preparedPost: IPostUpdateModel = {
     ...rawPost,
-    newTags: []
+    newTags: [],
+    datetime: rawPost.time ? rawPost.date + ' ' + rawPost.time : rawPost.date,
+    isNullTime: !rawPost.time
   }
 
   model.value = preparedPost
@@ -224,6 +234,17 @@ const mapPostToModel = (post: IPost) => {
 const clearAttachmentModel = () => {
   newAttachmentsModel.value = []
 }
+
+watch(() => model.value.isNullTime, newValue => {
+  const onlyDate = model.value.datetime.split(' ')[0]
+  if (newValue) {
+    // Delete time for no time input
+    model.value.datetime = onlyDate
+  } else {
+    // Restore time for preventing date clearing in calendar
+    model.value.datetime = `${onlyDate} 00:00`
+  }
+})
 
 onMounted(() => {
   tagStore.getTags().then(() => {
@@ -254,6 +275,10 @@ onUnmounted(() => {
 .lifelog-post-form {
   width: 100%;
   background-color: #ffffff;
+
+  &__datetime {
+    width: 240px;
+  }
 
   &__file {
     position: relative;

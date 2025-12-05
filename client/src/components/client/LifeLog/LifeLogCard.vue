@@ -66,12 +66,12 @@
       <q-card-section class="q-pa-sm">
         <div class="row items-center no-wrap">
           <div class="col">
-            <div class="text-subtitle2">Дата события: {{ post.datetime }}</div>
+            <div class="text-subtitle2">Дата события: {{ post.date }} <span v-if="post.time">{{ post.time }}</span></div>
           </div>
         </div>
       </q-card-section>
       <q-card-section class="q-pa-sm">
-        {{ post.content }}
+        <div v-if="post.content" v-html="post.content"></div>
       </q-card-section>
       <q-card-section class="q-pa-sm">
         <template v-if="post.tags.length">

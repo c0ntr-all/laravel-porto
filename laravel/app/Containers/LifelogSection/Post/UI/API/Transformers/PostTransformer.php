@@ -32,7 +32,8 @@ class PostTransformer extends TransformerAbstract
             'id' => $post->id,
             'title' => $post->title,
             'content' => $post->content,
-            'datetime' => $post->datetime->format('Y-m-d H:i'),
+            'date' => $post->date->format('Y-m-d'),
+            'time' => $post->time?->format('H:i'),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
         ];
     }

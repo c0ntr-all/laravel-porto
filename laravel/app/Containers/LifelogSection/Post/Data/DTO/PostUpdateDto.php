@@ -11,7 +11,8 @@ class PostUpdateDto extends Data
     public int $user_id;
     public string|Optional|null $title;
     public string|Optional|null $content;
-    public Carbon|Optional|null $datetime;
+    public Carbon $date;
+    public ?Carbon $time;
 
     public function __construct(
     ) {

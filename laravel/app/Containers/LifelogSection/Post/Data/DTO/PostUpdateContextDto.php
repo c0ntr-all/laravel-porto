@@ -13,8 +13,10 @@ class PostUpdateContextDto extends Data
     public int $user_id;
     public string|Optional|null $title;
     public string|Optional|null $content;
-    #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i')]
-    public Carbon|Optional|null $datetime;
+    #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
+    public Carbon $date;
+    #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]
+    public ?Carbon $time;
     public array|null $tags = null;
     public array|null $new_tags = null;
     public array $deleted_attachments_ids = [];

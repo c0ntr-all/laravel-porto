@@ -24,7 +24,8 @@ class PostFactory extends Factory
             'user_id' => User::factory(),
             'title' => fake()->sentence(),
             'content' => fake()->paragraph(),
-            'datetime' => fake()->dateTime(),
+            'date' => fake()->date(),
+            'time' => fake()->time(),
         ];
     }
 }

@@ -26,7 +26,8 @@ class CreateRequest extends FormRequest
         return [
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:3000',
-            'datetime' => 'required|date_format:Y-m-d H:i',
+            'date' => 'required|date_format:Y-m-d',
+            'time' => 'sometimes|date_format:H:i|nullable',
             'tags' => 'sometimes|array',
             'tags.*' => 'sometimes|string',
             'new_tags' => 'sometimes|array',

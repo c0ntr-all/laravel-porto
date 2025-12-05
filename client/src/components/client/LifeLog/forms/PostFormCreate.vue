@@ -31,8 +31,14 @@
 
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div v-if="model.datetime" class="lifelog-post-form__action">
-          <AppDatetimeField v-model="model.datetime" />
+        <div v-if="model.datetime" class="flex">
+          <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <q-checkbox
+            v-model="model.isNullTime"
+            name="не учитывать время"
+            label="не учитывать время"
+          />
         </div>
       </div>
       <div class="lifelog-post-form-actions__right">
@@ -50,11 +56,12 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, toRaw } from 'vue'
+import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
 import { IPost, IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
 import PostFormCreateTags from 'src/components/client/LifeLog/forms/PostFormCreateTags.vue'
 
@@ -73,14 +80,19 @@ defineProps<{
   post?: IPost
 }>()
 
+const getEmptyPostModel = (): IPostModel => {
+  return {
+    title: '',
+    content: '',
+    tags: [],
+    newTags: [],
+    datetime: getCurrentDateTime(),
+    isNullTime: false
+  }
+}
+
 // --- Models ---
-const model = ref<IPostModel>({
-  title: '',
-  content: '',
-  tags: [],
-  newTags: [],
-  datetime: getCurrentDateTime()
-})
+const model = ref<IPostModel>(getEmptyPostModel())
 const attachmentModel = ref<File[]>([])
 
 // --- State ---
@@ -97,15 +109,6 @@ const createPost = async () => {
     clearAttachmentModel()
     resetAvailableTags()
   })
-}
-const getEmptyPostModel = (): IPostModel => {
-  return {
-    title: '',
-    content: '',
-    tags: [],
-    newTags: [],
-    datetime: getCurrentDateTime()
-  }
 }
 const clearAttachmentModel = () => {
   attachmentModel.value = []
@@ -126,6 +129,17 @@ const resetAvailableTags = () => {
   }
 }
 
+watch(() => model.value.isNullTime, newValue => {
+  const onlyDate = model.value.datetime.split(' ')[0]
+  if (newValue) {
+    // Delete time for no time input
+    model.value.datetime = onlyDate
+  } else {
+    // Restore time for preventing date clearing in calendar
+    model.value.datetime = `${onlyDate} 00:00`
+  }
+})
+
 // --- Lifecycle ---
 onMounted(() => {
   model.value = getEmptyPostModel()
@@ -137,6 +151,10 @@ onMounted(() => {
 .lifelog-post-form {
   width: 100%;
   background-color: #ffffff;
+
+  &__datetime {
+    width: 240px;
+  }
 
   &-actions {
     background-color: #fbfbfb;

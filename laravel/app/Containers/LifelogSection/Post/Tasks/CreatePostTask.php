@@ -25,7 +25,8 @@ class CreatePostTask extends ParentTask
             'user_id' => $postCreateDto->user_id,
             'title' => $postCreateDto->title,
             'content' => $postCreateDto->content,
-            'datetime' => $postCreateDto->datetime
+            'date' => $postCreateDto->date,
+            'time' => $postCreateDto->time
         ]);
     }
 }

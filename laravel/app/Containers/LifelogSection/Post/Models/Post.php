@@ -21,10 +21,11 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property int $user_id
  * @property string $title
- * @property string $content
- * @property Carbon|null $datetime
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property string|null $content
+ * @property Carbon $date
+ * @property Carbon|null $time
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property User $user
  * @property Tag[] $tags
  * @method static Builder|Post newModelQuery()
@@ -54,7 +55,8 @@ class Post extends ActivityLoggableModel
     protected $guarded = [];
     protected $casts = [
         'id' => 'string',
-        'datetime' => 'datetime',
+        'date' => 'datetime',
+        'time' => 'datetime',
     ];
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::LL_POST;
 }

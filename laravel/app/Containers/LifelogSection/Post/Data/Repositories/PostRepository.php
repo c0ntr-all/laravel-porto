@@ -13,7 +13,7 @@ class PostRepository
     public function get(array $data): Collection
     {
         return QueryBuilder::for(Post::whereUserId($data['user_id']))
-                           ->allowedSorts('datetime')
+                           ->allowedSorts('date')
                            ->allowedFilters([
                                AllowedFilter::custom('tags', new TagsFilter()),
                                // Filter exists only in tags scope

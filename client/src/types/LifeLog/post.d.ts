@@ -7,7 +7,8 @@ export interface IPost {
   id: string
   title?: string
   content: string
-  datetime: string | null
+  date: string
+  time: string | null
   created_at: string | null
   user: IUser
   tags: ITag[]
@@ -23,7 +24,8 @@ export interface IPostModel {
   content: string,
   tags: ITag[],
   newTags: INewTag[],
-  datetime: string | null
+  datetime: string,
+  isNullTime: boolean,
 }
 
 type IPostUpdateModel = IPostModel & {

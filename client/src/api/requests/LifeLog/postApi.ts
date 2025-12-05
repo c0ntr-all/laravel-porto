@@ -6,7 +6,7 @@ import { buildFilterForUrl } from 'src/utils/jsonapi'
 
 export const postApi = {
   async getPosts(filters: IPostFilter): Promise<IJsonApiResponse> {
-    const defaultSort: string = '-datetime'
+    const defaultSort: string = '-date'
     let url: string = `v1/lifelog/posts?sort=${defaultSort}`
     if (filters) {
       const spatieFilters = buildFilterForUrl(filters)

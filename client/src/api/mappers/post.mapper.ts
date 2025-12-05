@@ -4,11 +4,13 @@ import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 
 export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
+  console.log(postModel)
   const data: IPostCreateDto = {
     title: postModel.title,
     content: postModel.content,
     tags: postModel.tags.map((t: ITag) => t.id),
-    datetime: postModel.datetime
+    date: postModel.datetime.split(' ')[0],
+    time: postModel.isNullTime ? null : postModel.datetime.split(' ')[1]
   }
   if (postModel.newTags) {
     data.new_tags = postModel.newTags.map((t: INewTag) => t.name)
@@ -22,7 +24,16 @@ export function mapPostFormToUpdateDto(edited: IPostUpdateModel, original: IPost
 
   if (edited.title !== original.title) dto.title = edited.title
   if (edited.content !== original.content) dto.content = edited.content
-  if (edited.datetime !== original.datetime) dto.datetime = edited.datetime
+
+  // Reconstructing datetime for compare
+  let originalDateTime = original.date
+  if (original.time) {
+    originalDateTime += ' ' + original.time
+  }
+  if (edited.datetime !== originalDateTime) {
+    dto.date = edited.datetime?.split(' ')[0]
+    dto.time = edited.isNullTime ? null : edited.datetime?.split(' ')[1]
+  }
 
   const existingAttachments: IPostWithAttachmentWithState[] = edited.attachments.filter(
     file => file.is_deleted === true

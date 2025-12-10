@@ -20,19 +20,25 @@ class UpdatePostTaskTest extends TestCase
 
         Post::unsetEventDispatcher();
 
+        $datetime = fake()->dateTimeBetween('-2 months', 'now');
+
         $post = Post::factory()->create([
             'user_id' => $user->id,
             'title' => 'Old title',
             'content' => 'Old content',
-            'datetime' => fake()->dateTimeBetween('-2 months', 'now'),
+            'date' => $datetime->format('Y-m-d'),
+            'time' => $datetime->format('H:i:s'),
         ]);
 
         $task = app(UpdatePostTask::class);
 
+        $newDatetime = fake()->dateTimeBetween('-2 months', 'now');
+
         $dto = PostUpdateDto::from([
             'title' => 'New title',
             'content' => 'New content',
-            'datetime' => fake()->dateTimeBetween('-2 months', 'now'),
+            'date' => $newDatetime->format('Y-m-d'),
+            'time' => $newDatetime->format('H:i:s'),
         ]);
 
         $updatedPost = $task->run($post, $dto);

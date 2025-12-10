@@ -29,7 +29,6 @@ class ListAlbumsAction
         $albums = $this->handle();
 
         return fractal($albums, new AlbumTransformer())
-            ->parseIncludes(['user'])
             ->withResourceName('albums')
             ->addMeta(['count' => $albums->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);

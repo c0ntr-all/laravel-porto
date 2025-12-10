@@ -135,6 +135,8 @@ export function normalizeApiItemResponse(responseData: any) {
 
       responseData.data[relName] = processRawRelation(relData, responseData.included)
     }
+
+    delete responseData.data.relationships
   }
 
   return responseData

@@ -67,7 +67,12 @@ class ImageUpload
     public function upload($image): string
     {
         $pathToReturn = $this->folder . '/' . $this->filename;
+
         $pathToSave = Storage::path('public') . '/' . $pathToReturn;
+
+        if (!Storage::exists($pathToSave)) {
+            Storage::makeDirectory($pathToSave);
+        }
 
         try {
             Image::read($image)->save($pathToSave);

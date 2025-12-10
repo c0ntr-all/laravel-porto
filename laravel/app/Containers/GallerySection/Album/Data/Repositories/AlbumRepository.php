@@ -12,7 +12,7 @@ class AlbumRepository
      */
     public function getAll(): Collection
     {
-        return Album::with(['user'])->get();
+        return Album::get();
     }
 
     /**

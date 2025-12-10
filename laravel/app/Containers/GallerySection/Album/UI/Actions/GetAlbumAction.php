@@ -23,6 +23,7 @@ class GetAlbumAction
         return fractal($album, new AlbumTransformer())
             ->parseIncludes(['images', 'user'])
             ->withResourceName('albums')
+            ->addMeta(['count' => $album->images->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

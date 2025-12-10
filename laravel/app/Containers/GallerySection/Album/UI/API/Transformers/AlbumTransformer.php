@@ -15,7 +15,7 @@ use League\Fractal\TransformerAbstract;
 class AlbumTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'images', 'user'
+        'images'
     ];
 
     public function transform(Album $album): array
@@ -27,11 +27,6 @@ class AlbumTransformer extends TransformerAbstract
             'image' => $album->full_image,
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),
         ];
-    }
-
-    public function includeUser(Album $album): Item
-    {
-        return $this->item($album->user, new UserTransformer(), 'user');
     }
 
     public function includeImages(Album $album): Collection

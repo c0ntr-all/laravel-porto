@@ -105,7 +105,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, markRaw, onMounted, onUnmounted, ref, toRaw, watch} from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
@@ -118,7 +118,7 @@ import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
-import AppDateField from "src/components/default/AppDateField.vue"
+import AppDateField from 'src/components/default/AppDateField.vue'
 
 interface IInputRef {
   resetValidation: () => void
@@ -262,7 +262,7 @@ onUnmounted(() => {
     content: rawPost.content,
     tags: rawPost.tags,
     newTags: [],
-    datetime: rawPost.datetime,
+    datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
     attachments: []
   }
 

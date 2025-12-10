@@ -87,10 +87,13 @@ class UpdatePostTest extends TestCase
 
         $post = $this->createUpdateablePost($user->id);
 
+        $datetime = fake()->dateTimeBetween('-2 months', 'now');
+
         $updatedPostData = [
             'title' => 'Updated title',
             'content' => 'Updated content',
-            'datetime' => fake()->dateTimeBetween('-2 months', 'now')->format('Y-m-d H:i'),
+            'date' => $datetime->format('Y-m-d'),
+            'time' => $datetime->format('H:i')
         ];
 
         $newTagsNames = [
@@ -111,7 +114,8 @@ class UpdatePostTest extends TestCase
                     'attributes' => [
                         'title',
                         'content',
-                        'datetime',
+                        'date',
+                        'time'
                     ],
                     'relationships' => [
                         'tags' => [
@@ -159,7 +163,8 @@ class UpdatePostTest extends TestCase
                     'attributes' => [
                         'title',
                         'content',
-                        'datetime',
+                        'date',
+                        'time'
                     ],
                     'relationships' => [
                         'user' => [
@@ -215,11 +220,14 @@ class UpdatePostTest extends TestCase
 
     private function createUpdateablePost($userId): Model
     {
+        $datetime = fake()->dateTimeBetween('-2 months', 'now');
+
         return Post::factory()->create([
             'user_id' => $userId,
             'title' => 'Old title',
             'content' => 'Old content',
-            'datetime' => fake()->dateTimeBetween('-2 months', 'now'),
+            'date' => $datetime->format('Y-m-d'),
+            'time' => $datetime->format('H:i'),
         ]);
     }
 }

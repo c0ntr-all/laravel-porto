@@ -134,7 +134,7 @@ export const useMusicPlayer = defineStore('musicPlayer', {
       }).catch(error => {
         Notify.create({
           type: 'negative',
-          message: error.response.data.message || 'Error!'
+          message: error.response.data.message || error
         })
       })
     },

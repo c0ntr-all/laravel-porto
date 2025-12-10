@@ -22,6 +22,8 @@ use Illuminate\Support\Carbon;
  * @property string $original_path
  * @property string $list_thumb_path
  * @property string $preview_thumb_path
+ * @property integer $width
+ * @property integer $height
  * @property string $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at

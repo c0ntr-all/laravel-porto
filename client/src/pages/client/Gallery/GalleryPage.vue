@@ -24,9 +24,9 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { api } from 'src/boot/axios'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
-import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
-import { IIncludedItem, IRelationshipData } from 'src/components/types'
+import { handleApiError } from 'src/utils/jsonapi'
+import { IAlbum } from 'src/components/client/Gallery/types'
+import { IIncludedItem } from 'src/components/types'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
 
 interface IResponseAlbum {
@@ -37,11 +37,6 @@ interface IResponseAlbum {
     image: string
     description: string | null
     created_at: string
-  }
-  relationships: {
-    media: {
-      data: IRelationshipData[]
-    }
   }
 }
 
@@ -59,12 +54,7 @@ const getAlbums = async (): Promise<void> => {
       albums.value = response.data.data.map((responseAlbum: IResponseAlbum) => {
         return {
           id: responseAlbum.id,
-          ...responseAlbum.attributes,
-          relationships: {
-            media: getIncluded<IMediaItem>('media', responseAlbum.relationships, response.data.included) as {
-              data: IMediaItem[]
-            }
-          }
+          ...responseAlbum.attributes
         }
       })
     }).catch(error => {

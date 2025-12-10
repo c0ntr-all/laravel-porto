@@ -15,6 +15,8 @@ class ImageTransformer extends TransformerAbstract
         return [
             'id' => $image->id,
             'source' => $image->source,
+            'width' => $image->width,
+            'height' => $image->height,
             'original_path' => $image->full_path,
             'list_thumb_path' => url('') . '/storage/' . $image->list_thumb_path,
             'preview_thumb_path' => url('') . '/storage/' . $image->preview_thumb_path,

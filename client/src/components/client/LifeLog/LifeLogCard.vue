@@ -57,7 +57,7 @@
             />
           </div>
         </div>
-        <LifeLogCardCarousel
+        <GalleryCarousel
           v-model="showCarousel"
           v-model:current-slide-id="currentSlideId"
           :slides="post.attachments"
@@ -99,7 +99,7 @@ import { IPost } from 'src/types/LifeLog/post'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
-import LifeLogCardCarousel from 'src/components/client/LifeLog/LifeLogCardCarousel.vue'
+import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 
 interface Action {
   fn: () => void

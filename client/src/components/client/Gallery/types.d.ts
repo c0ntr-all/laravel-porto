@@ -16,9 +16,7 @@ export interface IAlbum {
   image: string
   description: string | null
   created_at: string
-  relationships: {
-    media: {
-      data: IMediaItem[]
-    }
+  images: {
+    data: IMediaItem[]
   }
 }

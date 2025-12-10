@@ -20,7 +20,7 @@
         <p>Total Items: {{ total }}</p>
         <div class="row q-gutter-md">
           <GalleryMediaCard
-            v-for="media in album.relationships.media.data"
+            v-for="media in album.images.data"
             :key="media.id"
             :media="media"
             @click="openCarousel(media.id)"
@@ -29,10 +29,10 @@
       </q-card-section>
     </q-card>
 
-    <GalleryCarouselDialog
+    <GalleryCarousel
       v-model="showCarousel"
-      :currentSlide="currentSlide"
-      :slides="album.relationships.media.data"
+      v-model:current-slide-id="currentSlideId"
+      :slides="album.images.data"
     />
   </template>
 
@@ -43,13 +43,14 @@
 
 <script lang="ts" setup>
 import { api } from 'src/boot/axios'
-import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { handleApiError, handleApiSuccess, normalizeApiItemResponse } from 'src/utils/jsonapi'
 import { onMounted, provide, ref } from 'vue'
 import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
 import { IIncludedItem, IRelationshipData } from 'src/components/types'
+import { ITaskList } from 'src/types'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import GalleryMediaCard from 'src/components/client/Gallery/GalleryMediaCard.vue'
-import GalleryCarouselDialog from 'src/components/client/Gallery/GalleryCarouselDialog.vue'
+import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import AlbumPageSkeleton from 'src/pages/client/Gallery/AlbumPageSkeleton.vue'
 import GalleryUploadButton from 'src/components/client/Gallery/GalleryUploadButton.vue'
 
@@ -71,8 +72,11 @@ interface IGetAlbumApiResponse {
         }
       }
     }
-  },
+  }
   included: IIncludedItem[]
+  meta: {
+    count: number
+  }
 }
 
 interface IResponseMediaItem {
@@ -111,22 +115,15 @@ const album = ref<IAlbum | null>(null)
 const total = ref(0)
 const loading = ref<boolean>(true)
 const showCarousel = ref(false)
-const currentSlide = ref<string>('')
+const currentSlideId = ref<string>('')
 
 const getAlbum = async (id: string): Promise<void> => {
   await api.get<IGetAlbumApiResponse>(`v1/gallery/albums/${id}`)
     .then(response => {
-      const responseAlbum = response.data.data
-      album.value = {
-        id: responseAlbum.id,
-        ...responseAlbum.attributes,
-        relationships: {
-          media: getIncluded<IMediaItem>('media', responseAlbum.relationships, response.data.included) as {
-            data: IMediaItem[]
-          }
-        }
-      }
-      total.value = responseAlbum.relationships.media.meta.count
+      const normalizedResponse = normalizeApiItemResponse(response.data)
+
+      album.value = normalizedResponse.data as unknown as ITaskList[]
+      total.value = response.data.meta.count
     }).catch(error => {
       handleApiError(error)
     }).finally(() => {
@@ -164,11 +161,10 @@ const formatMediaItem = (item: IResponseMediaItem): IMediaItem => ({
 })
 
 const addMediaToAlbum = (media: IMediaItem[]) => {
-  album.value?.relationships.media.data.push(...media)
+  album.value?.images.data.push(...media)
 }
-
 const openCarousel = (id: string) => {
-  currentSlide.value = id
+  currentSlideId.value = id
   showCarousel.value = true
 }
 

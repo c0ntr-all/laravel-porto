@@ -47,7 +47,7 @@ const commentModel = ref<string>('')
 const createComment = () => {
   api.post<ICreateCommentResponse>('v1/comments', {
     commentable_id: props.taskId,
-    commentable_type: 'task',
+    commentable_type: 'tm_tasks',
     content: commentModel.value
   }).then((response) => {
     const responseData = response.data.data

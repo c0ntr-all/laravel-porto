@@ -47,7 +47,6 @@ import { handleApiError, handleApiSuccess, normalizeApiItemResponse } from 'src/
 import { onMounted, provide, ref } from 'vue'
 import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
 import { IIncludedItem, IRelationshipData } from 'src/components/types'
-import { ITaskList } from 'src/types'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import GalleryMediaCard from 'src/components/client/Gallery/GalleryMediaCard.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
@@ -122,7 +121,7 @@ const getAlbum = async (id: string): Promise<void> => {
     .then(response => {
       const normalizedResponse = normalizeApiItemResponse(response.data)
 
-      album.value = normalizedResponse.data as unknown as ITaskList[]
+      album.value = normalizedResponse.data as unknown as IAlbum
       total.value = response.data.meta.count
     }).catch(error => {
       handleApiError(error)

@@ -24,7 +24,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { api } from 'src/boot/axios'
-import { handleApiError } from 'src/utils/jsonapi'
+import { handleApiError, normalizeApiItemResponse } from 'src/utils/jsonapi'
 import { IAlbum } from 'src/components/client/Gallery/types'
 import { IIncludedItem } from 'src/components/types'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
@@ -51,12 +51,7 @@ const loading = ref(true)
 const getAlbums = async (): Promise<void> => {
   await api.get<IGetAlbumsApiResponse>('v1/gallery/albums')
     .then(response => {
-      albums.value = response.data.data.map((responseAlbum: IResponseAlbum) => {
-        return {
-          id: responseAlbum.id,
-          ...responseAlbum.attributes
-        }
-      })
+      albums.value = normalizeApiItemResponse(response.data)
     }).catch(error => {
       handleApiError(error)
     }).finally(() => {

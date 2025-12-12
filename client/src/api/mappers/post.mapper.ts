@@ -4,7 +4,6 @@ import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 
 export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
-  console.log(postModel)
   const data: IPostCreateDto = {
     title: postModel.title,
     content: postModel.content,

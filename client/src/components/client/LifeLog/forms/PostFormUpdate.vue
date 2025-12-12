@@ -263,6 +263,7 @@ onUnmounted(() => {
     tags: rawPost.tags,
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
+    isNullTime: !!rawPost.time,
     attachments: []
   }
 

@@ -43,13 +43,13 @@
   </q-dialog>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup generic="T extends IImageSource">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { IAttachment } from 'src/types/attachment'
+import { IImageSource } from 'src/types/carousel'
 
 // --- Props ---
 const props = defineProps<{
-  slides: IAttachment[]
+  slides: T[]
 }>()
 
 // --- Models ---
@@ -68,7 +68,7 @@ let minWidthState = INITIAL_SCENE_WIDTH
 
 // --- Computed ---
 const currentSlide = computed(() => {
-  return props.slides.find((slide: IAttachment) => slide.id === currentSlideId.value)
+  return props.slides.find((slide: IImageSource) => slide.id === currentSlideId.value)
 })
 const minContainerWidth = computed(() => {
   if (imageSizes.value.width && imageSizes.value.width > minWidthState) {
@@ -116,10 +116,6 @@ watch(show, (value) => {
   if (!value) {
     minWidthState = INITIAL_SCENE_WIDTH
   }
-})
-
-watch(currentSlideId, value => {
-  // console.log(currentSlide.value)
 })
 
 // проверяем ориентацию всех слайдов

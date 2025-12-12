@@ -2,8 +2,12 @@
 
 namespace App\Ship\Enums;
 
+use App\Ship\Enums\Traits\Arrayable;
+
 enum ContainerAliasEnum: string
 {
+    use Arrayable;
+
     //AppSection
     case USER = 'users';
     case TAG = 'tags';

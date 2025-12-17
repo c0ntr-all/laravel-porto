@@ -16,9 +16,9 @@ class PostUpdateContextDto extends Data
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
     public Carbon $date;
     #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]
-    public ?Carbon $time;
-    public array|null $tags = null;
-    public array|null $new_tags = null;
+    public Carbon $time;
+    public array|null $tags;
+    public array|null $new_tags;
     public array $deleted_attachments_ids = [];
 
     public function __construct(

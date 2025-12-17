@@ -10,6 +10,6 @@ class LaravelDiskImageSourceStrategy extends AbstractImageSourceStrategy
     {
         $originalPath = $this->getOriginalPath();
 
-        return Storage::disk('public')->path($originalPath);
+        return Storage::disk(config('filesystems.default'))->path($originalPath);
     }
 }

@@ -20,7 +20,7 @@ class PathGenerationService
 
         $thumbName = sprintf('%s_%s_thumbnail.%s', $info['filename'], $thumbType, $info['extension']);
         $thumbsFolderPath = "{$albumPath}/thumbnails";
-        $thumbFullPath = Storage::disk('public')->path("{$thumbsFolderPath}/{$thumbName}");
+        $thumbFullPath = Storage::disk(config('filesystems.default'))->path("{$thumbsFolderPath}/{$thumbName}");
 
         return [
             'thumb_path' => "{$thumbsFolderPath}/{$thumbName}",
@@ -31,7 +31,7 @@ class PathGenerationService
 
     public function prepareFolder(string $folder): void
     {
-        $disk = Storage::disk('public');
+        $disk = Storage::disk(config('filesystems.default'));
 
         $absolutePath = $disk->path($folder);
 

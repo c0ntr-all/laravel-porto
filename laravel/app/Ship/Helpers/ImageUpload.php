@@ -68,10 +68,10 @@ class ImageUpload
     {
         $pathToReturn = $this->folder . '/' . $this->filename;
 
-        $pathToSave = Storage::path('public') . '/' . $pathToReturn;
+        $pathToSave = Storage::path($pathToReturn);
 
-        if (!Storage::exists($pathToSave)) {
-            Storage::makeDirectory($pathToSave);
+        if (!Storage::exists($this->folder)) {
+            Storage::makeDirectory($this->folder);
         }
 
         try {

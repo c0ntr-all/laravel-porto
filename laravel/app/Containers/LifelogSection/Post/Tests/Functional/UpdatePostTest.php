@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -31,7 +32,8 @@ class UpdatePostTest extends TestCase
         $updatedPostData = [
             'title' => 'Updated title',
             'content' => 'Updated content',
-            'datetime' => fake()->dateTimeBetween('-2 months', 'now')->format('Y-m-d H:i'),
+            'date' => fake()->dateTimeBetween('-2 months', 'now')->format('Y-m-d'),
+            'time' => fake()->dateTimeBetween('-2 months', 'now')->format('H:i'),
         ];
 
         $response = $this->patchJson("/api/v1/lifelog/posts/{$post->id}", [
@@ -46,7 +48,8 @@ class UpdatePostTest extends TestCase
                     'attributes' => [
                         'title',
                         'content',
-                        'datetime',
+                        'date',
+                        'time',
                     ],
                     'relationships' => [
                         'tags' => [
@@ -188,9 +191,15 @@ class UpdatePostTest extends TestCase
                 ]
             ]);
 
-        $this->assertDatabaseHas('lifelog_posts', $post->toArray());
+        $this->assertDatabaseHas('lifelog_posts', [
+            'title' => $post->title,
+            'content' => $post->content,
+            'date' => $post->date->format('Y-m-d'),
+            'time' => $post->time->format('H:i'),
+            'user_id' => $user->id
+        ]);
 
-        Storage::fake('public');
+//        Storage::fake('public'); //TODO: Решить проблему тут и очистку файлов после тестов
         $file = UploadedFile::fake()->image('test-image.jpg');
 
         $responseAttachables = $this->postJson("/api/v1/app/attachments/upload", [
@@ -199,21 +208,25 @@ class UpdatePostTest extends TestCase
             'files' => [$file],
             'correlation_uuid' => $response->json('meta.correlation_uuid'),
         ]);
+        unlink($file->getPathname());
+
         $responseAttachables->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'type',
-                    'id',
-                    'attributes' => [
-                        'attachment_type',
-                        'attachment_created_at',
-                        'source',
-                        'original_path',
-                        'list_thumb_path',
-                        'preview_thumb_path',
-                        'width',
-                        'height'
-                    ],
+                    '*' => [
+                        'type',
+                        'id',
+                        'attributes' => [
+                            'attachment_type',
+                            'attachment_created_at',
+                            'source',
+                            'original_path',
+                            'list_thumb_path',
+                            'preview_thumb_path',
+                            'width',
+                            'height'
+                        ],
+                    ]
                 ]
             ]);
     }
@@ -229,5 +242,14 @@ class UpdatePostTest extends TestCase
             'date' => $datetime->format('Y-m-d'),
             'time' => $datetime->format('H:i'),
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        if (app()->environment('testing')) {
+            Storage::disk('public_testing')->deleteDirectory('/');
+        }
+
+        parent::tearDown();
     }
 }

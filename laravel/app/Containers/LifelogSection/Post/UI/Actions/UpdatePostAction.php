@@ -12,6 +12,7 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
+use App\Containers\LifelogSection\Post\Tasks\CreatePostAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
@@ -19,11 +20,11 @@ use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Helpers\Correlation;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class UpdatePostAction extends BaseAction
+class UpdatePostAction extends UseCaseAction
 {
     protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::LL_POST;
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
@@ -34,7 +35,8 @@ class UpdatePostAction extends BaseAction
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
+        private readonly CreatePostAttachmentsTask $syncPostAttachmentsTask
     )
     {
         parent::__construct();
@@ -80,13 +82,22 @@ class UpdatePostAction extends BaseAction
                 $this->syncPostTagsTask->run($post, $postUpdateDto->user_id, $tagsIdsForSync);
             }
 
-            $attachmentsDeleteDto = AttachmentsDeleteDto::from($postUpdateContextDto->toArray());
+            if (!empty($postUpdateContextDto->attachments)) {
+                $this->syncPostAttachmentsTask->run(
+                    $post,
+                    $postUpdateContextDto->user_id,
+                    $postUpdateContextDto->attachments
+                );
+            }
 
-            //TODO: Сделать условие
-            $this->deleteAttachmentsTask->run(
-                model: $updatedPost,
-                dto: $attachmentsDeleteDto
-            );
+            if (!empty($postUpdateContextDto->deleted_attachments_ids)) {
+                $attachmentsDeleteDto = AttachmentsDeleteDto::from($postUpdateContextDto->toArray());
+
+                $this->deleteAttachmentsTask->run(
+                    model: $updatedPost,
+                    dto: $attachmentsDeleteDto
+                );
+            }
 
             return $updatedPost;
         });

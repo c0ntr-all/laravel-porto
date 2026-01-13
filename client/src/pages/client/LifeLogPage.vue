@@ -33,7 +33,7 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { isEmpty } from 'radash'
-import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
+import { usePostStore } from 'src/stores/modules/postStore'
 import { ITag } from 'src/types/tag'
 import { ITagsFilterData } from 'src/types'
 import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'

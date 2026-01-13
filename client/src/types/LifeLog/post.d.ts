@@ -1,6 +1,6 @@
 import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
-import { IAttachment, IAttachmentWithState } from 'src/types/attachment'
+import { IGalleryImage, IGalleryImageWithState } from 'src/types/gallery'
 
 export interface IPost {
   type: string
@@ -12,11 +12,11 @@ export interface IPost {
   created_at: string | null
   user: IUser
   tags: ITag[]
-  attachments: IAttachment[]
+  attachments: IGalleryImage[] //TODO: Пока только Image. При добавлении других типов, это будет изменено
 }
 
-type IPostWithAttachmentWithState = IAttachmentWithState & {
-  attachments?: IAttachmentWithState[]
+type IPostWithAttachmentWithState = IGalleryImageWithState & {
+  attachments?: IGalleryImageWithState[]
 }
 
 export interface IPostModel {

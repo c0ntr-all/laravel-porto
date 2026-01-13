@@ -10,7 +10,7 @@ use App\Ship\Parents\Tasks\Task as ParentTask;
 class CreateAttachmentTask extends ParentTask
 {
     public function __construct(
-        private readonly AttachmentRepository $AttachmentRepository
+        private readonly AttachmentRepository $attachmentRepository
     )
     {
     }
@@ -21,6 +21,6 @@ class CreateAttachmentTask extends ParentTask
      */
     public function run(AttachmentCreateDto $dto): Attachment
     {
-        return $this->AttachmentRepository->create($dto->toArray());
+        return $this->attachmentRepository->create($dto->toArray());
     }
 }

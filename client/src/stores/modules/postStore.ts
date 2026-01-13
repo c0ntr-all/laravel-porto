@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { postApi } from 'src/api/requests/LifeLog/postApi'
-import { useAttachmentStore } from 'src/stores/modules/attachmentStore'
+import { postApi } from 'src/api/requests/postApi'
 import { IPost, IPostFilter, IPostModel, IPostUpdateModel } from 'src/types/LifeLog/post'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
@@ -9,6 +8,7 @@ import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 import { IJsonApiResponse } from 'src/types'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
+import { uploadPostAttachments } from 'src/services/post.service'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
@@ -33,23 +33,16 @@ export const usePostStore = defineStore('post', () => {
   async function createPost(postModel: IPostModel, attachmentModel: File[]): Promise<IPost> {
     try {
       const postCreateDto: IPostCreateDto = mapPostFormToCreateDto(postModel)
+
+      let attachmentsIds: string[] | undefined = []
+      if (attachmentModel?.length) {
+        attachmentsIds = await uploadPostAttachments(attachmentModel)
+      }
+      postCreateDto.attachments = attachmentsIds
+
       const responseData: IJsonApiResponse = await postApi.createPost(postCreateDto)
       const mappedResponse: IPost[] = mapResponse(responseData) as IPost[]
       const newPost: IPost = mappedResponse[0]
-
-      if (attachmentModel?.length) {
-        const attachmentStore = useAttachmentStore()
-        const newAttachments = await attachmentStore.createAttachment({
-          files: attachmentModel,
-          attachable_type: newPost.type,
-          attachable_id: newPost.id,
-          correlation_uuid: responseData.meta?.correlation_uuid
-        })
-
-        if (newAttachments) {
-          newPost.attachments = newAttachments
-        }
-      }
 
       posts.value.unshift(newPost)
       postsCount.value += 1
@@ -75,21 +68,15 @@ export const usePostStore = defineStore('post', () => {
 
     try {
       const postUpdateDto: IPostUpdateDto = mapPostFormToUpdateDto(postModel, originalPost)
+
+      let attachmentsIds: string[] | undefined = []
+      if (attachmentModel?.length) {
+        attachmentsIds = await uploadPostAttachments(attachmentModel)
+      }
+      postUpdateDto.attachments = attachmentsIds
+
       const responseData: IJsonApiResponse = await postApi.updatePost(id, postUpdateDto)
       const updatedPost: IPost = mapResponse(responseData)[0] as IPost
-
-      if (attachmentModel?.length) {
-        const attachmentStore = useAttachmentStore()
-        const uploadedAttachments = await attachmentStore.createAttachment({
-          files: attachmentModel,
-          attachable_type: updatedPost.type,
-          attachable_id: updatedPost.id,
-          correlation_uuid: responseData.meta?.correlation_uuid
-        })
-        if (uploadedAttachments) {
-          updatedPost.attachments.push(...uploadedAttachments)
-        }
-      }
 
       // add to main list of posts
       const index = posts.value.findIndex(p => p.id === updatedPost.id)

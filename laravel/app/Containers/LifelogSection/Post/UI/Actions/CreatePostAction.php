@@ -9,17 +9,18 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
+use App\Containers\LifelogSection\Post\Tasks\CreatePostAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Helpers\Correlation;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class CreatePostAction extends BaseAction
+class CreatePostAction extends UseCaseAction
 {
     protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::LL_POST;
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
@@ -29,7 +30,8 @@ class CreatePostAction extends BaseAction
         private readonly ListTagsByNamesTask       $listTagsByNamesTask,
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
+        private readonly CreatePostAttachmentsTask $syncPostAttachmentsTask,
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
@@ -72,10 +74,14 @@ class CreatePostAction extends BaseAction
                 $this->syncPostTagsTask->run($post, $postCreateDto->user_id, $tagsIdsForSync);
             }
 
+            if (!empty($postCreateDto->attachments)) {
+                $this->syncPostAttachmentsTask->run($post, $postCreateDto->user_id, $postCreateDto->attachments);
+            }
+
             return $post;
         });
 
-        // Сделать Event запускающий таску
+        // TODO: Сделать Event запускающий таску
         DB::afterCommit(function () use ($post) {
             $this->createActivityUseCaseTask->run($post, $this->eventTypesEnum->value);
         });
@@ -96,7 +102,7 @@ class CreatePostAction extends BaseAction
         $post = $this->handle($postCreateDto);
 
         return fractal($post, new PostTransformer($postCreateDto->user_id))
-            ->parseIncludes(['user', 'tags'])
+            ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName('ll_posts')
             ->addMeta([
                 'message' => 'New post successfully created!',

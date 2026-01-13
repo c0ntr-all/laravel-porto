@@ -6,4 +6,5 @@ export interface IPostUpdateDto {
   tags?: string[]
   new_tags?: string[]
   deleted_attachments_ids?: string[]
+  attachments?: string[]
 }

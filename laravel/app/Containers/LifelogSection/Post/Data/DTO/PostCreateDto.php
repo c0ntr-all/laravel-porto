@@ -18,6 +18,7 @@ class PostCreateDto extends Data
     public ?Carbon $time;
     public ?array $tags = null;
     public ?array $new_tags = null;
+    public ?array $attachments = [];
 
     public function __construct(
     ) {

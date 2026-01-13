@@ -20,6 +20,7 @@ class PostUpdateContextDto extends Data
     public array|null $tags;
     public array|null $new_tags;
     public array $deleted_attachments_ids = [];
+    public ?array $attachments = [];
 
     public function __construct(
     ) {

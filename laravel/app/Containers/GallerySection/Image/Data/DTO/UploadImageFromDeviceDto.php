@@ -2,8 +2,8 @@
 
 namespace App\Containers\GallerySection\Image\Data\DTO;
 
-use Illuminate\Http\UploadedFile;
 use App\Ship\Parents\DTO\Data;
+use Illuminate\Http\UploadedFile;
 
 class UploadImageFromDeviceDto extends Data
 {

@@ -31,7 +31,9 @@ class CreateRequest extends FormRequest
             'tags' => 'sometimes|array',
             'tags.*' => 'sometimes|string',
             'new_tags' => 'sometimes|array',
-            'new_tags.*' => 'sometimes|string|max:20'
+            'new_tags.*' => 'sometimes|string|max:20',
+            'attachments' => 'sometimes|array',
+            'attachments.*' => 'sometimes|uuid',
         ];
     }
 }

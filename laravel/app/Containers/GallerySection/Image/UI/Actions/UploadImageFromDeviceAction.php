@@ -2,44 +2,47 @@
 
 namespace App\Containers\GallerySection\Image\UI\Actions;
 
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
 use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
-use App\Containers\GallerySection\Image\Models\Image as GalleryImage;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
 use App\Containers\GallerySection\Image\Tasks\SaveUploadedImageTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromDeviceRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
+use App\Ship\Helpers\Correlation;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Support\Collection;
 use Ramsey\Uuid\Uuid;
 
-class UploadImageFromDeviceAction
+class UploadImageFromDeviceAction extends BaseAction
 {
-    use AsAction;
-
     private const string SOURCE_TYPE = ImageSourceEnum::DEVICE->value;
 
     public function __construct(
-        private readonly SaveUploadedImageTask    $saveUploadedImageTask,
-        private readonly CreateImageInAlbumTask   $createImageInAlbumTask,
-        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
-        private readonly PathGenerationService    $pathGenerationService
+        private readonly SaveUploadedImageTask     $saveUploadedImageTask,
+        private readonly CreateImageInAlbumTask    $createImageInAlbumTask,
+        private readonly CreateAllImageThumbsTask  $createAllImageThumbsTask,
+        private readonly PathGenerationService     $pathGenerationService
     )
     {
+        parent::__construct();
     }
 
-    public function handle(Album $album, UploadImageFromDeviceDto $uploadImageDto): GalleryImage
+    public function handle(Album $album, UploadImageFromDeviceDto $uploadImagesDto): Collection
     {
+        $images = [];
+
+        $file = $uploadImagesDto->file;
         $uuid = Uuid::uuid4()->toString();
 
-        $file = $uploadImageDto->file;
-        $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadImageDto->user_id, $album->id);
+        $albumPath = $this->pathGenerationService->getAlbumFolderPath($uploadImagesDto->user_id, $album->id);
         $basePath = $albumPath . '/' . $uuid;
         $filePath = $this->saveUploadedImageTask->run($file, $basePath);
 
@@ -49,7 +52,7 @@ class UploadImageFromDeviceAction
 
         $createImageDto = CreateImageDto::from([
             'id' => $uuid,
-            'user_id' => $uploadImageDto->user_id,
+            'user_id' => $uploadImagesDto->user_id,
             'original_path' => $filePath,
             'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
             'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
@@ -58,15 +61,23 @@ class UploadImageFromDeviceAction
             'source' => self::SOURCE_TYPE
         ]);
 
-        return $this->createImageInAlbumTask->run($album, $createImageDto);
+        $images[] = $this->createImageInAlbumTask->run($album, $createImageDto);
+
+        return collect($images);
     }
 
     public function asController(Album $album, UploadImageFromDeviceRequest $request): JsonResponse
     {
-        $uploadImageDto = UploadImageFromDeviceDto::from($request->validated());
-        $uploadImageDto->user_id = (string)auth()->user()->id;
+        $uploadImagesDto = UploadImageFromDeviceDto::from($request->validated());
+        $uploadImagesDto->user_id = (string)auth()->user()->id;
 
-        $result = $this->handle($album, $uploadImageDto);
+        //TODO: Здесь это не исопльзуется. Разобраться на счет причастности к UseCase логам
+        //TODO: Переделать этот экшн под заливку одного файла
+        if (isset($requestData['correlation_uuid'])) {
+            Correlation::setUuid($requestData['correlation_uuid']);
+        }
+
+        $result = $this->handle($album, $uploadImagesDto);
 
         return fractal($result, new ImageTransformer())
             ->withResourceName('images')

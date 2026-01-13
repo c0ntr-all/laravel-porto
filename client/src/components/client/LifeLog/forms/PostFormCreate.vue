@@ -58,7 +58,7 @@
 <script lang="ts" setup>
 import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
-import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
+import { usePostStore } from 'src/stores/modules/postStore'
 import { IPost, IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'

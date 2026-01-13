@@ -110,10 +110,10 @@ import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
-import { usePostStore } from 'src/stores/modules/LifeLog/postStore'
+import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPost, IPostUpdateModel } from 'src/types'
-import { IAttachmentWithState } from 'src/types/attachment'
+import { IGalleryImageWithState } from 'src/types/gallery'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
@@ -183,7 +183,7 @@ const handleAddTag = (tagName: string) => {
   }
 }
 
-const handleSwitchRemoveFile = (file: IAttachmentWithState) => {
+const handleSwitchRemoveFile = (file: IGalleryImageWithState) => {
   const index = model.value.attachments.findIndex(x => x.id === file.id)
   model.value.attachments[index].is_deleted = !file.is_deleted
 }
@@ -223,7 +223,7 @@ const mapPostToModel = (post: IPost) => {
   model.value = preparedPost
   if (model.value.attachments.length) {
     // Подготовка состояния файлов на случай удаления
-    model.value.attachments = toRaw(model.value.attachments.map((item: IAttachmentWithState) => {
+    model.value.attachments = toRaw(model.value.attachments.map((item: IGalleryImageWithState) => {
       item.is_deleted = false
       return toRaw(item)
     }))

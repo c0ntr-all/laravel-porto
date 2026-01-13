@@ -5,4 +5,5 @@ export interface IPostCreateDto {
   time: string | null
   tags?: string[]
   new_tags?: string[]
+  attachments?: string[]
 }

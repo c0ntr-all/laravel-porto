@@ -63,7 +63,8 @@ module.exports = configure(function (ctx) {
         mode: ctx.dev ? 'test' : 'prod',
         host: ctx.dev
           ? 'http://docker-porto.loc/api'
-          : 'https://api.home-portal.prod'
+          : 'https://api.home-portal.prod',
+        galleryUploadAlbumId: '1'
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

@@ -12,10 +12,10 @@
 </template>
 
 <script lang="ts" setup>
-import { IAttachment } from 'src/types/attachment'
+import { IGalleryImage } from 'src/types/gallery'
 
 defineProps<{
-  image: IAttachment
+  image: IGalleryImage
 }>()
 </script>
 

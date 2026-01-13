@@ -19,15 +19,16 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $album_id
  * @property string $source
- * @property string $original_path
- * @property string $list_thumb_path
- * @property string $preview_thumb_path
+ * @property string $extension
+ * @property string $external_url
  * @property integer $width
  * @property integer $height
  * @property string $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read string $full_path
+ * @property-read string $base_path
+ * @property-read string $list_thumb_path
+ * @property-read string $preview_thumb_path
  * @method static Builder|Image newModelQuery()
  * @method static Builder|Image newQuery()
  * @method static Builder|Image onlyTrashed()
@@ -63,16 +64,50 @@ class Image extends ActivityLoggableModel
     }
 
     /**
-     * Full path from root for original path
+     * List Thumbnail Path
      *
      * @return string
      */
-    public function getFullPathAttribute(): string
+    public function getListThumbPathAttribute(): string
     {
+        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
+        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
+
+        return url('') .
+            '/storage/' .
+            str_replace($search, $replace, config('image.default.mask.list_thumb'));
+    }
+
+    /**
+     * List Thumbnail Path
+     *
+     * @return string
+     */
+    public function getPreviewThumbPathAttribute(): string
+    {
+        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
+        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
+
+        return url('') .
+            '/storage/' .
+            str_replace($search, $replace, config('image.default.mask.preview_thumb'));
+    }
+
+    /**
+     * Base path
+     *
+     * @return string
+     */
+    public function getBasePathAttribute(): string
+    {
+        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
+        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
+
         return match($this->source) {
-            ImageSourceEnum::WINDOWS->value => url('') . '/windows/images/' . $this->original_path,
-            ImageSourceEnum::DEVICE->value => url('') . '/storage/' . $this->original_path,
-            ImageSourceEnum::WEB->value => $this->original_path
+            ImageSourceEnum::DEVICE->value => url('') .
+                '/storage/' .
+                str_replace($search, $replace, config('image.default.mask.base')),
+            ImageSourceEnum::WEB->value => $this->external_url
         };
     }
 }

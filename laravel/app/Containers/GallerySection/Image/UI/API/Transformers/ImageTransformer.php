@@ -17,9 +17,9 @@ class ImageTransformer extends TransformerAbstract
             'source' => $image->source,
             'width' => $image->width,
             'height' => $image->height,
-            'original_path' => $image->full_path,
-            'list_thumb_path' => url('') . '/storage/' . $image->list_thumb_path,
-            'preview_thumb_path' => url('') . '/storage/' . $image->preview_thumb_path,
+            'original_path' => $image->base_path,
+            'list_thumb_path' => $image->list_thumb_path,
+            'preview_thumb_path' => $image->preview_thumb_path,
             'description' => $image->description,
             'created_at' => $image->created_at->format('Y-m-d H:i:s'),
         ];

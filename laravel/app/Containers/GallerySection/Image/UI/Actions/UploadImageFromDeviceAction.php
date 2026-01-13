@@ -15,6 +15,7 @@ use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
 use App\Containers\GallerySection\Image\Tasks\SaveUploadedImageTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromDeviceRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Helpers\Correlation;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
@@ -71,16 +72,10 @@ class UploadImageFromDeviceAction extends BaseAction
         $uploadImagesDto = UploadImageFromDeviceDto::from($request->validated());
         $uploadImagesDto->user_id = (string)auth()->user()->id;
 
-        //TODO: Здесь это не исопльзуется. Разобраться на счет причастности к UseCase логам
-        //TODO: Переделать этот экшн под заливку одного файла
-        if (isset($requestData['correlation_uuid'])) {
-            Correlation::setUuid($requestData['correlation_uuid']);
-        }
-
         $result = $this->handle($album, $uploadImagesDto);
 
         return fractal($result, new ImageTransformer())
-            ->withResourceName('images')
+            ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

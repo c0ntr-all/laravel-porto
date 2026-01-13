@@ -16,9 +16,9 @@ class AttachmentTransformer extends TransformerAbstract
             'attachment_type' => $attachment->fileable_type,
             'attachment_created_at' => $attachment->created_at->format('Y-m-d H:i:s'),
             'source' => $file->source,
-            'original_path' => $file->full_path,
-            'list_thumb_path' => url('') . '/storage/' . $file->list_thumb_path,
-            'preview_thumb_path' => url('') . '/storage/' . $file->preview_thumb_path,
+            'original_path' => $file->base_path,
+            'list_thumb_path' => $file->list_thumb_path,
+            'preview_thumb_path' => $file->preview_thumb_path,
             'width' => $file->width,
             'height' => $file->height,
         ];

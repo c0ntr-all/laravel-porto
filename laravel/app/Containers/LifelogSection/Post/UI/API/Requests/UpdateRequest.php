@@ -34,6 +34,8 @@ class UpdateRequest extends FormRequest
             'new_tags.*' => 'sometimes|string|unique:App\Containers\AppSection\Tag\Models\Tag,name',
             'deleted_attachment_ids' => 'sometimes|array',
             'deleted_attachments_ids.*' => 'sometimes|string',
+            'attachments' => 'sometimes|array',
+            'attachments.*' => 'sometimes|uuid',
         ];
     }
 }

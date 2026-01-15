@@ -22,6 +22,7 @@ enum ContainerAliasEnum: string
     case LL_POST = 'll_posts';
     //GallerySection
     case GALLERY_IMAGE = 'gallery_images';
+    case GALLERY_VIDEO = 'gallery_videos';
 
     public function getContainerMessage(): string
     {
@@ -34,6 +35,7 @@ enum ContainerAliasEnum: string
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
             self::GALLERY_IMAGE => 'Изображение',
+            self::GALLERY_VIDEO => 'Видео',
         };
     }
 }

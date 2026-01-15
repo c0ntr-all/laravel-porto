@@ -4,6 +4,7 @@ namespace App\Containers\GallerySection\Album\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Image\Models\Image;
+use App\Containers\GallerySection\Video\Models\Video;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -55,5 +56,10 @@ class Album extends Model
     public function images(): HasMany
     {
         return $this->hasMany(Image::class);
+    }
+
+    public function videos(): HasMany
+    {
+        return $this->hasMany(Video::class);
     }
 }

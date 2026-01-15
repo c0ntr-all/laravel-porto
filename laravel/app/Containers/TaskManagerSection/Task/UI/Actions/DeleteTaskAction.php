@@ -7,10 +7,10 @@ use App\Containers\TaskManagerSection\Task\Tasks\DeleteTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\DeleteRequest;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class DeleteTaskAction extends BaseAction
+class DeleteTaskAction extends UseCaseAction
 {
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::DELETED;
     protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;

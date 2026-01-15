@@ -36,9 +36,9 @@ return [
         |
         */
         'mask' => [
-            'base' => 'userfiles/{user_id}/gallery/{album_id}/{file_id}.{ext}',
-            'list_thumb' => 'userfiles/{user_id}/gallery/{album_id}/thumbnails/{file_id}_list_thumbnail.{ext}',
-            'preview_thumb' => 'userfiles/{user_id}/gallery/{album_id}/thumbnails/{file_id}_preview_thumbnail.{ext}',
+            'base' => 'userfiles/{user_id}/images/{album_id}/{file_id}.{ext}',
+            'list_thumb' => 'userfiles/{user_id}/images/{album_id}/thumbnails/{file_id}_list_thumbnail.{ext}',
+            'preview_thumb' => 'userfiles/{user_id}/images/{album_id}/thumbnails/{file_id}_preview_thumbnail.{ext}',
         ]
     ]
 ];

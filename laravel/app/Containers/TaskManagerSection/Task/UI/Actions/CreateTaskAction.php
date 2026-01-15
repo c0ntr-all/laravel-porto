@@ -11,11 +11,11 @@ use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Helpers\Correlation;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class CreateTaskAction extends BaseAction
+class CreateTaskAction extends UseCaseAction
 {
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
     protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;

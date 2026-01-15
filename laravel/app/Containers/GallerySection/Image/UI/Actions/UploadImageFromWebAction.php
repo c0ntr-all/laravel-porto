@@ -6,7 +6,6 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromWebDto;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
-use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
 use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
@@ -14,6 +13,7 @@ use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromWebRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
+use App\Ship\Enums\FileSourceEnum;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -21,7 +21,7 @@ class UploadImageFromWebAction
 {
     use AsAction;
 
-    private const string SOURCE_TYPE = ImageSourceEnum::WEB->value;
+    private const string SOURCE_TYPE = FileSourceEnum::WEB->value;
 
     public function __construct(
         private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,

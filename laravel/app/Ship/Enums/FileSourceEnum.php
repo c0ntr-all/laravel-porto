@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\GallerySection\Image\Enums;
+namespace App\Ship\Enums;
 
 use App\Ship\Enums\Traits\Arrayable;
 
-enum ImageSourceEnum: string
+enum FileSourceEnum: string
 {
     use Arrayable;
 

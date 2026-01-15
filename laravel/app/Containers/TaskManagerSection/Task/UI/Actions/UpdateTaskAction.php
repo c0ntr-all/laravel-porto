@@ -9,11 +9,11 @@ use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\UpdateRequest;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 
-class UpdateTaskAction extends BaseAction
+class UpdateTaskAction extends UseCaseAction
 {
     protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;

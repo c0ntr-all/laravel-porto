@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
+use App\Ship\Enums\FileSourceEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('album_id');
-            $table->enum('source', ImageSourceEnum::toArray());
+            $table->enum('source', FileSourceEnum::toArray());
             $table->string('original_path');
             $table->string('list_thumb_path');
             $table->string('preview_thumb_path');

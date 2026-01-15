@@ -2,12 +2,10 @@
 
 namespace App\Containers\GallerySection\Image\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
-use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
@@ -16,7 +14,7 @@ use App\Containers\GallerySection\Image\Tasks\SaveUploadedImageTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromDeviceRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Helpers\Correlation;
+use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -24,7 +22,7 @@ use Ramsey\Uuid\Uuid;
 
 class UploadImageFromDeviceAction extends BaseAction
 {
-    private const string SOURCE_TYPE = ImageSourceEnum::DEVICE->value;
+    private const string SOURCE_TYPE = FileSourceEnum::DEVICE->value;
 
     public function __construct(
         private readonly SaveUploadedImageTask     $saveUploadedImageTask,

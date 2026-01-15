@@ -6,13 +6,13 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromWindowsDto;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
-use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImagesFromWindowsRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
+use App\Ship\Enums\FileSourceEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -21,7 +21,7 @@ class UploadImagesFromWindowsAction
 {
     use AsAction;
 
-    private const string SOURCE_TYPE = ImageSourceEnum::WINDOWS->value;
+    private const string SOURCE_TYPE = FileSourceEnum::WINDOWS->value;
 
     public function __construct(
         private readonly CreateImageInAlbumTask   $createImageInAlbumTask,

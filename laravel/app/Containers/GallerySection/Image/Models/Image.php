@@ -4,8 +4,8 @@ namespace App\Containers\GallerySection\Image\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
-use App\Containers\GallerySection\Image\Enums\ImageSourceEnum;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -104,10 +104,10 @@ class Image extends ActivityLoggableModel
         $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
 
         return match($this->source) {
-            ImageSourceEnum::DEVICE->value => url('') .
+            FileSourceEnum::DEVICE->value => url('') .
                 '/storage/' .
                 str_replace($search, $replace, config('image.default.mask.base')),
-            ImageSourceEnum::WEB->value => $this->external_url
+            FileSourceEnum::WEB->value => $this->external_url
         };
     }
 }

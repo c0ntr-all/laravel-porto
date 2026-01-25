@@ -10,7 +10,7 @@ class PathGenerationService
 {
     public function getAlbumFolderPath(string $userId, string $albumId): string
     {
-        return "userfiles/{$userId}/gallery/{$albumId}";
+        return "userfiles/{$userId}/images/{$albumId}";
     }
 
     #[ArrayShape(['thumb_path' => 'string', 'thumbs_folder_path' => 'string', 'thumb_full_path' => 'string'])]

@@ -5,8 +5,8 @@ namespace App\Containers\GallerySection\Image\UI\Actions;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
-use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
+use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
@@ -17,7 +17,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
 
 class UploadImageFromDeviceAction extends BaseAction
@@ -34,10 +34,8 @@ class UploadImageFromDeviceAction extends BaseAction
         parent::__construct();
     }
 
-    public function handle(Album $album, UploadImageFromDeviceDto $uploadImagesDto): Collection
+    public function handle(Album $album, UploadImageFromDeviceDto $uploadImagesDto): Image
     {
-        $images = [];
-
         $file = $uploadImagesDto->file;
         $uuid = Uuid::uuid4()->toString();
 
@@ -47,22 +45,22 @@ class UploadImageFromDeviceAction extends BaseAction
 
         $imageStrategy = ImageSourceFactory::create($filePath, self::SOURCE_TYPE);
 
-        $thumbnails = $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
+        try {
+            $this->createAllImageThumbsTask->run($imageStrategy, $albumPath);
+        } catch (\Exception $exception) {
+            Log::warning("Unable to create thumbnails({$uuid}): " . $exception->getMessage());
+        }
 
         $createImageDto = CreateImageDto::from([
             'id' => $uuid,
             'user_id' => $uploadImagesDto->user_id,
-            'original_path' => $filePath,
-            'list_thumb_path' => $thumbnails[ImageThumbTypeEnum::LIST->value],
-            'preview_thumb_path' => $thumbnails[ImageThumbTypeEnum::PREVIEW->value],
+            'extension' => $file->getClientOriginalExtension(),
             'width' => $imageStrategy->getImage()->width(),
             'height' => $imageStrategy->getImage()->height(),
             'source' => self::SOURCE_TYPE
         ]);
 
-        $images[] = $this->createImageInAlbumTask->run($album, $createImageDto);
-
-        return collect($images);
+        return $this->createImageInAlbumTask->run($album, $createImageDto);
     }
 
     public function asController(Album $album, UploadImageFromDeviceRequest $request): JsonResponse

@@ -11,9 +11,7 @@ class CreateImageDto extends Data
     public string $source;
     public int $width;
     public int $height;
-    public string $original_path;
-    public string $list_thumb_path;
-    public string $preview_thumb_path;
+    public string $extension;
     public ?string $description = null;
 
     public function __construct()

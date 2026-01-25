@@ -4,7 +4,6 @@ namespace App\Containers\GallerySection\Image\Tasks;
 
 use App\Containers\GallerySection\Image\Contracts\ImageSourceContract;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
-use App\Containers\GallerySection\Image\Tasks\CreateImageThumbTask;
 use App\Ship\Parents\Tasks\Task;
 
 class CreateAllImageThumbsTask extends Task

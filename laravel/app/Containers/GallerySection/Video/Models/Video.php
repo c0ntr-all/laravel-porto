@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property int $album_id
  * @property string $source
  * @property string $extension
+ * @property string $duration
+ * @property string $original_name
  * @property integer $width
  * @property integer $height
  * @property string $description
@@ -68,7 +70,7 @@ class Video extends ActivityLoggableModel
     public function getListThumbPathAttribute(): string
     {
         $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
+        $replace = [$this->user_id, $this->album_id, $this->id, 'jpg'];
 
         return url('') .
             '/storage/' .

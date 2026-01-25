@@ -19,18 +19,18 @@ class CreatePostAttachmentsTask extends ParentTask
     /**
      * @param Post $post
      * @param int $userId
-     * @param array $attachmentsIdsForSync
+     * @param array $attachments
      * @return void
      */
-    public function run(Post $post, int $userId, array $attachmentsIdsForSync): void
+    public function run(Post $post, int $userId, array $attachments): void
     {
-        collect($attachmentsIdsForSync)->each(function (string $attachmentId) use ($post, $userId): void {
+        collect($attachments)->each(function (array $attachment) use ($post, $userId): void {
             $dto = AttachmentCreateDto::from([
                 'user_id' => $userId,
                 'attachable_type' => ContainerAliasEnum::LL_POST->value,
                 'attachable_id' => $post->id,
-                'fileable_type' => ContainerAliasEnum::GALLERY_IMAGE->value,
-                'fileable_id' => $attachmentId,
+                'fileable_type' => $attachment['type'],
+                'fileable_id' => $attachment['id'],
             ]);
             // TODO: cross-section dependency
             $this->createAttachmentTask->run($dto);

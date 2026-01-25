@@ -17,6 +17,7 @@ class VideoTransformer extends TransformerAbstract
             'source' => $video->source,
             'width' => $video->width,
             'height' => $video->height,
+            'duration' => $video->duration,
             'original_path' => $video->base_path,
             'list_thumb_path' => $video->list_thumb_path,
             'description' => $video->description,

@@ -41,15 +41,29 @@ class UploadVideoFromDeviceAction extends BaseAction
 
         $videoStream = $media->getVideoStream();
 
+        if (isset($videoStream->get('tags')['DURATION'])) {
+            $duration = explode('.', $videoStream->get('tags')['DURATION'])[0];
+        } else {
+            $duration = null;
+        }
+
         $createVideoDto = CreateVideoDto::from([
             'id' => $uuid,
             'user_id' => $uploadVideoDto->user_id,
             'album_id' => $album->id,
+            'source' => self::SOURCE_TYPE,
+            'duration' => $duration,
+            'original_name' => $file->getClientOriginalName(),
             'extension' => $extension,
             'width' => $videoStream->get('width'),
             'height' => $videoStream->get('height'),
-            'source' => self::SOURCE_TYPE
         ]);
+
+        // Создаем скрины после получения данных т.к. после них создается Frame, который не имеет метода getStreams()
+        $media->getFrameFromSeconds(10)
+            ->export()
+            ->toDisk('public')
+            ->save("userfiles/{$uploadVideoDto->user_id}/videos/{$album->id}/thumbnails/{$uuid}_list_thumbnail.jpg");
 
         return $this->createVideoTask->run($createVideoDto);
     }

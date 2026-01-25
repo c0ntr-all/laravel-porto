@@ -17,7 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('album_id');
             $table->enum('source', FileSourceEnum::toArray());
+            $table->string('duration', 10)->nullable();
             $table->string('extension', 4)->nullable();
+            $table->string('original_name')->nullable();
             $table->string('external_url')->nullable();
             $table->integer('width');
             $table->integer('height');

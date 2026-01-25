@@ -10,6 +10,8 @@ class CreateVideoDto extends Data
     public int $user_id;
     public int $album_id;
     public string $source;
+    public string $duration;
+    public string $original_name;
     public int $width;
     public int $height;
     public string $extension;

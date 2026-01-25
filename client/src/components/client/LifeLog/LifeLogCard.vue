@@ -53,8 +53,16 @@
                @click="openCarousel(attachment.id)"
           >
             <LifeLogCardImage
+              v-if="attachment.attachment_type === 'gallery_images'"
               :image="attachment"
             />
+            <LifeLogCardVideo
+              v-else-if="attachment.attachment_type === 'gallery_videos'"
+              :image="attachment"
+            />
+            <div v-else>
+              Identification attachment error
+            </div>
           </div>
         </div>
         <GalleryCarousel
@@ -100,6 +108,7 @@ import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
+import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
 
 interface Action {
   fn: () => void

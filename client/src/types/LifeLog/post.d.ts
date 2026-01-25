@@ -12,7 +12,7 @@ export interface IPost {
   created_at: string | null
   user: IUser
   tags: ITag[]
-  attachments: IGalleryImage[] //TODO: Пока только Image. При добавлении других типов, это будет изменено
+  attachments: IGalleryImage[] // TODO: Пока только Image. При добавлении других типов, это будет изменено
 }
 
 type IPostWithAttachmentWithState = IGalleryImageWithState & {

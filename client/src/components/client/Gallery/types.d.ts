@@ -6,6 +6,7 @@ export interface IMediaItem {
   original_path: string
   list_thumb_path: string
   preview_thumb_path: string
+  attachment_type: string
   width: number
   height: number
 }

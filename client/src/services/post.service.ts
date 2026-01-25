@@ -11,15 +11,36 @@ interface IResult {
 
 export async function uploadPostAttachments(files: File[]): Promise<string[] | undefined> {
   const fileGroups = groupFileTypes(files)
+  const galleryStore = useGalleryStore()
 
   if (fileGroups.images.length) {
-    const galleryStore = useGalleryStore()
-
     try {
       const mappedImages = fileGroups.images.map((file: File) => mapFileToUploadItem(file))
-      const result = await galleryStore.uploadImages(mappedImages)
+      const url = 'v1/gallery/albums/1/images/upload'
+      const result = await galleryStore.uploadFiles(url, mappedImages)
 
-      return result ? result.map((item) => item.id) : []
+      return result ? result.map((item) => {
+        return {
+          id: item.id,
+          type: item.type
+        }
+      }) : []
+    } catch (err: any) {
+      console.error(err)
+    }
+  }
+  if (fileGroups.videos.length) {
+    try {
+      const url = 'v1/gallery/albums/1/videos/upload'
+      const mappedImages = fileGroups.videos.map((file: File) => mapFileToUploadItem(file))
+      const result = await galleryStore.uploadFiles(url, mappedImages)
+
+      return result ? result.map((item) => {
+        return {
+          id: item.id,
+          type: item.type
+        }
+      }) : []
     } catch (err: any) {
       console.error(err)
     }

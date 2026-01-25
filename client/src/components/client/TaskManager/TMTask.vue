@@ -82,7 +82,7 @@ import TMProgressAddButton from 'src/components/client/TaskManager/TMProgressAdd
 import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAddButton.vue'
 import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
 import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
-import { useTaskStore } from 'src/stores/modules/TaskManager/taskStore'
+import { useTaskStore } from 'src/stores/modules/taskStore'
 import { IChecklist, IComment, IProgressItem, IReminderItem, ITask } from 'src/types/TaskManager/task'
 
 interface ITaskPartsRef {

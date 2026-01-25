@@ -19,6 +19,7 @@
           transition-duration="50"
           height="100%"
           style="max-width: none"
+          :fullscreen="false"
           swipeable
           arrows
         >
@@ -28,7 +29,12 @@
             class="column no-wrap flex-center q-pa-none"
             :name="slide.id"
           >
+            <q-video
+              v-if="slide.attachment_type === 'gallery_videos'"
+              src="https://vkvideo.ru/video485184029_456239672"
+              ratio=""/>
             <q-img
+              v-else
               :src="slide.preview_thumb_path"
               :style="imageStyle"
               fit="contain"

@@ -4,13 +4,14 @@ import { mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
 
 export const galleryApi = {
   async upload(
+    url: string,
     file: File,
     onProgress: (percent: number) => void
   ): Promise<IJsonApiResponse> {
     const formData = mapMediaItemToFormData(file)
 
     const response = await api.post(
-      'v1/gallery/albums/1/images/upload',
+      url,
       formData,
       {
         onUploadProgress: (event) => {

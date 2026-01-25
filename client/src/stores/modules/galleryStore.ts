@@ -10,11 +10,12 @@ export const useGalleryStore = defineStore('gallery', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  async function uploadImages(items: IUploadItem[]) {
+  async function uploadFiles(url: string, items: IUploadItem[]) {
     try {
       const result = []
       for (const item of items) {
         const responseData: IJsonApiResponse = await galleryApi.upload(
+          url,
           item.file,
           (progress: number): void => { item.progress = progress }
         )
@@ -34,6 +35,6 @@ export const useGalleryStore = defineStore('gallery', () => {
   return {
     isLoading,
     error,
-    uploadImages
+    uploadFiles
   }
 })

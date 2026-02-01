@@ -12,6 +12,8 @@ class ChecklistItemTransformer extends TransformerAbstract
         return [
             'id' => $checklistItem->id,
             'title' => $checklistItem->title,
+            'is_declined' => $checklistItem->is_declined,
+            'decline_reason' => $checklistItem->decline_reason,
             'finished_at' => $checklistItem->finished_at?->format('Y-m-d H:i:s'),
             'created_at' => $checklistItem->created_at->format('Y-m-d H:i:s')
         ];

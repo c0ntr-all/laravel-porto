@@ -2,29 +2,27 @@
 
 namespace App\Containers\TaskManagerSection\Checklist\Data\Repositories;
 
-use App\Containers\TaskManagerSection\Checklist\Data\DTO\ChecklistItemCreateData;
-use App\Containers\TaskManagerSection\Checklist\Data\DTO\ChecklistItemUpdateData;
 use App\Containers\TaskManagerSection\Checklist\Models\ChecklistItem;
 
 class ChecklistItemRepository
 {
     /**
-     * @param ChecklistItemCreateData $dto
+     * @param array $data
      * @return mixed
      */
-    public function create(ChecklistItemCreateData $dto): ChecklistItem
+    public function create(array $data): ChecklistItem
     {
-        return ChecklistItem::create($dto->toArray());
+        return ChecklistItem::create($data);
     }
 
     /**
      * @param ChecklistItem $checklistItem
-     * @param ChecklistItemUpdateData $dto
+     * @param array $data
      * @return ChecklistItem
      */
-    public function update(ChecklistItem $checklistItem, ChecklistItemUpdateData $dto): ChecklistItem
+    public function update(ChecklistItem $checklistItem, array $data): ChecklistItem
     {
-        $checklistItem->update($dto->toArray());
+        $checklistItem->update($data);
 
         return $checklistItem;
     }

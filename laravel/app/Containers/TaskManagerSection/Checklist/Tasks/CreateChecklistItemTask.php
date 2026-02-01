@@ -21,6 +21,6 @@ class CreateChecklistItemTask extends ParentTask
      */
     public function run(ChecklistItemCreateData $dto): ChecklistItem
     {
-        return $this->checklistItemRepository->create($dto);
+        return $this->checklistItemRepository->create($dto->toArray());
     }
 }

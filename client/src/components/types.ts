@@ -9,3 +9,12 @@ export interface IIncludedItem {
   attributes: Record<string, any>
   relationships?: any
 }
+
+export interface IAction {
+  name: string
+  label: string
+  icon: string
+  color?: string
+  is_active: boolean
+  func(): void
+}

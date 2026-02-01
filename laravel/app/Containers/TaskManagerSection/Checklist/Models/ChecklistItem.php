@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $checklist_id
+ * @property boolean $is_declined
+ * @property string|null $decline_reason
  * @property string $title
  * @property int $position
  * @property \Illuminate\Support\Carbon|null $finished_at
@@ -32,6 +34,8 @@ class ChecklistItem extends Model
         'checklist_id',
         'title',
         'position',
+        'is_declined',
+        'decline_reason',
         'finished_at',
         'created_at',
         'updated_at'

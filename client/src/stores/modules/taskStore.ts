@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { taskApi } from 'src/api/requests/taskApi'
 import { ITask, IUpdateTaskResponse } from 'src/types/TaskManager/task'
+import { handleApiError, handleApiSuccess, normalizeApiItemResponse } from 'src/utils/jsonapi'
 
 export const useTaskStore = defineStore('task', {
   state: () => ({
@@ -29,6 +30,20 @@ export const useTaskStore = defineStore('task', {
 
     async updateTaskContent(id: string, content: string): Promise<IUpdateTaskResponse> {
       return this.updateTask(id, { content })
+    },
+
+    async updateChecklistItem(taskId, checklistId, checklistItemId, payload) {
+      try {
+        const responseData = await taskApi.updateChecklistItem(taskId, checklistId, checklistItemId, payload)
+
+        handleApiSuccess(responseData)
+
+        return normalizeApiItemResponse(responseData)
+      } catch (error) {
+        handleApiError(error)
+
+        return error
+      }
     }
   }
 })

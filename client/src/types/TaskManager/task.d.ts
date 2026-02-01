@@ -6,6 +6,8 @@ export interface IChecklistItem {
   title: string
   created_at: string
   finished_at: string | null
+  is_declined: boolean
+  decline_reason: string | null
 }
 
 export interface IChecklist {
@@ -237,6 +239,39 @@ export interface ICreateReminderResponse {
       interval: string
       is_active: boolean
       datetime: string
+      created_at: string
+      updated_at: string
+    }
+  },
+  meta: {
+    message?: string
+  }
+}
+
+export interface IChecklistItemResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      title: string
+      is_declined: boolean
+      decline_reason: string
+      finished_at: string
+      created_at: string
+      updated_at: string
+    }
+  },
+  meta: {
+    message?: string
+  }
+}
+
+export interface IUpdateChecklistResponse {
+  data: {
+    type: string
+    id: string
+    attributes: {
+      title: string
       created_at: string
       updated_at: string
     }

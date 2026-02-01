@@ -11,6 +11,8 @@ use Spatie\LaravelData\Optional;
 class ChecklistItemUpdateData extends Data
 {
     public string|Optional $title;
+    public bool|Optional $is_declined;
+    public string|Optional $decline_reason;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]
     public Carbon|Optional|null $finished_at;
 

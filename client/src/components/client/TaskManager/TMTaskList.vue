@@ -1,7 +1,7 @@
 <template>
   <q-card class="list bg-grey-4">
     <q-card-section class="list__header">
-      <p>{{ list.attributes.title }}</p>
+      <p>{{ list.title }}</p>
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">
@@ -14,8 +14,8 @@
         />
         <q-dialog v-model="isDialogOpen" @hide="closeTask">
           <TMTask
-            v-if="selectedTask"
-            :task="selectedTask"
+            v-if="selectedTaskId !== null"
+            :task-id="selectedTaskId"
             @closed="closeTask"
           />
         </q-dialog>
@@ -29,7 +29,7 @@
       <div v-if="showAddForm" class="list__add-form">
         <q-input
           @keyup.enter="createTask"
-          v-model="model.newCardName"
+          v-model="model.taskTitle"
           ref="taskAddTextarea"
           type="textarea"
           input-style="height: 60px; resize: none"
@@ -60,29 +60,34 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, nextTick } from 'vue'
-import { AxiosError } from 'axios'
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { ICreateTaskResponse, ITask, ITaskList } from 'src/types/TaskManager/task'
+import { ref, computed, nextTick } from 'vue'
+import { useTaskStore } from 'src/stores/modules/taskStore'
+import { handleApiError } from 'src/utils/jsonapi'
+import { ITask, ITaskList } from 'src/types/TaskManager/task'
 import TMTask from 'src/components/client/TaskManager/TMTask.vue'
 import TMTaskListItem from 'src/components/client/TaskManager/TMTaskListItem.vue'
+
+const taskStore = useTaskStore()
 
 const props = defineProps<{
   list: ITaskList
 }>()
+
 const showAddForm = ref<boolean>(false)
 const taskAddTextarea = ref<HTMLElement | null>(null)
-const tasks = ref<ITask[]>(props.list.tasks?.data || [])
-const model = ref<{ newCardName: string, newCardContent: string }>({
-  newCardName: '',
-  newCardContent: ''
+const model = ref<{ taskTitle: string, taskContent: string }>({
+  taskTitle: '',
+  taskContent: ''
 })
-const selectedTask = ref<ITask | null>(null)
+const selectedTaskId = ref<string | null>(null)
 const isDialogOpen = ref(false)
 
+const tasks = computed(() => {
+  return props.list.tasksIds?.map(id => taskStore.tasks.byId[id])
+})
+
 const openTask = (task: ITask) => {
-  selectedTask.value = task
+  selectedTaskId.value = task.id
   isDialogOpen.value = true
 }
 
@@ -102,42 +107,17 @@ const closeAddForm = () => {
 }
 
 const clearModel = () => {
-  model.value.newCardName = ''
+  model.value.taskTitle = ''
 }
 
 const createTask = async (): Promise<void> => {
-  const cardName = model.value.newCardName
-
-  await api.post<ICreateTaskResponse>('v1/task-manager/tasks', {
-    title: cardName,
+  await taskStore.createTask({
+    title: model.value.taskTitle,
     task_list_id: props.list.id
-  }).then(response => {
-    handleApiSuccess(response.data)
-
-    const newTask: ITask = {
-      id: response.data.data.id,
-      title: response.data.data.attributes.title,
-      content: response.data.data.attributes.content || '',
-      finished_at: null,
-      is_declined: false,
-      checklists: {
-        data: [],
-        meta: {
-          count: 0
-        }
-      },
-      comments: {
-        data: [],
-        meta: {
-          count: 0
-        }
-      }
-    }
-
-    tasks.value.push(newTask)
-    clearModel()
-  }).catch((error: AxiosError<{ message: string }>) => {
+  }).catch(error => {
     handleApiError(error)
+  }).finally(() => {
+    clearModel()
   })
 }
 </script>

@@ -1,5 +1,8 @@
 import { Notify } from 'quasar'
 import { AxiosError } from 'axios'
+import { StoreEntity } from 'src/types/store'
+import {IJsonApiResource} from "src/types";
+import {updateObject} from "src/utils/helpers";
 
 interface IIncluded {
   type: string
@@ -255,4 +258,192 @@ export function buildFilterForUrl(filters: Record<string, any>): string {
   }
 
   return params.toString()
+}
+
+// NEW
+
+function indexIncluded(included: IJsonApiResource[] = []) {
+  const map = new Map<string, IJsonApiResource>()
+
+  for (const item of included) {
+    map.set(`${item.type}:${item.id}`, item)
+  }
+
+  return map
+}
+
+export function normalizeEntity<T extends { id: string }>(
+  entity: JsonApiResource,
+  included: JsonApiResource[] = []
+): { entity: T; related: Record<string, T[]> } {
+  const includedMap = new Map(
+    included.map(i => [`${i.type}:${i.id}`, i])
+  )
+
+  const related: Record<string, T[]> = {}
+  const visited = new Set<string>()
+
+  function normalizeRecursive(resource: JsonApiResource): T {
+    const key = `${resource.type}:${resource.id}`
+    if (visited.has(key)) {
+      return {
+        id: resource.id,
+        ...(resource.attributes ?? {})
+      } as T
+    }
+
+    visited.add(key)
+
+    const normalized: any = {
+      id: resource.id,
+      type: resource.type,
+      ...(resource.attributes ?? {})
+    }
+
+    if (resource.relationships) {
+      for (const relName in resource.relationships) {
+        const relData = resource.relationships[relName].data
+        if (!relData) {
+          normalized[`${relName}Ids`] = []
+          continue
+        }
+
+        const relArray = Array.isArray(relData)
+          ? relData
+          : [relData]
+
+        normalized[`${relName}Ids`] = relArray.map(r => r.id)
+
+        for (const rel of relArray) {
+          const includedItem = includedMap.get(
+            `${rel.type}:${rel.id}`
+          )
+
+          if (!includedItem) continue
+
+          const normalizedRelated = normalizeRecursive(
+            includedItem
+          )
+
+          if (!related[relName]) {
+            related[relName] = []
+          }
+
+          // защита от дублей
+          if (
+            !related[relName].some(
+              i => i.id === normalizedRelated.id
+            )
+          ) {
+            related[relName].push(normalizedRelated)
+          }
+        }
+      }
+    }
+
+    return normalized as T
+  }
+
+  const normalizedEntity = normalizeRecursive(entity)
+
+  return {
+    entity: normalizedEntity,
+    related
+  }
+}
+
+export function normalizeEntityCollection(
+  data: IJsonApiResource[],
+  included: IJsonApiResource[] = []
+) {
+  const includedIndex = indexIncluded(included)
+
+  const entities: Record<string, Record<string, any>> = {}
+
+  function ensureBucket(type: string) {
+    if (!entities[type]) {
+      entities[type] = {}
+    }
+  }
+
+  function normalizeResource(resource: IJsonApiResource) {
+    const id = resource.id
+    const type = resource.type
+
+    ensureBucket(type)
+
+    const normalized: any = {
+      id,
+      type,
+      ...(resource.attributes ?? {})
+    }
+
+    if (resource.relationships) {
+      for (const relName in resource.relationships) {
+        const rel = resource.relationships[relName].data
+
+        if (!rel) {
+          normalized[`${relName}Ids`] = []
+          continue
+        }
+
+        if (Array.isArray(rel)) {
+          const ids: string[] = []
+
+          for (const r of rel) {
+            ids.push(r.id)
+
+            const includedItem = includedIndex.get(`${r.type}:${r.id}`)
+            if (includedItem) {
+              normalizeResource(includedItem)
+            }
+          }
+
+          normalized[`${relName}Ids`] = ids
+        } else {
+          normalized[`${relName}Id`] = rel.id
+
+          const includedItem = includedIndex.get(`${rel.type}:${rel.id}`)
+          if (includedItem) {
+            normalizeResource(includedItem)
+          }
+        }
+      }
+    }
+
+    entities[type][id] = normalized
+  }
+
+  for (const item of data) {
+    normalizeResource(item)
+  }
+
+  return entities
+}
+
+/**
+ * Целиком обновляет entity в сторе по id
+ */
+export function upsertEntity<T extends { id: string }>(
+  store: StoreEntity<T>,
+  entity: T
+) {
+  if (!store.byId[entity.id]) {
+    store.allIds.push(entity.id)
+  }
+
+  store.byId[entity.id] = entity
+}
+
+/**
+ * Поточечно обновляет свойства entity в сторе по id
+ */
+export function patchEntity<T extends { id: string }>(
+  store: StoreEntity<T>,
+  entity: T
+) {
+  const object = store.byId[entity.id]
+  const updated = updateObject(object, entity)
+
+  upsertEntity(store, updated)
 }

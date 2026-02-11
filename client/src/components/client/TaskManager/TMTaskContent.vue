@@ -12,6 +12,7 @@
       min-height="5rem"
       autofocus
       @keyup.enter.stop
+      :caret='true'
       counter
     />
     <div class="q-pt-sm">

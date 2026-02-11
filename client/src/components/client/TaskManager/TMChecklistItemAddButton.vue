@@ -44,15 +44,14 @@ import { computed, inject, nextTick, ref } from 'vue'
 const props = defineProps<{
   checklistId: string
 }>()
-const emit = defineEmits<{
-  (e: 'processed', value: any): void
-}>()
 
 const formText = ref<HTMLElement | null>(null)
 const model = ref<string | null>(null)
 const activeFormId = inject('activeFormId', ref<string | null>(null))
 const setActiveChecklistForm = inject<{(id: string | null): void}>('setActiveChecklistForm')!
 const isActive = computed(() => activeFormId.value === props.checklistId)
+
+const createChecklistItem = inject('createChecklistItem')
 
 const openForm = () => {
   setActiveChecklistForm(props.checklistId)
@@ -67,15 +66,15 @@ const closeForm = () => {
   }
 }
 
-const handleForm = () => {
-  emit('processed', model)
+const clearModel = () => {
+  model.value = null
 }
 
-defineExpose({
-  clearModel: () => {
-    model.value = null
-  }
-})
+const handleForm = () => {
+  createChecklistItem(model.value).then(() => {
+    clearModel()
+  })
+}
 </script>
 
 <style scoped>

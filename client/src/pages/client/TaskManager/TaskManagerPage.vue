@@ -13,19 +13,19 @@
     <p>Total lists: {{ listsCount }}</p>
     <div v-if="showAddForm" class="list__add-form q-mb-lg">
       <q-input
-        @keyup.enter="createList"
+        @keyup.enter="createTaskList"
         v-model="model.newListName"
         ref="listAddTextarea"
         class="list__add-input q-mb-sm"
         dense
         outlined
       />
-      <q-btn @click="createList" label="Create a list" color="primary" class="q-mr-sm" no-caps/>
+      <q-btn @click="createTaskList" label="Create a list" color="primary" class="q-mr-sm" no-caps/>
       <q-btn @click="closeAddForm" icon="close" color="danger" size="md" flat round dense/>
     </div>
     <div class="task-lists row items-start q-gutter-md q-mb-lg">
       <TMTaskList
-        v-for="list in taskLists"
+        v-for="list in listsWithTasks"
         :list="list"
         :key="list.id"
         :ref="'list-ref-' + list.id"
@@ -35,82 +35,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { useQuasar } from 'quasar'
-import { api } from 'src/boot/axios'
-import { handleApiError, normalizeApiResponse } from 'src/utils/jsonapi'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { handleApiError } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import TMTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
-import { ITaskList } from 'src/types/TaskManager/task'
+import { useTaskStore } from 'src/stores/modules/taskStore'
 
-interface IResponseTaskList {
-  type: string
-  id: string
-  attributes: {
-    title: string
-    created_at: string
-  }
-  relationships: {
-    tasks: {
-      data: [],
-      meta: {
-        tasks_count: bigint
-      }
-    }
-  }
-}
+// --- Store ---
+const taskStore = useTaskStore()
 
-interface IRelationshipData {
-  type: string
-  id: string
-  attributes: object
-}
-
-interface IRelationships {
-  [key: string]: {
-    data: IRelationshipData[]
-  }
-}
-
-interface IncludedItem {
-  type: string
-  id: string
-  attributes: object
-  relationships?: IRelationships
-}
-
-interface GetListApiResponse {
-  data: IResponseTaskList[]
-  attributes: {
-    title: string
-    created_at: string
-  }
-  included?: IncludedItem[]
-  meta: {
-    count: number
-    message?: string
-  }
-}
-
-interface CreateListApiResponse {
-  data: {
-    id: string
-    attributes: {
-      title: string
-      created_at: string
-    }
-  }
-  included?: IncludedItem[]
-  meta: {
-    count: number
-    message?: string
-  }
-}
-
-const $q = useQuasar()
-
+// --- State ---
 const showAddForm = ref<boolean>(false)
-const taskLists = ref<ITaskList[]>([])
 const listsCount = ref<number>(0)
 const loading = ref<boolean>(true)
 const listAddTextarea = ref<HTMLElement | null>(null)
@@ -118,6 +53,12 @@ const model = ref<{ newListName: string }>({
   newListName: ''
 })
 
+// --- Computed ---
+const listsWithTasks = computed(() =>
+  taskStore.taskLists.allIds.map(listId => taskStore.taskLists.byId[listId])
+)
+
+// --- Methods ---
 const openAddForm = () => {
   showAddForm.value = true
   nextTick(() => {
@@ -129,44 +70,23 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
-const createList = async (): Promise<void> => {
-  await api.post<CreateListApiResponse>('v1/task-manager/task-lists', {
-    title: model.value.newListName
-  }).then(response => {
-    $q.notify({
-      type: 'positive',
-      message: response.data.meta.message || 'Task list successfully created!'
+const getTaskLists = async (): Promise<void> => {
+  await taskStore.getTaskLists()
+    .catch(error => {
+      handleApiError(error)
     })
-
-    const newTaskList: ITaskList = {
-      id: response.data.data.id,
-      attributes: {
-        title: response.data.data.attributes.title
-      },
-      tasks: {
-        data: []
-      }
-    }
-
-    taskLists.value.push(newTaskList)
-    clearModel()
-  }).catch(error => {
-    handleApiError(error)
-  })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
-const getTaskLists = async (): Promise<void> => {
-  loading.value = true
-  await api.get<GetListApiResponse>('v1/task-manager/task-lists')
-    .then(response => {
-      const normalizedResponse = normalizeApiResponse(response.data)
-
-      taskLists.value = normalizedResponse.data as unknown as ITaskList[]
-      listsCount.value = response.data.meta.count
-    }).catch(error => {
+const createTaskList = async (): Promise<void> => {
+  await taskStore.createTaskList({ title: model.value.newListName })
+    .catch(error => {
       handleApiError(error)
-    }).finally(() => {
-      loading.value = false
+    })
+    .finally(() => {
+      clearModel()
     })
 }
 
@@ -174,6 +94,7 @@ const clearModel = () => {
   model.value.newListName = ''
 }
 
+// --- Hooks ---
 onMounted(() => {
   getTaskLists()
 })

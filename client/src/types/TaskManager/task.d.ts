@@ -78,6 +78,7 @@ export interface ITask {
   content?: string
   finished_at: string | null
   is_declined: boolean
+  isHydrated: boolean // If full Task loaded
   checklists?: {
     data: IChecklist[],
     meta: {
@@ -101,12 +102,8 @@ export interface ITask {
 
 export interface ITaskList {
   id: string
-  attributes: {
-    title: string
-  }
-  tasks?: {
-    data: ITask[]
-  }
+  title: string
+  tasks?: ITask[]
 }
 
 export interface ICreateTaskResponse {
@@ -172,24 +169,20 @@ export interface IDeleteTaskResponse {
   }
 }
 
-export interface ICreateCommentResponse {
-  data: {
-    type: string
-    id: string
-    attributes: {
-      name: string
-      content: string
-      created_at: string
-    }
-    relationships: {
-      user: {
-        data: IUser
+export interface IResponseTaskList {
+  type: string
+  id: string
+  attributes: {
+    title: string
+    created_at: string
+  }
+  relationships: {
+    tasks: {
+      data: [],
+      meta: {
+        tasks_count: bigint
       }
     }
-  },
-  included: IIncludedItem[]
-  meta: {
-    message?: string
   }
 }
 

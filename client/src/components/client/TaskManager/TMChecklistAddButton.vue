@@ -33,45 +33,20 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
-import { IChecklist, ICreateChecklistResponse } from 'src/types/TaskManager/task'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { AxiosError } from 'axios'
+import { useTaskStore } from 'src/stores/modules/taskStore'
+
+// --- Store ---
+const taskStore = useTaskStore()
 
 const props = defineProps<{
   taskId: string,
 }>()
 
-const emit = defineEmits<{
-  (e: 'created', value: IChecklist): void
-}>()
-
 const newChecklistTitle = ref('Check list')
 
 const createChecklist = () => {
-  api.post<ICreateChecklistResponse>(`v1/task-manager/tasks/${props.taskId}/checklists`, {
+  taskStore.createChecklist(props.taskId, {
     title: newChecklistTitle.value
-  }).then((response) => {
-    const responseData = response.data.data
-
-    const newChecklist = {
-      id: responseData.id,
-      title: responseData.attributes.title,
-      created_at: responseData.attributes.created_at,
-      updated_at: responseData.attributes.updated_at,
-      checklistItems: {
-        data: [],
-        meta: {
-          count: 1
-        }
-      }
-    }
-
-    emit('created', newChecklist)
-
-    handleApiSuccess(response.data)
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
   })
 }
 </script>

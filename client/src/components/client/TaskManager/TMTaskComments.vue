@@ -8,19 +8,16 @@
         placeholder="Write a comment..."
         filled
         autogrow
+        name="comment"
       />
       <q-btn @click="createComment" color="primary" label="Send"/>
     </div>
-    <div v-if="commentsData" class="comments-list column q-gutter-sm">
-      <q-card v-for="comment in commentsData" :key="comment.id">
-        <q-card-section class="flex justify-between">
-          <span>{{ comment.user.data.name }}</span>
-          <time class="time">{{ comment.created_at }}</time>
-        </q-card-section>
-        <q-card-section>
-          {{ comment.content }}
-        </q-card-section>
-      </q-card>
+    <div v-if="comments.length" class="comments-list column q-gutter-sm">
+      <TMTaskComment
+        v-for="comment in comments"
+        :key="comment.id"
+        :comment="comment"
+      />
     </div>
     <p v-else class="text-grey-5">There are no comments!</p>
   </div>
@@ -28,52 +25,26 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
-import { IComment, ICreateCommentResponse } from 'src/types/TaskManager/task'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { AxiosError } from 'axios'
+import { IComment } from 'src/types/TaskManager/task'
+import TMTaskComment from 'src/components/client/TaskManager/TMTaskComment.vue'
+import { useTaskStore } from 'src/stores/modules/taskStore'
+
+const taskStore = useTaskStore()
 
 const props = defineProps<{
-  commentsData: IComment[],
+  comments: IComment[],
   taskId: string,
-}>()
-
-const emit = defineEmits<{
-  (e: 'created', value: IComment): void
 }>()
 
 const commentModel = ref<string>('')
 
-const createComment = () => {
-  api.post<ICreateCommentResponse>('v1/comments', {
+async function createComment() {
+  await taskStore.createComment({
     commentable_id: props.taskId,
     commentable_type: 'tm_tasks',
     content: commentModel.value
-  }).then((response) => {
-    const responseData = response.data.data
-
-    const newComment = {
-      id: responseData.id,
-      content: responseData.attributes.content,
-      created_at: responseData.attributes.created_at,
-      user: {
-        data: {
-          id: responseData.relationships.user.data.id,
-          name: response.data.included.filter(
-            included => included.type === 'user' && included.id === responseData.relationships.user.data.id
-          )[0].attributes.name as string,
-          email: responseData.relationships.user.data.email
-        }
-      }
-    }
-
-    emit('created', newComment)
-
+  }).then(() => {
     clearCommentModel()
-
-    handleApiSuccess(response.data)
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
   })
 }
 

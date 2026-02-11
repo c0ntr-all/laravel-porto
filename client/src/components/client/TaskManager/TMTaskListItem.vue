@@ -26,8 +26,10 @@
 import { computed } from 'vue'
 import TMTaskListItemActionsButton from 'src/components/client/TaskManager/TMTaskListItemActionsButton.vue'
 import { ITask } from 'src/types/TaskManager/task'
-import { useTaskApiRequests } from 'src/composables/client/TaskManager/useTaskApiRequests'
 import TMTaskListItemPanel from 'src/components/client/TaskManager/TMTaskListItemPanel.vue'
+import { useTaskStore } from 'src/stores/modules/taskStore'
+
+const taskStore = useTaskStore()
 
 const props = defineProps<{
   task: ITask
@@ -36,17 +38,20 @@ const emit = defineEmits<{
   (e: 'opened', task: ITask): void
 }>()
 
-const {
-  task,
-  switchTaskFinishing,
-  switchTaskDeclanation,
-  deleteTask
-} = useTaskApiRequests(props.task)
+const isFinished = computed(() => props.task.finished_at !== null)
+const isDeclined = computed(() => props.task.is_declined)
 
-const isFinished = computed(() => task.value.finished_at !== null)
-const isDeclined = computed(() => task.value.is_declined === true)
+const openTask = () => emit('opened', props.task)
 
-const openTask = () => emit('opened', task.value)
+async function switchTaskFinishing(status: boolean) {
+  return await taskStore.updateTask(props.task.id, { is_finished: status })
+}
+async function switchTaskDeclanation(status: boolean) {
+  return await taskStore.updateTask(props.task.id, { is_declined: status })
+}
+async function deleteTask() {
+  return await taskStore.deleteTask(props.task.id)
+}
 </script>
 
 <style scoped lang="scss">

@@ -73,21 +73,16 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { getCurrentDateTime } from 'src/utils/datetime'
-import { ICreateReminderResponse, IReminderItem } from 'src/types/TaskManager/task'
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { AxiosError } from 'axios'
-import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import { list } from 'radash'
+import { useTaskStore } from 'src/stores/modules/taskStore'
+import { getCurrentDateTime } from 'src/utils/datetime'
+import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+
+const taskStore = useTaskStore()
 
 const props = defineProps<{
   taskId: string,
   isReminderAvailable: boolean,
-}>()
-
-const emit = defineEmits<{
-  (e: 'created', value: IReminderItem): void
 }>()
 
 const minutesOptions = list(1, 60)
@@ -202,25 +197,10 @@ const clearReminderModel = () => {
   }
 }
 
-const createReminder = () => {
+const createReminder = async () => {
   const preparedRequestData = prepareRequestData(reminderModel.value)
-  api.post<ICreateReminderResponse>(`v1/task-manager/tasks/${props.taskId}/reminder`, {
-    ...preparedRequestData
-  }).then((response) => {
-    const responseData = response.data.data
-    const { id, attributes } = responseData
-
-    const newReminder: IReminderItem = {
-      id,
-      ...attributes
-    }
-
-    emit('created', newReminder)
-
+  await taskStore.createReminder(props.taskId, preparedRequestData).then(() => {
     clearReminderModel()
-    handleApiSuccess(response.data)
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
   })
 }
 </script>

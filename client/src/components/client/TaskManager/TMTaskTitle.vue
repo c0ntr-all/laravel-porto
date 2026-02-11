@@ -9,14 +9,15 @@
     >
       <q-input
         v-model="scope.value"
-        @keyup.enter="updateTitle(scope.value)"
+        @keyup.enter="saveTitle(scope.value)"
         dense
         autofocus
         counter
+        name="title"
       />
       <div class="q-pt-sm">
-        <q-btn @click="updateTitle(scope.value)" label="Save" color="primary" flat/>
-        <q-btn @click="cancelUpdate" label="Cancel" color="primary" flat/>
+        <q-btn @click="saveTitle(scope.value)" label="Save" color="primary" flat/>
+        <q-btn @click="cancelSave" label="Cancel" color="primary" flat/>
       </div>
     </q-popup-edit>
   </div>
@@ -26,7 +27,7 @@
 import { ref } from 'vue'
 
 const emit = defineEmits<{
-  (e: 'updated', value: string): void
+  (e: 'saved', value: string): void
 }>()
 
 const title = defineModel<string>('title', {
@@ -35,22 +36,22 @@ const title = defineModel<string>('title', {
 const titleEditorRef = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 
 defineExpose({
-  onUpdateSuccess: () => {
+  onSaveSuccess: () => {
     titleEditorRef.value?.set()
   },
-  onUpdateError: () => {
+  onSaveError: () => {
     titleEditorRef.value?.cancel()
   }
 })
 
-const cancelUpdate = () => {
+const cancelSave = () => {
   if (titleEditorRef.value) {
     titleEditorRef?.value.cancel()
   }
 }
 
-const updateTitle = (value: string) => {
-  emit('updated', value)
+const saveTitle = (value: string) => {
+  emit('saved', value)
 }
 </script>
 

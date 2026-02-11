@@ -4,7 +4,7 @@
       <q-checkbox
         v-model="selectedItems"
         :val="item.id"
-        :disable="item.is_declined === 1"
+        :disable="item.is_declined"
         @click="updateStatus(item.id)"
       />
     </q-item-section>
@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, inject } from 'vue'
 import { IChecklistItem } from 'src/types/TaskManager/task'
 import AppActionsButton from 'src/components/default/AppActionsButton.vue'
 import { IAction } from 'src/components/types'
@@ -47,21 +47,26 @@ import { IAction } from 'src/components/types'
 const props = defineProps<{
   item: IChecklistItem
 }>()
+
+// Only one emit for decline because it needs a modal window for reason text and this modal should be one for all.
 const emit = defineEmits<{
-  (e: 'activate', value: IChecklistItem): void
   (e: 'decline', value: IChecklistItem): void
-  (e: 'update', value: IChecklistItem): void
-  (e: 'delete', value: IChecklistItem): void
 }>()
 
-const activateItem = () => {
-  emit('activate', props.item)
-}
+const updateChecklistItem = inject('updateChecklistItem')
+const deleteChecklistItem = inject('deleteChecklistItem')
+
 const declineItem = () => {
   emit('decline', props.item)
 }
 const deleteItem = () => {
-  emit('delete', props.item)
+  deleteChecklistItem(props.item.id)
+}
+const activateItem = () => {
+  updateChecklistItem(props.item.id, {
+    is_declined: false,
+    decline_reason: ''
+  })
 }
 
 const actions: IAction[] = computed(() => [{
@@ -90,16 +95,20 @@ const checklistItem = ref(props.item)
 const checklistItemTitlePopup = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 const selectedItems = defineModel<string[]>({ required: true })
 
-const closePopup = () => {
+const closeTitlePopup = () => {
   if (checklistItemTitlePopup.value) {
     checklistItemTitlePopup.value.cancel()
   }
 }
-
-const updateTitle = async (newTitle: string) => {
-  if (newTitle !== props.item.title) {
-    emit('update', { title: newTitle })
+const updateTitle = async (title: string) => {
+  if (title !== props.item.title) {
+    updateChecklistItem(props.item.id, { title })
+      .then(() => {
+        closeTitlePopup()
+      })
   }
+
+  closeTitlePopup()
 }
 
 const updateStatus = (id: string) => {
@@ -109,7 +118,7 @@ const updateStatus = (id: string) => {
 
   const status = !selectedItems.value.includes(id)
 
-  emit('update', { status })
+  updateChecklistItem(props.item.id, { status })
 }
 
 </script>

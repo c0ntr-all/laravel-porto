@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from 'src/stores/modules/user'
+import { useUserStore } from 'src/stores/modules/userStore'
 
 defineOptions({
   name: 'MainLayout'

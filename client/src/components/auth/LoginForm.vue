@@ -28,7 +28,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { useUserStore } from 'src/stores/modules/user'
+import { useUserStore } from 'src/stores/modules/userStore'
 
 const $q = useQuasar()
 const $router = useRouter()

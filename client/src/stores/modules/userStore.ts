@@ -7,7 +7,7 @@ interface Data {
 }
 
 export const useUserStore = defineStore({
-  id: 'user',
+  id: 'userStore',
   state: () => ({
     isAdmin: false,
     status: '',

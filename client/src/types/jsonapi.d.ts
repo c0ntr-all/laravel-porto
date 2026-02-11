@@ -12,15 +12,12 @@ export interface IHasManyRelationship {
   }
 }
 export interface IJsonApiResource {
-  id: string;
-  type: string;
-  attributes: Record<string, any>;
-  relationships?: Record<
-    string,
-    {
-      data: { id: string; type: string } | { id: string; type: string }[] | null;
-    }
-  >;
+  id: string
+  type: string
+  attributes?: Record<string, any>
+  relationships?: Record<string, {
+    data: { id: string; type: string } | { id: string; type: string }[] | null
+  }>
 }
 
 export interface IJsonApiResponse {

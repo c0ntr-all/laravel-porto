@@ -63,40 +63,54 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   async function createTaskList(payload: {title: string}) {
-    const responseData = await taskApi.createTaskList(payload)
-    const { entity } = normalizeEntity(responseData.data, responseData.included)
+    try {
+      const responseData = await taskApi.createTaskList(payload)
+      const { entity } = normalizeEntity(responseData.data, responseData.included)
 
-    upsertEntity(this.taskLists, entity)
+      entity.tasksIds = []
+
+      upsertEntity(this.taskLists, entity)
+    } catch (error: AxiosError<{ message: string }>) {
+      handleApiError(error)
+    }
   }
 
   async function getTask(id: string): Promise<void> {
-    const responseData = await taskApi.getTask<ITaskResponse>(id)
-    const { entity, related } = normalizeEntity(responseData.data, responseData.included)
+    try {
+      const responseData = await taskApi.getTask<ITaskResponse>(id)
+      const { entity, related } = normalizeEntity(responseData.data, responseData.included)
 
-    for (const type in related) {
-      const camelType = camel(type)
-      for (const id in related[type]) {
-        upsertEntity(this[camelType], related[type][id])
+      for (const type in related) {
+        const camelType = camel(type)
+        for (const id in related[type]) {
+          upsertEntity(this[camelType], related[type][id])
+        }
       }
+
+      entity.isHydrated = true
+
+      upsertEntity(this.tasks, entity)
+    } catch (error: AxiosError<{ message: string }>) {
+      handleApiError(error)
     }
-
-    entity.isHydrated = true
-
-    upsertEntity(this.tasks, entity)
   }
 
   async function createTask(payload: {title: string; task_list_id: number}): Promise<void> {
-    const responseData = await taskApi.createTask<ICreateTaskResponse>(payload)
-    const { entity } = normalizeEntity(responseData.data, responseData.included)
+    try {
+      const responseData = await taskApi.createTask<ICreateTaskResponse>(payload)
+      const { entity } = normalizeEntity(responseData.data, responseData.included)
 
-    entity.isHydrated = true
+      entity.isHydrated = true
 
-    upsertEntity(this.tasks, entity)
+      upsertEntity(this.tasks, entity)
 
-    // Add task to the taskIds of list
-    const list = taskLists.byId[entity.task_list_id]
-    if (!list.tasksIds.includes(entity.id)) {
-      list.tasksIds.push(entity.id)
+      // Add task to the taskIds of list
+      const list = taskLists.byId[entity.task_list_id]
+      if (!list.tasksIds.includes(entity.id)) {
+        list.tasksIds.push(entity.id)
+      }
+    } catch (error: AxiosError<{ message: string }>) {
+      handleApiError(error)
     }
   }
 
@@ -113,7 +127,7 @@ export const useTaskStore = defineStore('task', () => {
       upsertEntity(this.tasks, updated)
 
       handleApiSuccess(responseData)
-    } catch (error) {
+    } catch (error: AxiosError<{ message: string }>) {
       handleApiError(error)
     }
   }
@@ -195,12 +209,52 @@ export const useTaskStore = defineStore('task', () => {
       const responseData = await taskApi.updateChecklistItem(taskId, checklistId, checklistItemId, payload)
       const { entity } = normalizeEntity(responseData.data, responseData.included)
 
-      console.log(entity, payload)
+      patchEntity(this.checklistItems, entity)
+
+      handleApiSuccess(responseData)
+    } catch (error) {
+      handleApiError(error)
+    }
+  }
+
+  async function finishChecklistItem(taskId, checklistId, checklistItemId) {
+    try {
+      // Optimistic UI
+      checklistItems.byId[checklistItemId].finished_at = Date().toString()
+
+      const responseData = await taskApi.updateChecklistItem(taskId, checklistId, checklistItemId, {
+        is_finished: true
+      })
+      const { entity } = normalizeEntity(responseData.data, responseData.included)
 
       patchEntity(this.checklistItems, entity)
 
       handleApiSuccess(responseData)
     } catch (error) {
+      // Revert Optimistic UI
+      checklistItems.byId[checklistItemId].finished_at = null
+
+      handleApiError(error)
+    }
+  }
+
+  async function unfinishChecklistItem(taskId, checklistId, checklistItemId) {
+    try {
+      // Optimistic UI
+      checklistItems.byId[checklistItemId].finished_at = null
+
+      const responseData = await taskApi.updateChecklistItem(taskId, checklistId, checklistItemId, {
+        is_finished: false
+      })
+      const { entity } = normalizeEntity(responseData.data, responseData.included)
+
+      patchEntity(this.checklistItems, entity)
+
+      handleApiSuccess(responseData)
+    } catch (error) {
+      // Revert Optimistic UI
+      checklistItems.byId[checklistItemId].finished_at = Date().toString()
+
       handleApiError(error)
     }
   }
@@ -212,7 +266,7 @@ export const useTaskStore = defineStore('task', () => {
 
       const responseData = await taskApi.deleteChecklistItem(taskId, checklistId, checklistItemId)
 
-      const checklist = checklists.byId[checklistItem.checklist_id]
+      const checklist = checklists.byId[checklistId]
       if (checklist) {
         checklist.checklistItemsIds = checklist.checklistItemsIds.filter(id => id !== checklistItemId)
       }
@@ -295,6 +349,8 @@ export const useTaskStore = defineStore('task', () => {
     updateChecklist,
     createChecklistItem,
     updateChecklistItem,
+    finishChecklistItem,
+    unfinishChecklistItem,
     deleteChecklistItem,
     createProgress,
     createReminder,

@@ -26,4 +26,13 @@ class ChecklistItemRepository
 
         return $checklistItem;
     }
+
+    /**
+     * @param ChecklistItem $checklistItem
+     * @return bool
+     */
+    public function delete(ChecklistItem $checklistItem): bool
+    {
+        return $checklistItem->delete();
+    }
 }

@@ -94,11 +94,28 @@ const progressLabel = computed(() => (progress.value * 100) + '%')
 const checklistTitle = ref(props.checklist.title)
 const isOpenDeclineItemDialog = ref(false)
 const itemForDecline = ref(null) // Элемент чеклиста, который пользователь решил отклонить.
-const selectedItems = ref(
-  checklistItems.value
-    .filter(item => item.finished_at !== null)
-    .map(item => item.id)
-)
+const selectedItems = computed({
+  get() {
+    return checklistItems.value
+      .filter(item => item.finished_at !== null)
+      .map(item => item.id)
+  },
+
+  set(newIds: number[]) {
+    // синхронизируем стор
+    checklistItems.value.forEach(item => {
+      const shouldBeFinished = newIds.includes(item.id)
+
+      if (shouldBeFinished && !item.finished_at) {
+        taskStore.finishChecklistItem(props.task.id, props.checklist.id, item.id)
+      }
+
+      if (!shouldBeFinished && item.finished_at) {
+        taskStore.unfinishChecklistItem(props.task.id, props.checklist.id, item.id)
+      }
+    })
+  }
+})
 
 // --- Refs ---
 const checklistTitlePopupRef = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)

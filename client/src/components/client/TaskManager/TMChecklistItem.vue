@@ -5,7 +5,6 @@
         v-model="selectedItems"
         :val="item.id"
         :disable="item.is_declined"
-        @click="updateStatus(item.id)"
       />
     </q-item-section>
     <q-item-section>
@@ -41,8 +40,8 @@
 <script lang="ts" setup>
 import { computed, ref, inject } from 'vue'
 import { IChecklistItem } from 'src/types/TaskManager/task'
-import AppActionsButton from 'src/components/default/AppActionsButton.vue'
 import { IAction } from 'src/components/types'
+import AppActionsButton from 'src/components/default/AppActionsButton.vue'
 
 const props = defineProps<{
   item: IChecklistItem
@@ -110,17 +109,6 @@ const updateTitle = async (title: string) => {
 
   closeTitlePopup()
 }
-
-const updateStatus = (id: string) => {
-  if (props.item.is_declined) {
-    return
-  }
-
-  const status = !selectedItems.value.includes(id)
-
-  updateChecklistItem(props.item.id, { status })
-}
-
 </script>
 
 <style lang="scss" scoped>

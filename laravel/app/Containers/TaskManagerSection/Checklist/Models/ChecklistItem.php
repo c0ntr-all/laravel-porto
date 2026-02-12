@@ -42,7 +42,8 @@ class ChecklistItem extends Model
     ];
 
     protected $casts = [
-        'finished_at' => 'datetime'
+        'finished_at' => 'datetime',
+        'is_declined' => 'bool',
     ];
 
     public function checklist(): BelongsTo

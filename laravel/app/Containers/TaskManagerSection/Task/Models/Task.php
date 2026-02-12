@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * App\Models\Tasks\Task
  *
  * @property int $id
- * @property int $list_id
+ * @property int $task_list_id
  * @property string $title
  * @property string|null $content
  * @property bool $is_declined

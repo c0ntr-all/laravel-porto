@@ -23,7 +23,12 @@ class GetTaskAction
 
         return fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
-            ->parseIncludes(['comments'])
+            ->parseIncludes([
+                'comments.user',
+                'checklists.checklistItems',
+                'progress',
+                'reminder'
+            ])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

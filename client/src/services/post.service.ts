@@ -9,7 +9,7 @@ interface IResult {
   other: File[]
 }
 
-export async function uploadPostAttachments(files: File[]): Promise<string[] | undefined> {
+export async function uploadPostAttachments(files: File[]): Promise<{id: string, type: string}[] | undefined> {
   const fileGroups = groupFileTypes(files)
   const galleryStore = useGalleryStore()
 
@@ -19,7 +19,7 @@ export async function uploadPostAttachments(files: File[]): Promise<string[] | u
       const url = 'v1/gallery/albums/1/images/upload'
       const result = await galleryStore.uploadFiles(url, mappedImages)
 
-      return result ? result.map((item) => {
+      return result ? result.map((item): {id: string, type: string} => {
         return {
           id: item.id,
           type: item.type

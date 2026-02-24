@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import { defineStore } from 'pinia'
-import { ICommentPayload } from 'src/types'
+import { IComment, ICommentCreatePayload } from 'src/types'
 import { normalizeEntity, upsertEntity } from 'src/utils/jsonapi'
 import { StoreEntity } from 'src/types/store'
 import { commentApi } from 'src/api/requests/commentApi'
@@ -11,11 +11,11 @@ export const useCommentStore = defineStore('comment', () => {
     allIds: []
   })
 
-  async function createComment(payload: ICommentPayload) {
+  async function createComment(payload: ICommentCreatePayload) {
     const responseData = await commentApi.createComment(payload)
     const { entity } = normalizeEntity(responseData.data, responseData.included)
 
-    upsertEntity(this.comments, entity)
+    upsertEntity(comments, entity)
   }
   return {
     comments,

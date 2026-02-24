@@ -88,7 +88,7 @@ import { ref, watch } from 'vue'
 import { AxiosError } from 'axios'
 import { api } from 'src/boot/axios'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IProgressItem } from 'src/types/TaskManager/task'
+import { IProgress } from 'src/types/TaskManager/task'
 
 interface IUpdateChecklistResponse {
   data: {
@@ -109,7 +109,7 @@ interface IUpdateChecklistResponse {
 }
 
 const props = defineProps<{
-  progressItem: IProgressItem,
+  progressItem: IProgress,
   isLast: boolean
 }>()
 const progressItem = ref(props.progressItem)

@@ -60,7 +60,7 @@
           />
           <TMReminderAddButton
             :task-id="task.id"
-            :is-reminder-available="isReminderAvailable"
+            :is-reminder-available="!!reminder"
           />
         </q-card-section>
       </div>
@@ -81,11 +81,12 @@ import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAdd
 import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
 import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
 import TMTaskSkeleton from 'src/components/client/TaskManager/TMTaskSkeleton.vue'
-import { IChecklist, IComment, IProgressItem, IReminderItem, ITask } from 'src/types/TaskManager/task'
+import { IChecklist, IProgress, IReminderItem, ITask } from 'src/types/TaskManager/task'
+import { IComment } from 'src/types'
 
 interface ITaskPartsRef {
-  onUpdateError: () => void
-  onUpdateSuccess: () => void
+  onSaveSuccess: () => void
+  onSaveError: () => void
 }
 
 const taskStore = useTaskStore()
@@ -101,21 +102,26 @@ const content = ref<string>(task.value.content || '') // null to string cast
 const title = ref<string>(task.value.title || '')
 
 const checklists = computed<IChecklist[]>(() =>
-  task.value.checklistsIds.map(id => taskStore.checklists?.byId[id])
+  task.value.checklistsIds!.map(id => taskStore.checklists?.byId[id])
 )
-const progresses = computed<IProgressItem[]>(() =>
+const progresses = computed<IProgress[] | undefined>(() =>
   task.value.progressIds?.map(id => taskStore.progress.byId[id])
 )
 const comments = computed<IComment[]>(() =>
   task.value.commentsIds?.map(id => taskStore.comments.byId[id])
 )
-const reminder = ref<IReminderItem | null>(task.value.reminder || null)
+const reminder = computed<IReminderItem | null>(() => {
+  const reminder = task.value.reminderIds?.map(id => taskStore.reminder.byId[id])
+  if (reminder) {
+    return reminder[0]
+  }
+
+  return null
+})
+const isProgressAvailable = computed(() => progresses?.value?.filter(item => item.is_final).length === 0)
 
 const taskTitleRef = ref<ITaskPartsRef | null>(null)
 const taskContentRef = ref<ITaskPartsRef | null>(null)
-const isProgressAvailable = computed(() => progresses.value.filter(item => item.is_final).length === 0)
-const isReminderAvailable = computed(() => !task.value?.reminder)
-// const reminder = ref<IReminderItem | null>(task.value.reminder || null)
 const activeChecklistFormId = ref<string | null>(null)
 
 provide('activeFormId', activeChecklistFormId)
@@ -138,9 +144,9 @@ async function handleUpdateContent(newContent: string) {
   await taskStore.updateTask(task.value.id, {
     content: newContent
   }).then(() => {
-    taskContentRef.value?.onUpdateSuccess()
+    taskContentRef.value?.onSaveSuccess()
   }).catch(() => {
-    taskContentRef.value?.onUpdateError()
+    taskContentRef.value?.onSaveError()
   })
 }
 

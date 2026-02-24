@@ -54,7 +54,18 @@
 import { ref } from 'vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { getCurrentDateTime } from 'src/utils/datetime'
+import { IProgress } from 'src/types/TaskManager/task'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+
+interface IProgressTitleRef {
+  hasError: boolean
+  validate: () => void
+  resetValidation: () => void
+}
+
+interface IProgressMenuRef {
+  hide: () => void
+}
 
 const taskStore = useTaskStore()
 
@@ -69,27 +80,30 @@ const progressModel = ref({
   is_final: false,
   finished_at: getCurrentDateTime()
 })
-const newProgressMenuRef = ref(null)
-const progressTitleRef = ref(null)
+const newProgressMenuRef = ref<IProgressMenuRef | null>(null)
+const progressTitleRef = ref<IProgressTitleRef | null>(null)
 
 const createProgress = async () => {
-  progressTitleRef.value.validate()
+  if (progressTitleRef.value) {
+    progressTitleRef.value.validate()
 
-  if (!progressTitleRef?.value.hasError) {
-    await taskStore.createProgress(props.taskId, {
-      title: progressModel.value.title,
-      content: progressModel.value.content,
-      is_final: progressModel.value.is_final,
-      finished_at: progressModel.value.finished_at
-    })
-      .then(newProgressItem => {
-        clearProgressModel()
-        resetValidation()
+    if (!progressTitleRef.value.hasError) {
+      await taskStore.createProgress(props.taskId, {
+        title: progressModel.value.title,
+        content: progressModel.value.content,
+        is_final: progressModel.value.is_final,
+        finished_at: progressModel.value.finished_at
+      }).then((newProgressItem: IProgress | undefined) => {
+        if (newProgressItem) {
+          clearProgressModel()
+          resetValidation()
 
-        if (newProgressItem.is_final) {
-          newProgressMenuRef.value.hide()
+          if (newProgressMenuRef.value && newProgressItem.is_final) {
+            newProgressMenuRef.value.hide()
+          }
         }
       })
+    }
   }
 }
 
@@ -101,7 +115,9 @@ const clearProgressModel = () => {
 }
 
 const resetValidation = () => {
-  progressTitleRef?.value.resetValidation()
+  if (progressTitleRef.value) {
+    progressTitleRef.value.resetValidation()
+  }
 }
 </script>
 

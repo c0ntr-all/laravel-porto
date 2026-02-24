@@ -9,6 +9,7 @@
     },
     "typeRoots": [
       "./src/types",
+      "./src/symbols",
       "./node_modules/@types"
     ]
   },

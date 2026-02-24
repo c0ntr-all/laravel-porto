@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="refDialog" v-model="prompt" persistent>
+  <q-dialog ref="refDialog" v-model="dialogModel" persistent>
     <q-card style="min-width: 350px">
       <q-card-section>
         <div class="text-h6">Decline Reason</div>
@@ -9,11 +9,11 @@
         <q-input
           ref="refInput"
           v-model="declineReason"
-          @keyup.enter="prompt = false"
+          @keyup.enter="submitDecline"
           name="decline-reason"
           :rules="[
-            (val: any) => !!val || 'Field must not be empty',
-            (val: any) => val.length >= 5 || '5 symbols min'
+            (val: string) => !!val || 'Field must not be empty',
+            (val: string) => val.length >= 5 || '5 symbols min'
           ]"
           dense
           autofocus
@@ -22,46 +22,78 @@
 
       <q-card-actions align="right" class="text-primary">
         <q-btn flat label="Cancel" @click="cancelDecline" />
-        <q-btn flat label="Add reason" @click="decline" />
+        <q-btn flat label="Add reason" @click="submitDecline" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-const prompt = defineModel(false)
-const declineReason = ref('')
-const refDialog = ref(null)
-const refInput = ref(null)
+interface IInputRef {
+  hasError: boolean
+  validate: () => boolean | Promise<boolean>
+  resetValidation: () => void
+}
+
+interface IDialogRef {
+  hide: () => void
+  show: () => void
+}
+
+// Исправляем defineModel - используем стандартный подход
+const props = defineProps<{
+  modelValue?: boolean | null
+}>()
 
 const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
   (e: 'declined', value: string): void
 }>()
 
-const decline = () => {
-  refInput?.value.validate()
+// Используем старое связывание т.к. defineModel не принимается по типам в q-dialog
+const dialogModel = computed({
+  get: () => props.modelValue ?? false,
+  set: (value: boolean) => emit('update:modelValue', value)
+})
 
-  if (!refInput?.value.hasError) {
-    emit('declined', declineReason.value)
-    hideDialog()
-    clearModel()
+const declineReason = ref('')
+const refDialog = ref<IDialogRef | null>(null)
+const refInput = ref<IInputRef | null>(null)
+
+const submitDecline = async () => {
+  if (refInput.value) {
+    const isValid = await refInput.value.validate()
+
+    if (!refInput.value.hasError && isValid) {
+      emit('declined', declineReason.value)
+      hideDialog()
+      clearModel()
+    }
   }
 }
+
 const cancelDecline = () => {
   hideDialog()
   clearModel()
 }
+
 const clearModel = () => {
-  refInput?.value.resetValidation()
-  declineReason.value = ''
+  if (refInput.value) {
+    refInput.value.resetValidation()
+    declineReason.value = ''
+  }
 }
+
 const hideDialog = () => {
-  refDialog?.value.hide()
+  dialogModel.value = false
+
+  if (refDialog.value) {
+    refDialog.value.hide()
+  }
 }
 </script>
 
 <style scoped lang="scss">
-
 </style>

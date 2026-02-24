@@ -34,7 +34,7 @@ export const usePostStore = defineStore('post', () => {
     try {
       const postCreateDto: IPostCreateDto = mapPostFormToCreateDto(postModel)
 
-      let attachmentsIds: string[] | undefined = []
+      let attachmentsIds: {id: string, type: string}[] | undefined = []
       if (attachmentModel?.length) {
         attachmentsIds = await uploadPostAttachments(attachmentModel)
       }
@@ -69,7 +69,7 @@ export const usePostStore = defineStore('post', () => {
     try {
       const postUpdateDto: IPostUpdateDto = mapPostFormToUpdateDto(postModel, originalPost)
 
-      let attachmentsIds: string[] | undefined = []
+      let attachmentsIds: {id: string, type: string}[] | undefined = []
       if (attachmentModel?.length) {
         attachmentsIds = await uploadPostAttachments(attachmentModel)
       }

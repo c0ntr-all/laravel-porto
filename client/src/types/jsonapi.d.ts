@@ -16,15 +16,18 @@ export interface IJsonApiResource {
   type: string
   attributes?: Record<string, any>
   relationships?: Record<string, {
-    data: { id: string; type: string } | { id: string; type: string }[] | null
+    data: IRelationshipItem | IRelationshipItem[] | null
   }>
 }
 
-export interface IJsonApiResponse {
-  data: IJsonApiResource | IJsonApiResource[];
+export interface IJsonApiResponse<T = IJsonApiResource> {
+  data: T | T[];
   included?: IJsonApiResource[];
   meta?: {
     count?: number,
+    message?: string
     correlation_uuid?: string
   }
 }
+
+export type ApiError = import('axios').AxiosError<{ message: string }>

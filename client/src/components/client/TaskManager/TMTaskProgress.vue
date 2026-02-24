@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ITask, IProgressItem } from 'src/types/TaskManager/task'
+import { ITask, IProgress } from 'src/types/TaskManager/task'
 import TMTaskProgressItem from 'src/components/client/TaskManager/TMTaskProgressItem.vue'
 
 const props = defineProps<{
-  progress: IProgressItem[]
+  progress: IProgress[]
   task: ITask
 }>()
 

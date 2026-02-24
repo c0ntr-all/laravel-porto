@@ -1,8 +1,8 @@
 import { api } from 'src/boot/axios'
-import { ICommentPayload } from 'src/types'
+import { ICommentCreatePayload } from 'src/types'
 
 export const commentApi = {
-  async createComment(payload: ICommentPayload) {
+  async createComment(payload: ICommentCreatePayload) {
     const response = await api.post('v1/comments', payload)
 
     return response.data

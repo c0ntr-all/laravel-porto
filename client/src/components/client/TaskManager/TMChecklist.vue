@@ -39,7 +39,6 @@
           :task-id="task.id"
           :checklist-id="checklist.id"
           v-model="selectedItems"
-          @update="patch => onUpdateItem(item, patch)"
           @decline="onDeclineItem"
           dense
         />
@@ -61,6 +60,7 @@ import { computed, ref, provide } from 'vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import TMChecklistItemAddButton from 'src/components/client/TaskManager/TMChecklistItemAddButton.vue'
 import { IChecklist, IChecklistItem, ITask } from 'src/types/TaskManager/task'
+import { createChecklistItemKey, updateChecklistItemKey, deleteChecklistItemKey } from 'src/symbols/task-manager.keys'
 import TMChecklistItem from 'src/components/client/TaskManager/TMChecklistItem.vue'
 import TMChecklistItemDeclineDialog from 'src/components/client/TaskManager/TMChecklistItemDeclineDialog.vue'
 
@@ -91,9 +91,9 @@ const progress = computed(() => {
 const progressLabel = computed(() => (progress.value * 100) + '%')
 
 // --- State ---
-const checklistTitle = ref(props.checklist.title)
-const isOpenDeclineItemDialog = ref(false)
-const itemForDecline = ref(null) // Элемент чеклиста, который пользователь решил отклонить.
+const checklistTitle = ref<string>(props.checklist.title)
+const isOpenDeclineItemDialog = ref<boolean>(false)
+const itemForDecline = ref<IChecklistItem | null>(null) // Элемент чеклиста, который пользователь решил отклонить.
 const selectedItems = computed({
   get() {
     return checklistItems.value
@@ -101,7 +101,7 @@ const selectedItems = computed({
       .map(item => item.id)
   },
 
-  set(newIds: number[]) {
+  set(newIds: string[]) {
     // синхронизируем стор
     checklistItems.value.forEach(item => {
       const shouldBeFinished = newIds.includes(item.id)
@@ -127,7 +127,7 @@ const closeChecklistPopup = () => {
     checklistTitlePopupRef?.value.cancel()
   }
 }
-const createChecklistItem = async (title: string | null) => {
+const createChecklistItem = async (title: string) => {
   await taskStore.createChecklistItem(props.task.id, props.checklist.id, { title })
 }
 
@@ -143,16 +143,18 @@ const updateChecklistTitle = async (title: string) => {
 }
 
 // Открывает модальное окно для причины отклонения и назначает элемент для отклонения
-const onDeclineItem = checklistItem => {
+const onDeclineItem = (checklistItem: IChecklistItem) => {
   itemForDecline.value = checklistItem
   isOpenDeclineItemDialog.value = true
 }
-const processDeclineItem = async declineReason => {
-  await taskStore.updateChecklistItem(props.task.id, props.checklist.id, itemForDecline.value.id, {
-    is_declined: true,
-    decline_reason: declineReason,
-    is_finished: false
-  })
+const processDeclineItem = async (declineReason: string) => {
+  if (itemForDecline.value) {
+    await taskStore.updateChecklistItem(props.task.id, props.checklist.id, itemForDecline.value.id, {
+      is_declined: true,
+      decline_reason: declineReason,
+      is_finished: false
+    })
+  }
 }
 
 const updateChecklistItem = async (itemId: string, patch: Partial<IChecklistItem>) => {
@@ -163,9 +165,9 @@ const deleteChecklistItem = async (itemId: string) => {
   await taskStore.deleteChecklistItem(props.task.id, props.checklist.id, itemId)
 }
 
-provide('createChecklistItem', createChecklistItem)
-provide('updateChecklistItem', updateChecklistItem)
-provide('deleteChecklistItem', deleteChecklistItem)
+provide(createChecklistItemKey, createChecklistItem)
+provide(updateChecklistItemKey, updateChecklistItem)
+provide(deleteChecklistItemKey, deleteChecklistItem)
 </script>
 
 <style scoped>

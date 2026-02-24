@@ -36,12 +36,12 @@ const content = defineModel<string | undefined>('content', {
 const contentEditorRef = ref<InstanceType<typeof import('quasar').QPopupEdit> | null>(null)
 
 defineExpose({
-  onUpdateSuccess: () => {
+  onSaveSuccess: () => {
     if (contentEditorRef.value) {
       contentEditorRef.value.set()
     }
   },
-  onUpdateError: () => {
+  onSaveError: () => {
     cancelUpdate()
   }
 })

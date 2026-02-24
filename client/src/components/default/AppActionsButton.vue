@@ -50,7 +50,7 @@ const emit = defineEmits<{
 
 const handleClick = (action: IAction) => {
   action.func()
-  emit('clicked')
+  emit('clicked', true)
 }
 </script>
 

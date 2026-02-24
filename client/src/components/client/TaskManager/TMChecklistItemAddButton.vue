@@ -40,6 +40,8 @@
 
 <script lang="ts" setup>
 import { computed, inject, nextTick, ref } from 'vue'
+import { createChecklistItemKey } from 'src/symbols/task-manager.keys'
+import { injectStrict } from 'src/utils/injection'
 
 const props = defineProps<{
   checklistId: string
@@ -51,7 +53,7 @@ const activeFormId = inject('activeFormId', ref<string | null>(null))
 const setActiveChecklistForm = inject<{(id: string | null): void}>('setActiveChecklistForm')!
 const isActive = computed(() => activeFormId.value === props.checklistId)
 
-const createChecklistItem = inject('createChecklistItem')
+const createChecklistItem = injectStrict(createChecklistItemKey)
 
 const openForm = () => {
   setActiveChecklistForm(props.checklistId)
@@ -70,10 +72,12 @@ const clearModel = () => {
   model.value = null
 }
 
-const handleForm = () => {
-  createChecklistItem(model.value).then(() => {
+const handleForm = async () => {
+  if (model.value) {
+    await createChecklistItem(model.value)
+
     clearModel()
-  })
+  }
 }
 </script>
 

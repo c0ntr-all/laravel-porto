@@ -38,10 +38,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, inject } from 'vue'
+import { computed, ref } from 'vue'
 import { IChecklistItem } from 'src/types/TaskManager/task'
-import { IAction } from 'src/components/types'
 import AppActionsButton from 'src/components/default/AppActionsButton.vue'
+import { deleteChecklistItemKey, updateChecklistItemKey } from 'src/symbols/task-manager.keys'
+import { injectStrict } from 'src/utils/injection'
 
 const props = defineProps<{
   item: IChecklistItem
@@ -52,8 +53,8 @@ const emit = defineEmits<{
   (e: 'decline', value: IChecklistItem): void
 }>()
 
-const updateChecklistItem = inject('updateChecklistItem')
-const deleteChecklistItem = inject('deleteChecklistItem')
+const updateChecklistItem = injectStrict(updateChecklistItemKey)
+const deleteChecklistItem = injectStrict(deleteChecklistItemKey)
 
 const declineItem = () => {
   emit('decline', props.item)
@@ -68,7 +69,7 @@ const activateItem = () => {
   })
 }
 
-const actions: IAction[] = computed(() => [{
+const actions = computed(() => [{
   name: 'activate',
   label: 'Activate item',
   icon: 'do_disturb',
@@ -101,10 +102,9 @@ const closeTitlePopup = () => {
 }
 const updateTitle = async (title: string) => {
   if (title !== props.item.title) {
-    updateChecklistItem(props.item.id, { title })
-      .then(() => {
-        closeTitlePopup()
-      })
+    await updateChecklistItem(props.item.id, { title })
+
+    closeTitlePopup()
   }
 
   closeTitlePopup()

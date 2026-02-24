@@ -1,8 +1,8 @@
 import { Notify } from 'quasar'
 import { AxiosError } from 'axios'
 import { StoreEntity } from 'src/types/store'
-import {IJsonApiResource} from "src/types";
-import {updateObject} from "src/utils/helpers";
+import { IJsonApiResource } from 'src/types'
+import { updateObject } from 'src/utils/helpers'
 
 interface IIncluded {
   type: string
@@ -211,9 +211,20 @@ const processItem = (relationName: string, relationItem: IRelationshipItem, incl
   }
 }
 
-export function handleApiError(error: AxiosError) {
-  const message = (error.response?.data as { message?: string })?.message || error.message
-  console.error(error.message)
+export function handleApiError(error: unknown) {
+  let message = 'Unknown error occurred'
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as any
+
+    message = data?.message || error.message
+  }
+
+  // Стандартная ошибка JavaScript
+  if (error instanceof Error) {
+    message = error.message
+  }
+
+  console.error(message)
 
   Notify.create({
     type: 'negative',
@@ -273,8 +284,8 @@ function indexIncluded(included: IJsonApiResource[] = []) {
 }
 
 export function normalizeEntity<T extends { id: string }>(
-  entity: JsonApiResource,
-  included: JsonApiResource[] = []
+  entity: IJsonApiResource,
+  included: IJsonApiResource[] = []
 ): { entity: T; related: Record<string, T[]> } {
   const includedMap = new Map(
     included.map(i => [`${i.type}:${i.id}`, i])
@@ -283,7 +294,7 @@ export function normalizeEntity<T extends { id: string }>(
   const related: Record<string, T[]> = {}
   const visited = new Set<string>()
 
-  function normalizeRecursive(resource: JsonApiResource): T {
+  function normalizeRecursive(resource: IJsonApiResource): T {
     const key = `${resource.type}:${resource.id}`
     if (visited.has(key)) {
       return {
@@ -330,11 +341,7 @@ export function normalizeEntity<T extends { id: string }>(
           }
 
           // защита от дублей
-          if (
-            !related[relName].some(
-              i => i.id === normalizedRelated.id
-            )
-          ) {
+          if (!related[relName].some(i => i.id === normalizedRelated.id)) {
             related[relName].push(normalizedRelated)
           }
         }

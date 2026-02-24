@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { IComment } from 'src/types/TaskManager/task'
+import { IComment } from 'src/types'
 import TMTaskComment from 'src/components/client/TaskManager/TMTaskComment.vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 

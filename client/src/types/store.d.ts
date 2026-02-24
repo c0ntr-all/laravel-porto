@@ -1,5 +1,5 @@
 export interface StoreEntity<T> {
-  byId: Record<number, T>,
-  allIds: number[],
+  byId: Record<string, T>,
+  allIds: string[],
   total?: number
 }

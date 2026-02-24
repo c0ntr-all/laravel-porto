@@ -16,8 +16,8 @@ class TaskProgressTransformer extends TransformerAbstract
             'content' => $taskProgress->content,
             'is_final' => $taskProgress->is_final,
             'finished_at' => $taskProgress->finished_at->format('Y-m-d H:i:s'),
-            'created_at' => $taskProgress->created_at->format('Y-m-d H:i:s'),
-            'updated_at' => $taskProgress->updated_at->format('Y-m-d H:i:s'),
+            'created_at' => $taskProgress->created_at->setTimezone('Europe/Moscow')->format('Y-m-d H:i:s'),
+            'updated_at' => $taskProgress->updated_at->setTimezone('Europe/Moscow')->format('Y-m-d H:i:s'),
         ];
     }
 }

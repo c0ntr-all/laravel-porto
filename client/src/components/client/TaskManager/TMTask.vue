@@ -67,8 +67,9 @@
             </q-tab-panel>
 
             <q-tab-panel name="history">
-              <div class="text-h6">History</div>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
+              <TMTaskUseCaseLogs
+                :task-id="task.id"
+              />
             </q-tab-panel>
           </q-tab-panels>
         </q-card-section>
@@ -99,6 +100,7 @@ import TMChecklist from 'src/components/client/TaskManager/TMChecklist.vue'
 import TMTaskProgress from 'src/components/client/TaskManager/TMTaskProgress.vue'
 import TMReminder from 'src/components/client/TaskManager/TMReminder.vue'
 import TMTaskComments from 'src/components/client/TaskManager/TMTaskComments.vue'
+import TMTaskUseCaseLogs from 'src/components/client/TaskManager/TMTaskUseCaseLogs.vue'
 import TMChecklistAddButton from 'src/components/client/TaskManager/TMChecklistAddButton.vue'
 import TMProgressAddButton from 'src/components/client/TaskManager/TMProgressAddButton.vue'
 import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAddButton.vue'

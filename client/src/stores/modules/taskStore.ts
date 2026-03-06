@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 import { camel } from 'radash'
-import { taskApi } from 'src/api/requests/taskApi'
 import { updateObject } from 'src/utils/helpers'
 import {
   ITaskList, ITask, IProgress, IChecklist, IChecklistItem, ITaskListCreatePayload, ITaskCreatePayload,
   ITaskUpdatePayload, IChecklistItemCreatePayload, IChecklistCreatePayload,
-  IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload, IReminderItem
+  IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload, IReminderItem,
+  IUseCaseLog
 } from 'src/types/TaskManager/task'
 import { IUser } from 'src/types/user'
 import { StoreEntity } from 'src/types/store'
@@ -14,7 +14,9 @@ import {
   upsertEntity, normalizeEntity, normalizeEntityCollection, handleApiSuccess, handleApiError, patchEntity
 } from 'src/utils/jsonapi'
 import { IComment, ICommentCreatePayload, IFilter } from 'src/types'
+import { taskApi } from 'src/api/requests/taskApi'
 import { commentApi } from 'src/api/requests/commentApi'
+import { useCaseLogApi } from 'src/api/requests/useCaseLogApi'
 
 export const useTaskStore = defineStore('task', () => {
   const taskLists = reactive<StoreEntity<ITaskList>>({ byId: {}, allIds: [] })
@@ -24,6 +26,7 @@ export const useTaskStore = defineStore('task', () => {
   const checklistItems = reactive<StoreEntity<IChecklistItem>>({ byId: {}, allIds: [] })
   const reminder = reactive<StoreEntity<IReminderItem>>({ byId: {}, allIds: [] })
   const comments = reactive<StoreEntity<IComment>>({ byId: {}, allIds: [] })
+  const useCaseLogs = reactive<StoreEntity<IUseCaseLog>>({ byId: {}, allIds: [] })
   const users = reactive<StoreEntity<IUser>>({ byId: {}, allIds: [] })
 
   type Collections = {
@@ -34,6 +37,7 @@ export const useTaskStore = defineStore('task', () => {
     checklistItems: StoreEntity<IChecklistItem>
     reminder: StoreEntity<IReminderItem>
     comments: StoreEntity<IComment>
+    useCaseLogs: StoreEntity<IUseCaseLog>
     users: StoreEntity<IUser>
   }
 
@@ -46,6 +50,7 @@ export const useTaskStore = defineStore('task', () => {
     checklistItems,
     reminder,
     comments,
+    useCaseLogs,
     users
   }
 
@@ -425,6 +430,22 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  async function getUseCaseLogs(filters: IFilter): Promise<void> {
+    const responseData = await useCaseLogApi.getUseCaseLogs(filters)
+
+    const entities = normalizeEntityCollection(responseData.data, responseData.included)
+
+    for (const type in entities) {
+      const camelType = camel(type)
+
+      if (isValidCollectionKey(camelType)) {
+        for (const id in entities[type]) {
+          upsertEntity(collections[camelType], entities[type][id])
+        }
+      }
+    }
+  }
+
   return {
     taskLists,
     tasks,
@@ -433,6 +454,7 @@ export const useTaskStore = defineStore('task', () => {
     checklistItems,
     reminder,
     comments,
+    useCaseLogs,
     users,
     getTaskLists,
     createTaskList,
@@ -450,6 +472,7 @@ export const useTaskStore = defineStore('task', () => {
     createProgress,
     createReminder,
     getComments,
-    createComment
+    createComment,
+    getUseCaseLogs
   }
 })

@@ -32,12 +32,6 @@ type IPostUpdateModel = IPostModel & {
   attachments: IPostWithAttachmentWithState[]
 }
 
-export interface IPostFilter {
-  filter?: {
-    [key: string]: string | number
-  }
-}
-
 interface ITagsFilterData {
   tags: ITag[],
   tags_mode: 'or' | 'and'

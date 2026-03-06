@@ -31,3 +31,7 @@ export interface IJsonApiResponse<T = IJsonApiResource> {
 }
 
 export type ApiError = import('axios').AxiosError<{ message: string }>
+
+export interface IFilter {
+  [key: string]: string | number
+}

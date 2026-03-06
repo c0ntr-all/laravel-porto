@@ -1,12 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
-import { IPost, IPostFilter, IPostModel, IPostUpdateModel } from 'src/types/LifeLog/post'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
-import { IJsonApiResponse } from 'src/types'
+import { IJsonApiResponse, IPost, IFilter, IPostModel, IPostUpdateModel } from 'src/types'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { uploadPostAttachments } from 'src/services/post.service'
 
@@ -16,7 +15,7 @@ export const usePostStore = defineStore('post', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  async function getPosts(filters: IPostFilter = {}) {
+  async function getPosts(filters: IFilter = {}) {
     isLoading.value = true
     error.value = null
     try {

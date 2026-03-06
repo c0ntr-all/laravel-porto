@@ -59,11 +59,6 @@ interface IResponse {
   included?: any
   meta: any
 }
-// interface IItemResponse {
-//   data: IRawElement
-//   included?: any
-//   meta: any
-// }
 
 const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]) => {
   const includedItem = included.find((include: IncludedItem) => {
@@ -314,20 +309,40 @@ export function normalizeEntity<T extends { id: string }>(
     if (resource.relationships) {
       for (const relName in resource.relationships) {
         const relData = resource.relationships[relName].data
+
         if (!relData) {
           normalized[`${relName}Ids`] = []
           continue
         }
 
-        const relArray = Array.isArray(relData)
-          ? relData
-          : [relData]
+        if (Array.isArray(relData)) {
+          normalized[`${relName}Ids`] = relData.map(r => r.id)
 
-        normalized[`${relName}Ids`] = relArray.map(r => r.id)
+          for (const rel of relData) {
+            const includedItem = includedMap.get(
+              `${rel.type}:${rel.id}`
+            )
 
-        for (const rel of relArray) {
+            if (!includedItem) continue
+
+            const normalizedRelated = normalizeRecursive(
+              includedItem
+            )
+
+            if (!related[relName]) {
+              related[relName] = []
+            }
+
+            // защита от дублей
+            if (!related[relName].some(i => i.id === normalizedRelated.id)) {
+              related[relName].push(normalizedRelated)
+            }
+          }
+        } else {
+          normalized[`${relName}Id`] = relData.id
+
           const includedItem = includedMap.get(
-            `${rel.type}:${rel.id}`
+            `${relData.type}:${relData.id}`
           )
 
           if (!includedItem) continue
@@ -336,14 +351,7 @@ export function normalizeEntity<T extends { id: string }>(
             includedItem
           )
 
-          if (!related[relName]) {
-            related[relName] = []
-          }
-
-          // защита от дублей
-          if (!related[relName].some(i => i.id === normalizedRelated.id)) {
-            related[relName].push(normalizedRelated)
-          }
+          related[relName].push(normalizedRelated)
         }
       }
     }
@@ -387,17 +395,17 @@ export function normalizeEntityCollection(
 
     if (resource.relationships) {
       for (const relName in resource.relationships) {
-        const rel = resource.relationships[relName].data
+        const relData = resource.relationships[relName].data
 
-        if (!rel) {
+        if (!relData) {
           normalized[`${relName}Ids`] = []
           continue
         }
 
-        if (Array.isArray(rel)) {
+        if (Array.isArray(relData)) {
           const ids: string[] = []
 
-          for (const r of rel) {
+          for (const r of relData) {
             ids.push(r.id)
 
             const includedItem = includedIndex.get(`${r.type}:${r.id}`)
@@ -408,9 +416,9 @@ export function normalizeEntityCollection(
 
           normalized[`${relName}Ids`] = ids
         } else {
-          normalized[`${relName}Id`] = rel.id
+          normalized[`${relName}Id`] = relData.id
 
-          const includedItem = includedIndex.get(`${rel.type}:${rel.id}`)
+          const includedItem = includedIndex.get(`${relData.type}:${relData.id}`)
           if (includedItem) {
             normalizeResource(includedItem)
           }

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $content
  * @property string $commentable_type
- * @property int $commentable_id
+ * @property string $commentable_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -46,6 +46,10 @@ class Comment extends Model
         'content',
         'updated_at',
         'deleted_at'
+    ];
+
+    protected $casts = [
+        'commentable_id' => 'string',
     ];
 
     public function comment(): MorphTo

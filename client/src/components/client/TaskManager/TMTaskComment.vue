@@ -21,7 +21,7 @@ const props = defineProps<{
   comment: IComment
 }>()
 
-const user = computed(() => taskStore.user.byId[props.comment.userIds[0]])
+const user = computed(() => taskStore.users.byId[props.comment.userId])
 </script>
 
 <style scoped lang="scss">

@@ -13,7 +13,7 @@ import { StoreEntity } from 'src/types/store'
 import {
   upsertEntity, normalizeEntity, normalizeEntityCollection, handleApiSuccess, handleApiError, patchEntity
 } from 'src/utils/jsonapi'
-import { IComment, ICommentCreatePayload } from 'src/types'
+import { IComment, ICommentCreatePayload, IFilter } from 'src/types'
 import { commentApi } from 'src/api/requests/commentApi'
 
 export const useTaskStore = defineStore('task', () => {
@@ -24,7 +24,7 @@ export const useTaskStore = defineStore('task', () => {
   const checklistItems = reactive<StoreEntity<IChecklistItem>>({ byId: {}, allIds: [] })
   const reminder = reactive<StoreEntity<IReminderItem>>({ byId: {}, allIds: [] })
   const comments = reactive<StoreEntity<IComment>>({ byId: {}, allIds: [] })
-  const user = reactive<StoreEntity<IUser>>({ byId: {}, allIds: [] })
+  const users = reactive<StoreEntity<IUser>>({ byId: {}, allIds: [] })
 
   type Collections = {
     taskLists: StoreEntity<ITaskList>
@@ -32,9 +32,9 @@ export const useTaskStore = defineStore('task', () => {
     progress: StoreEntity<IProgress>
     checklists: StoreEntity<IChecklist>
     checklistItems: StoreEntity<IChecklistItem>
-    reminder: StoreEntity<IReminderItem> // Исправлено: IReminderItem -> IReminderItem
+    reminder: StoreEntity<IReminderItem>
     comments: StoreEntity<IComment>
-    user: StoreEntity<IUser>
+    users: StoreEntity<IUser>
   }
 
   // Словарь для доступа по имени
@@ -46,7 +46,7 @@ export const useTaskStore = defineStore('task', () => {
     checklistItems,
     reminder,
     comments,
-    user
+    users
   }
 
   // Type guard для проверки существования ключа в collections
@@ -128,7 +128,7 @@ export const useTaskStore = defineStore('task', () => {
             break
           case 'user':
             for (const id in related[type]) {
-              upsertEntity(user, related[type][id] as unknown as IUser)
+              upsertEntity(users, related[type][id] as unknown as IUser)
             }
             break
         }
@@ -396,6 +396,22 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  async function getComments(filters: IFilter): Promise<void> {
+    const responseData = await commentApi.getComments(filters)
+
+    const entities = normalizeEntityCollection(responseData.data, responseData.included)
+
+    for (const type in entities) {
+      const camelType = camel(type)
+
+      if (isValidCollectionKey(camelType)) {
+        for (const id in entities[type]) {
+          upsertEntity(collections[camelType], entities[type][id])
+        }
+      }
+    }
+  }
+
   async function createComment(payload: ICommentCreatePayload): Promise<void> {
     const responseData = await commentApi.createComment(payload)
     const { entity } = normalizeEntity<IComment>(responseData.data, responseData.included)
@@ -417,7 +433,7 @@ export const useTaskStore = defineStore('task', () => {
     checklistItems,
     reminder,
     comments,
-    user,
+    users,
     getTaskLists,
     createTaskList,
     getTask,
@@ -433,6 +449,7 @@ export const useTaskStore = defineStore('task', () => {
     deleteChecklistItem,
     createProgress,
     createReminder,
+    getComments,
     createComment
   }
 })

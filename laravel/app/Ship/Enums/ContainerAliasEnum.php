@@ -12,6 +12,7 @@ enum ContainerAliasEnum: string
     case USER = 'users';
     case TAG = 'tags';
     case ATTACHMENT = 'attachments';
+    case COMMENTS = 'comments';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
@@ -29,6 +30,8 @@ enum ContainerAliasEnum: string
         return match($this) {
             self::USER => 'Пользователь',
             self::TAG => 'Тег',
+            self::ATTACHMENT => 'Вложение',
+            self::COMMENTS => 'Комментарий',
             self::MUSIC_ARTIST => 'Исполнитель',
             self::MUSIC_ALBUM => 'Альбом',
             self::MUSIC_TRACK => 'Трек',

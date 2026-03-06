@@ -24,7 +24,6 @@ class GetTaskAction
         return fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
             ->parseIncludes([
-                'comments.user',
                 'checklists.checklistItems',
                 'progress',
                 'reminder'

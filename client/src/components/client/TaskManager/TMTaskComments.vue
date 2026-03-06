@@ -1,6 +1,5 @@
 <template>
   <div class="comments">
-    <div class="text-h6 q-mb-sm">Comments</div>
     <div class="comments-form q-mb-md">
       <q-input
         v-model="commentModel"
@@ -20,11 +19,14 @@
       />
     </div>
     <p v-else class="text-grey-5">There are no comments!</p>
+    <q-inner-loading :showing="isCommentsLoading">
+      <q-spinner-gears size="50px" color="primary" />
+    </q-inner-loading>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { IComment } from 'src/types'
 import TMTaskComment from 'src/components/client/TaskManager/TMTaskComment.vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
@@ -32,12 +34,29 @@ import { useTaskStore } from 'src/stores/modules/taskStore'
 const taskStore = useTaskStore()
 
 const props = defineProps<{
-  comments: IComment[],
   taskId: string,
 }>()
 
 const commentModel = ref<string>('')
 
+const isCommentsLoading = ref(true)
+const comments = computed<IComment[]>(() => {
+  // TODO: переделать под Enum
+  return Object.values(taskStore.comments.byId).filter(comment => {
+    return comment.commentable_id === props.taskId && comment.commentable_type === 'tm_tasks'
+  })
+})
+async function loadComments() {
+  await taskStore.getComments({
+    commentable_id: props.taskId,
+    // TODO: переделать под Enum
+    commentable_type: 'tm_tasks'
+  }).finally(() => {
+    isCommentsLoading.value = false
+  })
+}
+
+// TODO: Надо все таки из стора вызывать метод т.к. в task надо добавить commentsIds
 async function createComment() {
   await taskStore.createComment({
     commentable_id: props.taskId,
@@ -51,6 +70,10 @@ async function createComment() {
 const clearCommentModel = () => {
   commentModel.value = ''
 }
+
+onMounted(() => {
+  loadComments()
+})
 </script>
 
 <style scoped lang="scss">

@@ -43,10 +43,34 @@
         </q-card-section>
 
         <q-card-section>
-          <TMTaskComments
-            :comments="comments"
-            :task-id="task.id"
-          />
+          <q-tabs
+            v-model="footerTabs"
+            class="text-grey"
+            :breakpoint="0"
+            active-color="primary"
+            indicator-color="primary"
+            align="left"
+            narrow-indicator
+            dense
+          >
+            <q-tab name="comments" label="Comments" />
+            <q-tab name="history" label="History" />
+          </q-tabs>
+
+          <q-separator />
+
+          <q-tab-panels v-model="footerTabs" animated>
+            <q-tab-panel name="comments">
+              <TMTaskComments
+                :task-id="task.id"
+              />
+            </q-tab-panel>
+
+            <q-tab-panel name="history">
+              <div class="text-h6">History</div>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit.
+            </q-tab-panel>
+          </q-tab-panels>
         </q-card-section>
       </div>
       <div class="col-3">
@@ -82,7 +106,6 @@ import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
 import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
 import TMTaskSkeleton from 'src/components/client/TaskManager/TMTaskSkeleton.vue'
 import { IChecklist, IProgress, IReminderItem, ITask } from 'src/types/TaskManager/task'
-import { IComment } from 'src/types'
 
 interface ITaskPartsRef {
   onSaveSuccess: () => void
@@ -100,15 +123,13 @@ const task = computed<ITask>(() => taskStore.tasks.byId[props.taskId])
 
 const content = ref<string>(task.value.content || '') // null to string cast
 const title = ref<string>(task.value.title || '')
+const footerTabs = ref('comments')
 
 const checklists = computed<IChecklist[]>(() =>
   task.value.checklistsIds!.map(id => taskStore.checklists?.byId[id])
 )
 const progresses = computed<IProgress[] | undefined>(() =>
   task.value.progressIds?.map(id => taskStore.progress.byId[id])
-)
-const comments = computed<IComment[]>(() =>
-  task.value.commentsIds?.map(id => taskStore.comments.byId[id])
 )
 const reminder = computed<IReminderItem | null>(() => {
   const reminder = task.value.reminderIds?.map(id => taskStore.reminder.byId[id])

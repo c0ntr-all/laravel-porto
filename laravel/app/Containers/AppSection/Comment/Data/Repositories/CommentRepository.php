@@ -3,12 +3,28 @@
 namespace App\Containers\AppSection\Comment\Data\Repositories;
 
 use App\Containers\AppSection\Comment\Data\DTO\CommentCreateData;
+use App\Containers\AppSection\Comment\Models\Comment;
 use App\Ship\Exceptions\RepositoryException;
+use App\Ship\Parents\QueryBuilder\QueryBuilder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class CommentRepository
 {
+    public function get(array $data): Collection
+    {
+        return QueryBuilder::for(Comment::class)
+            ->allowedSorts('created_at')
+            ->allowedFilters([
+                // Явно указываем, что это фильтр точного совпадения
+                AllowedFilter::exact('commentable_id'),
+                AllowedFilter::exact('commentable_type'),
+            ])
+            ->with(['user'])
+            ->get();
+    }
     /**
      * @throws RepositoryException
      */

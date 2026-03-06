@@ -7,6 +7,7 @@ use App\Containers\AppSection\Comment\Models\Comment;
 use App\Containers\AppSection\Comment\Tasks\CreateCommentTask;
 use App\Containers\AppSection\Comment\UI\API\Requests\CreateRequest;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Exceptions\CreateResourceFailedException;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -36,7 +37,7 @@ class CreateCommentAction
         $comment = $this->handle($dto);
 
         return fractal($comment, new CommentTransformer())
-            ->withResourceName('comments')
+            ->withResourceName(ContainerAliasEnum::COMMENTS->value)
             ->parseIncludes('user')
             ->addMeta(['message' => 'Comment created successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

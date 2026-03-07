@@ -26,14 +26,17 @@
           <TMReminder :reminder="reminder" />
         </q-card-section>
 
-        <q-card-section v-if="checklists.length">
-          <TMChecklist
+        <template v-if="checklists.length">
+          <q-card-section
             v-for="checklist in checklists"
             :key="checklist.id"
-            :checklist="checklist"
-            :task="task"
-          />
-        </q-card-section>
+          >
+            <TMChecklist
+              :checklist="checklist"
+              :task="task"
+            />
+          </q-card-section>
+        </template>
 
         <q-card-section v-if="progresses?.length">
           <TMTaskProgress

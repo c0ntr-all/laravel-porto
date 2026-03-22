@@ -6,14 +6,13 @@ import {
   ITaskList, ITask, IProgress, IChecklist, IChecklistItem, ITaskListCreatePayload, ITaskCreatePayload,
   ITaskUpdatePayload, IChecklistItemCreatePayload, IChecklistCreatePayload,
   IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload, IReminderItem,
-  IUseCaseLog
-} from 'src/types/TaskManager/task'
+  IUseCaseLog, IComment, ICommentCreatePayload, IFilter
+} from 'src/types'
 import { IUser } from 'src/types/user'
 import { StoreEntity } from 'src/types/store'
 import {
   upsertEntity, normalizeEntity, normalizeEntityCollection, handleApiSuccess, handleApiError, patchEntity
 } from 'src/utils/jsonapi'
-import { IComment, ICommentCreatePayload, IFilter } from 'src/types'
 import { taskApi } from 'src/api/requests/taskApi'
 import { commentApi } from 'src/api/requests/commentApi'
 import { useCaseLogApi } from 'src/api/requests/useCaseLogApi'

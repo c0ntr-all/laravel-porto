@@ -45,7 +45,8 @@ class Reminder extends Model
     ];
 
     protected $casts = [
-        'datetime' => 'datetime'
+        'datetime' => 'datetime',
+        'task_id' => 'string',
     ];
 
     public function task(): BelongsTo

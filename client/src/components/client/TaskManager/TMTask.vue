@@ -88,7 +88,7 @@
           />
           <TMReminderAddButton
             :task-id="task.id"
-            :is-reminder-available="!!reminder"
+            :is-reminder-available="isReminderAvailable"
           />
         </q-card-section>
       </div>
@@ -137,14 +137,11 @@ const progresses = computed<IProgress[] | undefined>(() =>
   task.value.progressIds?.map(id => taskStore.progress.byId[id])
 )
 const reminder = computed<IReminderItem | null>(() => {
-  const reminder = task.value.reminderIds?.map(id => taskStore.reminder.byId[id])
-  if (reminder) {
-    return reminder[0]
-  }
-
-  return null
+  return Object.values(taskStore.reminder.byId).filter(reminder => reminder.task_id === task.value.id)[0] || null
 })
+
 const isProgressAvailable = computed(() => progresses?.value?.filter(item => item.is_final).length === 0)
+const isReminderAvailable = computed(() => !reminder.value)
 
 const taskTitleRef = ref<ITaskPartsRef | null>(null)
 const taskContentRef = ref<ITaskPartsRef | null>(null)

@@ -351,6 +351,10 @@ export function normalizeEntity<T extends { id: string }>(
             includedItem
           )
 
+          if (!related[relName]) {
+            related[relName] = []
+          }
+
           related[relName].push(normalizedRelated)
         }
       }

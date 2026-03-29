@@ -21,6 +21,7 @@ class ShipServiceProvider extends ServiceProvider
         RouteServiceProvider::class,
         EventServiceProvider::class,
         MigrationServiceProvider::class,
+        LocalizationServiceProvider::class,
         AuthServiceProvider::class,
         JwtServiceProvider::class,
         TelescopeServiceProvider::class

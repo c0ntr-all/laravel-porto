@@ -19,6 +19,7 @@ class UseCaseLogTransformer extends TransformerAbstract
             'id' => $useCaseLog->id,
             'user_id' => $useCaseLog->user_id,
             'event_type' => $useCaseLog->event_type,
+            'event_label' => __('appSection@activityLog::events.' . $useCaseLog->event_type),
             'loggable_id' => $useCaseLog->loggable_id,
             'loggable_type' => $useCaseLog->loggable_type,
             'created_at' => $useCaseLog->created_at->setTimezone('Europe/Moscow')->format('Y-m-d H:i:s')

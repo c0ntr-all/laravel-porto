@@ -131,6 +131,9 @@ export interface ITaskFields {
   is_finished: boolean // Not field, it's for simpler finishing tasks
   is_declined: boolean
   decline_reason: string | null
+  reminders_count: number
+  checklists_count: number
+  progresses_count: number
 }
 export interface ITask extends ITaskFields {
   id: string

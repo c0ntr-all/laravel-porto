@@ -151,6 +151,11 @@ export const useTaskStore = defineStore('task', () => {
       const responseData = await taskApi.createTask(payload)
       const { entity } = normalizeEntity<ITask>(responseData.data, responseData.included)
 
+      // TODO: prepare empty Task
+      entity.checklistsIds = []
+      entity.progressIds = []
+      entity.reminderIds = []
+      entity.commentsIds = []
       entity.isHydrated = true
 
       upsertEntity(tasks, entity)
@@ -217,6 +222,8 @@ export const useTaskStore = defineStore('task', () => {
       if (!task.checklistsIds!.includes(entity.id)) {
         task.checklistsIds!.push(entity.id)
       }
+
+      task.checklists_count++
 
       handleApiSuccess(responseData)
     } catch (error: unknown) {
@@ -371,6 +378,8 @@ export const useTaskStore = defineStore('task', () => {
         task.progressIds!.push(entity.id)
       }
 
+      task.progresses_count++
+
       handleApiSuccess(responseData)
 
       return entity
@@ -393,6 +402,8 @@ export const useTaskStore = defineStore('task', () => {
       if (task.reminderIds && !task.reminderIds.includes(entity.id)) {
         task.reminderIds.push(entity.id)
       }
+
+      task.reminders_count++
 
       handleApiSuccess(responseData)
     } catch (error: unknown) {
@@ -418,12 +429,64 @@ export const useTaskStore = defineStore('task', () => {
 
   async function createComment(payload: ICommentCreatePayload): Promise<void> {
     const responseData = await commentApi.createComment(payload)
-    const { entity } = normalizeEntity<IComment>(responseData.data, responseData.included)
+    const { entity, related } = normalizeEntity<IComment>(responseData.data, responseData.included)
 
     upsertEntity(comments, entity)
 
+    for (const type in related) {
+      const camelType = camel(type)
+
+      // TODO: Временная явная проверка для каждого типа
+      switch (camelType) {
+        case 'taskLists':
+          for (const id in related[type]) {
+            upsertEntity(taskLists, related[type][id] as unknown as ITaskList)
+          }
+          break
+        case 'tasks':
+          for (const id in related[type]) {
+            upsertEntity(tasks, related[type][id] as unknown as ITask)
+          }
+          break
+        case 'checklists':
+          for (const id in related[type]) {
+            upsertEntity(checklists, related[type][id] as unknown as IChecklist)
+          }
+          break
+        case 'checklistItems':
+          for (const id in related[type]) {
+            upsertEntity(checklistItems, related[type][id] as unknown as IChecklistItem)
+          }
+          break
+        case 'progress':
+          for (const id in related[type]) {
+            upsertEntity(progress, related[type][id] as unknown as IProgress)
+          }
+          break
+        case 'reminder':
+          for (const id in related[type]) {
+            upsertEntity(reminder, related[type][id] as unknown as IReminderItem)
+          }
+          break
+        case 'comments':
+          for (const id in related[type]) {
+            upsertEntity(comments, related[type][id] as unknown as IComment)
+          }
+          break
+        case 'user':
+          for (const id in related[type]) {
+            upsertEntity(users, related[type][id] as unknown as IUser)
+          }
+          break
+      }
+    }
+
     // Add task to the taskIds of list
     const task = tasks.byId[payload.commentable_id]
+    if (!task.commentsIds) {
+      task.commentsIds = []
+    }
+
     if (!task.commentsIds.includes(entity.id)) {
       task.commentsIds.push(entity.id)
     }

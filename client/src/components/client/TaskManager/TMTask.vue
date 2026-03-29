@@ -150,7 +150,9 @@ const activeChecklistFormId = ref<string | null>(null)
 provide('activeFormId', activeChecklistFormId)
 
 async function loadTask() {
-  await taskStore.getTask(props.taskId)
+  if (!task.value.isHydrated) {
+    await taskStore.getTask(props.taskId)
+  }
 }
 
 async function handleUpdateTitle(newTitle: string) {

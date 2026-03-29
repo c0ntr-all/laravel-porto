@@ -19,17 +19,16 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { ITask } from 'src/types/TaskManager/task'
-import { checkRelationExists } from 'src/utils/helpers'
 
 const props = defineProps<{
   task: ITask
 }>()
-const task = ref(props.task)
-const isChecklistsExists = computed(() => checkRelationExists(task.value, 'checklists'))
-const isReminderExists = computed(() => checkRelationExists(task.value, 'reminder'))
-const isProgressExists = computed(() => checkRelationExists(task.value, 'progress'))
+
+const isChecklistsExists = computed(() => props.task.checklists_count > 0)
+const isReminderExists = computed(() => props.task.reminders_count > 0)
+const isProgressExists = computed(() => props.task.progresses_count > 0)
 </script>
 
 <style lang="scss" scoped>

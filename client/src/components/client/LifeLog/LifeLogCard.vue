@@ -72,26 +72,24 @@
         />
       </q-card-section>
       <q-card-section class="q-pa-sm">
-        <div class="row items-center no-wrap">
-          <div class="col">
-            <div class="text-subtitle2">Дата события: {{ post.date }} <span v-if="post.time">{{ post.time }}</span></div>
-          </div>
-        </div>
-      </q-card-section>
-      <q-card-section class="q-pa-sm">
         <div v-if="post.content" v-html="post.content"></div>
       </q-card-section>
-      <q-card-section class="q-pa-sm">
-        <template v-if="post.tags.length">
-          <LifeLogTag
-            v-for="tag in post.tags"
-            :key="tag.id"
-            :tag="tag"
-            :color="'primary'"
-            :text-color="'white'"
-            dense
-          />
-        </template>
+      <q-card-section class="flex items-center q-pa-sm">
+        <div class="ll-card-tags">
+          <template v-if="post.tags.length">
+            <LifeLogTag
+              v-for="tag in post.tags"
+              :key="tag.id"
+              :tag="tag"
+              :color="'primary'"
+              :text-color="'white'"
+              dense
+            />
+          </template>
+        </div>
+        <div class="ll-card-datetime">
+          <div class="text-subtitle2">{{ post.date }} <span v-if="post.time">{{ post.time }}</span></div>
+        </div>
       </q-card-section>
     </q-card>
 
@@ -161,5 +159,16 @@ const openCarousel = (id: string) => {
 }
 .ll-card {
   width: 100%;
+
+  &-tags {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  &-datetime {
+    flex-shrink: 0;
+  }
 }
 </style>

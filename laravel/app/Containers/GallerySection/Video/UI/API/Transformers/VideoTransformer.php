@@ -3,6 +3,7 @@
 namespace App\Containers\GallerySection\Video\UI\API\Transformers;
 
 use App\Containers\GallerySection\Video\Models\Video;
+use App\Ship\Helpers\DateHelper;
 use League\Fractal\TransformerAbstract;
 
 /**
@@ -17,7 +18,7 @@ class VideoTransformer extends TransformerAbstract
             'source' => $video->source,
             'width' => $video->width,
             'height' => $video->height,
-            'duration' => $video->duration,
+            'duration' => DateHelper::secondsToDatetime($video->duration),
             'original_path' => $video->base_path,
             'list_thumb_path' => $video->list_thumb_path,
             'description' => $video->description,

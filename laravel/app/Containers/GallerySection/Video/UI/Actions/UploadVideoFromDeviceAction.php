@@ -11,6 +11,8 @@ use App\Containers\GallerySection\Video\UI\API\Requests\UploadVideoFromDeviceReq
 use App\Containers\GallerySection\Video\UI\API\Transformers\VideoTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\FileSourceEnum;
+use App\Ship\Helpers\DateHelper;
+use App\Ship\Packages\VideoMetadata\VideoMetadataFactory;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -40,12 +42,9 @@ class UploadVideoFromDeviceAction extends BaseAction
         $media = FFMpeg::fromDisk('public')->open($result);
 
         $videoStream = $media->getVideoStream();
+        $videoMetadata = VideoMetadataFactory::create($extension);
 
-        if (isset($videoStream->get('tags')['DURATION'])) {
-            $duration = explode('.', $videoStream->get('tags')['DURATION'])[0];
-        } else {
-            $duration = null;
-        }
+        $duration = $videoMetadata->getDuration($videoStream);
 
         $createVideoDto = CreateVideoDto::from([
             'id' => $uuid,

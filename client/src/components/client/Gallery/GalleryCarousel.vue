@@ -29,10 +29,11 @@
             class="column no-wrap flex-center q-pa-none"
             :name="slide.id"
           >
-            <q-video
+            <AppVideo
               v-if="slide.attachment_type === 'gallery_videos'"
-              src="https://vkvideo.ru/video485184029_456239672"
-              ratio=""/>
+              :src="slide.original_path"
+              :autoplay="true"
+            />
             <q-img
               v-else
               :src="slide.preview_thumb_path"
@@ -52,6 +53,7 @@
 <script lang="ts" setup generic="T extends IImageSource">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IImageSource } from 'src/types/carousel'
+import AppVideo from 'src/components/default/AppVideo.vue'
 
 // --- Props ---
 const props = defineProps<{

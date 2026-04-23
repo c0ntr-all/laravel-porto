@@ -3,6 +3,8 @@
 namespace App\Ship\Enums;
 
 use App\Ship\Enums\Traits\Arrayable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 enum ContainerAliasEnum: string
 {
@@ -40,5 +42,12 @@ enum ContainerAliasEnum: string
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',
         };
+    }
+
+    public static function getAliasByModel(Model $model): string
+    {
+        $morphMap = Relation::morphMap();
+
+        return array_search(get_class($model), $morphMap);
     }
 }

@@ -1,5 +1,6 @@
 export * from './jsonapi'
 export * from './LifeLog/post'
+export * from './LifeLog/period'
 export * from './TaskManager/task'
 export * from './user'
 export * from './comment'

@@ -3,6 +3,9 @@
     <div class="lifelog-post-form-wrap q-mb-md">
       <PostFormCreate />
     </div>
+    <div class="lifelog-period-form-wrap q-mb-md">
+      <LifeLogPeriodForm />
+    </div>
     <div class="lifelog-filter-wrap q-mb-md">
       <LifeLogPostsFilter
         @submit="onFilterSubmit"
@@ -39,7 +42,9 @@ import { ITagsFilterData } from 'src/types'
 import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
 import LifeLogPostsFilter from 'src/components/client/LifeLog/LifeLogPostsFilter.vue'
 import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
+// import LifeLogRowCard from 'src/components/client/LifeLog/LifeLogRowCard.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import LifeLogPeriodForm from 'src/components/client/LifeLog/LifeLogPeriodForm.vue'
 
 const postStore = usePostStore()
 const { posts, postsCount } = storeToRefs(postStore)
@@ -78,6 +83,9 @@ onMounted(() => {
   max-width: 700px;
 
   .lifelog-post-form-wrap {
+    width: 100%;
+  }
+  .lifelog-period-form-wrap {
     width: 100%;
   }
   .lifelog-posts-wrap {

@@ -5,15 +5,19 @@ import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
-import { IJsonApiResponse, IPost, IFilter, IPostModel, IPostUpdateModel } from 'src/types'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { uploadPostAttachments } from 'src/services/post.service'
+import { IJsonApiResponse, IPost, IFilter, IPostModel, IPostUpdateModel, IPeriodCreatePayload, IPeriod } from 'src/types'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
   const postsCount = ref<number>(0)
+  const periods = ref<IPost[]>([])
+  const periodsCount = ref<number>(0)
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
+  const startPeriodPostId = ref<string | null>(null)
+  const endPeriodPostId = ref<string | null>(null)
 
   async function getPosts(filters: IFilter = {}) {
     isLoading.value = true
@@ -30,15 +34,24 @@ export const usePostStore = defineStore('post', () => {
   }
 
   async function createPost(postModel: IPostModel, attachmentModel: File[]): Promise<IPost> {
-    try {
-      const postCreateDto: IPostCreateDto = mapPostFormToCreateDto(postModel)
+    const postCreateDto: IPostCreateDto = mapPostFormToCreateDto(postModel)
 
-      let attachmentsIds: {id: string, type: string}[] | undefined = []
-      if (attachmentModel?.length) {
+    let attachmentsIds: {id: string, type: string}[] | undefined = []
+    if (attachmentModel?.length) {
+      try {
         attachmentsIds = await uploadPostAttachments(attachmentModel)
-      }
-      postCreateDto.attachments = attachmentsIds
+      } catch (error: any) {
+        const errorMessage = error.message || 'Не удалось загрузить вложения'
+        handleApiError(errorMessage)
+        console.log('test2')
 
+        throw new Error(`Ошибка загрузки вложений: ${errorMessage}`)
+      }
+    }
+
+    postCreateDto.attachments = attachmentsIds
+
+    try {
       const responseData: IJsonApiResponse = await postApi.createPost(postCreateDto)
       const mappedResponse: IPost[] = mapResponse(responseData) as IPost[]
       const newPost: IPost = mappedResponse[0]
@@ -49,10 +62,9 @@ export const usePostStore = defineStore('post', () => {
       handleApiSuccess(responseData)
 
       return newPost
-    } catch (err: any) {
-      handleApiError(err)
-      error.value = err.message ?? 'Ошибка создания'
-      throw err
+    } catch (error: any) {
+      handleApiError(error.message || 'Не удалось создать пост')
+      throw error
     }
   }
 
@@ -91,12 +103,43 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
+  function setStartPeriodPostId(id: string|null) {
+    startPeriodPostId.value = id
+  }
+
+  function setEndPeriodPostId(id: string|null) {
+    endPeriodPostId.value = id
+  }
+
+  async function createPeriod(payload: IPeriodCreatePayload): Promise<IPeriod> {
+    try {
+      const responseData: IJsonApiResponse = await postApi.createPeriod(payload)
+      const mappedResponse: IPeriod[] = mapResponse(responseData) as IPeriod[]
+      const newPeriod: IPeriod = mappedResponse[0]
+
+      periods.value.unshift(newPeriod)
+      periodsCount.value += 1
+
+      handleApiSuccess(responseData)
+
+      return newPeriod
+    } catch (error: any) {
+      handleApiError(error.message || 'Не удалось создать период')
+      throw error
+    }
+  }
+
   return {
     posts,
     postsCount,
     isLoading,
+    startPeriodPostId,
+    endPeriodPostId,
     getPosts,
     createPost,
-    updatePost
+    updatePost,
+    setStartPeriodPostId,
+    setEndPeriodPostId,
+    createPeriod
   }
 })

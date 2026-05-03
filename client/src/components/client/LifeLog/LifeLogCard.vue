@@ -1,5 +1,11 @@
 <template>
-  <div class="ll-card-wrap">
+  <div
+    class="ll-card-wrap"
+    :class="{
+      'll-card-wrap--start-period': isPostStartPeriod,
+      'll-card-wrap--end-period': isPostEndPeriod
+    }
+  ">
     <q-avatar
       class="ll-card-wrap__avatar"
       color="primary"
@@ -107,6 +113,7 @@ import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.v
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
+import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
 
 interface Action {
   fn: () => void
@@ -119,6 +126,9 @@ const props = defineProps<{
   post: IPost
 }>()
 const { post } = toRefs(props)
+
+const { startPeriodPostId, endPeriodPostId, setStartPeriodPostId, setEndPeriodPostId } = useLifelogPeriods()
+
 const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
 const showCarousel = ref<boolean>(false)
@@ -140,7 +150,24 @@ const availableActions: Action[] = [{
   label: 'Delete Post',
   name: 'delete_post',
   icon: 'delete'
+}, {
+  fn: () => {
+    setStartPeriodPostId(props.post.id)
+  },
+  label: 'Start period',
+  name: 'start_period',
+  icon: 'line_axis'
+}, {
+  fn: () => {
+    setEndPeriodPostId(props.post.id)
+  },
+  label: 'End period',
+  name: 'end_period',
+  icon: 'line_axis'
 }]
+
+const isPostStartPeriod = computed(() => startPeriodPostId.value === props.post.id)
+const isPostEndPeriod = computed(() => endPeriodPostId.value === props.post.id)
 const openCarousel = (id: string) => {
   currentSlideId.value = id
   showCarousel.value = true
@@ -155,6 +182,54 @@ const openCarousel = (id: string) => {
   &__avatar {
     position: absolute;
     left: 0;
+  }
+
+  &--start-period {
+    &:before {
+      content: '';
+      position: absolute;
+      width: calc(100% - 3.5rem);
+      height: 100%;
+      background: #000;
+      z-index: 1;
+      opacity: .5;
+    }
+
+    &:after {
+      content: "start";
+      position: absolute;
+      margin-top: -30px;
+      margin-left: -10px;
+      left: 50%;
+      top: 50%;
+      font-size: 2rem;
+      color: #fff;
+      z-index: 2;
+    }
+  }
+
+  &--end-period {
+    &:before {
+      content: '';
+      position: absolute;
+      width: calc(100% - 3.5rem);
+      height: 100%;
+      background: #000;
+      z-index: 1;
+      opacity: .5;
+    }
+
+    &:after {
+      content: 'end';
+      position: absolute;
+      margin-top: -30px;
+      margin-left: -10px;
+      left: 50%;
+      top: 50%;
+      font-size: 2rem;
+      color: #fff;
+      z-index: 2;
+    }
   }
 }
 .ll-card {

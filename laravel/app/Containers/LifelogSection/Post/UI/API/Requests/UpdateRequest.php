@@ -2,7 +2,9 @@
 
 namespace App\Containers\LifelogSection\Post\UI\API\Requests;
 
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
@@ -35,7 +37,11 @@ class UpdateRequest extends FormRequest
             'deleted_attachment_ids' => 'sometimes|array',
             'deleted_attachments_ids.*' => 'sometimes|string',
             'attachments' => 'sometimes|array',
-            'attachments.*' => 'sometimes|uuid',
+            'attachments.*.type' => [
+                'required',
+                Rule::in([ContainerAliasEnum::GALLERY_IMAGE->value, ContainerAliasEnum::GALLERY_VIDEO->value]),
+            ],
+            'attachments.*.id' => 'required|uuid',
         ];
     }
 }

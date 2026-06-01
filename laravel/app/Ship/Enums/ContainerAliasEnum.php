@@ -23,6 +23,7 @@ enum ContainerAliasEnum: string
     case TM_TASK = 'tm_tasks';
     //LifelogSection
     case LL_POST = 'll_posts';
+    case LL_PERIOD = 'll_periods';
     //GallerySection
     case GALLERY_IMAGE = 'gallery_images';
     case GALLERY_VIDEO = 'gallery_videos';

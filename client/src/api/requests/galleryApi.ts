@@ -10,17 +10,21 @@ export const galleryApi = {
   ): Promise<IJsonApiResponse> {
     const formData = mapMediaItemToFormData(file)
 
-    const response = await api.post(
-      url,
-      formData,
-      {
-        onUploadProgress: (event) => {
-          if (!event.total) return
-          onProgress(Math.round(event.loaded * 100 / event.total))
+    try {
+      const response = await api.post(
+        url,
+        formData,
+        {
+          onUploadProgress: (event) => {
+            if (!event.total) return
+            onProgress(Math.round(event.loaded * 100 / event.total))
+          }
         }
-      }
-    )
+      )
 
-    return response.data
+      return response.data
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 }

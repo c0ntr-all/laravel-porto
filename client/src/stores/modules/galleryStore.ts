@@ -29,6 +29,7 @@ export const useGalleryStore = defineStore('gallery', () => {
       return result
     } catch (err: any) {
       error.value = err.message ?? 'Ошибка создания'
+      throw new Error(error.value)
     }
   }
 

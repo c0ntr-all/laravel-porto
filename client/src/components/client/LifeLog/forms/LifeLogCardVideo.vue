@@ -4,7 +4,7 @@
     class="media-item"
   >
     <template v-slot:default>
-      <q-chip class="media-item__time" text-color="white" dense>0:19</q-chip>
+      <q-chip class="media-item__time" text-color="white" dense>{{ shortDuration }}</q-chip>
       <q-img class="media-item__img" src="~assets/icons/video-square.svg" fit="contain" />
     </template>
     <template v-slot:error>
@@ -16,11 +16,14 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { IGalleryImage } from 'src/types/gallery'
 
-defineProps<{
+const props = defineProps<{
   image: IGalleryImage
 }>()
+
+const shortDuration = computed(() => props.image.duration.slice(3, 9))
 </script>
 
 <style lang="scss" scoped>

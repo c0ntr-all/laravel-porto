@@ -14,4 +14,14 @@ abstract class ActivityLoggableModel extends Model implements DBLoggable
     {
         return $this->loggableType->value;
     }
+
+    public function userLogs()
+    {
+
+    }
+
+    public function systemLogs()
+    {
+
+    }
 }

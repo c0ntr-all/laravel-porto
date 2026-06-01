@@ -2,6 +2,7 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\TaskManagerSection\Task\Data\DTO\TaskUpdateData;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\UpdateTaskTask;
@@ -12,6 +13,7 @@ use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UpdateTaskAction extends UseCaseAction
 {
@@ -19,7 +21,8 @@ class UpdateTaskAction extends UseCaseAction
     protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
 
     public function __construct(
-        private readonly UpdateTaskTask $updateTaskTask
+        private readonly UpdateTaskTask $updateTaskTask,
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
@@ -27,7 +30,14 @@ class UpdateTaskAction extends UseCaseAction
 
     public function handle(Task $task, TaskUpdateData $dto): Task
     {
-        return $this->updateTaskTask->run($task, $dto);
+        $updatedTask = $this->updateTaskTask->run($task, $dto);
+
+        // После успешного коммита формируем user_log
+        DB::afterCommit(function () use ($updatedTask) {
+            $this->createActivityUseCaseTask->run($updatedTask, $this->eventTypesEnum->value);
+        });
+
+        return $updatedTask;
     }
 
     public function asController(Task $task, UpdateRequest $request): JsonResponse

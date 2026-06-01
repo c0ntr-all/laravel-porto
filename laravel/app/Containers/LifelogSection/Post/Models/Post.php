@@ -7,10 +7,12 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
+use App\Containers\LifelogSection\Period\Models\Period;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -26,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $time
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property Carbon $datetime
  * @property User $user
  * @property Tag[] $tags
  * @method static Builder|Post newModelQuery()
@@ -59,4 +62,58 @@ class Post extends ActivityLoggableModel
         'time' => 'datetime',
     ];
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::LL_POST;
+
+    public function startPeriods(): HasMany
+    {
+        return $this->hasMany(Period::class, 'start_post_id');
+    }
+
+    public function endPeriods(): HasMany
+    {
+        return $this->hasMany(Period::class, 'end_post_id');
+    }
+
+    public function periods(): Post|Builder
+    {
+        return Period::query()
+            ->where('user_id', $this->user_id)
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    // Пост находится между start и end по ID
+                    $q->where('start_post_id', '<', $this->id)
+                        ->where(function ($sq) {
+                            $sq->where('end_post_id', '>', $this->id)
+                                ->orWhereNull('end_post_id');
+                        });
+                });
+            });
+    }
+
+    // Все периоды, связанные с постом (для eager loading)
+    public function allRelatedPeriods(): Post|Builder
+    {
+        return Period::query()
+            ->where('user_id', $this->user_id)
+            ->where(function ($query) {
+                $query->where('start_post_id', $this->id)
+                    ->orWhere('end_post_id', $this->id)
+                    ->orWhere(function ($q) {
+                        $q->where('start_post_id', '<', $this->id)
+                            ->where(function ($sq) {
+                                $sq->where('end_post_id', '>', $this->id)
+                                    ->orWhereNull('end_post_id');
+                            });
+                    });
+            });
+    }
+
+    public function getDatetimeAttribute(): Carbon
+    {
+        $datetime = $this->date;
+        if (!is_null($this->time)) {
+            $datetime = $datetime . ' ' . $this->time;
+        }
+
+        return $datetime;
+    }
 }

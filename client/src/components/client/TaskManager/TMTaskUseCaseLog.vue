@@ -14,7 +14,7 @@
           </q-tooltip>
         </q-avatar>
         <span>{{ user.name }}</span>
-        <span>{{ log.event_type }} задачу</span>
+        <span>{{ log.event_label }} задачу</span>
       </div>
       <div class="task-history-item__time">
         <time>{{ log.created_at }}</time>

@@ -26,7 +26,7 @@ export async function uploadPostAttachments(files: File[]): Promise<{id: string,
         }
       }) : []
     } catch (err: any) {
-      console.error(err)
+      throw new Error(err)
     }
   }
   if (fileGroups.videos.length) {

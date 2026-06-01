@@ -4,15 +4,12 @@ export interface IUseCaseLogFields {
   loggable_id: string
   loggable_type: string
   event_type: string
+  event_label: string
   created_at: string
 }
 export interface IUseCaseLog extends IUseCaseLogFields {
   id: string
   userId: string
-}
-export interface IUseCaseLogListPayload {
-  loggable_id: string
-  loggable_type: string
 }
 export interface IUseCaseLogResource extends IJsonApiResource {
   attributes: IUseCaseLogFields

@@ -63,7 +63,7 @@ module.exports = configure(function (ctx) {
         mode: ctx.dev ? 'test' : 'prod',
         host: ctx.dev
           ? 'http://docker-porto.loc/api'
-          : 'https://api.home-portal.prod',
+          : 'https://api.home-portal.prod/api',
         galleryUploadAlbumId: '1'
       },
       // rawDefine: {}
@@ -101,7 +101,6 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
       host: 'docker-porto.loc',
-      port: 9000,
       https: false,
       open: true // opens browser window automatically
     },

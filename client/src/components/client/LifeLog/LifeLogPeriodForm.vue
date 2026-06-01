@@ -54,24 +54,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, computed } from 'vue'
-import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
-
-const { startPeriodPost, endPeriodPost, resetPeriod, createPeriod } = useLifelogPeriods()
-
-const baseModel = {
-  title: null,
-  description: null,
-  start_post_id: null,
-  end_post_id: null
-}
-
-const model = ref(baseModel)
-
-const isSaveAvailable = computed(() => startPeriodPost.value !== null)
-
-const clearModel = () => {
+<script lang="ts" setup>+ clearModel = () => {
   model.value = baseModel.value
 }
 

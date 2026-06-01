@@ -8,7 +8,7 @@
       />
     </div>
     <p v-else class="text-grey-5">There are no history!</p>
-    <q-inner-loading :showing="isCommentsLoading">
+    <q-inner-loading :showing="isHistoryLoading">
       <q-spinner-gears size="50px" color="primary" />
     </q-inner-loading>
   </div>

@@ -17,6 +17,7 @@ return new class extends Migration
                 ->default(false);
             $table->string('decline_reason')
                 ->after('is_declined')
+                ->nullable()
                 ->default(null);
         });
     }

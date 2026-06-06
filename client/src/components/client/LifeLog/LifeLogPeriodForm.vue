@@ -1,17 +1,19 @@
 <template>
   <div class="lifelog-period-form q-pa-md">
     <div class="text-h6 q-mb-md">Создать период</div>
-    <div class="q-mb-md">
+    <div class="q-mb-md flex" style="column-gap: .25rem">
       <q-input
         name="period"
         ref="titleRef"
         v-model="model.title"
         class="q-pa-none"
+        style="flex-grow: 1"
         label="Title of period"
         :rules="[val => !!val || 'Field is required']"
         dense
         outlined
       />
+      <AppColorPicker v-model="model.color" />
     </div>
     <div class="flex justify-between items-center">
       <div class="lifelog-periods-table">
@@ -54,21 +56,42 @@
   </div>
 </template>
 
-<script lang="ts" setup>+ clearModel = () => {
-  model.value = baseModel.value
+<script lang="ts" setup>
+import { ref, computed } from 'vue'
+import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
+import AppColorPicker from 'src/components/default/AppColorPicker.vue'
+import { generateRandomHex } from 'src/utils/colors'
+import { IPeriodModel } from 'src/types'
+
+const { startPeriodPost, endPeriodPost, resetPeriod, createPeriod } = useLifelogPeriods()
+
+const baseModel: IPeriodModel = {
+  title: null,
+  description: null,
+  start_post_id: null,
+  end_post_id: null,
+  color: generateRandomHex(),
+  icon: null
 }
 
+const model = ref<IPeriodModel>(baseModel)
+
+const isSaveAvailable = computed(() => startPeriodPost.value !== null)
+
 const processCreatePeriod = () => {
-  const payload = {
-    title: model.value.title,
+  const data = {
+    ...model.value,
     start_post_id: startPeriodPost.value.id,
     end_post_id: endPeriodPost.value.id
   }
-  createPeriod(payload).then(() => {
+  createPeriod(data).then(() => {
     clearModel()
   })
 }
 
+const clearModel = () => {
+  model.value = baseModel.value
+}
 </script>
 
 <style lang="scss" scoped>

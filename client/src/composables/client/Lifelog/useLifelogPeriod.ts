@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { usePostStore } from 'src/stores/modules/postStore'
-import {IPeriodCreatePayload, IPost} from 'src/types'
+import { IPeriodModel, IPost } from 'src/types'
 
 export default function useLifelogPeriods() {
   const postStore = usePostStore()
@@ -26,7 +26,7 @@ export default function useLifelogPeriods() {
     postStore.setEndPeriodPostId(null)
   }
 
-  const createPeriod = (payload: IPeriodCreatePayload): Promise => {
+  const createPeriod = (payload: IPeriodModel): Promise => {
     return postStore.createPeriod(payload)
   }
 

@@ -7,7 +7,16 @@ import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { uploadPostAttachments } from 'src/services/post.service'
-import { IJsonApiResponse, IPost, IFilter, IPostModel, IPostUpdateModel, IPeriodCreatePayload, IPeriod } from 'src/types'
+import {
+  IJsonApiResponse,
+  IPost,
+  IFilter,
+  IPostModel,
+  IPostUpdateModel,
+  IPeriod,
+  IPeriodModel, IPeriodCreateDto
+} from 'src/types'
+import { mapPeriodFormModelToCreateDto } from 'src/api/mappers/LifeLog/period.mapper'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
@@ -43,7 +52,6 @@ export const usePostStore = defineStore('post', () => {
       } catch (error: any) {
         const errorMessage = error.message || 'Не удалось загрузить вложения'
         handleApiError(errorMessage)
-        console.log('test2')
 
         throw new Error(`Ошибка загрузки вложений: ${errorMessage}`)
       }
@@ -111,9 +119,11 @@ export const usePostStore = defineStore('post', () => {
     endPeriodPostId.value = id
   }
 
-  async function createPeriod(payload: IPeriodCreatePayload): Promise<IPeriod> {
+  async function createPeriod(periodModel: IPeriodModel): Promise<IPeriod> {
+    const periodCreateDto: IPeriodCreateDto = mapPeriodFormModelToCreateDto(periodModel)
+
     try {
-      const responseData: IJsonApiResponse = await postApi.createPeriod(payload)
+      const responseData: IJsonApiResponse = await postApi.createPeriod(periodCreateDto)
       const mappedResponse: IPeriod[] = mapResponse(responseData) as IPeriod[]
       const newPeriod: IPeriod = mappedResponse[0]
 

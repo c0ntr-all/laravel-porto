@@ -1,5 +1,13 @@
 import { IJsonApiResource, IJsonApiResponse } from 'src/types'
 
+export interface IPeriodModel {
+  title: string,
+  description?: string,
+  start_post_id: string,
+  end_post_id: string | null,
+  color: string,
+  icon?: string | null
+}
 /**
  * Only backend fields
  */
@@ -8,14 +16,6 @@ export interface IPeriodFields {
   description: string | null
   color: string | null
   icon: boolean
-}
-export interface IPeriodCreatePayload {
-  title: string
-  description?: string
-  start_post_id: string
-  end_post_id?: string
-  color: string
-  icon?: string
 }
 export interface IPeriodUpdatePayload extends Partial<IPeriodFields> {}
 export interface IPeriodResource extends IJsonApiResource {

@@ -1,5 +1,5 @@
 import { api } from 'src/boot/axios'
-import { IFilter, IJsonApiResponse, IPeriodCreatePayload } from 'src/types'
+import { IFilter, IJsonApiResponse, IPeriodCreateDto } from 'src/types'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 import { buildFilterForUrl } from 'src/utils/jsonapi'
@@ -24,7 +24,7 @@ export const postApi = {
     const response = await api.patch(`v1/lifelog/posts/${id}`, postUpdateDto)
     return response.data
   },
-  async createPeriod(payload: IPeriodCreatePayload): Promise<IJsonApiResponse> {
+  async createPeriod(payload: IPeriodCreateDto): Promise<IJsonApiResponse> {
     const response = await api.post('v1/lifelog/periods', payload)
     return response.data
   }

@@ -18,6 +18,10 @@ use App\Containers\GallerySection\Image\Events\CreatedEvent as GalleryImageCreat
 use App\Containers\GallerySection\Image\Events\DeletedEvent as GalleryImageDeletedEvent;
 use App\Containers\GallerySection\Image\Events\GalleryImageEvent;
 use App\Containers\GallerySection\Image\Events\UpdatedEvent as GalleryImageUpdatedEvent;
+use App\Containers\LifelogSection\Period\Events\CreatedEvent as PeriodCreatedEvent;
+use App\Containers\LifelogSection\Period\Events\DeletedEvent as PeriodDeletedEvent;
+use App\Containers\LifelogSection\Period\Events\PeriodEvent;
+use App\Containers\LifelogSection\Period\Events\UpdatedEvent as PeriodUpdatedEvent;
 use App\Containers\LifelogSection\Post\Events\CreatedEvent as PostCreatedEvent;
 use App\Containers\LifelogSection\Post\Events\DeletedEvent as PostDeletedEvent;
 use App\Containers\LifelogSection\Post\Events\PostEvent;
@@ -40,6 +44,13 @@ class ActivityLogEventsSubscriber
             PostUpdatedEvent::class,
             PostDeletedEvent::class
         ], $this->handlePostEvents(...));
+
+        // CRUD periods
+        $events->listen([
+            PeriodCreatedEvent::class,
+            PeriodUpdatedEvent::class,
+            PeriodDeletedEvent::class
+        ], $this->handlePeriodEvents(...));
 
         // CRUD tags
         $events->listen([
@@ -73,6 +84,30 @@ class ActivityLogEventsSubscriber
             TaskUpdatedEvent::class,
             TaskDeletedEvent::class
         ], $this->handleTaskEvents(...));
+    }
+
+    private function handlePeriodEvents(PeriodEvent $event): void
+    {
+        $uuid = Correlation::getUuid();
+        $period = $event->getPeriod();
+        $eventType = $event->getEventType();
+        $userId = auth()?->user()?->id;
+        $metadata = $period->only(['title', 'color', 'start_post_id', 'end_post_id']);
+
+        if ($eventType === EventTypesEnum::UPDATED->value) {
+            $metadata = $period->getChanges();
+        }
+
+        $systemLogDto = SystemLogCreateDto::from([
+            'user_id' => $userId,
+            'event_type' => $eventType,
+            'main_type' => $period->getLoggableType(),
+            'main_id' => $period->id,
+            'correlation_uuid' => $uuid,
+            'metadata' => $metadata,
+        ]);
+
+        SystemLogCreateAction::dispatchSync($systemLogDto);
     }
 
     private function handlePostEvents(PostEvent $event): void

@@ -109,11 +109,14 @@ class Post extends ActivityLoggableModel
 
     public function getDatetimeAttribute(): Carbon
     {
-        $datetime = $this->date;
-        if (!is_null($this->time)) {
-            $datetime = $datetime . ' ' . $this->time;
+        $date = $this->date->format('Y-m-d');
+
+        if ($this->time) {
+            $time = $this->time->format('H:i:s');
+
+            return Carbon::parse($date . ' ' . $time);
         }
 
-        return $datetime;
+        return Carbon::parse($date . ' 00:00:00');
     }
 }

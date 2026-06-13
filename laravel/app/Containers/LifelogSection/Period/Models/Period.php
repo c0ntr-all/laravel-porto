@@ -54,6 +54,7 @@ class Period extends ActivityLoggableModel
     protected $table = 'lifelog_periods';
 
     protected $fillable = [
+        'user_id',
         'title',
         'description',
         'color',

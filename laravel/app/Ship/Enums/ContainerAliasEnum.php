@@ -40,6 +40,7 @@ enum ContainerAliasEnum: string
             self::MUSIC_TRACK => 'Трек',
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
+            self::LL_PERIOD => 'Период',
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',
         };

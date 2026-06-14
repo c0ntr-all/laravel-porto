@@ -4,19 +4,10 @@ namespace App\Containers\GallerySection\Image\UI\API\Requests;
 
 use App\Containers\GallerySection\Image\Rules\ValidateImageExistence;
 use App\Containers\GallerySection\Image\Rules\ValidateImageExtension;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class UploadImagesFromWindowsRequest extends FormRequest
+class UploadImagesFromWindowsRequest extends AuthenticatedRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     /**
      * Get the validation rules that apply to the request.

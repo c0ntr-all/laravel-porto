@@ -2,18 +2,13 @@
 
 namespace App\Containers\AppSection\Tag\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class CreateRequest extends FormRequest
+class CreateRequest extends AuthenticatedRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
-        return true;
+        return parent::authorize();
     }
 
     /**

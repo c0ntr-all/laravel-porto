@@ -2,9 +2,9 @@
 
 namespace App\Containers\MusicSection\Artist\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class TracksRequest extends FormRequest
+class TracksRequest extends AuthenticatedRequest
 {
     /**
      * Determine if the user is authorized to make this request.

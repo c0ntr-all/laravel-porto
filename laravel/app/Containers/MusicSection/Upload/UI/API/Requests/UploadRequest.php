@@ -3,19 +3,10 @@
 namespace App\Containers\MusicSection\Upload\UI\API\Requests;
 
 use App\Containers\MusicSection\Upload\Helpers\PathHelper;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AdminRequest;
 
-class UploadRequest extends FormRequest
+class UploadRequest extends AdminRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     /**
      * Get the validation rules that apply to the request.

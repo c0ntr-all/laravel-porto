@@ -2,9 +2,9 @@
 
 namespace App\Containers\MusicSection\Album\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class IndexRequest extends FormRequest
+class IndexRequest extends AuthenticatedRequest
 {
     /**
      * Determine if the user is authorized to make this request.

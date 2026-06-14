@@ -60,7 +60,14 @@ class Artist extends Model
 
     protected $table = 'music_artists';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'country_id',
+        'name',
+        'description',
+        'image',
+        'path',
+    ];
 
     public function albums(): BelongsToMany
     {

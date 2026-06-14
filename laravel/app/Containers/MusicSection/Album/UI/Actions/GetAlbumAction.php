@@ -5,11 +5,10 @@ namespace App\Containers\MusicSection\Album\UI\Actions;
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetAlbumAction
+class GetAlbumAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(Album $album): Album
     {

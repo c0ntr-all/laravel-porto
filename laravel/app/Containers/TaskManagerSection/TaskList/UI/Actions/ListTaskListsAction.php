@@ -8,11 +8,10 @@ use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\ListRequest;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTransformer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListTaskListsAction
+class ListTaskListsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ListTaskListsTask $listTaskListsTask

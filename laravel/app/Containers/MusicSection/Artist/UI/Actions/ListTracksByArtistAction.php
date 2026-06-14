@@ -8,11 +8,10 @@ use App\Containers\MusicSection\Track\Tasks\ListTracksByArtistTask;
 use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-final class ListTracksByArtistAction
+final class ListTracksByArtistAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ListTracksByArtistTask $listTracksByArtistTask

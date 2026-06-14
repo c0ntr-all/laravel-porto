@@ -55,7 +55,18 @@ class Video extends ActivityLoggableModel
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_VIDEO;
 
     protected $table = 'gallery_videos';
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'album_id',
+        'source',
+        'extension',
+        'duration',
+        'original_name',
+        'external_url',
+        'width',
+        'height',
+        'description',
+    ];
 
     public function album(): BelongsTo
     {

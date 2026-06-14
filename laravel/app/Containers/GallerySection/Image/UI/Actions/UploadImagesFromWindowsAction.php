@@ -15,11 +15,10 @@ use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\FileSourceEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UploadImagesFromWindowsAction
+class UploadImagesFromWindowsAction extends BaseAction
 {
-    use AsAction;
 
     private const string SOURCE_TYPE = FileSourceEnum::WINDOWS->value;
 

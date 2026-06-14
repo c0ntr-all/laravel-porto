@@ -6,11 +6,10 @@ use App\Containers\AppSection\Authentication\Data\DTO\CreatePasswordGrantTokenDt
 use App\Containers\AppSection\Authentication\Tasks\CreatePasswordGrantTokenTask;
 use App\Containers\AppSection\Authentication\UI\API\Requests\LoginRequest;
 use Illuminate\Http\Client\Response;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class LoginAction
+class LoginAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreatePasswordGrantTokenTask $createPasswordGrantTokenTask

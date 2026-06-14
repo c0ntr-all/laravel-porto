@@ -10,7 +10,13 @@ class ActivityUseCaseLog extends Model
 {
     use HasUser;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'correlation_uuid',
+        'loggable_type',
+        'loggable_id',
+        'event_type',
+    ];
 
     const null UPDATED_AT = null;
 

@@ -6,11 +6,10 @@ use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskList\Tasks\DeleteTaskListTask;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\DeleteRequest;
 use Illuminate\Http\Response;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class DeleteTaskListAction
+class DeleteTaskListAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly DeleteTaskListTask $deleteTaskListTask

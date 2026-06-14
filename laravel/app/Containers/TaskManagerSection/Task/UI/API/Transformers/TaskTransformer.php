@@ -29,9 +29,15 @@ class TaskTransformer extends TransformerAbstract
             'content' => $task->content,
             'finished_at' => $task->finished_at?->format('Y-m-d H:i:s'),
             'is_declined' => $task->is_declined,
-            'reminders_count' => $task->reminder()->count(),
-            'checklists_count' => $task->checklists()->count(),
-            'progresses_count' => $task->progress()->count(),
+            'reminders_count' => $task->relationLoaded('reminder')
+                ? ($task->reminder ? 1 : 0)
+                : $task->reminder()->count(),
+            'checklists_count' => $task->relationLoaded('checklists')
+                ? $task->checklists->count()
+                : $task->checklists()->count(),
+            'progresses_count' => $task->relationLoaded('progress')
+                ? $task->progress->count()
+                : $task->progress()->count(),
             'created_at' => $task->created_at->format('Y-m-d H:i:s'),
         ];
     }

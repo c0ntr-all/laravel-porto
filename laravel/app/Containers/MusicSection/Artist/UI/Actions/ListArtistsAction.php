@@ -7,11 +7,10 @@ use App\Containers\MusicSection\Artist\UI\API\Requests\IndexRequest;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListArtistsAction
+class ListArtistsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ArtistRepository $artistRepository

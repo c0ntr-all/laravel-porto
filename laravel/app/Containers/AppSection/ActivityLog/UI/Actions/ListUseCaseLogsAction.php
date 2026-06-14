@@ -7,11 +7,10 @@ use App\Containers\AppSection\ActivityLog\UI\API\Requests\ListRequest;
 use App\Containers\AppSection\ActivityLog\UI\API\Transformers\UseCaseLogTransformer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListUseCaseLogsAction
+class ListUseCaseLogsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ListUseCaseLogsTask $listUseCaseLogsTask

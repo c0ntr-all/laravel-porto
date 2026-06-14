@@ -15,11 +15,10 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Helpers\Correlation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UploadAttachmentAction
+class UploadAttachmentAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateAttachmentTask $createAttachmentTask,

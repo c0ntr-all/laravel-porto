@@ -5,11 +5,10 @@ namespace App\Containers\AppSection\Tag\UI\Actions;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetTagAction
+class GetTagAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(Tag $tag): Tag
     {

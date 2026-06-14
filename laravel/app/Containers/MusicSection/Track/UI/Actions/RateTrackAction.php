@@ -8,11 +8,10 @@ use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Track\Tasks\RateTrackTask;
 use App\Containers\MusicSection\Track\UI\API\Requests\RateRequest;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class RateTrackAction
+class RateTrackAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly RateTrackTask $rateTrackTask

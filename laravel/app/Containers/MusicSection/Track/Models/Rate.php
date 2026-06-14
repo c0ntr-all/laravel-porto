@@ -28,14 +28,20 @@ class Rate extends Model
 {
     protected $table = 'music_track_rates';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'track_id',
+        'rate',
+    ];
 
     protected static function boot(): void
     {
         parent::boot();
 
         static::addGlobalScope('user', function ($builder) {
-            $builder->where('user_id', '=', auth()->user()->id);
+            if (auth()->check()) {
+                $builder->where('user_id', '=', auth()->id());
+            }
         });
     }
 }

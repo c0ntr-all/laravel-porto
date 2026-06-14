@@ -4,11 +4,10 @@ namespace App\Containers\AppSection\ActivityLog\UI\Actions;
 
 use App\Containers\AppSection\ActivityLog\Data\DTO\SystemLogCreateDto;
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivitySystemLogTask;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-final class SystemLogCreateAction
+final class SystemLogCreateAction extends BaseAction
 {
-    use AsAction;
 
     /**
      * Create a new job instance.

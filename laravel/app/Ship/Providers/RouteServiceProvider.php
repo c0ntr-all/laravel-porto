@@ -141,8 +141,7 @@ class RouteServiceProvider extends LaravelRouteServiceProvider
         return [
             'middleware' => $this->getMiddlewares(),
 //            'domain' => $this->getApiUrl(),
-            //todo: Temporary solution for api routes
-            'prefix' => (env('APP_ENV') !== 'production' ? 'api' : '') . $prefix,
+            'prefix' => Config::get('api.prefix', '') . $prefix,
         ];
     }
 

@@ -10,7 +10,16 @@ class ActivitySystemLog extends Model
 {
     use HasUser;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'correlation_uuid',
+        'event_type',
+        'main_type',
+        'main_id',
+        'related_type',
+        'related_id',
+        'metadata',
+    ];
 
     const null UPDATED_AT = null;
 

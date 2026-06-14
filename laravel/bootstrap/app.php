@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->use([
-            \Illuminate\Http\Middleware\HandleCors::class
+            \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Ship\Middleware\InitCorrelationMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

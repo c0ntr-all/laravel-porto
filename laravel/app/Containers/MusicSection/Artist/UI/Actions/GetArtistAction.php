@@ -5,11 +5,10 @@ namespace App\Containers\MusicSection\Artist\UI\Actions;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetArtistAction
+class GetArtistAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(Artist $artist): Artist
     {

@@ -6,11 +6,10 @@ use App\Containers\MusicSection\Playlist\Data\Repositories\PlaylistRepository;
 use App\Containers\MusicSection\Playlist\UI\API\Transformers\PlaylistTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListPlaylistsAction
+class ListPlaylistsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly PlaylistRepository $playlistRepository

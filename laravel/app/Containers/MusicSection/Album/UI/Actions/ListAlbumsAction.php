@@ -7,11 +7,10 @@ use App\Containers\MusicSection\Album\UI\API\Requests\IndexRequest;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListAlbumsAction
+class ListAlbumsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly AlbumRepository $albumRepository

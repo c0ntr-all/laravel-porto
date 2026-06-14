@@ -13,7 +13,13 @@ class Attachment extends ActivityLoggableModel
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::ATTACHMENT;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'attachable_type',
+        'attachable_id',
+        'fileable_type',
+        'fileable_id',
+    ];
 
     public function attachable(): MorphTo
     {

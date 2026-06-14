@@ -8,11 +8,10 @@ use App\Containers\MusicSection\Tag\Tasks\CreateTagTask;
 use App\Containers\MusicSection\Tag\UI\API\Requests\CreateRequest;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class CreateTagAction
+class CreateTagAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateTagTask $createTagTask

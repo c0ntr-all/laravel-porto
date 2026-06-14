@@ -11,11 +11,10 @@ use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistIte
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UpdateChecklistItemAction
+class UpdateChecklistItemAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly UpdateChecklistItemTask $updateChecklistItemTask

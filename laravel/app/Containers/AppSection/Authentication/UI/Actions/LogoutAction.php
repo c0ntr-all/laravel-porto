@@ -7,11 +7,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cookie;
 use Laravel\Passport\Passport;
 use Lcobucci\JWT\Configuration;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class LogoutAction
+class LogoutAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly Configuration $jwtConfig,

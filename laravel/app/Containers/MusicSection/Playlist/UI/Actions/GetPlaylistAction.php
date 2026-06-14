@@ -5,11 +5,10 @@ namespace App\Containers\MusicSection\Playlist\UI\Actions;
 use App\Containers\MusicSection\Playlist\Models\Playlist;
 use App\Containers\MusicSection\Playlist\UI\API\Transformers\PlaylistTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetPlaylistAction
+class GetPlaylistAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(Playlist $playlist): Playlist
     {

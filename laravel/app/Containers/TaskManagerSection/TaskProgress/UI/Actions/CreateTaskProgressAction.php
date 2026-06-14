@@ -9,11 +9,10 @@ use App\Containers\TaskManagerSection\TaskProgress\Tasks\CreateTaskProgressTask;
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Requests\TaskProgressCreateRequest;
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Transformers\TaskProgressTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class CreateTaskProgressAction
+class CreateTaskProgressAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateTaskProgressTask $createTaskProgressTask

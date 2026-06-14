@@ -4,11 +4,10 @@ namespace App\Containers\AppSection\User\UI\Actions;
 
 use App\Containers\AppSection\User\UI\API\Resources\ProfileResource;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetUserProfileAction
+class GetUserProfileAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(): ?Authenticatable
     {

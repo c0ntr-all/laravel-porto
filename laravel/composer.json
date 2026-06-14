@@ -14,18 +14,18 @@
         "laravel/tinker": "^2.9",
         "lorisleiva/laravel-actions": "^2.8",
         "pbmedia/laravel-ffmpeg": "^8.7",
-        "predis/predis": "*",
+        "predis/predis": "^2.3",
         "spatie/laravel-data": "^4.7",
         "spatie/laravel-fractal": "^6.2",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-query-builder": "^6.0"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "*",
+        "barryvdh/laravel-debugbar": "^3.14",
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
-        "laravel/telescope": "*",
+        "laravel/telescope": "^5.0",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
         "phpunit/phpunit": "^11.0.1"
@@ -55,7 +55,6 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
         ]
     },

@@ -9,11 +9,10 @@ use App\Containers\LifelogSection\Period\UI\API\Transformers\PeriodTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListPeriodsAction
+class ListPeriodsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ListPeriodsTask $listPeriodsTask

@@ -10,11 +10,10 @@ use App\Containers\TaskManagerSection\Checklist\UI\API\Requests\ChecklistItemCre
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistItemTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class CreateChecklistItemAction
+class CreateChecklistItemAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateChecklistItemTask $createChecklistItemTask

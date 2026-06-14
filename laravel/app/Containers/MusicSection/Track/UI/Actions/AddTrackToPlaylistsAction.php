@@ -7,11 +7,10 @@ use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Track\Tasks\AddTrackToPlaylistsTask;
 use App\Containers\MusicSection\Track\UI\API\Requests\AddTrackToPlaylistsRequest;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class AddTrackToPlaylistsAction
+class AddTrackToPlaylistsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly AddTrackToPlaylistsTask $addTrackToPlaylistsTask

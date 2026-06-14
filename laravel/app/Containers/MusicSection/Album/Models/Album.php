@@ -63,7 +63,18 @@ class Album extends Model
 
     protected $table = 'music_albums';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'parent_id',
+        'album_type_id',
+        'name',
+        'description',
+        'attributes',
+        'edition',
+        'date',
+        'is_date_verified',
+        'image',
+        'path',
+    ];
     protected $casts = [
         'date' => 'datetime',
         'attributes' => 'array',

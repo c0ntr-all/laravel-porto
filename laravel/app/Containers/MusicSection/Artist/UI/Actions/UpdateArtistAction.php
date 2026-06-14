@@ -12,11 +12,10 @@ use App\Containers\MusicSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\MusicSection\Tag\Tasks\SyncTagsTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UpdateArtistAction
+class UpdateArtistAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly UpdateArtistTask $updateArtistTask,

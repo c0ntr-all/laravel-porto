@@ -6,11 +6,10 @@ use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\Tasks\DeleteTagWithChildrenTask;
 use App\Containers\MusicSection\Tag\UI\API\Requests\DeleteRequest;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class DeleteTagAction
+class DeleteTagAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly DeleteTagWithChildrenTask $deleteTagWithChildrenTask

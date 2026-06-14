@@ -6,7 +6,6 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Exceptions\ActionNotReadyException;
 use App\Ship\Helpers\Correlation;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class UseCaseAction extends BaseAction
 {
@@ -16,7 +15,7 @@ class UseCaseAction extends BaseAction
     /** * @throws ActionNotReadyException */
     public function __construct()
     {
-        parent::__construct();
+        Correlation::init();
 
         if (!$this->containerAliasEnum) {
             throw new ActionNotReadyException('containerAliasEnum is not specified.');

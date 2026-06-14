@@ -10,20 +10,22 @@ class ParseTracksFromFolderTask extends ParentTask
 
     public function run(string $path): array
     {
-        return $this->parseTracks($path);
+        $items = [];
+        $this->parseTracks($path, $items);
+
+        return $items;
     }
 
     /**
      * Searches for tracks of the specified formats in folders and subfolders of the specified path
      *
      * @param string $path
-     * @return array
+     * @param array $items
+     * @return void
      */
-    private function parseTracks(string $path): array
+    private function parseTracks(string $path, array &$items): void
     {
         $dirCanonical = realpath($path);
-
-        static $items = [];
 
         if ($dirStream = opendir($dirCanonical)) {
             while (false !== ($fileName = readdir($dirStream))) {
@@ -39,7 +41,7 @@ class ParseTracksFromFolderTask extends ParentTask
                 $dirItem = $dirCanonical . DIRECTORY_SEPARATOR . $fileName;
 
                 if (is_dir($dirItem)) {
-                    $this->parseTracks($dirItem);
+                    $this->parseTracks($dirItem, $items);
                 }
 
                 $fileInfo = pathinfo($fileName);
@@ -48,8 +50,8 @@ class ParseTracksFromFolderTask extends ParentTask
                     $items[] = $dirItem;
                 }
             }
-        }
 
-        return $items;
+            closedir($dirStream);
+        }
     }
 }

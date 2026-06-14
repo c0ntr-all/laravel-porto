@@ -37,7 +37,12 @@ class Tag extends ActivityLoggableModel
 
     protected $table ='tags';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'name',
+        'slug',
+        'content',
+    ];
     protected $casts = [
         'id' => 'string'
     ];

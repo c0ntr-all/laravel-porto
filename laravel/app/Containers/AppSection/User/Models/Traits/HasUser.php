@@ -17,8 +17,10 @@ trait HasUser
         parent::boot();
 
         static::addGlobalScope('user', function ($builder) {
-            $builder->where(static::make()->getTable() . '.user_id', '=', auth()->user()->id)
-                    ->orWhere(static::make()->getTable() . '.user_id', '=', null);
+            if (auth()->check()) {
+                $builder->where(static::make()->getTable() . '.user_id', '=', auth()->id())
+                        ->orWhere(static::make()->getTable() . '.user_id', '=', null);
+            }
         });
     }
 

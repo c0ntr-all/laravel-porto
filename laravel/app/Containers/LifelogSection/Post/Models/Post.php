@@ -55,7 +55,14 @@ class Post extends ActivityLoggableModel
 
     protected $table = 'lifelog_posts';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'id',
+        'user_id',
+        'title',
+        'content',
+        'date',
+        'time',
+    ];
     protected $casts = [
         'id' => 'string',
         'date' => 'datetime',

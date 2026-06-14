@@ -6,11 +6,10 @@ use App\Containers\MusicSection\Album\Tasks\ListAlbumsByArtistTask;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumInArtistTransformer;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListAlbumsByArtistAction
+class ListAlbumsByArtistAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly ListAlbumsByArtistTask $listAlbumsByArtistTask

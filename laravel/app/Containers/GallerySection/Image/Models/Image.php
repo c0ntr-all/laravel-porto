@@ -56,7 +56,16 @@ class Image extends ActivityLoggableModel
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_IMAGE;
 
     protected $table = 'gallery_images';
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'album_id',
+        'source',
+        'extension',
+        'external_url',
+        'width',
+        'height',
+        'description',
+    ];
 
     public function album(): BelongsTo
     {

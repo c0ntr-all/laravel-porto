@@ -20,7 +20,11 @@ class AlbumType extends Model
 {
     protected $table = 'music_album_types';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'slug',
+        'name',
+        'description',
+    ];
 
     public function albums(): HasMany
     {

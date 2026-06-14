@@ -8,11 +8,10 @@ use App\Containers\AppSection\Registration\UI\API\Requests\RegisterRequest;
 use App\Containers\AppSection\User\Data\DTO\CreateUserDto;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\AppSection\User\Tasks\CreateUserTask;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class RegisterUserAction
+class RegisterUserAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateUserTask $createUserTask,

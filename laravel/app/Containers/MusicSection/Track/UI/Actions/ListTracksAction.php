@@ -9,11 +9,10 @@ use App\Containers\MusicSection\Track\Data\Repositories\TrackRepository;
 use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListTracksAction
+class ListTracksAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly TrackRepository $trackRepository

@@ -10,11 +10,10 @@ use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Exceptions\CreateResourceFailedException;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class CreateCommentAction
+class CreateCommentAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateCommentTask $commentCreateTask

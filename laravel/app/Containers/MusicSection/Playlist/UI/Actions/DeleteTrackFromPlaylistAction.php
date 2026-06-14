@@ -8,11 +8,10 @@ use App\Containers\MusicSection\Playlist\Tasks\DeleteTrackFromPlaylistTask;
 use App\Containers\MusicSection\Playlist\UI\API\Requests\DeleteTrackFromPlaylistRequest;
 use App\Containers\MusicSection\Track\Models\Track;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class DeleteTrackFromPlaylistAction
+class DeleteTrackFromPlaylistAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly DeleteTrackFromPlaylistTask $removeTrackFromPlaylistTask

@@ -8,11 +8,10 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class ListTagsAction
+class ListTagsAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly TagRepository $tagRepository

@@ -7,11 +7,10 @@ use App\Containers\AppSection\Tag\Tasks\DeleteTagTask;
 use App\Containers\AppSection\Tag\UI\API\Requests\DeleteRequest;
 use App\Ship\Exceptions\DeleteResourceFailedException;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class DeleteTagAction
+class DeleteTagAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly DeleteTagTask $deleteTagWithChildrenTask

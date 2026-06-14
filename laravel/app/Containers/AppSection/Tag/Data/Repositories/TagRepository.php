@@ -14,8 +14,7 @@ class TagRepository
 {
     public function get(): Collection
     {
-        //TODO: Убрать
-        $userId = auth()->user()->id;
+        $userId = auth()->id();
 
         return QueryBuilder::for(Tag::class)
                            ->allowedSorts([

@@ -6,15 +6,14 @@ use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\GetRequest;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetTaskAction
+class GetTaskAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(Task $task): Task
     {
-        return $task->load('comments');
+        return $task->load(['comments', 'reminder', 'checklists', 'progress']);
     }
 
     public function asController(Task $task, GetRequest $request): JsonResponse

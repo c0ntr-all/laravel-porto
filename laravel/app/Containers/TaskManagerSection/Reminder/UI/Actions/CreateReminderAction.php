@@ -9,11 +9,10 @@ use App\Containers\TaskManagerSection\Reminder\UI\API\Requests\ReminderCreateReq
 use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class CreateReminderAction
+class CreateReminderAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly CreateReminderTask $createReminderTask

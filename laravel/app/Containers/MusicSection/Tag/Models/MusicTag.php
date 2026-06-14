@@ -48,7 +48,14 @@ class MusicTag extends Model
 {
     protected $table ='music_tags';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'parent_id',
+        'name',
+        'slug',
+        'content',
+        'is_base',
+    ];
 
     protected $casts = [
         'is_base' => 'boolean'

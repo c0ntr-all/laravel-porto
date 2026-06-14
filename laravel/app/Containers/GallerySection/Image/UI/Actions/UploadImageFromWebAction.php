@@ -15,11 +15,10 @@ use App\Containers\GallerySection\Image\UI\API\Requests\UploadImageFromWebReques
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\FileSourceEnum;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UploadImageFromWebAction
+class UploadImageFromWebAction extends BaseAction
 {
-    use AsAction;
 
     private const string SOURCE_TYPE = FileSourceEnum::WEB->value;
 

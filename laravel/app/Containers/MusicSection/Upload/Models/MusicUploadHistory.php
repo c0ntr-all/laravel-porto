@@ -15,5 +15,7 @@ class MusicUploadHistory extends Model
 {
     protected $table = 'music_upload_history';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'data',
+    ];
 }

@@ -48,7 +48,13 @@ class Album extends Model
 
     protected $table = 'gallery_albums';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'system_code',
+        'name',
+        'description',
+        'image',
+    ];
     protected $casts = [
         'id' => 'string'
     ];

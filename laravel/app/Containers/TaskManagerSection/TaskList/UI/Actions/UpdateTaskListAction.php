@@ -8,11 +8,10 @@ use App\Containers\TaskManagerSection\TaskList\Tasks\UpdateTaskListTask;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\UpdateRequest;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class UpdateTaskListAction
+class UpdateTaskListAction extends BaseAction
 {
-    use AsAction;
 
     public function __construct(
         private readonly UpdateTaskListTask $updateTaskListTask

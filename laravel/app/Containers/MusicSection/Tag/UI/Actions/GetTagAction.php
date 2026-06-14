@@ -5,11 +5,10 @@ namespace App\Containers\MusicSection\Tag\UI\Actions;
 use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Http\JsonResponse;
-use Lorisleiva\Actions\Concerns\AsAction;
+use App\Ship\Parents\Actions\BaseAction;
 
-class GetTagAction
+class GetTagAction extends BaseAction
 {
-    use AsAction;
 
     public function handle(MusicTag $tag): MusicTag
     {

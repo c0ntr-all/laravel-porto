@@ -2,15 +2,10 @@
 
 namespace App\Containers\AppSection\Registration\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\PublicRequest;
 
-class RegisterRequest extends FormRequest
+class RegisterRequest extends PublicRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
         return true;

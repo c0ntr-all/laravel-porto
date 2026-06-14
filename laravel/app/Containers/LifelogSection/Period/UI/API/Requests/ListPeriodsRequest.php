@@ -2,14 +2,10 @@
 
 namespace App\Containers\LifelogSection\Period\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class ListPeriodsRequest extends FormRequest
+class ListPeriodsRequest extends AuthenticatedRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     public function rules(): array
     {

@@ -2,14 +2,10 @@
 
 namespace App\Containers\TaskManagerSection\TaskList\UI\API\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class CreateRequest extends FormRequest
+class CreateRequest extends AuthenticatedRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     public function rules(): array
     {

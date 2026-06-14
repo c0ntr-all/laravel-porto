@@ -3,20 +3,11 @@
 namespace App\Containers\TaskManagerSection\Reminder\UI\API\Requests;
 
 use App\Containers\TaskManagerSection\Reminder\Enums\ReminderIntervalEnum;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
 
-class ReminderCreateRequest extends FormRequest
+class ReminderCreateRequest extends AuthenticatedRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     /**
      * Get the validation rules that apply to the request.

@@ -1,12 +1,14 @@
 import { computed } from 'vue'
 import { usePostStore } from 'src/stores/modules/postStore'
+import { usePeriodStore } from 'src/stores/modules/periodStore'
 import { IPeriodModel, IPost } from 'src/types'
 
 export default function useLifelogPeriods() {
   const postStore = usePostStore()
+  const periodStore = usePeriodStore()
 
-  const startPeriodPostId = computed(() => postStore.startPeriodPostId)
-  const endPeriodPostId = computed(() => postStore.endPeriodPostId)
+  const startPeriodPostId = computed(() => periodStore.startPeriodPostId)
+  const endPeriodPostId = computed(() => periodStore.endPeriodPostId)
   const startPeriodPost = computed<IPost>(() =>
     postStore.posts.find(post => post.id === startPeriodPostId.value)
   ) || null
@@ -15,19 +17,19 @@ export default function useLifelogPeriods() {
   ) || null
 
   const setStartPeriodPostId = (postId: string): void => {
-    postStore.setStartPeriodPostId(postId)
+    periodStore.setStartPeriodPostId(postId)
   }
   const setEndPeriodPostId = (postId: string): void => {
-    postStore.setEndPeriodPostId(postId)
+    periodStore.setEndPeriodPostId(postId)
   }
 
   const resetPeriod = () => {
-    postStore.setStartPeriodPostId(null)
-    postStore.setEndPeriodPostId(null)
+    periodStore.setStartPeriodPostId(null)
+    periodStore.setEndPeriodPostId(null)
   }
 
   const createPeriod = (payload: IPeriodModel): Promise => {
-    return postStore.createPeriod(payload)
+    return periodStore.createPeriod(payload)
   }
 
   return {

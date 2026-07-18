@@ -1,5 +1,19 @@
-import { IJsonApiResource, IJsonApiResponse } from 'src/types'
+import { IJsonApiResource, IJsonApiResponse, IUser } from 'src/types'
 
+export interface IPeriod {
+  type: string
+  id: string
+  title?: string
+  description?: string
+  color: string
+  icon: string | null
+  start_date: string
+  end_date: string | null
+  start_post_id: string
+  end_post_id: string | null
+  created_at: string
+  user: IUser
+}
 export interface IPeriodModel {
   title: string,
   description?: string,

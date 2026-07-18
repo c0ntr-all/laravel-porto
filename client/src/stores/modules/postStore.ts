@@ -12,21 +12,14 @@ import {
   IPost,
   IFilter,
   IPostModel,
-  IPostUpdateModel,
-  IPeriod,
-  IPeriodModel, IPeriodCreateDto
+  IPostUpdateModel
 } from 'src/types'
-import { mapPeriodFormModelToCreateDto } from 'src/api/mappers/LifeLog/period.mapper'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
   const postsCount = ref<number>(0)
-  const periods = ref<IPost[]>([])
-  const periodsCount = ref<number>(0)
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
-  const startPeriodPostId = ref<string | null>(null)
-  const endPeriodPostId = ref<string | null>(null)
 
   async function getPosts(filters: IFilter = {}) {
     isLoading.value = true
@@ -111,45 +104,12 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
-  function setStartPeriodPostId(id: string|null) {
-    startPeriodPostId.value = id
-  }
-
-  function setEndPeriodPostId(id: string|null) {
-    endPeriodPostId.value = id
-  }
-
-  async function createPeriod(periodModel: IPeriodModel): Promise<IPeriod> {
-    const periodCreateDto: IPeriodCreateDto = mapPeriodFormModelToCreateDto(periodModel)
-
-    try {
-      const responseData: IJsonApiResponse = await postApi.createPeriod(periodCreateDto)
-      const mappedResponse: IPeriod[] = mapResponse(responseData) as IPeriod[]
-      const newPeriod: IPeriod = mappedResponse[0]
-
-      periods.value.unshift(newPeriod)
-      periodsCount.value += 1
-
-      handleApiSuccess(responseData)
-
-      return newPeriod
-    } catch (error: any) {
-      handleApiError(error.message || 'Не удалось создать период')
-      throw error
-    }
-  }
-
   return {
     posts,
     postsCount,
     isLoading,
-    startPeriodPostId,
-    endPeriodPostId,
     getPosts,
     createPost,
-    updatePost,
-    setStartPeriodPostId,
-    setEndPeriodPostId,
-    createPeriod
+    updatePost
   }
 })

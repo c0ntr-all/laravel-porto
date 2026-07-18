@@ -53,6 +53,8 @@
         />
       </div>
     </div>
+    <hr>
+    <LifelogPeriodsList />
   </div>
 </template>
 
@@ -62,6 +64,7 @@ import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
 import AppColorPicker from 'src/components/default/AppColorPicker.vue'
 import { generateRandomHex } from 'src/utils/colors'
 import { IPeriodModel } from 'src/types'
+import LifelogPeriodsList from 'src/components/client/LifeLog/LifelogPeriodsList.vue'
 
 const { startPeriodPost, endPeriodPost, resetPeriod, createPeriod } = useLifelogPeriods()
 
@@ -74,7 +77,7 @@ const baseModel: IPeriodModel = {
   icon: null
 }
 
-const model = ref<IPeriodModel>(baseModel)
+const model = ref<IPeriodModel>({ ...baseModel })
 
 const isSaveAvailable = computed(() => startPeriodPost.value !== null)
 
@@ -86,11 +89,13 @@ const processCreatePeriod = () => {
   }
   createPeriod(data).then(() => {
     clearModel()
+    resetPeriod()
   })
 }
 
 const clearModel = () => {
-  model.value = baseModel.value
+  baseModel.color = generateRandomHex()
+  model.value = baseModel
 }
 </script>
 

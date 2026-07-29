@@ -12,6 +12,7 @@ class PeriodTransformer extends TransformerAbstract
         return [
             'id' => $period->id,
             'title' => $period->title,
+            'description' => $period->description,
             'color' => $period->color,
             'icon' => $period->icon,
             'start_post_id' => (string) $period->start_post_id,

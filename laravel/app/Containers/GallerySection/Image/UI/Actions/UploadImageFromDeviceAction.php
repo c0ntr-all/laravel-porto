@@ -31,7 +31,6 @@ class UploadImageFromDeviceAction extends BaseAction
         private readonly PathGenerationService     $pathGenerationService
     )
     {
-        parent::__construct();
     }
 
     public function handle(Album $album, UploadImageFromDeviceDto $uploadImagesDto): Image

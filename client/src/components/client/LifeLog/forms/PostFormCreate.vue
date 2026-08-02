@@ -80,6 +80,10 @@ defineProps<{
   post?: IPost
 }>()
 
+const emit = defineEmits<{
+  success: [post: IPost]
+}>()
+
 const getEmptyPostModel = (): IPostModel => {
   return {
     title: '',
@@ -104,11 +108,11 @@ const formTagsRef = ref<ITagsRef | null>(null)
 
 // --- Methods ---
 const createPost = async () => {
-  await postStore.createPost(model.value, attachmentModel.value).then(() => {
-    clearModel()
-    clearAttachmentModel()
-    resetAvailableTags()
-  })
+  const newPost = await postStore.createPost(model.value, attachmentModel.value)
+  clearModel()
+  clearAttachmentModel()
+  resetAvailableTags()
+  emit('success', newPost)
 }
 const clearAttachmentModel = () => {
   attachmentModel.value = []

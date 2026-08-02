@@ -1,7 +1,27 @@
 <template>
   <div class="row lifelog-container">
     <div class="lifelog-post-form-wrap q-mb-md">
-      <PostFormCreate />
+      <q-btn
+        color="primary"
+        label="Создать пост"
+        icon="add"
+        @click="openCreatePostModal"
+      />
+      <AppModal
+        v-model="isCreatePostModalOpen"
+        width="700px"
+        scrollable
+      >
+        <template #header>
+          Создать пост
+        </template>
+        <template #body>
+          <PostFormCreate
+            v-if="isCreatePostModalOpen"
+            @success="onPostCreated"
+          />
+        </template>
+      </AppModal>
     </div>
     <div class="lifelog-period-form-wrap q-mb-md">
       <LifeLogPeriodForm />
@@ -33,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { isEmpty } from 'radash'
 import { usePostStore } from 'src/stores/modules/postStore'
@@ -44,10 +64,21 @@ import LifeLogPostsFilter from 'src/components/client/LifeLog/LifeLogPostsFilter
 import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 // import LifeLogRowCard from 'src/components/client/LifeLog/LifeLogRowCard.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import AppModal from 'src/components/default/AppModal.vue'
 import LifeLogPeriodForm from 'src/components/client/LifeLog/LifeLogPeriodForm.vue'
 
 const postStore = usePostStore()
 const { posts, postsCount } = storeToRefs(postStore)
+
+const isCreatePostModalOpen = ref(false)
+
+const openCreatePostModal = () => {
+  isCreatePostModalOpen.value = true
+}
+
+const onPostCreated = () => {
+  isCreatePostModalOpen.value = false
+}
 
 const onFilterSubmit = (tagsFilterData: ITagsFilterData) => {
   reloadPosts(tagsFilterData)

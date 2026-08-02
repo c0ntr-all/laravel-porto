@@ -1,30 +1,29 @@
 import { api } from 'src/boot/axios'
-import { IJsonApiResponse } from 'src/types'
+import { ApiRequestContext, IJsonApiResponse } from 'src/types'
 import { mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
+import { buildCorrelationHeaders } from 'src/utils/correlation'
 
 export const galleryApi = {
   async upload(
     url: string,
     file: File,
-    onProgress: (percent: number) => void
+    onProgress: (percent: number) => void,
+    ctx?: ApiRequestContext
   ): Promise<IJsonApiResponse> {
     const formData = mapMediaItemToFormData(file)
 
-    try {
-      const response = await api.post(
-        url,
-        formData,
-        {
-          onUploadProgress: (event) => {
-            if (!event.total) return
-            onProgress(Math.round(event.loaded * 100 / event.total))
-          }
+    const response = await api.post(
+      url,
+      formData,
+      {
+        headers: buildCorrelationHeaders(ctx),
+        onUploadProgress: (event) => {
+          if (!event.total) return
+          onProgress(Math.round(event.loaded * 100 / event.total))
         }
-      )
+      }
+    )
 
-      return response.data
-    } catch (error) {
-      throw new Error(error)
-    }
+    return response.data
   }
 }

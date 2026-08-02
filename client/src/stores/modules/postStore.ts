@@ -3,14 +3,13 @@ import { ref } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
-import { mapPostFormToCreateDto, mapPostFormToUpdateDto } from 'src/api/mappers/post.mapper'
-import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
-import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
-import { uploadPostAttachments } from 'src/services/post.service'
 import {
-  IJsonApiResponse,
-  IPost,
+  createPostWithAttachments,
+  updatePostWithAttachments
+} from 'src/services/post-create.service'
+import {
   IFilter,
+  IPost,
   IPostModel,
   IPostUpdateModel
 } from 'src/types'
@@ -36,36 +35,17 @@ export const usePostStore = defineStore('post', () => {
   }
 
   async function createPost(postModel: IPostModel, attachmentModel: File[]): Promise<IPost> {
-    const postCreateDto: IPostCreateDto = mapPostFormToCreateDto(postModel)
-
-    let attachmentsIds: {id: string, type: string}[] | undefined = []
-    if (attachmentModel?.length) {
-      try {
-        attachmentsIds = await uploadPostAttachments(attachmentModel)
-      } catch (error: any) {
-        const errorMessage = error.message || 'Не удалось загрузить вложения'
-        handleApiError(errorMessage)
-
-        throw new Error(`Ошибка загрузки вложений: ${errorMessage}`)
-      }
-    }
-
-    postCreateDto.attachments = attachmentsIds
-
     try {
-      const responseData: IJsonApiResponse = await postApi.createPost(postCreateDto)
-      const mappedResponse: IPost[] = mapResponse(responseData) as IPost[]
-      const newPost: IPost = mappedResponse[0]
+      const { post, response } = await createPostWithAttachments(postModel, attachmentModel)
 
-      posts.value.unshift(newPost)
+      posts.value.unshift(post)
       postsCount.value += 1
+      handleApiSuccess(response)
 
-      handleApiSuccess(responseData)
-
-      return newPost
-    } catch (error: any) {
-      handleApiError(error.message || 'Не удалось создать пост')
-      throw error
+      return post
+    } catch (err: any) {
+      handleApiError(err.message || 'Не удалось создать пост')
+      throw err
     }
   }
 
@@ -79,28 +59,24 @@ export const usePostStore = defineStore('post', () => {
     if (!postModel || !originalPost) return
 
     try {
-      const postUpdateDto: IPostUpdateDto = mapPostFormToUpdateDto(postModel, originalPost)
+      const { post, response } = await updatePostWithAttachments(
+        id,
+        postModel,
+        originalPost,
+        attachmentModel
+      )
 
-      let attachmentsIds: {id: string, type: string}[] | undefined = []
-      if (attachmentModel?.length) {
-        attachmentsIds = await uploadPostAttachments(attachmentModel)
-      }
-      postUpdateDto.attachments = attachmentsIds
-
-      const responseData: IJsonApiResponse = await postApi.updatePost(id, postUpdateDto)
-      const updatedPost: IPost = mapResponse(responseData)[0] as IPost
-
-      // add to main list of posts
-      const index = posts.value.findIndex(p => p.id === updatedPost.id)
+      const index = posts.value.findIndex(p => p.id === post.id)
       if (index !== -1) {
-        posts.value.splice(index, 1, updatedPost)
+        posts.value.splice(index, 1, post)
       }
 
-      handleApiSuccess(responseData)
+      handleApiSuccess(response)
 
-      return updatedPost
+      return post
     } catch (err: any) {
       error.value = err.message ?? 'Error while updating post!'
+      handleApiError(err.message ?? 'Error while updating post!')
     }
   }
 

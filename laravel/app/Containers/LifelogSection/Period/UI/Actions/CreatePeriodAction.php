@@ -10,7 +10,6 @@ use App\Containers\LifelogSection\Period\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Period\UI\API\Transformers\PeriodTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Helpers\Correlation;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -53,10 +52,7 @@ class CreatePeriodAction extends UseCaseAction
 
         return fractal($period, new PeriodTransformer())
             ->withResourceName('ll_periods')
-            ->addMeta([
-                'message' => 'New period successfully created!',
-                'correlation_uuid' => Correlation::getUuid(),
-            ])
+            ->addMeta(['message' => 'New period successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -15,7 +15,6 @@ use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Helpers\Correlation;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -104,10 +103,7 @@ class CreatePostAction extends UseCaseAction
         return fractal($post, new PostTransformer($postCreateDto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName('ll_posts')
-            ->addMeta([
-                'message' => 'New post successfully created!',
-                'correlation_uuid' => Correlation::getUuid()
-            ])
+            ->addMeta(['message' => 'New post successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

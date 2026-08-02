@@ -19,7 +19,6 @@ use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Helpers\Correlation;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -125,10 +124,7 @@ class UpdatePostAction extends UseCaseAction
         return fractal($post, new PostTransformer($postUpdateContextDto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
-            ->addMeta([
-                'message' => 'Post successfully updated!',
-                'correlation_uuid' => Correlation::getUuid()
-            ])
+            ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -11,7 +11,14 @@ class InitCorrelationMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        Correlation::init();
+        $incomingUuid = $request->header(Correlation::HEADER_NAME)
+            ?? $request->input(Correlation::BODY_KEY);
+
+        try {
+            Correlation::resolve($incomingUuid);
+        } catch (\InvalidArgumentException $exception) {
+            abort(422, $exception->getMessage());
+        }
 
         return $next($request);
     }

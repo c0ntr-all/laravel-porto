@@ -9,12 +9,16 @@ use Illuminate\Support\Str;
  * Утилита для управления correlation UUID внутри одного запроса/UseCase.
  *
  * Позволяет:
- *  - сгенерировать новый correlation UUID при старте UseCase;
+ *  - сгенерировать новый correlation UUID при старте запроса;
+ *  - принять UUID из предыдущего запроса (заголовок X-Correlation-Uuid или body correlation_uuid);
  *  - получить его из любого места (Observer, Job и т.д.);
  *  - использовать для связи разных процессов, например system_logs и user_logs.
  */
 final class Correlation
 {
+    public const string HEADER_NAME = 'X-Correlation-Uuid';
+    public const string BODY_KEY = 'correlation_uuid';
+
     private const string UUID = 'currentCorrelationId';
     private const string USE_CASE = 'currentCorrelationUseCase';
 
@@ -24,6 +28,26 @@ final class Correlation
             $uuid = (string) Str::uuid();
             App::instance(self::UUID, $uuid);
         }
+    }
+
+    /**
+     * Устанавливает UUID из входящего значения или генерирует новый.
+     *
+     * @throws \InvalidArgumentException если передан невалидный UUID
+     */
+    public static function resolve(?string $uuid): void
+    {
+        if ($uuid === null || $uuid === '') {
+            self::init();
+
+            return;
+        }
+
+        if (!Str::isUuid($uuid)) {
+            throw new \InvalidArgumentException('Invalid correlation_uuid format.');
+        }
+
+        self::setUuid($uuid);
     }
 
     public static function setUuid(string $uuid): void

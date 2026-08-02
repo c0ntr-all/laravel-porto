@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
             \Illuminate\Http\Middleware\HandleCors::class,
             \App\Ship\Middleware\InitCorrelationMiddleware::class,
+            \App\Ship\Middleware\AppendCorrelationUuidMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

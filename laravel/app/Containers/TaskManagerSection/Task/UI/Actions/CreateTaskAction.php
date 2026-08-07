@@ -8,9 +8,10 @@ use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\CreateTaskTask;
 use App\Containers\TaskManagerSection\Task\UI\API\Requests\CreateRequest;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
+use App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate;
+use App\Containers\TaskManagerSection\TaskTemplate\Tasks\ApplyTaskTemplateTask;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
-use App\Ship\Helpers\Correlation;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -22,22 +23,29 @@ class CreateTaskAction extends UseCaseAction
 
     public function __construct(
         private readonly CreateTaskTask $createTaskTask,
+        private readonly ApplyTaskTemplateTask $applyTaskTemplateTask,
         private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
     }
 
-    public function handle(TaskCreateData $dto): Task
+    public function handle(TaskCreateData $dto, ?TaskTemplate $template = null): Task
     {
-        $createdTask = $this->createTaskTask->run($dto);
+        return DB::transaction(function () use ($dto, $template) {
+            $createdTask = $this->createTaskTask->run($dto);
 
-        // После успешного коммита формируем user_log
-        DB::afterCommit(function () use ($createdTask) {
-            $this->createActivityUseCaseTask->run($createdTask, $this->eventTypesEnum->value);
+            if ($template !== null) {
+                $createdTask = $this->applyTaskTemplateTask->run($createdTask, $template);
+            }
+
+            // После успешного коммита формируем user_log
+            DB::afterCommit(function () use ($createdTask) {
+                $this->createActivityUseCaseTask->run($createdTask, $this->eventTypesEnum->value);
+            });
+
+            return $createdTask;
         });
-
-        return $createdTask;
     }
 
     /**
@@ -45,14 +53,32 @@ class CreateTaskAction extends UseCaseAction
      */
     public function asController(CreateRequest $request): JsonResponse
     {
-        $dto = TaskCreateData::from($request->validated());
+        $validated = $request->validated();
+        $templateId = $validated['task_template_id'] ?? null;
+        unset($validated['task_template_id']);
+
+        $template = null;
+        if ($templateId !== null) {
+            $template = TaskTemplate::with(['checklists.items'])->findOrFail($templateId);
+            $validated['title'] = $validated['title'] ?? $template->title;
+            $validated['content'] = array_key_exists('content', $validated)
+                ? $validated['content']
+                : $template->content;
+        }
+
+        $dto = TaskCreateData::from($validated);
         $dto->user_id = auth()->user()->id;
 
-        $task = $this->handle($dto);
+        $task = $this->handle($dto, $template);
 
-        return fractal($task, new TaskTransformer())
+        $fractal = fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
-            ->addMeta(['message' => 'New task successfully created!'])
-            ->respond(200, [], JSON_PRETTY_PRINT);
+            ->addMeta(['message' => 'New task successfully created!']);
+
+        if ($template !== null) {
+            $fractal->parseIncludes(['checklists.checklistItems']);
+        }
+
+        return $fractal->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

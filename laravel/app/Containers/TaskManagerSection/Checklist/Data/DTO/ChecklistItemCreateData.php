@@ -9,6 +9,7 @@ class ChecklistItemCreateData extends Data
     public int $user_id;
     public int $checklist_id;
     public string $title;
+    public int $position = 0;
 
     public function __construct(
     ) {

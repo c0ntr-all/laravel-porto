@@ -16,8 +16,9 @@ class CreateRequest extends AuthenticatedRequest
     {
         return [
             'task_list_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
-            'title' => 'required|string|max:70',
-            'content' => 'sometimes|max:3000',
+            'task_template_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate,id',
+            'title' => 'required_without:task_template_id|string|max:70',
+            'content' => 'sometimes|nullable|max:3000',
         ];
     }
 }

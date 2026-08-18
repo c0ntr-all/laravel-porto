@@ -18,10 +18,10 @@ use App\Containers\GallerySection\Image\Events\CreatedEvent as GalleryImageCreat
 use App\Containers\GallerySection\Image\Events\DeletedEvent as GalleryImageDeletedEvent;
 use App\Containers\GallerySection\Image\Events\GalleryImageEvent;
 use App\Containers\GallerySection\Image\Events\UpdatedEvent as GalleryImageUpdatedEvent;
-use App\Containers\LifelogSection\Period\Events\CreatedEvent as PeriodCreatedEvent;
-use App\Containers\LifelogSection\Period\Events\DeletedEvent as PeriodDeletedEvent;
-use App\Containers\LifelogSection\Period\Events\PeriodEvent;
-use App\Containers\LifelogSection\Period\Events\UpdatedEvent as PeriodUpdatedEvent;
+use App\Containers\LifelogSection\Preset\Events\CreatedEvent as PresetCreatedEvent;
+use App\Containers\LifelogSection\Preset\Events\DeletedEvent as PresetDeletedEvent;
+use App\Containers\LifelogSection\Preset\Events\PresetEvent;
+use App\Containers\LifelogSection\Preset\Events\UpdatedEvent as PresetUpdatedEvent;
 use App\Containers\LifelogSection\Post\Events\CreatedEvent as PostCreatedEvent;
 use App\Containers\LifelogSection\Post\Events\DeletedEvent as PostDeletedEvent;
 use App\Containers\LifelogSection\Post\Events\PostEvent;
@@ -45,12 +45,12 @@ class ActivityLogEventsSubscriber
             PostDeletedEvent::class
         ], $this->handlePostEvents(...));
 
-        // CRUD periods
+        // CRUD presets
         $events->listen([
-            PeriodCreatedEvent::class,
-            PeriodUpdatedEvent::class,
-            PeriodDeletedEvent::class
-        ], $this->handlePeriodEvents(...));
+            PresetCreatedEvent::class,
+            PresetUpdatedEvent::class,
+            PresetDeletedEvent::class
+        ], $this->handlePresetEvents(...));
 
         // CRUD tags
         $events->listen([
@@ -86,23 +86,23 @@ class ActivityLogEventsSubscriber
         ], $this->handleTaskEvents(...));
     }
 
-    private function handlePeriodEvents(PeriodEvent $event): void
+    private function handlePresetEvents(PresetEvent $event): void
     {
         $uuid = Correlation::getUuid();
-        $period = $event->getPeriod();
+        $preset = $event->getPreset();
         $eventType = $event->getEventType();
         $userId = auth()?->user()?->id;
-        $metadata = $period->only(['title', 'color', 'start_post_id', 'end_post_id']);
+        $metadata = $preset->only(['title', 'color', 'start_post_id', 'end_post_id']);
 
         if ($eventType === EventTypesEnum::UPDATED->value) {
-            $metadata = $period->getChanges();
+            $metadata = $preset->getChanges();
         }
 
         $systemLogDto = SystemLogCreateDto::from([
             'user_id' => $userId,
             'event_type' => $eventType,
-            'main_type' => $period->getLoggableType(),
-            'main_id' => $period->id,
+            'main_type' => $preset->getLoggableType(),
+            'main_id' => $preset->id,
             'correlation_uuid' => $uuid,
             'metadata' => $metadata,
         ]);

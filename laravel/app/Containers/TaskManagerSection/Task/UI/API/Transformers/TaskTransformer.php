@@ -56,7 +56,7 @@ class TaskTransformer extends TransformerAbstract
 
     public function includeProgress(Task $task): Collection
     {
-        return $this->collection($task->progress, new TaskProgressTransformer(), 'progress')
+        return $this->collection($task->progress->sortBy('finished_at'), new TaskProgressTransformer(), 'progress')
                     ->setMeta(['count' => $task->progress->count()]);
     }
 

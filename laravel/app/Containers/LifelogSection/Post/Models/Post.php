@@ -7,7 +7,7 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
-use App\Containers\LifelogSection\Period\Models\Period;
+use App\Containers\LifelogSection\Preset\Models\Preset;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
@@ -70,19 +70,20 @@ class Post extends ActivityLoggableModel
     ];
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::LL_POST;
 
-    public function startPeriods(): HasMany
+    public function startPresets(): HasMany
     {
-        return $this->hasMany(Period::class, 'start_post_id');
+        return $this->hasMany(Preset::class, 'start_post_id');
     }
 
-    public function endPeriods(): HasMany
+    public function endPresets(): HasMany
     {
-        return $this->hasMany(Period::class, 'end_post_id');
+        return $this->hasMany(Preset::class, 'end_post_id');
     }
 
-    public function periods(): Post|Builder
+    public function presets(): Post|Builder
     {
-        return Period::query()
+        //TODO: переделать с post на date
+        return Preset::query()
             ->where('user_id', $this->user_id)
             ->where(function ($query) {
                 $query->where(function ($q) {
@@ -97,9 +98,9 @@ class Post extends ActivityLoggableModel
     }
 
     // Все периоды, связанные с постом (для eager loading)
-    public function allRelatedPeriods(): Post|Builder
+    public function allRelatedPresets(): Post|Builder
     {
-        return Period::query()
+        return Preset::query()
             ->where('user_id', $this->user_id)
             ->where(function ($query) {
                 $query->where('start_post_id', $this->id)

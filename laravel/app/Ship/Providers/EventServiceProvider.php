@@ -13,8 +13,8 @@ use App\Containers\GallerySection\Image\Models\Image as GalleryImage;
 use App\Containers\GallerySection\Image\Observers\ImageObserver as GalleryImageObserver;
 use App\Containers\GallerySection\Video\Models\Video as GalleryVideo;
 use App\Containers\GallerySection\Video\Observers\VideoObserver as GalleryVideoObserver;
-use App\Containers\LifelogSection\Period\Models\Period;
-use App\Containers\LifelogSection\Period\Observers\PeriodObserver;
+use App\Containers\LifelogSection\Preset\Models\Preset;
+use App\Containers\LifelogSection\Preset\Observers\PresetObserver;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Observers\PostObserver;
 use App\Containers\MusicSection\Album\Models\AlbumType;
@@ -46,7 +46,7 @@ class EventServiceProvider extends ServiceProvider
         MusicTag::class => [MusicTagObserver::class],
         AlbumType::class => [AlbumTypeObserver::class],
         Post::class => [PostObserver::class],
-        Period::class => [PeriodObserver::class],
+        Preset::class => [PresetObserver::class],
         Task::class => [TaskObserver::class],
         GalleryImage::class => [GalleryImageObserver::class],
         GalleryVideo::class => [GalleryVideoObserver::class],

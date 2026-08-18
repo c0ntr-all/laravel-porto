@@ -48,7 +48,7 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::MUSIC_TRACK->value => 'App\Containers\MusicSection\Track\Models\Track',
             ContainerAliasEnum::TM_TASK->value => 'App\Containers\TaskManagerSection\Task\Models\Task',
             ContainerAliasEnum::LL_POST->value => 'App\Containers\LifelogSection\Post\Models\Post',
-            ContainerAliasEnum::LL_PERIOD->value => 'App\Containers\LifelogSection\Period\Models\Period',
+            ContainerAliasEnum::LL_PRESET->value => 'App\Containers\LifelogSection\Preset\Models\Preset',
             ContainerAliasEnum::GALLERY_IMAGE->value => 'App\Containers\GallerySection\Image\Models\Image',
             ContainerAliasEnum::GALLERY_VIDEO->value => 'App\Containers\GallerySection\Video\Models\Video'
         ]);

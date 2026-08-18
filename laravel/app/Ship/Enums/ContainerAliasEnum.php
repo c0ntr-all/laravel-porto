@@ -23,7 +23,7 @@ enum ContainerAliasEnum: string
     case TM_TASK = 'tm_tasks';
     //LifelogSection
     case LL_POST = 'll_posts';
-    case LL_PERIOD = 'll_periods';
+    case LL_PRESET = 'll_presets';
     //GallerySection
     case GALLERY_IMAGE = 'gallery_images';
     case GALLERY_VIDEO = 'gallery_videos';
@@ -40,7 +40,7 @@ enum ContainerAliasEnum: string
             self::MUSIC_TRACK => 'Трек',
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
-            self::LL_PERIOD => 'Период',
+            self::LL_PRESET => 'Пресет',
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',
         };

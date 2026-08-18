@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('color', 7)->nullable();
             $table->string('icon')->nullable();
+            $table->json('rules')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

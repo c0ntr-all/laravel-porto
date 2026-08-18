@@ -92,7 +92,10 @@ class ActivityLogEventsSubscriber
         $preset = $event->getPreset();
         $eventType = $event->getEventType();
         $userId = auth()?->user()?->id;
-        $metadata = $preset->only(['title', 'color', 'start_post_id', 'end_post_id']);
+        $metadata = [
+            ...$preset->only(['title', 'color', 'start_date', 'end_date']),
+            'rules' => $preset->rules?->toArray(),
+        ];
 
         if ($eventType === EventTypesEnum::UPDATED->value) {
             $metadata = $preset->getChanges();
@@ -147,7 +150,7 @@ class ActivityLogEventsSubscriber
             'main_type' => $tag->getLoggableType(),
             'main_id' => $tag->id,
             'correlation_uuid' => $uuid,
-            'metadata' => $tag->only(['name', 'content']),
+            'metadata' => $tag->only(['user_id', 'name', 'slug', 'description']),
         ]);
 
         SystemLogCreateAction::dispatchSync($systemLogDto);

@@ -50,7 +50,7 @@ class CreatePostAction extends UseCaseAction
 
             // Проверяем существуют ли теги из тех, что присланы как новые
             if (!empty($tagsCreateDto->new_tags)) {
-                $existingNewTags = $this->listTagsByNamesTask->run($tagsCreateDto->new_tags);
+                $existingNewTags = $this->listTagsByNamesTask->run($tagsCreateDto->new_tags, $postCreateDto->user_id);
                 $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$tagsCreateDto) {
                     $tagsIdsForSync[] = $existingTag->id;
                     unset($tagsCreateDto->new_tags[array_search($existingTag->name, $tagsCreateDto->new_tags)]);

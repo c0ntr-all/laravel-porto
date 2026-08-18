@@ -12,7 +12,6 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -70,48 +69,31 @@ class Post extends ActivityLoggableModel
     ];
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::LL_POST;
 
-    public function startPresets(): HasMany
-    {
-        return $this->hasMany(Preset::class, 'start_post_id');
-    }
-
-    public function endPresets(): HasMany
-    {
-        return $this->hasMany(Preset::class, 'end_post_id');
-    }
-
     public function presets(): Post|Builder
     {
-        //TODO: переделать с post на date
         return Preset::query()
             ->where('user_id', $this->user_id)
             ->where(function ($query) {
-                $query->where(function ($q) {
-                    // Пост находится между start и end по ID
-                    $q->where('start_post_id', '<', $this->id)
-                        ->where(function ($sq) {
-                            $sq->where('end_post_id', '>', $this->id)
-                                ->orWhereNull('end_post_id');
-                        });
-                });
+                $query->where('start_date', '<=', $this->datetime)
+                    ->where(function ($subQuery) {
+                        $subQuery->where('end_date', '>=', $this->datetime)
+                            ->orWhereNull('end_date');
+                    });
             });
     }
 
-    // Все периоды, связанные с постом (для eager loading)
     public function allRelatedPresets(): Post|Builder
     {
         return Preset::query()
             ->where('user_id', $this->user_id)
             ->where(function ($query) {
-                $query->where('start_post_id', $this->id)
-                    ->orWhere('end_post_id', $this->id)
-                    ->orWhere(function ($q) {
-                        $q->where('start_post_id', '<', $this->id)
-                            ->where(function ($sq) {
-                                $sq->where('end_post_id', '>', $this->id)
-                                    ->orWhereNull('end_post_id');
-                            });
-                    });
+                $query->where(function ($subQuery) {
+                    $subQuery->where('start_date', '<=', $this->datetime)
+                        ->where(function ($dateQuery) {
+                            $dateQuery->where('end_date', '>=', $this->datetime)
+                                ->orWhereNull('end_date');
+                        });
+                });
             });
     }
 

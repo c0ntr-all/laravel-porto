@@ -3,28 +3,21 @@
 namespace App\Containers\LifelogSection\Preset\UI\API\Requests;
 
 use App\Ship\Parents\Requests\AuthenticatedRequest;
-use Illuminate\Validation\Rule;
 
 class CreateRequest extends AuthenticatedRequest
 {
-
     public function rules(): array
     {
         return [
             'title' => 'required|string|max:50',
             'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'start_post_id' => [
-                'required',
-                'string',
-                'numeric',
-                Rule::exists('lifelog_posts', 'id')->where('user_id', auth()->id()),
-            ],
-            'end_post_id' => [
-                'required',
-                'string',
-                'numeric',
-                Rule::exists('lifelog_posts', 'id')->where('user_id', auth()->id()),
-            ],
+            'description' => 'sometimes|string|max:1000',
+            'icon' => 'sometimes|string|max:50',
+            'tags' => 'sometimes|array',
+            'tags.*' => 'string|max:50',
+            'date_from' => 'sometimes|nullable|date_format:Y-m-d',
+            'date_to' => 'sometimes|nullable|date_format:Y-m-d|after_or_equal:date_from',
+            'text' => 'sometimes|nullable|string|max:255',
         ];
     }
 }

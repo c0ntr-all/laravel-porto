@@ -15,14 +15,10 @@ class ListTagsByNamesTask extends ParentTask
     }
 
     /**
-     * Проверка существования тегов по полю name из массива name
-     *
      * @param array $tagNames
-     * @return Collection|null
      */
-    public function run(array $tagNames): ?Collection
+    public function run(array $tagNames, int $userId): ?Collection
     {
-        // TODO: cross-section dependency
-        return $this->listTagsByWhereInTask->run('name', $tagNames);
+        return $this->listTagsByWhereInTask->run('name', $tagNames, $userId);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Containers\LifelogSection\Preset\UI\Actions;
 
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\LifelogSection\Preset\Data\DTO\PresetCreateDto;
+use App\Containers\LifelogSection\Preset\Data\ValueObjects\PresetRules;
 use App\Containers\LifelogSection\Preset\Models\Preset;
 use App\Containers\LifelogSection\Preset\Tasks\CreatePresetTask;
 use App\Containers\LifelogSection\Preset\UI\API\Requests\CreateRequest;
@@ -43,14 +44,27 @@ class CreatePresetAction extends UseCaseAction
      */
     public function asController(CreateRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $dto = PresetCreateDto::from([
-            ...$request->validated(),
             'user_id' => auth()->id(),
+            'title' => $validated['title'],
+            'color' => $validated['color'],
+            'description' => $validated['description'] ?? null,
+            'icon' => $validated['icon'] ?? null,
+            'tags' => $validated['tags'] ?? null,
+            'rules' => PresetRules::fromArray([
+                'tags' => $validated['tags'] ?? [],
+                'date_from' => $validated['date_from'] ?? null,
+                'date_to' => $validated['date_to'] ?? null,
+                'text' => $validated['text'] ?? null,
+            ]),
         ]);
 
         $preset = $this->handle($dto);
 
         return fractal($preset, new PresetTransformer())
+            ->parseIncludes(['tags'])
             ->withResourceName(ContainerAliasEnum::LL_PRESET->value)
             ->addMeta(['message' => 'New preset successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

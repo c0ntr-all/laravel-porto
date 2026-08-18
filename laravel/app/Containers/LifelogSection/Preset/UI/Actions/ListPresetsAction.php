@@ -33,6 +33,7 @@ class ListPresetsAction extends BaseAction
         $presets = $this->handle($dto);
 
         return fractal($presets, new PresetTransformer())
+            ->parseIncludes(['tags'])
             ->withResourceName(ContainerAliasEnum::LL_PRESET->value)
             ->addMeta(['count' => $presets->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);

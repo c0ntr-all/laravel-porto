@@ -58,7 +58,10 @@ class UpdatePostAction extends UseCaseAction
             // Проверяем существуют ли теги из тех, что присланы как новые
             if (!empty($postUpdateContextDto->new_tags)) {
                 $updateTagsDto = PostTagsUpdateDto::from($postUpdateContextDto->toArray());
-                $existingNewTags = $this->listTagsByNamesTask->run($updateTagsDto->new_tags);
+                $existingNewTags = $this->listTagsByNamesTask->run(
+                    $updateTagsDto->new_tags,
+                    $postUpdateContextDto->user_id
+                );
                 $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$updateTagsDto) {
                     $tagsIdsForSync[] = $existingTag->id;
                     unset($updateTagsDto->new_tags[array_search($existingTag->name, $updateTagsDto->new_tags)]);

@@ -13,15 +13,18 @@ class MostUsedSort implements Sort
     )
     {
     }
+
     public function __invoke(Builder $query, bool $descending, string $property): void
     {
         $direction = $descending ? 'DESC' : 'ASC';
 
-        $query->select('tags.*', DB::raw('COUNT(taggables.tag_id) as usage_count'))
-              ->leftJoin('taggables', function ($join) {
-                  $join->on('tags.id', '=', 'taggables.tag_id')
-                       ->where('taggables.user_id', '=', $this->userId);
-              })
-              ->groupBy('tags.id')->orderBy('usage_count', $direction);
+        $query->when($this->userId !== null, fn (Builder $builder) => $builder->where('tags.user_id', $this->userId))
+            ->select('tags.*', DB::raw('COUNT(taggables.tag_id) as usage_count'))
+            ->leftJoin('taggables', function ($join) {
+                $join->on('tags.id', '=', 'taggables.tag_id')
+                    ->where('taggables.user_id', '=', $this->userId);
+            })
+            ->groupBy('tags.id')
+            ->orderBy('usage_count', $direction);
     }
 }

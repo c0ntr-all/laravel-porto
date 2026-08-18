@@ -22,7 +22,10 @@ class CreateTagTask extends Task
             'user_id' => $dto->user_id,
             'name' => $dto->name,
             'slug' => $dto->slug,
-            'content' => $dto->content,
+            'description' => $dto->description ?? $dto->content,
+            'icon' => $dto->icon,
+            'color' => $dto->color,
+            'parent_id' => $dto->parent_id,
         ]);
     }
 }

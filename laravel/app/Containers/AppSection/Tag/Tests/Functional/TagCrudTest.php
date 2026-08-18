@@ -24,16 +24,17 @@ class TagCrudTest extends TestCase
         $response = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/tags', [
                 'name' => 'New Tag',
-                'content' => 'Tag description',
+                'description' => 'Tag description',
             ]);
 
         $response->assertOk()
             ->assertJsonStructure([
-                'data' => ['id', 'attributes' => ['name', 'slug']],
+                'data' => ['id', 'attributes' => ['name', 'slug', 'user_id']],
                 'meta' => ['message'],
             ]);
 
         $this->assertDatabaseHas('tags', [
+            'user_id' => $this->user->id,
             'name' => 'New Tag',
             'slug' => 'new-tag',
         ]);
@@ -55,7 +56,30 @@ class TagCrudTest extends TestCase
         $response->assertUnprocessable();
     }
 
-    public function test_user_can_list_tags(): void
+    public function test_different_users_can_create_tags_with_same_name(): void
+    {
+        $otherUser = User::factory()->create();
+
+        Tag::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Shared Name',
+            'slug' => 'shared-name',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/tags', [
+                'name' => 'Shared Name',
+            ]);
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('tags', [
+            'user_id' => $this->user->id,
+            'name' => 'Shared Name',
+        ]);
+    }
+
+    public function test_user_can_list_only_own_tags(): void
     {
         Tag::create([
             'user_id' => $this->user->id,
@@ -63,7 +87,7 @@ class TagCrudTest extends TestCase
             'slug' => 'tag-one',
         ]);
         Tag::create([
-            'user_id' => $this->user->id,
+            'user_id' => User::factory()->create()->id,
             'name' => 'Tag Two',
             'slug' => 'tag-two',
         ]);
@@ -72,9 +96,7 @@ class TagCrudTest extends TestCase
             ->getJson('/api/v1/tags');
 
         $response->assertOk()
-            ->assertJsonStructure([
-                'data' => ['*' => ['id', 'type', 'attributes']],
-            ]);
+            ->assertJsonCount(1, 'data');
     }
 
     public function test_user_can_get_tag_by_slug(): void

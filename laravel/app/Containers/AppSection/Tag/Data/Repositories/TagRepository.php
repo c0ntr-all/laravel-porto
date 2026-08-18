@@ -12,28 +12,27 @@ use Spatie\QueryBuilder\Enums\SortDirection;
 
 class TagRepository
 {
-    public function get(): Collection
+    public function get(int $userId): Collection
     {
-        $userId = auth()->id();
-
-        return QueryBuilder::for(Tag::class)
-                           ->allowedSorts([
-                               'name',
-                               'created_at',
-                               'updated_at',
-                               AllowedSort::custom('most_used', new MostUsedSort($userId))
-                                          ->defaultDirection(SortDirection::DESCENDING)
-                           ])
-                           ->get();
+        return QueryBuilder::for(Tag::whereUserId($userId))
+            ->allowedSorts([
+                'name',
+                'created_at',
+                'updated_at',
+                AllowedSort::custom('most_used', new MostUsedSort($userId))
+                    ->defaultDirection(SortDirection::DESCENDING),
+            ])
+            ->get();
     }
 
     public function getMostUsedTagsForUser(int $userId, int $limit = 10): Collection
     {
         return Tag::query()
+            ->where('tags.user_id', $userId)
             ->select('tags.*', DB::raw('COUNT(taggables.tag_id) as usage_count'))
             ->leftJoin('taggables', function ($join) use ($userId) {
                 $join->on('tags.id', '=', 'taggables.tag_id')
-                     ->where('taggables.user_id', '=', $userId);
+                    ->where('taggables.user_id', '=', $userId);
             })
             ->groupBy('tags.id')
             ->orderByDesc('usage_count')

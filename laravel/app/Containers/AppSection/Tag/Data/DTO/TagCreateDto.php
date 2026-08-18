@@ -9,9 +9,15 @@ class TagCreateDto extends Data
     public int $user_id;
     public string $name;
     public ?string $slug = null;
+    public ?string $description = null;
+    public ?string $icon = null;
+    public ?string $color = null;
+    public ?int $parent_id = null;
+
+    /** @deprecated use description */
     public ?string $content = null;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 }

@@ -7,24 +7,22 @@ use App\Containers\AppSection\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Containers\AppSection\User\Models\User>
+ * @extends Factory<Tag>
  */
 class TagFactory extends Factory
 {
     protected $model = Tag::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        $name = fake()->unique()->words(2, true);
+
         return [
             'user_id' => User::factory(),
-            'name' => fake()->sentence(),
-            'slug' => fake()->slug(),
-            'content' => fake()->paragraph(),
+            'name' => $name,
+            'slug' => str($name)->slug()->toString(),
+            'description' => fake()->optional()->sentence(),
+            'color' => fake()->optional()->hexColor(),
         ];
     }
 }

@@ -20,10 +20,9 @@ class CreateTagsByNamesTask extends Task
             return collect($tagsCreateDto->new_tags)->map(function (string $name) use ($tagsCreateDto) {
                 $tagCreateDto = TagCreateDto::from([
                     'user_id' => $tagsCreateDto->user_id,
-                    'name' => $name
+                    'name' => $name,
                 ]);
 
-                // TODO: cross-section dependency
                 return $this->createTagTask->run($tagCreateDto);
             });
         }

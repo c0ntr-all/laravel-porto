@@ -4,15 +4,13 @@ namespace App\Containers\AppSection\Tag\UI\Actions;
 
 use App\Containers\AppSection\Tag\Data\DTO\TagListDto;
 use App\Containers\AppSection\Tag\Data\Repositories\TagRepository;
-use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
+use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
 
 class ListTagsAction extends BaseAction
 {
-
     public function __construct(
         private readonly TagRepository $tagRepository
     )
@@ -21,18 +19,17 @@ class ListTagsAction extends BaseAction
 
     public function handle(TagListDto $dto): Collection
     {
-        return $this->tagRepository->get();
+        return $this->tagRepository->get($dto->user_id);
     }
 
-    public function asController(Tag $tag): JsonResponse
+    public function asController(): JsonResponse
     {
-        $dto = TagListDto::from(['user_id' => auth()->user()->id]);
+        $dto = TagListDto::from(['user_id' => auth()->id()]);
 
         $tags = $this->handle($dto);
 
         return fractal($tags, new TagTransformer())
             ->withResourceName('tags')
-            ->parseIncludes(['tags'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

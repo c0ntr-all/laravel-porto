@@ -6,32 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up(): void
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable()->default(NULL);
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
-            $table->text('content')->nullable();
+            $table->foreignId('user_id')->constrained('users');
+            $table->string('name');
+            $table->string('slug');
+            $table->string('icon')->nullable();
+            $table->string('color')->nullable();
+            $table->text('description')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('tags');
             $table->timestamps();
 
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users');
+            $table->unique(['user_id', 'name']);
+            $table->unique(['user_id', 'slug']);
+            $table->index('user_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down(): void
     {
         Schema::dropIfExists('tags');

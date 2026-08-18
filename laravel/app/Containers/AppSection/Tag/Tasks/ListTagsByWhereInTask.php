@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ListTagsByWhereInTask extends Task
 {
-    public function run(string $field, array $criteria): Collection
+    public function run(string $field, array $criteria, ?int $userId = null): Collection
     {
-        //TODO: Сделать как в Apiato - BaseRepository с applyCriteria вместо всех подобных тасок
         return QueryBuilder::for(Tag::class)
-                           ->when(!empty($criteria), function(Builder $query) use ($field, $criteria) {
-                               $query->whereIn($field, $criteria);
-                           })
-                           ->get();
+            ->when($userId !== null, fn (Builder $query) => $query->where('user_id', $userId))
+            ->when(!empty($criteria), function (Builder $query) use ($field, $criteria) {
+                $query->whereIn($field, $criteria);
+            })
+            ->get();
     }
 }

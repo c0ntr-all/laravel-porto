@@ -14,7 +14,7 @@ class TagRepository
 {
     public function get(int $userId): Collection
     {
-        return QueryBuilder::for(Tag::whereUserId($userId))
+        return QueryBuilder::for(Tag::query()->whereUserId($userId))
             ->allowedSorts([
                 'name',
                 'created_at',

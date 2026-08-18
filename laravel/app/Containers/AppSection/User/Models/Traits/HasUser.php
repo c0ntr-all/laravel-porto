@@ -24,9 +24,14 @@ trait HasUser
         });
     }
 
-    public function scopeWhereUser($query, string $userId)
+    public function scopeWhereUser($query, int|string $userId)
     {
-        return $query->where('user_id', $userId);
+        return $query->where($query->getModel()->getTable() . '.user_id', $userId);
+    }
+
+    public function scopeWhereUserId($query, int|string $userId)
+    {
+        return $this->scopeWhereUser($query, $userId);
     }
 
     public function user(): BelongsTo

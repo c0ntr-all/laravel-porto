@@ -18,8 +18,7 @@ class MostUsedSort implements Sort
     {
         $direction = $descending ? 'DESC' : 'ASC';
 
-        $query->when($this->userId !== null, fn (Builder $builder) => $builder->where('tags.user_id', $this->userId))
-            ->select('tags.*', DB::raw('COUNT(taggables.tag_id) as usage_count'))
+        $query->select('tags.*', DB::raw('COUNT(taggables.tag_id) as usage_count'))
             ->leftJoin('taggables', function ($join) {
                 $join->on('tags.id', '=', 'taggables.tag_id')
                     ->where('taggables.user_id', '=', $this->userId);

@@ -1,14 +1,14 @@
 <template>
-  <div class="lifelog-period-form q-pa-md">
+  <div class="lifelog-preset-form q-pa-md">
     <div class="text-h6 q-mb-md">Создать период</div>
     <div class="q-mb-md flex" style="column-gap: .25rem">
       <q-input
-        name="period"
+        name="preset"
         ref="titleRef"
         v-model="model.title"
         class="q-pa-none"
         style="flex-grow: 1"
-        label="Title of period"
+        label="Title of preset"
         :rules="[val => !!val || 'Field is required']"
         dense
         outlined
@@ -16,59 +16,59 @@
       <AppColorPicker v-model="model.color" />
     </div>
     <div class="flex justify-between items-center">
-      <div class="lifelog-periods-table">
-        <div class="lifelog-periods-table__row">
-          <div class="lifelog-periods-table__col">Start Post</div>
-          <div v-if="startPeriodPost" class="lifelog-periods-table__col">
-            {{ startPeriodPost.id }}. {{ startPeriodPost.title }} ({{ startPeriodPost.date }} {{ startPeriodPost.time }})
+      <div class="lifelog-presets-table">
+        <div class="lifelog-presets-table__row">
+          <div class="lifelog-presets-table__col">Start Post</div>
+          <div v-if="startPresetPost" class="lifelog-presets-table__col">
+            {{ startPresetPost.id }}. {{ startPresetPost.title }} ({{ startPresetPost.date }} {{ startPresetPost.time }})
           </div>
-          <div v-else class="lifelog-periods-table__col lifelog-periods-table__col--empty">
+          <div v-else class="lifelog-presets-table__col lifelog-presets-table__col--empty">
             Не выбрано
           </div>
         </div>
-        <div class="lifelog-periods-table__row">
-          <div class="lifelog-periods-table__col">End Post</div>
-          <div v-if="endPeriodPost" class="lifelog-periods-table__col">
-            {{ endPeriodPost.id }}. {{ endPeriodPost.title }} ({{ endPeriodPost.date }} {{ endPeriodPost.time }})
+        <div class="lifelog-presets-table__row">
+          <div class="lifelog-presets-table__col">End Post</div>
+          <div v-if="endPresetPost" class="lifelog-presets-table__col">
+            {{ endPresetPost.id }}. {{ endPresetPost.title }} ({{ endPresetPost.date }} {{ endPresetPost.time }})
           </div>
-          <div v-else class="lifelog-periods-table__col lifelog-periods-table__col--empty">
+          <div v-else class="lifelog-presets-table__col lifelog-presets-table__col--empty">
             Не выбрано
           </div>
         </div>
       </div>
-      <div class="lifelog-periods-actions">
+      <div class="lifelog-presets-actions">
         <q-btn
           class="q-mt-none q-ml-md"
           color="grey"
           label="Reset"
-          @click="resetPeriod"
+          @click="resetPreset"
           :disable="!isSaveAvailable"
           outline
         />
         <q-btn
           label="Создать"
           color="primary"
-          @click="processCreatePeriod"
+          @click="processCreatePreset"
           :disable="!isSaveAvailable"
         />
       </div>
     </div>
     <hr>
-    <LifelogPeriodsList />
+    <LifelogPresetsList />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
-import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
+import useLifelogPresets from 'src/composables/client/Lifelog/useLifelogPreset'
 import AppColorPicker from 'src/components/default/AppColorPicker.vue'
 import { generateRandomHex } from 'src/utils/colors'
-import { IPeriodModel } from 'src/types'
-import LifelogPeriodsList from 'src/components/client/LifeLog/LifelogPeriodsList.vue'
+import { IPresetModel } from 'src/types'
+import LifelogPresetsList from 'src/components/client/LifeLog/LifelogPresetsList.vue'
 
-const { startPeriodPost, endPeriodPost, resetPeriod, createPeriod } = useLifelogPeriods()
+const { startPresetPost, endPresetPost, resetPreset, createPreset } = useLifelogPresets()
 
-const baseModel: IPeriodModel = {
+const baseModel: IPresetModel = {
   title: null,
   description: null,
   start_post_id: null,
@@ -77,19 +77,19 @@ const baseModel: IPeriodModel = {
   icon: null
 }
 
-const model = ref<IPeriodModel>({ ...baseModel })
+const model = ref<IPresetModel>({ ...baseModel })
 
-const isSaveAvailable = computed(() => startPeriodPost.value !== null)
+const isSaveAvailable = computed(() => startPresetPost.value !== null)
 
-const processCreatePeriod = () => {
+const processCreatePreset = () => {
   const data = {
     ...model.value,
-    start_post_id: startPeriodPost.value.id,
-    end_post_id: endPeriodPost.value.id
+    start_post_id: startPresetPost.value.id,
+    end_post_id: endPresetPost.value.id
   }
-  createPeriod(data).then(() => {
+  createPreset(data).then(() => {
     clearModel()
-    resetPeriod()
+    resetPreset()
   })
 }
 
@@ -100,11 +100,11 @@ const clearModel = () => {
 </script>
 
 <style lang="scss" scoped>
-.lifelog-period-form {
+.lifelog-preset-form {
   width: 100%;
   background-color: #ffffff;
 }
-.lifelog-periods-table {
+.lifelog-presets-table {
   &__row {
     display: flex;
     column-gap: 1rem;
@@ -121,7 +121,7 @@ const clearModel = () => {
     }
   }
 }
-.lifelog-periods-actions {
+.lifelog-presets-actions {
   display: flex;
   column-gap: 1rem;
 }

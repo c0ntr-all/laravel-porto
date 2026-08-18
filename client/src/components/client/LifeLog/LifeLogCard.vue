@@ -2,8 +2,8 @@
   <div
     class="ll-card-wrap"
     :class="{
-      'll-card-wrap--start-period': isPostStartPeriod,
-      'll-card-wrap--end-period': isPostEndPeriod
+      'll-card-wrap--start-preset': isPostStartPreset,
+      'll-card-wrap--end-preset': isPostEndPreset
     }
   ">
     <q-avatar
@@ -113,7 +113,7 @@ import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.v
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
-import useLifelogPeriods from 'src/composables/client/Lifelog/useLifelogPeriod'
+import useLifelogPresets from 'src/composables/client/Lifelog/useLifelogPreset'
 
 interface Action {
   fn: () => void
@@ -127,7 +127,7 @@ const props = defineProps<{
 }>()
 const { post } = toRefs(props)
 
-const { startPeriodPostId, endPeriodPostId, setStartPeriodPostId, setEndPeriodPostId } = useLifelogPeriods()
+const { startPresetPostId, endPresetPostId, setStartPresetPostId, setEndPresetPostId } = useLifelogPresets()
 
 const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
@@ -152,22 +152,22 @@ const availableActions: Action[] = [{
   icon: 'delete'
 }, {
   fn: () => {
-    setStartPeriodPostId(props.post.id)
+    setStartPresetPostId(props.post.id)
   },
-  label: 'Start period',
-  name: 'start_period',
+  label: 'Start preset',
+  name: 'start_preset',
   icon: 'line_axis'
 }, {
   fn: () => {
-    setEndPeriodPostId(props.post.id)
+    setEndPresetPostId(props.post.id)
   },
-  label: 'End period',
-  name: 'end_period',
+  label: 'End preset',
+  name: 'end_preset',
   icon: 'line_axis'
 }]
 
-const isPostStartPeriod = computed(() => startPeriodPostId.value === props.post.id)
-const isPostEndPeriod = computed(() => endPeriodPostId.value === props.post.id)
+const isPostStartPreset = computed(() => startPresetPostId.value === props.post.id)
+const isPostEndPreset = computed(() => endPresetPostId.value === props.post.id)
 const openCarousel = (id: string) => {
   currentSlideId.value = id
   showCarousel.value = true
@@ -184,7 +184,7 @@ const openCarousel = (id: string) => {
     left: 0;
   }
 
-  &--start-period {
+  &--start-preset {
     &:before {
       content: '';
       position: absolute;
@@ -208,7 +208,7 @@ const openCarousel = (id: string) => {
     }
   }
 
-  &--end-period {
+  &--end-preset {
     &:before {
       content: '';
       position: absolute;

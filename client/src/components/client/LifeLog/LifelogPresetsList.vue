@@ -1,7 +1,7 @@
 <template>
   <q-table
     :title="tableTitleName"
-    :rows="periods"
+    :rows="presets"
     :columns="columns"
     row-key="id"
     :pagination="{rowsPerPage: 0}"
@@ -34,7 +34,7 @@
           {{ props.row.title }}
         </q-td>
         <q-td key="color" :props="props">
-          <span class="periods-list__color-col" :style="{backgroundColor: props.row.color }"></span>
+          <span class="presets-list__color-col" :style="{backgroundColor: props.row.color }"></span>
         </q-td>
         <q-td key="color" :props="props">
           {{ props.row.start_date }}
@@ -55,10 +55,10 @@
 <script lang="ts" setup>
 import { onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { usePeriodStore } from 'src/stores/modules/periodStore'
+import { usePresetStore } from 'src/stores/modules/presetStore'
 
-const periodStore = usePeriodStore()
-const { periods, periodsCount } = storeToRefs(periodStore)
+const presetStore = usePresetStore()
+const { presets, presetsCount } = storeToRefs(presetStore)
 const columns = [
   {
     name: 'title',
@@ -87,15 +87,15 @@ const columns = [
     sortable: true
   }
 ]
-const tableTitleName = computed(() => `Periods (${periodsCount.value})`)
+const tableTitleName = computed(() => `Presets (${presetsCount.value})`)
 onMounted(() => {
-  periodStore.getPeriods()
+  presetStore.getPresets()
 })
 
 </script>
 
 <style lang="scss" scoped>
-.periods-list__color-col {
+.presets-list__color-col {
   display: block;
   width: 1rem;
   height: 1rem;

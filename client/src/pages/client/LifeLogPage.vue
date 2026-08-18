@@ -23,8 +23,8 @@
         </template>
       </AppModal>
     </div>
-    <div class="lifelog-period-form-wrap q-mb-md">
-      <LifeLogPeriodForm />
+    <div class="lifelog-preset-form-wrap q-mb-md">
+      <LifeLogPresetForm />
     </div>
     <div class="lifelog-filter-wrap q-mb-md">
       <LifeLogPostsFilter
@@ -65,7 +65,7 @@ import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 // import LifeLogRowCard from 'src/components/client/LifeLog/LifeLogRowCard.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import AppModal from 'src/components/default/AppModal.vue'
-import LifeLogPeriodForm from 'src/components/client/LifeLog/LifeLogPeriodForm.vue'
+import LifeLogPresetForm from 'src/components/client/LifeLog/LifeLogPresetForm.vue'
 
 const postStore = usePostStore()
 const { posts, postsCount } = storeToRefs(postStore)
@@ -116,7 +116,7 @@ onMounted(() => {
   .lifelog-post-form-wrap {
     width: 100%;
   }
-  .lifelog-period-form-wrap {
+  .lifelog-preset-form-wrap {
     width: 100%;
   }
   .lifelog-posts-wrap {

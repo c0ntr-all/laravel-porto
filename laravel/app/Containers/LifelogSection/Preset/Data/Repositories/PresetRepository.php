@@ -20,4 +20,9 @@ class PresetRepository
     {
         return Preset::create($dto->toArray());
     }
+
+    public function deletePreset(Preset $preset): ?bool
+    {
+        return $preset->delete();
+    }
 }

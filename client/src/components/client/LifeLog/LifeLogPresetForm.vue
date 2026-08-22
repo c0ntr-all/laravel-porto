@@ -1,71 +1,77 @@
 <template>
   <div class="lifelog-preset-form">
-    <div class="row q-col-gutter-md q-mb-md">
-      <div class="col-grow">
-        <q-input
-          ref="titleRef"
-          v-model="model.title"
-          label="Название preset"
-          :rules="[val => !!val?.trim() || 'Обязательное поле']"
-          dense
-          outlined
-        />
-      </div>
-      <div class="col-auto flex items-center">
-        <AppColorPicker v-model="model.color" />
-      </div>
-    </div>
+    <q-inner-loading :showing="isLoading">
+      <q-spinner size="40px" color="primary" />
+    </q-inner-loading>
 
-    <div class="row q-col-gutter-md q-mb-lg">
-      <div class="col-12 col-md-6">
-        <PresetDateBlock
-          label="Начало"
-          icon="flag"
-          :post="startPresetPost"
-          v-model="dateFrom"
-          @clear-post="clearStartPost"
-        />
+    <template v-if="!isLoading">
+      <div class="row q-col-gutter-md q-mb-md">
+        <div class="col-grow">
+          <q-input
+            ref="titleRef"
+            v-model="model.title"
+            label="Название preset"
+            :rules="[val => !!val?.trim() || 'Обязательное поле']"
+            dense
+            outlined
+          />
+        </div>
+        <div class="col-auto flex items-center">
+          <AppColorPicker v-model="model.color" />
+        </div>
       </div>
-      <div class="col-12 col-md-6">
-        <PresetDateBlock
-          label="Окончание"
-          icon="outlined_flag"
-          :post="endPresetPost"
-          v-model="dateTo"
-          @clear-post="clearEndPost"
-        />
+
+      <div class="row q-col-gutter-md q-mb-lg">
+        <div class="col-12 col-md-6">
+          <PresetDateBlock
+            label="Начало"
+            icon="flag"
+            :post="startPresetPost"
+            v-model="dateFrom"
+            @clear-post="clearStartPost"
+          />
+        </div>
+        <div class="col-12 col-md-6">
+          <PresetDateBlock
+            label="Окончание"
+            icon="outlined_flag"
+            :post="endPresetPost"
+            v-model="dateTo"
+            @clear-post="clearEndPost"
+          />
+        </div>
       </div>
-    </div>
 
-    <PresetTagsSelect
-      v-model="selectedTags"
-      class="q-mb-lg"
-    />
-
-    <q-banner dense rounded class="bg-blue-1 text-primary q-mb-md">
-      <template #avatar>
-        <q-icon name="info" />
-      </template>
-      Дата и время задаются в одном поле: выбор поста подставит его дату, после чего значение можно скорректировать вручную.
-    </q-banner>
-
-    <div class="row justify-end q-gutter-sm">
-      <q-btn
-        flat
-        no-caps
-        label="Сбросить"
-        color="grey"
-        @click="resetForm"
+      <PresetTagsSelect
+        v-model="selectedTags"
+        class="q-mb-lg"
       />
-      <q-btn
-        no-caps
-        label="Создать preset"
-        color="primary"
-        :disable="!isSaveAvailable"
-        :loading="isSubmitting"
-        @click="processCreatePreset"
-      />
-    </div>
+
+      <q-banner dense rounded class="bg-blue-1 text-primary q-mb-md">
+        <template #avatar>
+          <q-icon name="info" />
+        </template>
+        Дата и время задаются в одном поле: выбор поста подставит его дату, после чего значение можно скорректировать вручную.
+      </q-banner>
+
+      <div class="row justify-end q-gutter-sm">
+        <q-btn
+          flat
+          no-caps
+          label="Сбросить"
+          color="grey"
+          @click="resetForm"
+        />
+        <q-btn
+          no-caps
+          :label="submitLabel"
+          color="primary"
+          :disable="!isSaveAvailable"
+          :loading="isSubmitting"
+          @click="processSubmit"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -77,8 +83,13 @@ import AppColorPicker from 'src/components/default/AppColorPicker.vue'
 import PresetDateBlock from 'src/components/client/LifeLog/PresetDateBlock.vue'
 import PresetTagsSelect from 'src/components/client/LifeLog/PresetTagsSelect.vue'
 import { generateRandomHex } from 'src/utils/colors'
-import { formatPostDatetime } from 'src/api/mappers/LifeLog/preset.mapper'
-import { IPresetModel } from 'src/types'
+import { formatPostDatetime, mapPresetToFormModel } from 'src/api/mappers/LifeLog/preset.mapper'
+import { handleApiError } from 'src/utils/jsonapi'
+import { IPreset, IPresetModel } from 'src/types'
+
+const props = defineProps<{
+  presetId?: string | null
+}>()
 
 const emit = defineEmits<{
   success: []
@@ -88,7 +99,8 @@ const {
   startPresetPost,
   endPresetPost,
   resetPreset,
-  createPreset
+  createPreset,
+  updatePreset
 } = useLifelogPresets()
 
 const presetStore = usePresetStore()
@@ -103,8 +115,44 @@ const dateFrom = ref('')
 const dateTo = ref('')
 const selectedTags = ref<string[]>([])
 const isSubmitting = ref(false)
+const isLoading = ref(false)
 
+const isEditMode = computed(() => Boolean(props.presetId))
 const isSaveAvailable = computed(() => !!model.value.title?.trim())
+const submitLabel = computed(() => isEditMode.value ? 'Сохранить' : 'Создать preset')
+
+const buildPayload = (): IPresetModel => ({
+  title: model.value.title.trim(),
+  color: model.value.color,
+  date_from: dateFrom.value.trim() || null,
+  date_to: dateTo.value.trim() || null,
+  tags: selectedTags.value.length ? [...selectedTags.value] : undefined
+})
+
+const populateForm = (preset: IPreset) => {
+  const formModel = mapPresetToFormModel(preset)
+
+  model.value = {
+    title: formModel.title,
+    color: formModel.color
+  }
+
+  presetStore.setStartPresetPostId(preset.start_post_id)
+  presetStore.setEndPresetPostId(preset.end_post_id)
+
+  dateFrom.value = formModel.date_from ?? ''
+  dateTo.value = formModel.date_to ?? ''
+  selectedTags.value = formModel.tags ?? []
+}
+
+const applyPostDatesIfNeeded = () => {
+  if (startPresetPost.value) {
+    dateFrom.value = formatPostDatetime(startPresetPost.value)
+  }
+  if (endPresetPost.value) {
+    dateTo.value = formatPostDatetime(endPresetPost.value)
+  }
+}
 
 watch(startPresetPost, post => {
   if (post) {
@@ -118,12 +166,21 @@ watch(endPresetPost, post => {
   }
 }, { flush: 'sync' })
 
-onMounted(() => {
-  if (startPresetPost.value) {
-    dateFrom.value = formatPostDatetime(startPresetPost.value)
+onMounted(async () => {
+  if (!props.presetId) {
+    applyPostDatesIfNeeded()
+    return
   }
-  if (endPresetPost.value) {
-    dateTo.value = formatPostDatetime(endPresetPost.value)
+
+  isLoading.value = true
+
+  try {
+    const preset = await presetStore.getPreset(props.presetId)
+    populateForm(preset)
+  } catch (error) {
+    handleApiError(error)
+  } finally {
+    isLoading.value = false
   }
 })
 
@@ -143,21 +200,21 @@ const resetForm = () => {
   model.value = createBaseModel()
 }
 
-const processCreatePreset = async () => {
+const processSubmit = async () => {
   if (!isSaveAvailable.value) return
 
   isSubmitting.value = true
 
   try {
-    await createPreset({
-      title: model.value.title.trim(),
-      color: model.value.color,
-      date_from: dateFrom.value.trim() || null,
-      date_to: dateTo.value.trim() || null,
-      tags: selectedTags.value.length ? [...selectedTags.value] : undefined
-    })
+    const payload = buildPayload()
 
-    resetForm()
+    if (isEditMode.value && props.presetId) {
+      await updatePreset(props.presetId, payload)
+    } else {
+      await createPreset(payload)
+      resetForm()
+    }
+
     emit('success')
   } finally {
     isSubmitting.value = false
@@ -168,5 +225,7 @@ const processCreatePreset = async () => {
 <style lang="scss" scoped>
 .lifelog-preset-form {
   width: 100%;
+  position: relative;
+  min-height: 120px;
 }
 </style>

@@ -1,5 +1,10 @@
-import { IJsonApiResource, IJsonApiResponse } from '../jsonapi'
-import { IUser } from '../user'
+import { IJsonApiResource, IJsonApiResponse, IUser } from '../jsonapi'
+
+export interface IPresetRules {
+  tags?: string[]
+  date_from?: string | null
+  date_to?: string | null
+}
 
 export interface IPreset {
   type: string
@@ -8,12 +13,16 @@ export interface IPreset {
   description?: string
   color: string
   icon: string | null
+  start_date?: string | null
+  end_date?: string | null
   date_from: string | null
   date_to: string | null
+  rules?: IPresetRules
   start_post_id: string | null
   end_post_id: string | null
+  tags?: string[]
   created_at: string
-  user: IUser
+  user?: IUser
 }
 
 export interface IPresetModel {
@@ -28,7 +37,11 @@ export interface IPresetFields {
   title: string
   description: string | null
   color: string | null
-  icon: boolean
+  icon: string | null
+  start_date: string | null
+  end_date: string | null
+  rules?: IPresetRules
+  created_at: string
 }
 
 export interface IPresetUpdatePayload extends Partial<IPresetFields> {}
@@ -45,3 +58,5 @@ export interface IPresetGetResponse extends IPresetResponse {}
 export interface IPresetCreateResponse extends IPresetResponse {}
 export interface IPresetUpdateResponse extends IPresetResponse {}
 export interface IPresetDeleteResponse extends IPresetResponse {}
+
+export type { IPresetCreateDto } from 'src/api/DTO/PresetCreateDto'

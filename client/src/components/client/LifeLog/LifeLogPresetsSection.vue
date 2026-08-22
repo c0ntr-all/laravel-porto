@@ -20,21 +20,26 @@
     <q-separator />
 
     <q-card-section class="q-pt-sm">
-      <LifelogPresetsList />
+      <LifelogPresetsList
+        @edit="openEditModal"
+        @delete="confirmDelete"
+      />
     </q-card-section>
 
     <AppModal
-      v-model="isCreateModalOpen"
+      v-model="isModalOpen"
       width="720px"
       scrollable
     >
       <template #header>
-        Создать preset
+        {{ modalTitle }}
       </template>
       <template #body>
         <LifeLogPresetForm
-          v-if="isCreateModalOpen"
-          @success="onPresetCreated"
+          v-if="isModalOpen"
+          :key="formKey"
+          :preset-id="editingPresetId"
+          @success="onFormSuccess"
         />
       </template>
     </AppModal>
@@ -44,15 +49,21 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useQuasar } from 'quasar'
 import AppModal from 'src/components/default/AppModal.vue'
 import LifelogPresetsList from 'src/components/client/LifeLog/LifelogPresetsList.vue'
 import LifeLogPresetForm from 'src/components/client/LifeLog/LifeLogPresetForm.vue'
 import { usePresetStore } from 'src/stores/modules/presetStore'
+import { handleApiError } from 'src/utils/jsonapi'
+import { IPreset } from 'src/types'
 
+const $q = useQuasar()
 const presetStore = usePresetStore()
 const { presetsCount } = storeToRefs(presetStore)
 
-const isCreateModalOpen = ref(false)
+const isModalOpen = ref(false)
+const editingPresetId = ref<string | null>(null)
+const formKey = ref(0)
 
 const presetsCountLabel = computed(() => {
   const count = presetsCount.value
@@ -65,13 +76,54 @@ const presetsCountLabel = computed(() => {
   return 'preset\'ов'
 })
 
+const modalTitle = computed(() =>
+  editingPresetId.value ? 'Редактировать preset' : 'Создать preset'
+)
+
 const openCreateModal = () => {
-  isCreateModalOpen.value = true
+  editingPresetId.value = null
+  formKey.value += 1
+  isModalOpen.value = true
 }
 
-const onPresetCreated = () => {
-  isCreateModalOpen.value = false
+const openEditModal = (id: string) => {
+  editingPresetId.value = id
+  formKey.value += 1
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  editingPresetId.value = null
+}
+
+const onFormSuccess = () => {
+  closeModal()
   presetStore.getPresets()
+}
+
+const confirmDelete = (preset: IPreset) => {
+  $q.dialog({
+    title: 'Удалить preset?',
+    message: `Preset «${preset.title}» будет удалён без возможности восстановления.`,
+    cancel: {
+      label: 'Отмена',
+      flat: true,
+      noCaps: true
+    },
+    ok: {
+      label: 'Удалить',
+      color: 'negative',
+      noCaps: true
+    },
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await presetStore.deletePreset(preset.id)
+    } catch (error) {
+      handleApiError(error)
+    }
+  })
 }
 </script>
 

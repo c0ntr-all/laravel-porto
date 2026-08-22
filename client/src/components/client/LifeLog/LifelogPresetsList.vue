@@ -27,12 +27,42 @@
             {{ formatPresetDateRange(preset.date_from, preset.date_to) }}
           </q-item-label>
           <q-item-label
+            v-if="preset.tags?.length"
+            caption
+            class="q-mt-xs"
+          >
+            {{ preset.tags.join(', ') }}
+          </q-item-label>
+          <q-item-label
             v-if="preset.description"
             caption
             class="q-mt-xs text-grey-7"
           >
             {{ preset.description }}
           </q-item-label>
+        </q-item-section>
+
+        <q-item-section side>
+          <div class="row items-center no-wrap">
+            <q-btn
+              flat
+              round
+              dense
+              icon="edit"
+              color="primary"
+              aria-label="Редактировать preset"
+              @click="emit('edit', preset.id)"
+            />
+            <q-btn
+              flat
+              round
+              dense
+              icon="delete"
+              color="negative"
+              aria-label="Удалить preset"
+              @click="emit('delete', preset)"
+            />
+          </div>
         </q-item-section>
       </q-item>
     </q-list>
@@ -51,6 +81,12 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePresetStore } from 'src/stores/modules/presetStore'
 import { formatPresetDateRange } from 'src/utils/datetime'
+import { IPreset } from 'src/types'
+
+const emit = defineEmits<{
+  edit: [id: string]
+  delete: [preset: IPreset]
+}>()
 
 const presetStore = usePresetStore()
 const { presets, isLoading } = storeToRefs(presetStore)

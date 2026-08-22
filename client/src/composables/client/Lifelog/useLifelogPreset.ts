@@ -35,6 +35,10 @@ export default function useLifelogPresets() {
     return presetStore.createPreset(payload)
   }
 
+  const updatePreset = (id: string, payload: IPresetModel): Promise<IPreset> => {
+    return presetStore.updatePreset(id, payload)
+  }
+
   return {
     startPresetPostId,
     endPresetPostId,
@@ -43,6 +47,7 @@ export default function useLifelogPresets() {
     setStartPresetPostId,
     setEndPresetPostId,
     resetPreset,
-    createPreset
+    createPreset,
+    updatePreset
   }
 }

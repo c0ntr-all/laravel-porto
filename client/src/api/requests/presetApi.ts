@@ -17,5 +17,20 @@ export const presetApi = {
   async createPreset(payload: IPresetCreateDto): Promise<IJsonApiResponse> {
     const response = await api.post('v1/lifelog/presets', payload)
     return response.data
+  },
+
+  async getPreset(id: string): Promise<IJsonApiResponse> {
+    const response = await api.get(`v1/lifelog/presets/${id}`)
+    return response.data
+  },
+
+  async updatePreset(id: string, payload: IPresetCreateDto): Promise<IJsonApiResponse> {
+    const response = await api.patch(`v1/lifelog/presets/${id}`, payload)
+    return response.data
+  },
+
+  async deletePreset(id: string): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/lifelog/presets/${id}`)
+    return response.data
   }
 }

@@ -49,10 +49,9 @@ class CreatePresetAction extends UseCaseAction
         $dto = PresetCreateDto::from([
             'user_id' => auth()->id(),
             'title' => $validated['title'],
-            'color' => $validated['color'],
             'description' => $validated['description'] ?? null,
+            'color' => $validated['color'],
             'icon' => $validated['icon'] ?? null,
-            'tags' => $validated['tags'] ?? null,
             'rules' => PresetRules::fromArray([
                 'tags' => $validated['tags'] ?? [],
                 'date_from' => $validated['date_from'] ?? null,

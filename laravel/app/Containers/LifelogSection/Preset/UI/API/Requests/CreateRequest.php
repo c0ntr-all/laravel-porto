@@ -15,8 +15,8 @@ class CreateRequest extends AuthenticatedRequest
             'icon' => 'sometimes|string|max:50',
             'tags' => 'sometimes|array',
             'tags.*' => 'string|max:50',
-            'date_from' => 'sometimes|nullable|date_format:Y-m-d',
-            'date_to' => 'sometimes|nullable|date_format:Y-m-d|after_or_equal:date_from',
+            'date_from' => 'sometimes|nullable|date_format:Y-m-d H:i',
+            'date_to' => 'sometimes|nullable|date_format:Y-m-d H:i|after_or_equal:date_from',
             'text' => 'sometimes|nullable|string|max:255',
         ];
     }

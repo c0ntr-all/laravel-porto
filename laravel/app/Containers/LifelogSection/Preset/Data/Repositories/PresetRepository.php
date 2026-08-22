@@ -18,15 +18,6 @@ class PresetRepository
 
     public function createPreset(PresetCreateDto $dto): Preset
     {
-        return Preset::create([
-            'user_id' => $dto->user_id,
-            'title' => $dto->title,
-            'description' => $dto->description,
-            'color' => $dto->color,
-            'icon' => $dto->icon,
-            'start_date' => $dto->rules->dateFrom,
-            'end_date' => $dto->rules->dateTo,
-            'rules' => $dto->rules,
-        ]);
+        return Preset::create($dto->toArray());
     }
 }

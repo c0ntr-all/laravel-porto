@@ -9,10 +9,9 @@ class PresetCreateDto extends Data
 {
     public int $user_id;
     public string $title;
-    public string $color;
     public ?string $description = null;
+    public string $color;
     public ?string $icon = null;
-    public ?array $tags = null;
     public PresetRules $rules;
 
     public function __construct()

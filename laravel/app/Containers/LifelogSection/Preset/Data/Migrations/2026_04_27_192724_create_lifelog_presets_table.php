@@ -14,10 +14,8 @@ return new class extends Migration
         Schema::create('lifelog_presets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->datetime('start_date')->nullable()->default(NULL);
-            $table->datetime('end_date')->nullable()->default(NULL);
-            $table->string('title');
             $table->text('description')->nullable();
+            $table->string('title');
             $table->string('color', 7)->nullable();
             $table->string('icon')->nullable();
             $table->json('rules')->nullable();

@@ -23,14 +23,14 @@
         </template>
       </AppModal>
     </div>
-    <div class="lifelog-preset-form-wrap q-mb-md">
-      <LifeLogPresetForm />
-    </div>
     <div class="lifelog-filter-wrap q-mb-md">
       <LifeLogPostsFilter
         @submit="onFilterSubmit"
         @reset="onFilterReset"
       />
+    </div>
+    <div class="lifelog-presets-wrap q-mb-md">
+      <LifeLogPresetsSection />
     </div>
     <div class="lifelog-posts-wrap q-mb-md q-gutter-sm">
       <div v-if="postStore.isLoading">loading...</div>
@@ -65,7 +65,7 @@ import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
 // import LifeLogRowCard from 'src/components/client/LifeLog/LifeLogRowCard.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import AppModal from 'src/components/default/AppModal.vue'
-import LifeLogPresetForm from 'src/components/client/LifeLog/LifeLogPresetForm.vue'
+import LifeLogPresetsSection from 'src/components/client/LifeLog/LifeLogPresetsSection.vue'
 
 const postStore = usePostStore()
 const { posts, postsCount } = storeToRefs(postStore)
@@ -116,7 +116,7 @@ onMounted(() => {
   .lifelog-post-form-wrap {
     width: 100%;
   }
-  .lifelog-preset-form-wrap {
+  .lifelog-presets-wrap {
     width: 100%;
   }
   .lifelog-posts-wrap {

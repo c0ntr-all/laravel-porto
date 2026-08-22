@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { usePresetStore } from 'src/stores/modules/presetStore'
-import { IPresetModel, IPost } from 'src/types'
+import { IPreset, IPresetModel, IPost } from 'src/types'
 
 export default function useLifelogPresets() {
   const postStore = usePostStore()
@@ -9,16 +9,19 @@ export default function useLifelogPresets() {
 
   const startPresetPostId = computed(() => presetStore.startPresetPostId)
   const endPresetPostId = computed(() => presetStore.endPresetPostId)
-  const startPresetPost = computed<IPost>(() =>
+
+  const startPresetPost = computed<IPost | undefined>(() =>
     postStore.posts.find(post => post.id === startPresetPostId.value)
-  ) || null
-  const endPresetPost = computed<IPost>(() =>
+  )
+
+  const endPresetPost = computed<IPost | undefined>(() =>
     postStore.posts.find(post => post.id === endPresetPostId.value)
-  ) || null
+  )
 
   const setStartPresetPostId = (postId: string): void => {
     presetStore.setStartPresetPostId(postId)
   }
+
   const setEndPresetPostId = (postId: string): void => {
     presetStore.setEndPresetPostId(postId)
   }
@@ -28,7 +31,7 @@ export default function useLifelogPresets() {
     presetStore.setEndPresetPostId(null)
   }
 
-  const createPreset = (payload: IPresetModel): Promise => {
+  const createPreset = (payload: IPresetModel): Promise<IPreset> => {
     return presetStore.createPreset(payload)
   }
 

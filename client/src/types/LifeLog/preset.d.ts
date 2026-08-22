@@ -1,4 +1,5 @@
-import { IJsonApiResource, IJsonApiResponse, IUser } from 'src/types'
+import { IJsonApiResource, IJsonApiResponse } from '../jsonapi'
+import { IUser } from '../user'
 
 export interface IPreset {
   type: string
@@ -7,37 +8,39 @@ export interface IPreset {
   description?: string
   color: string
   icon: string | null
-  start_date: string
-  end_date: string | null
-  start_post_id: string
+  date_from: string | null
+  date_to: string | null
+  start_post_id: string | null
   end_post_id: string | null
   created_at: string
   user: IUser
 }
+
 export interface IPresetModel {
-  title: string,
-  description?: string,
-  start_post_id: string,
-  end_post_id: string | null,
-  color: string,
-  icon?: string | null
+  title: string
+  color: string
+  date_from?: string | null
+  date_to?: string | null
+  tags?: string[]
 }
-/**
- * Only backend fields
- */
+
 export interface IPresetFields {
   title: string
   description: string | null
   color: string | null
   icon: boolean
 }
+
 export interface IPresetUpdatePayload extends Partial<IPresetFields> {}
+
 export interface IPresetResource extends IJsonApiResource {
   attributes: IPresetFields
 }
+
 export interface IPresetResponse extends IJsonApiResponse<IPresetResource> {
   data: IPresetResource
 }
+
 export interface IPresetGetResponse extends IPresetResponse {}
 export interface IPresetCreateResponse extends IPresetResponse {}
 export interface IPresetUpdateResponse extends IPresetResponse {}

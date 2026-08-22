@@ -1,20 +1,26 @@
-import { IPresetModel } from 'src/types'
+import { IPost } from 'src/types'
+import { IPresetModel } from 'src/types/LifeLog/preset'
 import { IPresetCreateDto } from 'src/api/DTO/PresetCreateDto'
 
+export function formatPostDatetime(post: IPost): string {
+  if (post.time) {
+    return `${post.date} ${post.time}`
+  }
+
+  return `${post.date} 00:00`
+}
+
 export function mapPresetFormModelToCreateDto(presetModel: IPresetModel): IPresetCreateDto {
-  const data: IPresetCreateDto = {
+  const dto: IPresetCreateDto = {
     title: presetModel.title,
-    start_post_id: presetModel.start_post_id,
-    end_post_id: presetModel.end_post_id,
-    color: presetModel.color
+    color: presetModel.color,
+    date_from: presetModel.date_from?.trim() || null,
+    date_to: presetModel.date_to?.trim() || null
   }
 
-  if (presetModel.description) {
-    data.description = presetModel.description
-  }
-  if (presetModel.icon) {
-    data.icon = presetModel.icon
+  if (presetModel.tags?.length) {
+    dto.tags = presetModel.tags
   }
 
-  return data
+  return dto
 }

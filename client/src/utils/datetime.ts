@@ -24,4 +24,23 @@ const humanDatetime = (datetime: string) => {
   return date.formatDate(datetime, format)
 }
 
-export { getCurrentDateTime, humanDatetime }
+const formatPresetDateRange = (
+  dateFrom: string | null,
+  dateTo: string | null
+): string => {
+  if (!dateFrom && !dateTo) {
+    return 'Даты не заданы'
+  }
+
+  if (dateFrom && dateTo) {
+    return `${humanDatetime(dateFrom)} — ${humanDatetime(dateTo)}`
+  }
+
+  if (dateFrom) {
+    return `с ${humanDatetime(dateFrom)}`
+  }
+
+  return `до ${humanDatetime(dateTo!)}`
+}
+
+export { getCurrentDateTime, humanDatetime, formatPresetDateRange }

@@ -1,20 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { postApi } from 'src/api/requests/postApi'
 import { presetApi } from 'src/api/requests/presetApi'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import {
   IJsonApiResponse,
-  IPost,
   IFilter,
   IPreset,
-  IPresetModel, IPresetCreateDto
+  IPresetModel
 } from 'src/types'
 import { mapPresetFormModelToCreateDto } from 'src/api/mappers/LifeLog/preset.mapper'
 
 export const usePresetStore = defineStore('preset', () => {
-  const presets = ref<IPost[]>([])
+  const presets = ref<IPreset[]>([])
   const presetsCount = ref<number>(0)
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
@@ -36,7 +34,9 @@ export const usePresetStore = defineStore('preset', () => {
   }
 
   async function createPreset(presetModel: IPresetModel): Promise<IPreset> {
-    const presetCreateDto: IPresetCreateDto = mapPresetFormModelToCreateDto(presetModel)
+    const presetCreateDto = mapPresetFormModelToCreateDto(presetModel)
+
+    console.log(presetCreateDto)
 
     try {
       const responseData: IJsonApiResponse = await presetApi.createPreset(presetCreateDto)
@@ -50,7 +50,7 @@ export const usePresetStore = defineStore('preset', () => {
 
       return newPreset
     } catch (error: any) {
-      handleApiError(error.message || 'Не удалось создать период')
+      handleApiError(error.message || 'Не удалось создать preset')
       throw error
     }
   }

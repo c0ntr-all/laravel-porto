@@ -1,104 +1,73 @@
 <template>
-  <q-table
-    :title="tableTitleName"
-    :rows="presets"
-    :columns="columns"
-    row-key="id"
-    :pagination="{rowsPerPage: 0}"
-    :no-results-label="'No data'"
-    dense
-    flat
-  >
-    <template v-slot:header="props">
-      <q-tr :props="props">
-        <q-th auto-width />
-        <q-th v-for="col in props.cols" :key="col.name" :props="props">
-          {{ col.label }}
-        </q-th>
-      </q-tr>
-    </template>
-    <template v-slot:body="props">
-      <q-tr :props="props">
-        <q-td auto-width>
-          <q-btn
-            v-if="props.row.description"
+  <div class="presets-list">
+    <q-inner-loading :showing="isLoading">
+      <q-spinner size="32px" color="primary" />
+    </q-inner-loading>
+
+    <q-list
+      v-if="!isLoading && presets.length"
+      bordered
+      separator
+      class="rounded-borders"
+    >
+      <q-item
+        v-for="preset in presets"
+        :key="preset.id"
+      >
+        <q-item-section avatar>
+          <q-avatar
             size="sm"
-            color="accent"
-            round
-            dense
-            @click="props.expand = !props.expand"
-            :icon="props.expand ? 'remove' : 'add'"
+            :style="{ backgroundColor: preset.color || '#ccc' }"
           />
-        </q-td>
-        <q-td key="title" :props="props">
-          {{ props.row.title }}
-        </q-td>
-        <q-td key="color" :props="props">
-          <span class="presets-list__color-col" :style="{backgroundColor: props.row.color }"></span>
-        </q-td>
-        <q-td key="color" :props="props">
-          {{ props.row.start_date }}
-        </q-td>
-        <q-td key="color" :props="props">
-          {{ props.row.end_date }}
-        </q-td>
-      </q-tr>
-      <q-tr v-show="props.expand" :props="props">
-        <q-td colspan="100%">
-          <div class="text-left">{{ props.row.description }}</div>
-        </q-td>
-      </q-tr>
-    </template>
-  </q-table>
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label>{{ preset.title }}</q-item-label>
+          <q-item-label caption>
+            {{ formatPresetDateRange(preset.date_from, preset.date_to) }}
+          </q-item-label>
+          <q-item-label
+            v-if="preset.description"
+            caption
+            class="q-mt-xs text-grey-7"
+          >
+            {{ preset.description }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </q-list>
+
+    <div
+      v-else-if="!isLoading"
+      class="text-center text-grey-6 q-pa-md presets-list__empty"
+    >
+      Preset'ов пока нет
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, computed } from 'vue'
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePresetStore } from 'src/stores/modules/presetStore'
+import { formatPresetDateRange } from 'src/utils/datetime'
 
 const presetStore = usePresetStore()
-const { presets, presetsCount } = storeToRefs(presetStore)
-const columns = [
-  {
-    name: 'title',
-    required: true,
-    label: 'Заголовок',
-    align: 'left',
-    field: 'title',
-    sortable: true
-  }, {
-    name: 'color',
-    align: 'center',
-    label: 'Цвет',
-    field: 'color',
-    sortable: true
-  }, {
-    name: 'start_date',
-    align: 'center',
-    label: 'Дата начала',
-    field: 'start_date',
-    sortable: true
-  }, {
-    name: 'end_date',
-    align: 'center',
-    label: 'Дата окончания',
-    field: 'end_date',
-    sortable: true
-  }
-]
-const tableTitleName = computed(() => `Presets (${presetsCount.value})`)
+const { presets, isLoading } = storeToRefs(presetStore)
+
 onMounted(() => {
   presetStore.getPresets()
 })
-
 </script>
 
 <style lang="scss" scoped>
-.presets-list__color-col {
-  display: block;
-  width: 1rem;
-  height: 1rem;
-  margin: auto;
+.presets-list {
+  position: relative;
+  min-height: 48px;
+
+  &__empty {
+    border: 1px dashed #ddd;
+    border-radius: 4px;
+  }
 }
 </style>

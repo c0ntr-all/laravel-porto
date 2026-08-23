@@ -65,6 +65,11 @@ class AlbumRepository
                            ->first();
     }
 
+    public function findByPath(string $path): ?Album
+    {
+        return Album::query()->where('path', $path)->first();
+    }
+
     public function create(CreateAlbumDto $dto): Album
     {
         return Album::create([

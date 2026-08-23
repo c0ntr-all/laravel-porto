@@ -11,6 +11,9 @@
 |
 */
 
-// Illuminate\Support\Facades\Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-//    return (int) $user->id === (int) $id;
-// });
+use App\Containers\AppSection\User\Models\User;
+use Illuminate\Support\Facades\Broadcast;
+
+Broadcast::channel('music.uploads.{uploadId}', function (User $user, int $uploadId) {
+    return $user->hasRole('admin') ? ['id' => $user->id] : false;
+});

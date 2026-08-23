@@ -39,6 +39,16 @@ class ArtistRepository
                            ->paginate(100);
     }
 
+    public function findByPath(string $path): ?Artist
+    {
+        return Artist::query()->where('path', $path)->first();
+    }
+
+    public function findByName(string $name): ?Artist
+    {
+        return Artist::query()->where('name', $name)->first();
+    }
+
     public function create(CreateArtistDto $dto): Artist
     {
         return Artist::create([

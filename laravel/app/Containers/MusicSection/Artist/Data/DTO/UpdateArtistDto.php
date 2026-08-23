@@ -10,6 +10,7 @@ class UpdateArtistDto extends Data
     public ?string $name = null;
     public ?string $description = null;
     public ?string $image = null;
+    public ?string $path = null;
 
     public function __construct(
     ) {

@@ -49,6 +49,11 @@ class TrackRepository
         return $track->playlists()->syncWithPivotValues($playlists, $pivotValues);
     }
 
+    public function findByPath(string $path): ?Track
+    {
+        return Track::query()->where('path', $path)->first();
+    }
+
     public function create(Album $album, CreateTrackDto $dto): Track
     {
         return $album->tracks()->create([

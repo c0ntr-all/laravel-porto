@@ -4,11 +4,12 @@ namespace App\Containers\MusicSection\Upload\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
 
-class CreateMusicUploadHistoryDto extends Data
+class CreateUploadDto extends Data
 {
-    public array $data;
+    public int $user_id;
+    public string $path;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 }

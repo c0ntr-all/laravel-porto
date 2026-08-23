@@ -7,43 +7,77 @@ use InvalidArgumentException;
 
 class PathHelper
 {
-    /**
-     * Преобразует Windows-путь (F:\Music\...) в Linux-путь (/var/www/.../storage/mnt/f/...).
-     *
-     * @param string $windowsPath
-     * @return string
-     */
-    public static function windowsToLinux(string $windowsPath): string
+    public static function normalizeWindows(string $path): string
     {
-        if (!str_starts_with($windowsPath, 'F:\\')) {
-            throw new InvalidArgumentException('Path must start with "F:\\"');
+        $path = str_replace('/', '\\', trim($path));
+        $path = preg_replace('/\\\\+/', '\\', $path) ?? $path;
+
+        if (!preg_match('/^([A-Za-z]):\\\\(.*)$/', $path, $matches)) {
+            throw new InvalidArgumentException('Path must be an absolute Windows path, e.g. F:\\Music\\Artist');
         }
 
-        $relativePath = str_replace(['F:\\', '\\'], ['', '/'], $windowsPath);
+        $drive = strtoupper($matches[1]);
+        $relative = rtrim($matches[2], '\\');
 
-        return Storage::disk('windows_f')->path($relativePath);
+        return $drive . ':\\' . $relative;
     }
 
-    /**
-     * Проверяет, доступен ли файл/папка по Windows-пути.
-     *
-     * @param string $linuxPath
-     * @return bool
-     */
+    public static function toLinux(string $windowsPath): string
+    {
+        $windowsPath = self::normalizeWindows($windowsPath);
+        $drive = strtoupper($windowsPath[0]);
+        $configuredDrive = strtoupper((string) config('music_upload.drive', 'F'));
+
+        if ($drive !== $configuredDrive) {
+            throw new InvalidArgumentException("Only {$configuredDrive}: drive is mounted for the music library.");
+        }
+
+        $relative = str_replace('\\', '/', substr($windowsPath, 3));
+
+        return Storage::disk(self::disk())->path($relative);
+    }
+
+    public static function toWindows(string $linuxPath): string
+    {
+        $normalizedLinux = str_replace('\\', '/', $linuxPath);
+        $root = rtrim(str_replace('\\', '/', Storage::disk(self::disk())->path('')), '/');
+
+        if (preg_match('/^[A-Za-z]:\\\\/', str_replace('/', '\\', $linuxPath))) {
+            return self::normalizeWindows($linuxPath);
+        }
+
+        if (!str_starts_with($normalizedLinux, $root)) {
+            throw new InvalidArgumentException('Linux path is outside of the mounted music library disk.');
+        }
+
+        $relative = ltrim(substr($normalizedLinux, strlen($root)), '/');
+        $drive = strtoupper((string) config('music_upload.drive', 'F'));
+
+        return self::normalizeWindows($drive . ':\\' . str_replace('/', '\\', $relative));
+    }
+
     public static function exists(string $linuxPath): bool
     {
-        return file_exists($linuxPath);
+        return is_dir($linuxPath) || is_file($linuxPath);
     }
 
-    /**
-     * Пример дополнительного метода: получение содержимого папки.
-     *
-     * @param string $windowsDir
-     * @return array
-     */
-    public static function listFiles(string $windowsDir): array
+    public static function basename(string $windowsPath): string
     {
-        $linuxDir = self::windowsToLinux($windowsDir);
-        return scandir($linuxDir);
+        $normalized = self::normalizeWindows($windowsPath);
+
+        return basename(str_replace('\\', '/', $normalized));
+    }
+
+    public static function dirname(string $windowsPath): string
+    {
+        $normalized = self::normalizeWindows($windowsPath);
+        $dir = dirname(str_replace('\\', '/', $normalized));
+
+        return self::normalizeWindows(str_replace('/', '\\', $dir));
+    }
+
+    private static function disk(): string
+    {
+        return (string) config('music_upload.disk', 'windows_f');
     }
 }

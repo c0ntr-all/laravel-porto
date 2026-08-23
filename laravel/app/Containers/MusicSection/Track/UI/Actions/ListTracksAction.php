@@ -2,10 +2,8 @@
 
 namespace App\Containers\MusicSection\Track\UI\Actions;
 
-use App\Containers\MusicSection\Album\Data\Repositories\AlbumRepository;
-use App\Containers\MusicSection\Album\UI\API\Requests\IndexRequest;
-use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumTransformer;
 use App\Containers\MusicSection\Track\Data\Repositories\TrackRepository;
+use App\Containers\MusicSection\Track\UI\API\Requests\IndexRequest;
 use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;

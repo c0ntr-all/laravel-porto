@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Artist\UI\Actions;
 
 use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Artist\UI\API\Requests\GetRequest;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
 use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
@@ -15,7 +16,7 @@ class GetArtistAction extends BaseAction
         return $artist->load(['albums', 'tags']);
     }
 
-    public function asController(Artist $artist): JsonResponse
+    public function asController(Artist $artist, GetRequest $request): JsonResponse
     {
         $artist = $this->handle($artist);
 

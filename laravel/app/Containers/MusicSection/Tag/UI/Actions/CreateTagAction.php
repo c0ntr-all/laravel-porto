@@ -24,7 +24,7 @@ class CreateTagAction extends BaseAction
         return $this->createTagTask->run($dto);
     }
 
-    public function asController(MusicTag $tag, CreateRequest $request): JsonResponse
+    public function asController(CreateRequest $request): JsonResponse
     {
         $dto = TagCreateData::from($request->validated());
         $dto->user_id = auth()->user()->id;

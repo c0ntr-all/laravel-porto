@@ -5,6 +5,7 @@ namespace App\Containers\MusicSection\Artist\UI\Actions;
 use App\Containers\MusicSection\Album\Tasks\ListAlbumsByArtistTask;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumInArtistTransformer;
 use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Artist\UI\API\Requests\GetRequest;
 use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
 
@@ -17,9 +18,14 @@ class ListAlbumsByArtistAction extends BaseAction
     {
     }
 
-    public function handle(Artist $artist): JsonResponse
+    public function handle(Artist $artist)
     {
-        $albums = $this->listAlbumsByArtistTask->run($artist);
+        return $this->listAlbumsByArtistTask->run($artist);
+    }
+
+    public function asController(Artist $artist, GetRequest $request): JsonResponse
+    {
+        $albums = $this->handle($artist);
 
         return fractal($albums, new AlbumInArtistTransformer())
             ->withResourceName('albums')

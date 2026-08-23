@@ -15,7 +15,8 @@ class CreateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|max:50'
+            'name' => 'required|max:50',
+            'description' => 'sometimes|string|nullable|max:30000',
         ];
     }
 }

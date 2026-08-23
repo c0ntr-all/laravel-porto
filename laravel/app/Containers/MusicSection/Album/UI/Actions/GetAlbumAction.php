@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Album\UI\Actions;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\UI\API\Requests\GetRequest;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumTransformer;
 use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
@@ -15,7 +16,7 @@ class GetAlbumAction extends BaseAction
         return $album->load(['tracks.artists', 'tracks.rate', 'tags', 'versions']);
     }
 
-    public function asController(Album $album): JsonResponse
+    public function asController(Album $album, GetRequest $request): JsonResponse
     {
         $album = $this->handle($album);
 

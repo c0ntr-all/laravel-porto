@@ -13,7 +13,7 @@ class VersionTransformer extends TransformerAbstract
             'id' => $album->id,
             'parent_id' => $album->parent_id,
             'name' => $album->name,
-            'date' => $album->date->format('Y-m-d'),
+            'date' => $album->date?->format('Y-m-d'),
             'content' => $album->content,
             'image' => $album->full_image,
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),

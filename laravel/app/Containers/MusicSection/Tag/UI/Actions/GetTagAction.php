@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Tag\UI\Actions;
 
 use App\Containers\MusicSection\Tag\Models\MusicTag;
+use App\Containers\MusicSection\Tag\UI\API\Requests\GetRequest;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
@@ -15,7 +16,7 @@ class GetTagAction extends BaseAction
         return $tag;
     }
 
-    public function asController(MusicTag $tag): JsonResponse
+    public function asController(MusicTag $tag, GetRequest $request): JsonResponse
     {
         $tag = $this->handle($tag);
 

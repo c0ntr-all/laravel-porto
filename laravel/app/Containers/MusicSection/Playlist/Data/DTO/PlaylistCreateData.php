@@ -8,6 +8,7 @@ class PlaylistCreateData extends Data
 {
     public int $user_id;
     public string $name;
+    public ?string $description = null;
 
     public function __construct(
     ) {

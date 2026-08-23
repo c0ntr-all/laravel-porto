@@ -8,21 +8,47 @@ use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class ArtistRepository
 {
-    public static function getWithCursor(): CursorPaginator
+    public function getWithCursor(): CursorPaginator
     {
         return QueryBuilder::for(Artist::class)
+                           ->allowedFilters([
+                               AllowedFilter::partial('name'),
+                               AllowedFilter::exact('country_id'),
+                           ])
+                           ->allowedSorts(['name', 'created_at'])
+                           ->allowedIncludes(['tags'])
+                           ->with(['tags'])
                            ->orderByDesc('created_at')
                            ->cursorPaginate(12);
     }
 
-    public static function getWithPaginate(): LengthAwarePaginator
+    public function getWithPaginate(): LengthAwarePaginator
     {
         return QueryBuilder::for(Artist::class)
+                           ->allowedFilters([
+                               AllowedFilter::partial('name'),
+                               AllowedFilter::exact('country_id'),
+                           ])
+                           ->allowedSorts(['name', 'created_at'])
+                           ->with(['tags'])
                            ->orderByDesc('created_at')
                            ->paginate(100);
+    }
+
+    public function create(CreateArtistDto $dto): Artist
+    {
+        return Artist::create([
+            'user_id' => $dto->user_id,
+            'name' => $dto->name,
+            'description' => $dto->description,
+            'country_id' => $dto->country_id,
+            'path' => $dto->path,
+            'image' => $dto->image,
+        ]);
     }
 
     public function updateOrCreate(CreateArtistDto $dto): Artist
@@ -40,9 +66,14 @@ class ArtistRepository
 
     public function update(Artist $artist, UpdateArtistDto $dto): Artist
     {
-        $artist->update($dto->toArray());
+        $artist->update($this->payload($dto->toArray(), ['user_id']));
 
         return $artist;
+    }
+
+    public function delete(Artist $artist): ?bool
+    {
+        return $artist->delete();
     }
 
     /**
@@ -55,5 +86,13 @@ class ArtistRepository
     public function syncAlbumsWithoutDetaching(Artist $artist, array $albumIds): array
     {
         return $artist->albums()->syncWithoutDetaching($albumIds);
+    }
+
+    private function payload(array $data, array $except = []): array
+    {
+        return collect($data)
+            ->except($except)
+            ->filter(fn (mixed $value) => $value !== null)
+            ->all();
     }
 }

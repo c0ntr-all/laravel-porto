@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Track\Models;
 
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\History\Models\History;
 use App\Containers\MusicSection\Playlist\Models\Playlist;
 use App\Containers\MusicSection\Tag\Models\MusicTag;
 use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
@@ -109,6 +110,11 @@ class Track extends Model
     public function rate(): HasMany
     {
         return $this->hasMany(Rate::class);
+    }
+
+    public function history(): HasMany
+    {
+        return $this->hasMany(History::class);
     }
 
     public function scopeUser($query, $userId): void

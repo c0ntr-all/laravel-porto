@@ -33,14 +33,15 @@ class UpdateArtistAction extends BaseAction
     public function handle(Artist $artist, array $requestData): Artist
     {
         return DB::transaction(function() use ($artist, $requestData) {
-            $updateArtistDto = UpdateArtistDto::from($requestData);
-            $updateArtistDto->user_id = auth()->user()->id;
+            $updateArtistDto = UpdateArtistDto::from([
+                'user_id' => auth()->id(),
+                ...$requestData,
+            ]);
 
             if (!empty($requestData['image_file'])) {
                 $updateArtistDto->image = $this->uploadArtistCoverTask->run(
                     $requestData['image_file'],
-                    $updateArtistDto->name,
-                    $updateArtistDto->name
+                    (string) $artist->id
                 );
             }
 

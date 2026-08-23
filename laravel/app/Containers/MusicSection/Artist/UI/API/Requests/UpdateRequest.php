@@ -2,23 +2,17 @@
 
 namespace App\Containers\MusicSection\Artist\UI\API\Requests;
 
-use App\Ship\Parents\Requests\AuthenticatedRequest;
+use App\Ship\Parents\Requests\AdminRequest;
 
-class UpdateRequest extends AuthenticatedRequest
+class UpdateRequest extends AdminRequest
 {
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|string',
+            'name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string|nullable',
             'tags' => 'sometimes|array',
-            'tags.*' => 'sometimes|string',
+            'tags.*' => 'integer|exists:music_tags,id',
             'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];
     }

@@ -21,7 +21,7 @@ class TrackTransformer extends TransformerAbstract
             'name' => $track->name,
             'image' => $track->full_image,
             'duration' => $track->duration,
-            'rate' => !$track->rate->isEmpty() ? $track->rate[0]['rate'] : 0
+            'rate' => $track->rate->first()?->rate ?? 0
         ];
     }
 

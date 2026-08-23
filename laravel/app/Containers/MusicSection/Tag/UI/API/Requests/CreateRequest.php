@@ -17,7 +17,7 @@ class CreateRequest extends AuthenticatedRequest
         return [
             'name' => 'required|string|unique:music_tags|max:50',
             'content' => 'sometimes|string|max:30000',
-            'parent_id' => 'sometimes|int',
+            'parent_id' => 'sometimes|nullable|integer|exists:music_tags,id',
             'is_base' => 'sometimes|boolean',
         ];
     }

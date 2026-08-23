@@ -3,7 +3,7 @@
 namespace App\Containers\MusicSection\Artist\UI\Actions;
 
 use App\Containers\MusicSection\Artist\Models\Artist;
-use App\Containers\MusicSection\Track\Data\Collections\TrackCollection;
+use App\Containers\MusicSection\Artist\UI\API\Requests\GetRequest;
 use App\Containers\MusicSection\Track\Tasks\ListTracksByArtistTask;
 use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -24,7 +24,7 @@ final class ListTracksByArtistAction extends BaseAction
         return $this->listTracksByArtistTask->run($artist);
     }
 
-    public function asController(Artist $artist): JsonResponse
+    public function asController(Artist $artist, GetRequest $request): JsonResponse
     {
         $tracks = $this->handle($artist);
 

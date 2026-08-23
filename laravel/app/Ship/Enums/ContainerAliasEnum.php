@@ -19,6 +19,9 @@ enum ContainerAliasEnum: string
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
     case MUSIC_TRACK = 'music_tracks';
+    case MUSIC_PLAYLIST = 'music_playlists';
+    case MUSIC_TAG = 'music_tags';
+    case MUSIC_HISTORY = 'music_history';
     //TaskManagerSection
     case TM_TASK = 'tm_tasks';
     //LifelogSection
@@ -38,6 +41,9 @@ enum ContainerAliasEnum: string
             self::MUSIC_ARTIST => 'Исполнитель',
             self::MUSIC_ALBUM => 'Альбом',
             self::MUSIC_TRACK => 'Трек',
+            self::MUSIC_PLAYLIST => 'Плейлист',
+            self::MUSIC_TAG => 'Музыкальный тег',
+            self::MUSIC_HISTORY => 'История прослушивания',
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
             self::LL_PRESET => 'Пресет',

@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Playlist\UI\Actions;
 
 use App\Containers\MusicSection\Playlist\Data\Repositories\PlaylistRepository;
+use App\Containers\MusicSection\Playlist\UI\API\Requests\IndexRequest;
 use App\Containers\MusicSection\Playlist\UI\API\Transformers\PlaylistTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\CursorPaginator;
@@ -22,7 +23,7 @@ class ListPlaylistsAction extends BaseAction
         return $this->playlistRepository->getWithCursor($userId);
     }
 
-    public function asController(): JsonResponse
+    public function asController(IndexRequest $request): JsonResponse
     {
         $userId = auth()->user()->id;
         $playlists = $this->handle($userId);

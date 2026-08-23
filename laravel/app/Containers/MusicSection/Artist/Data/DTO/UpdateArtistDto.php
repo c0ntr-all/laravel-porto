@@ -7,9 +7,9 @@ use App\Ship\Parents\DTO\Data;
 class UpdateArtistDto extends Data
 {
     public int $user_id;
-    public string $name;
+    public ?string $name = null;
     public ?string $description = null;
-    public ?string $image;
+    public ?string $image = null;
 
     public function __construct(
     ) {

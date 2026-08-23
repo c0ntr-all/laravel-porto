@@ -3,7 +3,7 @@
 namespace App\Containers\MusicSection\Tag\UI\Actions;
 
 use App\Containers\MusicSection\Tag\Data\Repositories\TagRepository;
-use App\Containers\MusicSection\Tag\Models\MusicTag;
+use App\Containers\MusicSection\Tag\UI\API\Requests\IndexRequest;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +23,7 @@ class ListTagsAction extends BaseAction
         return $this->tagRepository->getTagsTree();
     }
 
-    public function asController(MusicTag $tag): JsonResponse
+    public function asController(IndexRequest $request): JsonResponse
     {
         $tags = $this->handle();
 

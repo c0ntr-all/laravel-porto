@@ -6,11 +6,11 @@ use App\Ship\Parents\DTO\Data;
 
 class CreateTrackDto extends Data
 {
-    public int $user_id;
-    public string $cd;
-    public int $number;
+    public ?int $user_id = null;
+    public ?string $cd = null;
+    public ?int $number = null;
     public string $name;
-    public string $path;
+    public ?string $path = null;
     public ?string $image = null;
     public ?string $duration = null;
     public ?int $bitrate = null;

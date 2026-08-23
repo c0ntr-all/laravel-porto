@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Playlist\UI\Actions;
 
 use App\Containers\MusicSection\Playlist\Models\Playlist;
+use App\Containers\MusicSection\Playlist\UI\API\Requests\GetRequest;
 use App\Containers\MusicSection\Playlist\UI\API\Transformers\PlaylistTransformer;
 use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
@@ -15,7 +16,7 @@ class GetPlaylistAction extends BaseAction
         return $playlist->load(['tracks']);
     }
 
-    public function asController(Playlist $playlist): JsonResponse
+    public function asController(Playlist $playlist, GetRequest $request): JsonResponse
     {
         $playlist = $this->handle($playlist);
 

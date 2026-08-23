@@ -9,18 +9,13 @@ use App\Ship\Parents\Tasks\Task as ParentTask;
 class SyncArtistsForTrackTask extends ParentTask
 {
     public function __construct(
-        private readonly TrackRepository $artistRepository
+        private readonly TrackRepository $trackRepository
     )
     {
     }
 
-    /**
-     * @param Track $track
-     * @param array $artistsIds
-     * @return array
-     */
-    public function run(Track $track, array $artistsIds): array
+    public function run(Track $track, array $artistIds): array
     {
-        return $this->artistRepository->syncArtistsWithoutDetaching($track, $artistsIds);
+        return $this->trackRepository->syncArtists($track, $artistIds);
     }
 }

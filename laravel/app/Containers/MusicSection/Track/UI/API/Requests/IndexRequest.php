@@ -1,34 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace App\Http\Requests\Music\Track;
+namespace App\Containers\MusicSection\Track\UI\API\Requests;
 
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 
 class IndexRequest extends AuthenticatedRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function rules(): array
     {
-        return true;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules()
-    {
-        return [
-            'filters' => 'sometimes|array',
-            'filters.type' => 'sometimes|string',
-            'filters.union' => 'sometimes|boolean',
-            'filters.rate' => 'sometimes|array',
-            'filters.rate.*' => 'sometimes|string'
-        ];
+        return [];
     }
 }

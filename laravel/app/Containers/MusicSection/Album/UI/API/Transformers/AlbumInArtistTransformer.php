@@ -22,7 +22,7 @@ class AlbumInArtistTransformer extends TransformerAbstract
         return [
             'id' => $album->id,
             'name' => $album->name,
-            'date' => $album->date->format('Y-m-d'),
+            'date' => $album->date?->format('Y-m-d'),
             'image' => $album->full_image,
         ];
     }

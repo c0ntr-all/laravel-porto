@@ -23,7 +23,7 @@ class AlbumTransformer extends TransformerAbstract
         return [
             'id' => $album->id,
             'name' => $album->name,
-            'date' => $album->date->format('Y-m-d'),
+            'date' => $album->date?->format('Y-m-d'),
             'description' => $album->description,
             'image' => $album->full_image,
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),

@@ -3,6 +3,8 @@
 namespace App\Containers\LifelogSection\Preset\Data\Repositories;
 
 use App\Containers\LifelogSection\Preset\Data\DTO\PresetCreateDto;
+use App\Containers\LifelogSection\Preset\Data\DTO\PresetUpdateDto;
+use App\Containers\LifelogSection\Preset\Data\ValueObjects\PresetRules;
 use App\Containers\LifelogSection\Preset\Models\Preset;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -18,7 +20,32 @@ class PresetRepository
 
     public function createPreset(PresetCreateDto $dto): Preset
     {
-        return Preset::create($dto->toArray());
+        return Preset::create([
+            'user_id' => $dto->user_id,
+            'title' => $dto->title,
+            'description' => $dto->description,
+            'color' => $dto->color,
+            'icon' => $dto->icon,
+            'start_date' => $dto->rules->dateFrom,
+            'end_date' => $dto->rules->dateTo,
+            'rules' => $dto->rules,
+        ]);
+    }
+
+    public function updatePreset(Preset $preset, PresetUpdateDto $dto): Preset
+    {
+        $data = $dto->toArray();
+        unset($data['user_id']);
+
+        if ($dto->rules instanceof PresetRules) {
+            $data['rules'] = $dto->rules;
+            $data['start_date'] = $dto->rules->dateFrom;
+            $data['end_date'] = $dto->rules->dateTo;
+        }
+
+        $preset->update($data);
+
+        return $preset;
     }
 
     public function deletePreset(Preset $preset): ?bool

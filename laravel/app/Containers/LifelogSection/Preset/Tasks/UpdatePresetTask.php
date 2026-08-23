@@ -3,13 +3,14 @@
 namespace App\Containers\LifelogSection\Preset\Tasks;
 
 use App\Containers\AppSection\Tag\Tasks\FindOrCreateTagsByNamesTask;
-use App\Containers\LifelogSection\Preset\Data\DTO\PresetCreateDto;
+use App\Containers\LifelogSection\Preset\Data\DTO\PresetUpdateDto;
 use App\Containers\LifelogSection\Preset\Data\Repositories\PresetRepository;
+use App\Containers\LifelogSection\Preset\Data\ValueObjects\PresetRules;
 use App\Containers\LifelogSection\Preset\Models\Preset;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Facades\DB;
 
-class CreatePresetTask extends ParentTask
+class UpdatePresetTask extends ParentTask
 {
     public function __construct(
         private readonly PresetRepository $presetRepository,
@@ -19,12 +20,12 @@ class CreatePresetTask extends ParentTask
     {
     }
 
-    public function run(PresetCreateDto $dto): Preset
+    public function run(Preset $preset, PresetUpdateDto $dto): Preset
     {
-        return DB::transaction(function () use ($dto) {
-            $preset = $this->presetRepository->createPreset($dto);
+        return DB::transaction(function () use ($preset, $dto) {
+            $preset = $this->presetRepository->updatePreset($preset, $dto);
 
-            if (!empty($dto->rules->tags)) {
+            if ($dto->rules instanceof PresetRules) {
                 $tags = $this->findOrCreateTagsByNamesTask->run($dto->rules->tags, $dto->user_id);
                 $this->syncPresetTagsTask->run(
                     $preset,

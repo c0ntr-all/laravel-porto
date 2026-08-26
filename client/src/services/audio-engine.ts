@@ -139,7 +139,7 @@ export class AudioEngine {
     }
 
     const audio = new Audio()
-    audio.preload = 'metadata'
+    audio.preload = 'auto'
     audio.addEventListener('timeupdate', () => {
       this.emit('timeupdate', {
         currentTime: audio.currentTime,

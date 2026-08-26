@@ -29,7 +29,14 @@ function getTrackAudioSrc(track: ITrack): string {
     return withLink.link
   }
 
-  return `${process.env.host}/v1/music/tracks/${track.id}/play`
+  const url = `${process.env.host}/v1/music/tracks/${track.id}/play`
+  const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('access_token')
+
+  if (!token) {
+    return url
+  }
+
+  return `${url}?access_token=${encodeURIComponent(token)}`
 }
 
 function cloneTracks(tracks: ITrack[]): ITrack[] {

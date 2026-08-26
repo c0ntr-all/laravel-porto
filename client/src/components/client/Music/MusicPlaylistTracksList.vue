@@ -29,11 +29,7 @@ const playlistActions = ['addToPlaylist', 'deleteTrackFromPlaylist']
 const tracks = ref(props.tracks)
 
 const initPlay = (track: ITrack) => {
-  // Replacing playlist with new track
-  if (!musicPlayer.playlist.includes(track)) {
-    musicPlayer.setPlaylist(tracks.value)
-  }
-  musicPlayer.playTrack(track)
+  musicPlayer.toggleTrack(track, tracks.value)
 }
 const removeTrackFromList = (trackId: string) => {
   const index = tracks.value.findIndex(item => item.id === trackId)

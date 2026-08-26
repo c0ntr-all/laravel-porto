@@ -1,56 +1,107 @@
 <template>
   <div class="app-slider" :style="{ width: width || '100%' }">
     <q-slider
-      v-model="localValue"
-      :min="0"
-      :max="100"
-      :step="0.1"
+      :model-value="displayValue"
+      :min="min"
+      :max="max"
+      :step="step"
       :disable="disable"
-      @update:model-value="handleUpdate"
-      :class="{ 'slider--only-drop': onlyDrop }"
+      :color="color"
+      @update:model-value="onInput"
+      @change="onChange"
+      @pan="onPan"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Props {
-  data: number
+  min?: number
+  max?: number
+  step?: number
   width?: string
   onlyDrop?: boolean
   disable?: boolean
-}
-
-interface Emits {
-  (e: 'move', value: number): void
+  color?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  min: 0,
+  max: 100,
+  step: 0.1,
   width: '100%',
   onlyDrop: false,
-  disable: false
+  disable: false,
+  color: 'primary'
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  change: [value: number]
+  dragging: [value: boolean]
+}>()
 
-const localValue = ref(props.data)
+const model = defineModel<number>({ default: 0 })
+const dragging = ref(false)
+const draftValue = ref(model.value)
+const handledByPan = ref(false)
 
-watch(() => props.data, (newValue) => {
-  localValue.value = newValue
-})
+const displayValue = computed(() => dragging.value ? draftValue.value : model.value)
 
-const handleUpdate = (value: number | null) => {
-  if (value !== null) {
-    emit('move', value)
+watch(model, value => {
+  if (!dragging.value) {
+    draftValue.value = value
   }
+})
+
+const commit = (value: number) => {
+  draftValue.value = value
+
+  if (props.onlyDrop || model.value !== value) {
+    model.value = value
+  }
+
+  emit('change', value)
+}
+
+const onInput = (value: number | null) => {
+  if (value === null) {
+    return
+  }
+
+  draftValue.value = value
+
+  if (!props.onlyDrop) {
+    model.value = value
+  }
+}
+
+const onPan = (phase: 'start' | 'end') => {
+  if (phase === 'start') {
+    dragging.value = true
+    handledByPan.value = false
+    draftValue.value = model.value
+    emit('dragging', true)
+    return
+  }
+
+  dragging.value = false
+  handledByPan.value = true
+  emit('dragging', false)
+  commit(draftValue.value)
+}
+
+const onChange = (value: number | null) => {
+  if (value === null) {
+    return
+  }
+
+  if (handledByPan.value) {
+    handledByPan.value = false
+    return
+  }
+
+  commit(value)
 }
 </script>
-
-<style lang="scss" scoped>
-.app-slider {
-  .slider--only-drop {
-    pointer-events: none;
-  }
-}
-</style>

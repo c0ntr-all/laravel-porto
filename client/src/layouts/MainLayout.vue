@@ -12,6 +12,8 @@
           round
         />
 
+        <AppMusicPlayer />
+
         <q-space />
 
         <q-btn class="q-ml-md" icon="dark_mode" color="primary" flat dense />
@@ -114,6 +116,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/userStore'
+import AppMusicPlayer from 'src/components/default/AppMusicPlayer.vue'
 
 defineOptions({
   name: 'MainLayout'

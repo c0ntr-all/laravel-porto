@@ -35,10 +35,7 @@ const albumActions = ['addToPlaylist']
 const tracks = ref(props.tracks.data)
 
 const initPlay = (track: ITrack) => {
-  if (!musicPlayer.playlist.includes(track)) {
-    musicPlayer.setPlaylist(tracks.value)
-  }
-  musicPlayer.playTrack(track)
+  musicPlayer.toggleTrack(track, tracks.value)
 }
 
 const removeTrackFromList = (trackId: string) => {

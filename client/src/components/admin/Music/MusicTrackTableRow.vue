@@ -1,10 +1,8 @@
 <template>
   <q-tr
     class="table-track"
-    :class="{'table-track--active': row.id === musicPlayer.track?.id}"
+    :class="{'table-track--active': isCurrent}"
     :props="props.rowProps"
-    @mouseover="hovered = true"
-    @mouseout="hovered = false"
   >
     <q-td
       v-for="col in props.rowProps.cols"
@@ -48,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { ITagShort, ITrack } from 'src/components/admin/Music/types'
 
@@ -70,10 +68,9 @@ const emit = defineEmits<{
 }>()
 const row = ref(props.rowProps.row)
 const musicPlayer = useMusicPlayer()
-const hovered = ref(false)
-const icon = musicPlayer.status === 'paused' || (musicPlayer.status === 'playing' && musicPlayer.track.id !== props.rowProps.row.id)
-  ? 'play_arrow'
-  : 'pause'
+const isCurrent = computed(() => musicPlayer.isCurrentTrack(row.value.id))
+const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
+const icon = computed(() => isPlaying.value ? 'pause' : 'play_arrow')
 const tagsToString = (tagsArray: ITagShort[], isBase: boolean = true) => {
   tagsArray.filter(tag => tag.is_base === isBase).join(', ')
 }

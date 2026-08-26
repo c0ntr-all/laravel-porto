@@ -129,11 +129,7 @@ const getTracks = async (filters?: Record<string, unknown>): Promise<void> => {
 }
 
 const initPlay = (track: ITrack) => {
-  // Replacing playlist with new track
-  if (!musicPlayer.playlist.includes(track)) {
-    musicPlayer.setPlaylist(tracks.value)
-  }
-  musicPlayer.playTrack(track)
+  musicPlayer.toggleTrack(track, tracks.value)
 }
 
 onMounted(() => {

@@ -162,10 +162,7 @@ const getTracks = async (): Promise<void> => {
 }
 
 const initPlay = (track: ITrack) => {
-  if (!musicPlayer.playlist.includes(track)) {
-    musicPlayer.setPlaylist(tracks.value)
-  }
-  musicPlayer.playTrack(track)
+  musicPlayer.toggleTrack(track, tracks.value)
 }
 
 onMounted(() => {

@@ -1,7 +1,7 @@
 <template>
   <div
     class="music-track flex no-wrap self-start items-center col-grow q-pr-sm rounded-borders"
-    :class="{'music-track--active': track.id === musicPlayer.track.id}"
+    :class="{'music-track--active': isCurrent}"
   >
     <div class="music-track__left" @click="handlePlay">
       <div class="music-track-cover q-mr-md">
@@ -14,7 +14,7 @@
         <div class="music-track-cover__overlay">
           <div class="music-track-cover__play-icon">
             <q-spinner-audio
-              v-if="musicPlayer.status === 'playing'"
+              v-if="isPlaying"
               size="1rem"
               color="white"
             />
@@ -24,7 +24,7 @@
         <q-icon
           class="music-track-cover__status-icon"
           size="xs"
-          :name="musicPlayer.status === 'paused' || (musicPlayer.status === 'playing' && musicPlayer.track.id !== track.id) ? 'play_arrow' : 'pause'"
+          :name="isPlaying ? 'pause' : 'play_arrow'"
           flat
           round
           dense
@@ -216,6 +216,8 @@ const props = defineProps<{
   playlistId?: string
 }>()
 const musicPlayer = useMusicPlayer()
+const isCurrent = computed(() => musicPlayer.isCurrentTrack(props.track.id))
+const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
 
 const availableActions: Action[] = [{
   name: 'addToPlaylist',

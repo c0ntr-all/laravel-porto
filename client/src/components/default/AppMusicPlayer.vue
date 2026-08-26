@@ -1,170 +1,100 @@
 <template>
-  <div class="music-player__panel flex row items-center q-px-md q-ml-md">
-    <div class="music-player__buttons">
+  <div class="music-player">
+    <div class="music-player__buttons" @click.stop>
       <q-btn
-        @click="musicPlayer.prevTrack()"
         icon="skip_previous"
         color="primary"
         flat
         round
-      />
+        dense
+        :disable="!player.hasTrack"
+        @click="player.previous()"
+      >
+        <q-tooltip>Previous</q-tooltip>
+      </q-btn>
       <q-btn
-        @click="musicPlayer.run()"
-        :icon="musicPlayer.status === 'playing' ? 'pause' : 'play_arrow'"
+        :icon="player.isPlaying ? 'pause' : 'play_arrow'"
         color="primary"
         flat
         round
-      />
+        dense
+        :loading="player.status === 'loading'"
+        :disable="!player.hasTrack && !player.playlist.length"
+        @click="player.toggle()"
+      >
+        <q-tooltip>{{ player.isPlaying ? 'Pause' : 'Play' }}</q-tooltip>
+      </q-btn>
       <q-btn
-        @click="musicPlayer.nextTrack()"
         icon="skip_next"
         color="primary"
         flat
         round
-      />
+        dense
+        :disable="!player.hasTrack"
+        @click="player.next()"
+      >
+        <q-tooltip>Next</q-tooltip>
+      </q-btn>
     </div>
-    <div class="music-player__title q-ml-md text-primary">
-      <span class="text-bold">{{ musicPlayer.track.artist }}</span> - {{ musicPlayer.track.name }}
+
+    <div class="music-player__title text-primary">
+      <template v-if="player.currentTrack">
+        <span class="text-bold">{{ player.currentTrack.artist || 'Unknown artist' }}</span>
+        <span> - {{ player.currentTrack.name }}</span>
+      </template>
+      <span v-else>No track selected</span>
     </div>
+
     <q-menu
       class="music-player__menu"
+      anchor="bottom left"
+      self="top left"
+      :offset="[0, 8]"
       transition-show="jump-down"
       transition-hide="jump-up"
-      style="width: 660px; min-height: 500px"
+      separate-close-popup
     >
-      <div class="music-player__controls flex row q-pa-sm">
-        <div class="music-player__buttons-group flex items-center q-mr-sm">
-          <q-btn
-            @click="musicPlayer.prevTrack()"
-            icon="skip_previous"
-            flat
-            dense
-            round
-          />
-          <q-btn
-            @click="musicPlayer.run()"
-            :icon="musicPlayer.status === 'playing' ? 'pause' : 'play_arrow'"
-            flat
-            dense
-            round
-          />
-          <q-btn
-            @click="musicPlayer.nextTrack()"
-            icon="skip_next"
-            flat
-            dense
-            round
-          />
-        </div>
-        <div class="music-player__main-card row self-start items-center col-grow">
-          <div class="track-card__image flex items-center justify-center q-pa-none"/>
-          <div class="q-pa-none q-ml-sm col-grow">
-            <div class="flex justify-between items-center">
-              <div style="max-width: 340px">
-                <div class="music-player__track-name">{{ musicPlayer.track.name }}</div>
-                <div class="music-player__artist-name">{{ musicPlayer.track.artist }}</div>
-              </div>
-              <div class="track-card__time">
-                {{ musicPlayer.timePassed }}
-              </div>
-            </div>
-
-            <AppSlider
-              :data="musicPlayer.rewindProgressWidth"
-              :onlyDrop="true"
-              @move="changeRewind"
-            />
-
-          </div>
-        </div>
-        <div class="music-player__volume flex items-center q-mx-md">
-          <AppSlider
-            :width="'50px'"
-            :data="musicPlayer.volumeProgressWidth"
-            @move="changeVolume"
-          />
-        </div>
-
-        <div class="music-player__buttons-group flex items-center">
-          <q-btn
-            @click="musicPlayer.shuffle()"
-            icon="shuffle"
-            flat
-            dense
-            round
-          />
-          <q-btn
-            icon="repeat"
-            flat
-            dense
-            round
-          />
-        </div>
-      </div>
-      <div class="q-pa-md q-gutter-xs">
-        <MusicTrackCard
-          v-for="track in musicPlayer.playlist"
-          :key="track.id"
-          :track="track"
-          @play="initPlay(track)"
-        />
-      </div>
+      <AppMusicPlayerExpanded />
     </q-menu>
   </div>
 </template>
+
 <script lang="ts" setup>
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-import AppSlider from 'src/components/default/AppSlider.vue'
-import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
-import { ITrack } from 'src/components/client/Music/types'
+import AppMusicPlayerExpanded from 'src/components/default/AppMusicPlayerExpanded.vue'
 
-const musicPlayer = useMusicPlayer()
-
-musicPlayer.init()
-
-const changeRewind = (value: number) => {
-  musicPlayer.audio.currentTime = value / 100 * musicPlayer.audio.duration
-}
-
-const changeVolume = (value: number) => {
-  // Считается корректно, но ощутимая разница только с 0 по 0.5. С 0.5 по 1 почти ничего не заметно по громкости
-  musicPlayer.audio.volume = value / 100 / 2
-}
-
-const initPlay = (track: ITrack) => {
-  musicPlayer.playTrack(track)
-}
+const player = useMusicPlayer()
 </script>
+
 <style lang="scss" scoped>
 .music-player {
-  &__panel {
-    &:hover {
-      background: rgba(174, 183, 194, 0.12);
-      cursor: pointer;
-    }
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: 16px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(174, 183, 194, 0.12);
   }
 
-  &__controls {
-    position: sticky;
-    top: 0;
-    background: #fff;
-    z-index: 999;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  &__buttons {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 
-  &__track-name {
-    max-width: 100%;
-    white-space: nowrap;
+  &__title {
+    min-width: 0;
+    max-width: 360px;
+    margin-left: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 12.5px;
-    line-height: 16px;
-  }
-
-  &__artist-name {
-    font-size: 12.5px;
-    line-height: 16px;
-    font-weight: bold;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 20px;
   }
 }
 </style>

@@ -43,7 +43,6 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from 'src/boot/axios'
-import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import MusicPlaylistTracksList from 'src/components/client/Music/MusicPlaylistTracksList.vue'
 import PlaylistPageSkeleton from 'src/pages/client/Music/PlaylistPageSkeleton.vue'
@@ -85,7 +84,6 @@ interface GetPlaylistApiResponse {
 }
 
 const route = useRoute()
-const musicPlayer = useMusicPlayer()
 const props = defineProps<{
   id: string
 }>()
@@ -119,8 +117,6 @@ onMounted(() => {
 watch(() => route.params, (toParams) => {
   getPlaylist(toParams.id)
 })
-
-musicPlayer.init()
 </script>
 
 <style lang="scss" scoped>

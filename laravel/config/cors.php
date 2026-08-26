@@ -17,15 +17,15 @@ return [
 
     'paths' => ['api/*', 'v1/*'],
 
-    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
     'allowed_origins' => explode(',', env('APP_ALLOWED_ORIGINS')),
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Correlation-Uuid'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Correlation-Uuid', 'Range'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['Accept-Ranges', 'Content-Range', 'Content-Length', 'Content-Type', 'Content-Disposition'],
 
     'max_age' => 60 * 60 * 24, // 24 часа
 

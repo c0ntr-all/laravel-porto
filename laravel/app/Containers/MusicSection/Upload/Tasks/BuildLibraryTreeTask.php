@@ -51,11 +51,48 @@ class BuildLibraryTreeTask extends ParentTask
             $albums[$albumKey]['tracks'][] = $track;
         }
 
+        $splitTypeId = $this->splitAlbumTypeId($albumTypes);
+
+        foreach ($albums as &$album) {
+            $album['artists'] = $this->uniqueArtistNames($album['tracks']);
+
+            if (count($album['artists']) > 1 && $splitTypeId !== null) {
+                $album['album_type_id'] = $splitTypeId;
+            }
+        }
+        unset($album);
+
         return [
             'name' => $artistName,
             'path' => $artistWindowsPath,
             'albums' => array_values($albums),
         ];
+    }
+
+    /**
+     * @param ParsedTrackDto[] $tracks
+     * @return string[]
+     */
+    private function uniqueArtistNames(array $tracks): array
+    {
+        $names = [];
+
+        foreach ($tracks as $track) {
+            $name = trim($track->artist);
+            if ($name === '') {
+                continue;
+            }
+            $names[$name] = $name;
+        }
+
+        return array_values($names);
+    }
+
+    private function splitAlbumTypeId(mixed $albumTypes): ?int
+    {
+        $split = $albumTypes->first(fn ($type) => strtolower((string) $type->slug) === 'split');
+
+        return $split ? (int) $split->id : null;
     }
 
     private function enrichAlbumMeta(ParsedTrackDto $track, mixed $albumTypes): ParsedTrackDto

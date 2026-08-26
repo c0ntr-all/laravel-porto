@@ -35,9 +35,9 @@ class ExtractId3TagsTask extends ParentTask
             'windows_path' => PathHelper::toWindows($linuxPath),
             'title' => $title,
             'album' => $album,
-            'artist' => $this->first($comments['albumartist'] ?? [])
+            'artist' => $this->first($comments['artist'] ?? [])
+                ?? $this->first($comments['albumartist'] ?? [])
                 ?? $this->first($comments['band'] ?? [])
-                ?? $this->first($comments['artist'] ?? [])
                 ?? $fallbackArtist,
             'genre' => $this->first($comments['genre'] ?? []),
             'year' => $year,

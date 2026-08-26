@@ -34,10 +34,12 @@ class PreviewUploadAction extends BaseAction
                     'path' => $album['path'],
                     'album_type_id' => $album['album_type_id'],
                     'original_album' => $album['original_album'],
+                    'artists' => $album['artists'],
                     'tracks_count' => count($album['tracks']),
                     'tracks' => array_map(static function ($track): array {
                         return [
                             'title' => $track->title,
+                            'artist' => $track->artist,
                             'path' => $track->windows_path,
                             'track_number' => $track->track_number,
                             'disc_number' => $track->disc_number,

@@ -101,36 +101,94 @@ class PersistLibraryTaskTest extends TestCase
         ]);
     }
 
-    private function makeSession(User $user): MusicUpload
+    public function test_it_creates_two_artists_for_a_split_album(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $upload = $this->makeSession($user, 'F:\\Music\\In Tongues We Speak');
+        $splitTypeId = (int) \App\Containers\MusicSection\Album\Models\AlbumType::query()
+            ->where('slug', 'split')
+            ->value('id');
+
+        $tree = [
+            'name' => 'In Tongues We Speak',
+            'path' => 'F:\\Music\\In Tongues We Speak',
+            'albums' => [[
+                'name' => 'In Tongues We Speak',
+                'date' => '1997-01-01',
+                'path' => 'F:\\Music\\In Tongues We Speak',
+                'album_type_id' => $splitTypeId ?: 1,
+                'original_album' => null,
+                'attributes' => null,
+                'image' => null,
+                'artists' => ['Napalm Death', 'Coalesce'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Food Chain',
+                        album: 'In Tongues We Speak',
+                        artist: 'Napalm Death',
+                        windowsPath: 'F:\\Music\\In Tongues We Speak\\01. Food Chain.mp3',
+                        albumPath: 'F:\\Music\\In Tongues We Speak',
+                        number: 1,
+                    ),
+                    $this->makeTrackDto(
+                        title: 'A New Language',
+                        album: 'In Tongues We Speak',
+                        artist: 'Coalesce',
+                        windowsPath: 'F:\\Music\\In Tongues We Speak\\02. A New Language.mp3',
+                        albumPath: 'F:\\Music\\In Tongues We Speak',
+                        number: 2,
+                    ),
+                ],
+            ]],
+        ];
+
+        [, $counters] = app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+
+        $this->assertSame(2, $counters['artists_created']);
+        $this->assertSame(1, $counters['albums_created']);
+        $this->assertSame(2, $counters['tracks_created']);
+        $this->assertDatabaseCount('music_artists', 2);
+        $this->assertDatabaseMissing('music_artists', ['name' => 'In Tongues We Speak']);
+        $this->assertDatabaseHas('music_artists', ['name' => 'Napalm Death']);
+        $this->assertDatabaseHas('music_artists', ['name' => 'Coalesce']);
+
+        $album = \App\Containers\MusicSection\Album\Models\Album::query()->first();
+        $this->assertNotNull($album);
+        $this->assertEqualsCanonicalizing(
+            ['Napalm Death', 'Coalesce'],
+            $album->artists()->get()->pluck('name')->all(),
+        );
+
+        $napalmTrack = \App\Containers\MusicSection\Track\Models\Track::query()->where('name', 'Food Chain')->first();
+        $coalesceTrack = \App\Containers\MusicSection\Track\Models\Track::query()->where('name', 'A New Language')->first();
+        $this->assertEquals(['Napalm Death'], $napalmTrack?->artists()->get()->pluck('name')->all());
+        $this->assertEquals(['Coalesce'], $coalesceTrack?->artists()->get()->pluck('name')->all());
+
+        $upload->refresh();
+        $this->assertSame('Napalm Death / Coalesce', $upload->artist_name);
+    }
+
+    private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload
     {
         return MusicUpload::create([
             'user_id' => $user->id,
-            'source_path' => 'F:\\Music\\Metallica',
+            'source_path' => $sourcePath,
             'status' => UploadStatusEnum::Running,
         ]);
     }
 
     private function makeTree(string $title = 'Enter Sandman'): array
     {
-        $track = ParsedTrackDto::from([
-            'linux_path' => '/tmp/01. Enter Sandman.mp3',
-            'windows_path' => 'F:\\Music\\Metallica\\Metallica\\01. Enter Sandman.mp3',
-            'title' => $title,
-            'album' => 'Metallica',
-            'artist' => 'Metallica',
-            'genre' => null,
-            'year' => '1991',
-            'date' => '1991-08-12',
-            'track_number' => 1,
-            'disc_number' => 1,
-            'duration' => '00:05:31',
-            'bitrate' => 320,
-            'album_cover_linux_path' => null,
-            'album_windows_path' => 'F:\\Music\\Metallica\\Metallica',
-            'album_version' => null,
-            'original_album' => null,
-            'album_type_id' => 1,
-        ]);
+        $track = $this->makeTrackDto(
+            title: $title,
+            album: 'Metallica',
+            artist: 'Metallica',
+            windowsPath: 'F:\\Music\\Metallica\\Metallica\\01. Enter Sandman.mp3',
+            albumPath: 'F:\\Music\\Metallica\\Metallica',
+            number: 1,
+        );
 
         return [
             'name' => 'Metallica',
@@ -143,8 +201,38 @@ class PersistLibraryTaskTest extends TestCase
                 'original_album' => null,
                 'attributes' => null,
                 'image' => null,
+                'artists' => ['Metallica'],
                 'tracks' => [$track],
             ]],
         ];
+    }
+
+    private function makeTrackDto(
+        string $title,
+        string $album,
+        string $artist,
+        string $windowsPath,
+        string $albumPath,
+        int $number,
+    ): ParsedTrackDto {
+        return ParsedTrackDto::from([
+            'linux_path' => '/tmp/' . basename(str_replace('\\', '/', $windowsPath)),
+            'windows_path' => $windowsPath,
+            'title' => $title,
+            'album' => $album,
+            'artist' => $artist,
+            'genre' => null,
+            'year' => '1991',
+            'date' => '1991-08-12',
+            'track_number' => $number,
+            'disc_number' => 1,
+            'duration' => '00:05:31',
+            'bitrate' => 320,
+            'album_cover_linux_path' => null,
+            'album_windows_path' => $albumPath,
+            'album_version' => null,
+            'original_album' => null,
+            'album_type_id' => 1,
+        ]);
     }
 }

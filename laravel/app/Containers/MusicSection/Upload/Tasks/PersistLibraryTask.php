@@ -78,50 +78,165 @@ class PersistLibraryTask extends ParentTask
                 'tracks_failed' => 0,
             ];
 
-            $artist = $this->persistArtist($tree, $userId, $counters);
+            /** @var array<string, Artist> $artistCache */
+            $artistCache = [];
+            $folderPath = (string) $tree['path'];
+            $folderArtistName = trim((string) $tree['name']);
+            $cover = $this->firstAlbumCover($tree);
             $processed = 0;
             $total = $this->countTracks($tree);
 
             foreach ($tree['albums'] as $albumData) {
-                $album = $this->persistAlbum($artist, $albumData, $userId, $counters);
+                $albumArtists = $this->resolveAlbumArtists(
+                    $albumData,
+                    $userId,
+                    $folderPath,
+                    $folderArtistName,
+                    $cover,
+                    $artistCache,
+                    $counters,
+                );
+                $primaryArtist = $albumArtists[0];
+                $album = $this->persistAlbum($primaryArtist, $albumArtists, $albumData, $userId, $counters);
 
                 foreach ($albumData['tracks'] as $trackDto) {
                     $processed++;
-                    $this->persistTrack($upload, $artist, $album, $trackDto, $tags, $counters);
+                    $trackArtist = $this->artistFromCache(
+                        $trackDto->artist,
+                        $userId,
+                        $folderPath,
+                        $folderArtistName,
+                        $cover,
+                        $artistCache,
+                        $counters,
+                    );
+                    $this->persistTrack($upload, $trackArtist, $album, $trackDto, $tags, $counters);
                     event(new UploadProgressed($upload, 'persisting', $processed, $total, $trackDto->title));
                 }
             }
 
-            $upload->artist_id = $artist->id;
-            $upload->artist_name = $artist->name;
+            $sessionArtist = $artistCache[$folderArtistName]
+                ?? array_values($artistCache)[0]
+                ?? null;
+
+            if ($sessionArtist) {
+                $upload->artist_id = $sessionArtist->id;
+            }
+            $upload->artist_name = implode(' / ', array_keys($artistCache));
             $upload->save();
 
-            return [$artist, $counters];
+            return [$sessionArtist, $counters];
         });
     }
 
-    private function persistArtist(array $tree, int $userId, array &$counters): Artist
-    {
-        $artist = $this->findArtistByPathTask->run($tree['path'])
-            ?? $this->findArtistByNameTask->run($tree['name']);
+    /**
+     * @param array<string, Artist> $artistCache
+     * @return Artist[]
+     */
+    private function resolveAlbumArtists(
+        array $albumData,
+        int $userId,
+        string $folderPath,
+        string $folderArtistName,
+        ?string $cover,
+        array &$artistCache,
+        array &$counters,
+    ): array {
+        $names = $albumData['artists'] ?? [];
+        if ($names === []) {
+            $names = [];
+            foreach ($albumData['tracks'] as $trackDto) {
+                $name = trim((string) $trackDto->artist);
+                if ($name !== '') {
+                    $names[$name] = $name;
+                }
+            }
+            $names = array_values($names);
+        }
+
+        if ($names === []) {
+            $names = [$folderArtistName];
+        }
+
+        $artists = [];
+        foreach ($names as $name) {
+            $artists[] = $this->artistFromCache(
+                $name,
+                $userId,
+                $folderPath,
+                $folderArtistName,
+                $cover,
+                $artistCache,
+                $counters,
+            );
+        }
+
+        return $artists;
+    }
+
+    /**
+     * @param array<string, Artist> $artistCache
+     */
+    private function artistFromCache(
+        string $name,
+        int $userId,
+        string $folderPath,
+        string $folderArtistName,
+        ?string $cover,
+        array &$artistCache,
+        array &$counters,
+    ): Artist {
+        $name = trim($name);
+        if ($name === '') {
+            $name = $folderArtistName;
+        }
+
+        if (!isset($artistCache[$name])) {
+            $artistCache[$name] = $this->persistNamedArtist(
+                $name,
+                $userId,
+                $folderPath,
+                $folderArtistName,
+                $cover,
+                $counters,
+            );
+        }
+
+        return $artistCache[$name];
+    }
+
+    private function persistNamedArtist(
+        string $name,
+        int $userId,
+        string $folderPath,
+        string $folderArtistName,
+        ?string $cover,
+        array &$counters,
+    ): Artist {
+        $isFolderArtist = strcasecmp($name, $folderArtistName) === 0;
+        $artist = $this->findArtistByNameTask->run($name)
+            ?? ($isFolderArtist ? $this->findArtistByPathTask->run($folderPath) : null);
+
+        $path = $isFolderArtist ? $folderPath : $folderPath . ' :: ' . $name;
 
         if (!$artist) {
             $artist = $this->createArtistTask->run(CreateArtistDto::from([
                 'user_id' => $userId,
-                'name' => $tree['name'],
-                'path' => $tree['path'],
+                'name' => $name,
+                'path' => $path,
             ]));
-            $counters['artists_created'] = 1;
-        } elseif ($artist->path !== $tree['path'] || $artist->name !== $tree['name']) {
+            $counters['artists_created']++;
+        } elseif ($isFolderArtist && ($artist->path !== $folderPath || $artist->name !== $name)) {
             $artist = $this->updateArtistTask->run($artist, UpdateArtistDto::from([
                 'user_id' => $userId,
-                'name' => $tree['name'],
-                'path' => $tree['path'],
+                'name' => $name,
+                'path' => $folderPath,
             ]));
         }
 
-        $cover = $this->firstAlbumCover($tree);
-        if ($cover && is_file($cover) && empty($artist->image)) {
+        $assignCover = $cover && is_file($cover) && empty($artist->image) && $isFolderArtist;
+
+        if ($assignCover) {
             $artist->image = $this->uploadArtistCoverTask->run(new File($cover), (string) $artist->id);
             $artist->save();
         }
@@ -129,11 +244,19 @@ class PersistLibraryTask extends ParentTask
         return $artist;
     }
 
-    private function persistAlbum(Artist $artist, array $albumData, int $userId, array &$counters): Album
-    {
+    /**
+     * @param Artist[] $albumArtists
+     */
+    private function persistAlbum(
+        Artist $primaryArtist,
+        array $albumArtists,
+        array $albumData,
+        int $userId,
+        array &$counters,
+    ): Album {
         $parentId = null;
         if (!empty($albumData['original_album'])) {
-            $parentId = $this->listAlbumsByNameTask->run($artist, $albumData['original_album'])?->id;
+            $parentId = $this->listAlbumsByNameTask->run($primaryArtist, $albumData['original_album'])?->id;
         }
 
         $payload = [
@@ -171,11 +294,14 @@ class PersistLibraryTask extends ParentTask
             $counters['albums_updated']++;
         }
 
-        $this->syncArtistsForAlbumTask->run($album, [$artist->id]);
-        $this->syncAlbumsForArtistTask->run($artist, [$album->id]);
+        $artistIds = array_values(array_unique(array_map(static fn (Artist $artist) => $artist->id, $albumArtists)));
+        $this->syncArtistsForAlbumTask->run($album, $artistIds);
+        foreach ($albumArtists as $artist) {
+            $this->syncAlbumsForArtistTask->run($artist, [$album->id]);
+        }
 
         if (!empty($albumData['image']) && is_file($albumData['image']) && empty($album->image)) {
-            $album->image = $this->uploadAlbumCoverTask->run(new File($albumData['image']), (int) $artist->id);
+            $album->image = $this->uploadAlbumCoverTask->run(new File($albumData['image']), (int) $primaryArtist->id);
             $album->save();
         }
 

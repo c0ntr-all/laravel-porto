@@ -4,7 +4,7 @@ import { api } from 'src/boot/axios'
 import { handleApiError } from 'src/utils/jsonapi'
 import { audioEngine } from 'src/services/audio-engine'
 import { formatPlaybackTime, parseDuration } from 'src/utils/playbackTime'
-import { ITrack } from 'src/components/client/Music/types'
+import { ITrack } from 'src/types'
 
 export type RepeatMode = 'off' | 'all' | 'one'
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'stopped'

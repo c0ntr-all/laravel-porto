@@ -43,7 +43,7 @@ const uploadArtist = async () => {
   processLoading.value = true
   fullPathRef.value.validate()
 
-  await api.post<IUploadArtistResponse>('v1/music/upload', {
+  await api.post<IUploadArtistResponse>('v1/music/uploads', {
     path: fullPath.value
   }).then(response => {
     handleApiSuccess(response.data)

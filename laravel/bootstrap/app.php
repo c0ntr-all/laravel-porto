@@ -1,7 +1,7 @@
 <?php
 
+use App\Ship\Exceptions\Handlers\ConfigureExceptions;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -18,6 +18,5 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Ship\Middleware\AppendCorrelationUuidMiddleware::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+    ->withExceptions(new ConfigureExceptions)
+    ->create();

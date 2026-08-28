@@ -151,7 +151,7 @@ import { ref, computed, watch } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
-import { ITrack } from 'src/components/client/Music/types'
+import { ITrack } from 'src/types'
 
 interface PlaylistTrack {
   id: string

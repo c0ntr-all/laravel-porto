@@ -28,6 +28,13 @@ export interface IJsonApiResponse<T = IJsonApiResource> {
     message?: string
     correlation_uuid?: string
   }
+  links?: {
+    first?: string | null
+    last?: string | null
+    prev?: string | null
+    next?: string | null
+    self?: string | null
+  }
 }
 
 export type ApiError = import('axios').AxiosError<{ message: string }>

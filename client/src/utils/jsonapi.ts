@@ -266,6 +266,23 @@ export function buildFilterForUrl(filters: Record<string, any>): string {
   return params.toString()
 }
 
+export function extractCursorFromLink(link?: string | { href?: string } | null): string | null {
+  if (!link) {
+    return null
+  }
+
+  const href = typeof link === 'string' ? link : link.href
+  if (!href) {
+    return null
+  }
+
+  try {
+    return new URL(href, 'http://localhost').searchParams.get('cursor')
+  } catch {
+    return null
+  }
+}
+
 // NEW
 
 function indexIncluded(included: IJsonApiResource[] = []) {

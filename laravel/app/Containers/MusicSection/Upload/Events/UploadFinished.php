@@ -30,11 +30,15 @@ class UploadFinished implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        $artists = $this->upload->relationLoaded('artists')
+            ? $this->upload->artists
+            : $this->upload->artists()->get();
+
         return [
             'id' => $this->upload->id,
             'status' => $this->upload->status->value,
-            'artist_id' => $this->upload->artist_id,
-            'artist_name' => $this->upload->artist_name,
+            'artist_ids' => $artists->pluck('id')->all(),
+            'artist_name' => $artists->pluck('name')->filter()->implode(' / ') ?: null,
             'tracks_found' => $this->upload->tracks_found,
             'tracks_created' => $this->upload->tracks_created,
             'tracks_updated' => $this->upload->tracks_updated,

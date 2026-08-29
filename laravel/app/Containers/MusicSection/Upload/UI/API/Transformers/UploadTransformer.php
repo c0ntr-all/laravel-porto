@@ -2,18 +2,22 @@
 
 namespace App\Containers\MusicSection\Upload\UI\API\Transformers;
 
+use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumInArtistTransformer;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistTransformer;
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use League\Fractal\Resource\Collection;
-use League\Fractal\Resource\Item;
-use League\Fractal\Resource\NullResource;
 use League\Fractal\TransformerAbstract;
 
 class UploadTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'artist',
+        'artists',
+        'albums',
         'tracks',
+    ];
+
+    protected array $defaultIncludes = [
+        'artists',
     ];
 
     public function transform(MusicUpload $upload): array
@@ -21,8 +25,9 @@ class UploadTransformer extends TransformerAbstract
         return [
             'id' => $upload->id,
             'user_id' => $upload->user_id,
-            'artist_id' => $upload->artist_id,
-            'artist_name' => $upload->artist_name,
+            'artist_ids' => $this->ids($upload, 'artists'),
+            'album_ids' => $this->ids($upload, 'albums'),
+            'artist_name' => $this->artistName($upload),
             'source_path' => $upload->source_path,
             'status' => $upload->status->value,
             'started_at' => $upload->started_at?->format('Y-m-d H:i:s'),
@@ -41,17 +46,41 @@ class UploadTransformer extends TransformerAbstract
         ];
     }
 
-    public function includeArtist(MusicUpload $upload): Item|NullResource
+    public function includeArtists(MusicUpload $upload): Collection
     {
-        if (!$upload->artist) {
-            return $this->null();
-        }
+        return $this->collection($upload->artists, new ArtistTransformer(), 'artists');
+    }
 
-        return $this->item($upload->artist, new ArtistTransformer(), 'artists');
+    public function includeAlbums(MusicUpload $upload): Collection
+    {
+        return $this->collection($upload->albums, new AlbumInArtistTransformer(), 'albums');
     }
 
     public function includeTracks(MusicUpload $upload): Collection
     {
         return $this->collection($upload->tracks, new UploadTrackTransformer(), 'upload_tracks');
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function ids(MusicUpload $upload, string $relation): array
+    {
+        if (!$upload->relationLoaded($relation)) {
+            return [];
+        }
+
+        return $upload->{$relation}->pluck('id')->map(static fn (mixed $id) => (int) $id)->values()->all();
+    }
+
+    private function artistName(MusicUpload $upload): ?string
+    {
+        if (!$upload->relationLoaded('artists')) {
+            return null;
+        }
+
+        $name = $upload->artists->pluck('name')->filter()->implode(' / ');
+
+        return $name !== '' ? $name : null;
     }
 }

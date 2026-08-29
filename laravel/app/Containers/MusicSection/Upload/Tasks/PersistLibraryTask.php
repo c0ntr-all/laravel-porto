@@ -85,6 +85,7 @@ class PersistLibraryTask extends ParentTask
             $cover = $this->firstAlbumCover($tree);
             $processed = 0;
             $total = $this->countTracks($tree);
+            $albumIds = [];
 
             foreach ($tree['albums'] as $albumData) {
                 $albumArtists = $this->resolveAlbumArtists(
@@ -98,6 +99,7 @@ class PersistLibraryTask extends ParentTask
                 );
                 $primaryArtist = $albumArtists[0];
                 $album = $this->persistAlbum($primaryArtist, $albumArtists, $albumData, $userId, $counters);
+                $albumIds[] = $album->id;
 
                 foreach ($albumData['tracks'] as $trackDto) {
                     $processed++;
@@ -115,17 +117,13 @@ class PersistLibraryTask extends ParentTask
                 }
             }
 
-            $sessionArtist = $artistCache[$folderArtistName]
-                ?? array_values($artistCache)[0]
-                ?? null;
+            $upload->artists()->sync(array_values(array_unique(array_map(
+                static fn (Artist $artist) => $artist->id,
+                $artistCache,
+            ))));
+            $upload->albums()->sync(array_values(array_unique($albumIds)));
 
-            if ($sessionArtist) {
-                $upload->artist_id = $sessionArtist->id;
-            }
-            $upload->artist_name = implode(' / ', array_keys($artistCache));
-            $upload->save();
-
-            return [$sessionArtist, $counters];
+            return $counters;
         });
     }
 
@@ -331,6 +329,9 @@ class PersistLibraryTask extends ParentTask
                     $album->name,
                     $existing->name,
                     $snapshot,
+                    null,
+                    $album->id,
+                    $artist->id,
                 );
                 $counters['tracks_skipped']++;
                 return;
@@ -375,6 +376,9 @@ class PersistLibraryTask extends ParentTask
                 $album->name,
                 $track->name,
                 $snapshot,
+                null,
+                $album->id,
+                $artist->id,
             );
         } catch (\Throwable $exception) {
             $counters['tracks_failed']++;
@@ -387,6 +391,8 @@ class PersistLibraryTask extends ParentTask
                 $trackDto->title,
                 $this->snapshot($trackDto),
                 $exception->getMessage(),
+                $album->id,
+                $artist->id,
             );
         }
     }

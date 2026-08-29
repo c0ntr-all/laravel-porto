@@ -25,6 +25,7 @@ class ListUploadsAction extends BaseAction
     {
         return fractal($this->handle(), new UploadTransformer())
             ->withResourceName('uploads')
+            ->parseIncludes(['artists'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

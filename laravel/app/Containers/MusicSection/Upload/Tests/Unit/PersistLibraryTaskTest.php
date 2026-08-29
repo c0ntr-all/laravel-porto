@@ -24,7 +24,7 @@ class PersistLibraryTaskTest extends TestCase
         $upload = $this->makeSession($user);
         $tree = $this->makeTree();
 
-        [, $counters] = app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+        $counters = app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
 
         $this->assertSame(1, $counters['artists_created']);
         $this->assertSame(1, $counters['albums_created']);
@@ -48,8 +48,16 @@ class PersistLibraryTaskTest extends TestCase
         ]);
 
         $upload->refresh();
-        $this->assertNotNull($upload->artist_id);
-        $this->assertSame('Metallica', $upload->artist_name);
+        $this->assertEquals(['Metallica'], $upload->artists()->pluck('name')->all());
+        $this->assertEquals(['Metallica'], $upload->albums()->pluck('name')->all());
+        $this->assertDatabaseCount('music_upload_artist', 1);
+        $this->assertDatabaseCount('music_upload_album', 1);
+        $this->assertDatabaseHas('music_upload_tracks', [
+            'upload_id' => $upload->id,
+            'status' => UploadTrackStatusEnum::Created->value,
+            'album_id' => $upload->albums()->first()?->id,
+            'artist_id' => $upload->artists()->first()?->id,
+        ]);
     }
 
     public function test_it_skips_unchanged_tracks_on_reimport(): void
@@ -63,7 +71,7 @@ class PersistLibraryTaskTest extends TestCase
         app(PersistLibraryTask::class)->run($first, $tree, $user->id);
 
         $second = $this->makeSession($user);
-        [, $counters] = app(PersistLibraryTask::class)->run($second, $tree, $user->id);
+        $counters = app(PersistLibraryTask::class)->run($second, $tree, $user->id);
 
         $this->assertSame(0, $counters['artists_created']);
         $this->assertSame(0, $counters['albums_created']);
@@ -89,7 +97,7 @@ class PersistLibraryTaskTest extends TestCase
 
         $changed = $this->makeTree(title: 'Enter Sandman (Remastered)');
         $second = $this->makeSession($user);
-        [, $counters] = app(PersistLibraryTask::class)->run($second, $changed, $user->id);
+        $counters = app(PersistLibraryTask::class)->run($second, $changed, $user->id);
 
         $this->assertSame(1, $counters['tracks_updated']);
         $this->assertSame(0, $counters['tracks_created']);
@@ -144,7 +152,7 @@ class PersistLibraryTaskTest extends TestCase
             ]],
         ];
 
-        [, $counters] = app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+        $counters = app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
 
         $this->assertSame(2, $counters['artists_created']);
         $this->assertSame(1, $counters['albums_created']);
@@ -167,7 +175,13 @@ class PersistLibraryTaskTest extends TestCase
         $this->assertEquals(['Coalesce'], $coalesceTrack?->artists()->get()->pluck('name')->all());
 
         $upload->refresh();
-        $this->assertSame('Napalm Death / Coalesce', $upload->artist_name);
+        $this->assertEqualsCanonicalizing(
+            ['Napalm Death', 'Coalesce'],
+            $upload->artists()->pluck('name')->all(),
+        );
+        $this->assertEquals(['In Tongues We Speak'], $upload->albums()->pluck('name')->all());
+        $this->assertDatabaseCount('music_upload_artist', 2);
+        $this->assertDatabaseCount('music_upload_album', 1);
     }
 
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload

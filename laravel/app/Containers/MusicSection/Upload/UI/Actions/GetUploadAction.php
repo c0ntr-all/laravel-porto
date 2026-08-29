@@ -12,14 +12,14 @@ class GetUploadAction extends BaseAction
 {
     public function handle(MusicUpload $upload): MusicUpload
     {
-        return $upload->load(['artist', 'tracks']);
+        return $upload->load(['artists', 'albums.artists', 'tracks.album', 'tracks.artist']);
     }
 
     public function asController(MusicUpload $upload, GetRequest $request): JsonResponse
     {
         return fractal($this->handle($upload), new UploadTransformer())
             ->withResourceName('uploads')
-            ->parseIncludes(['artist', 'tracks'])
+            ->parseIncludes(['artists', 'albums.artists', 'tracks'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

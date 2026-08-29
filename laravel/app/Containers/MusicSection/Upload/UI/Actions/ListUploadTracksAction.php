@@ -26,6 +26,7 @@ class ListUploadTracksAction extends BaseAction
     {
         return fractal($this->handle($upload), new UploadTrackTransformer())
             ->withResourceName('upload_tracks')
+            ->parseIncludes(['album', 'artist'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

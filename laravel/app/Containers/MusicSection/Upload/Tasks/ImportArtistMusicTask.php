@@ -42,7 +42,7 @@ class ImportArtistMusicTask extends ParentTask
                 );
             }
 
-            [, $counters] = $this->persistLibraryTask->run($upload, $parsed['tree'], (int) $upload->user_id);
+            $counters = $this->persistLibraryTask->run($upload, $parsed['tree'], (int) $upload->user_id);
 
             $failed = $counters['tracks_failed'] + count($parsed['errors']);
             $status = $failed > 0 ? UploadStatusEnum::CompletedWithErrors : UploadStatusEnum::Completed;

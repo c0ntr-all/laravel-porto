@@ -7,6 +7,7 @@ use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
+use App\Containers\MusicSection\Upload\Enums\UploadTrackStatusEnum;
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use App\Containers\MusicSection\Upload\Support\Id3Reader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -100,21 +101,28 @@ class UploadCrudTest extends TestCase
 
         $upload = MusicUpload::create([
             'user_id' => $admin->id,
-            'artist_id' => $artist->id,
-            'artist_name' => 'Metallica',
             'source_path' => 'F:\\Music\\Metallica',
             'status' => UploadStatusEnum::Completed,
         ]);
+        $upload->artists()->attach($artist->id);
+        $upload->albums()->attach($album->id);
 
         $this->actingAs($admin, 'api')
             ->getJson('/api/v1/music/uploads')
             ->assertOk()
-            ->assertJsonPath('data.0.id', (string) $upload->id);
+            ->assertJsonPath('data.0.id', (string) $upload->id)
+            ->assertJsonPath('data.0.attributes.artist_ids', [$artist->id])
+            ->assertJsonPath('data.0.attributes.artist_name', 'Metallica')
+            ->assertJsonPath('data.0.attributes.album_ids', [$album->id])
+            ->assertJsonCount(1, 'data.0.relationships.artists.data');
 
         $this->actingAs($admin, 'api')
             ->getJson('/api/v1/music/uploads/' . $upload->id)
             ->assertOk()
-            ->assertJsonPath('data.id', (string) $upload->id);
+            ->assertJsonPath('data.id', (string) $upload->id)
+            ->assertJsonPath('data.attributes.artist_ids', [$artist->id])
+            ->assertJsonCount(1, 'data.relationships.artists.data')
+            ->assertJsonCount(1, 'data.relationships.albums.data');
 
         $this->actingAs($admin, 'api')
             ->deleteJson('/api/v1/music/uploads/' . $upload->id)
@@ -139,8 +147,13 @@ class UploadCrudTest extends TestCase
 
         $first->assertCreated();
         $first->assertJsonPath('data.attributes.status', UploadStatusEnum::Completed->value);
+        $first->assertJsonCount(1, 'data.relationships.artists.data');
+        $first->assertJsonCount(1, 'data.relationships.albums.data');
+        $first->assertJsonCount(1, 'data.relationships.tracks.data');
         $this->assertDatabaseCount('music_artists', 1);
         $this->assertDatabaseCount('music_tracks', 1);
+        $this->assertDatabaseCount('music_upload_artist', 1);
+        $this->assertDatabaseCount('music_upload_album', 1);
 
         $second = $this->actingAs($admin, 'api')
             ->postJson('/api/v1/music/uploads', [
@@ -154,6 +167,90 @@ class UploadCrudTest extends TestCase
         $this->assertDatabaseCount('music_albums', 1);
         $this->assertDatabaseCount('music_tracks', 1);
         $this->assertDatabaseCount('music_uploads', 2);
+        $this->assertDatabaseCount('music_upload_artist', 2);
+        $this->assertDatabaseCount('music_upload_album', 2);
+    }
+
+    public function test_admin_can_inspect_all_artists_albums_and_tracks_of_a_session(): void
+    {
+        $admin = $this->makeAdmin();
+        $alcest = Artist::create([
+            'user_id' => $admin->id,
+            'name' => 'Alcest',
+            'path' => 'F:\\Music\\Alcest',
+        ]);
+        $angmar = Artist::create([
+            'user_id' => $admin->id,
+            'name' => 'Angmar',
+            'path' => 'F:\\Music\\Alcest :: Angmar',
+        ]);
+        $discrets = Artist::create([
+            'user_id' => $admin->id,
+            'name' => 'Les Discrets',
+            'path' => 'F:\\Music\\Alcest :: Les Discrets',
+        ]);
+        $albumA = Album::create([
+            'name' => 'Écailles de Lune',
+            'path' => 'F:\\Music\\Alcest\\Écailles de Lune',
+            'album_type_id' => 1,
+        ]);
+        $albumB = Album::create([
+            'name' => 'Septembre Et Ses Dernières Pensées',
+            'path' => 'F:\\Music\\Alcest\\Septembre',
+            'album_type_id' => 1,
+        ]);
+        $track = Track::create([
+            'album_id' => $albumA->id,
+            'name' => 'Percées De Lumière',
+            'path' => 'F:\\Music\\Alcest\\Écailles de Lune\\02. Percées De Lumière.mp3',
+            'number' => 2,
+        ]);
+
+        $upload = MusicUpload::create([
+            'user_id' => $admin->id,
+            'source_path' => 'F:\\Music\\Alcest',
+            'status' => UploadStatusEnum::Completed,
+        ]);
+        $upload->artists()->attach([$alcest->id, $angmar->id, $discrets->id]);
+        $upload->albums()->attach([$albumA->id, $albumB->id]);
+        $upload->tracks()->create([
+            'track_id' => $track->id,
+            'album_id' => $albumA->id,
+            'artist_id' => $alcest->id,
+            'album_name' => $albumA->name,
+            'track_name' => $track->name,
+            'source_path' => $track->path,
+            'status' => UploadTrackStatusEnum::Created,
+        ]);
+
+        $detail = $this->actingAs($admin, 'api')
+            ->getJson('/api/v1/music/uploads/' . $upload->id)
+            ->assertOk()
+            ->assertJsonCount(3, 'data.relationships.artists.data')
+            ->assertJsonCount(2, 'data.relationships.albums.data')
+            ->assertJsonCount(1, 'data.relationships.tracks.data');
+
+        $this->assertEqualsCanonicalizing(
+            [$alcest->id, $angmar->id, $discrets->id],
+            $detail->json('data.attributes.artist_ids'),
+        );
+        $this->assertEqualsCanonicalizing(
+            [$albumA->id, $albumB->id],
+            $detail->json('data.attributes.album_ids'),
+        );
+
+        $this->actingAs($admin, 'api')
+            ->getJson('/api/v1/music/uploads?filter[artist_id]=' . $angmar->id)
+            ->assertOk()
+            ->assertJsonPath('data.0.id', (string) $upload->id);
+
+        $this->actingAs($admin, 'api')
+            ->getJson('/api/v1/music/uploads/' . $upload->id . '/tracks')
+            ->assertOk()
+            ->assertJsonPath('data.0.attributes.album_id', $albumA->id)
+            ->assertJsonPath('data.0.attributes.artist_id', $alcest->id)
+            ->assertJsonPath('data.0.relationships.artist.data.id', (string) $alcest->id)
+            ->assertJsonPath('data.0.relationships.album.data.id', (string) $albumA->id);
     }
 
     public function test_admin_can_preview_artist_folder_without_persisting(): void

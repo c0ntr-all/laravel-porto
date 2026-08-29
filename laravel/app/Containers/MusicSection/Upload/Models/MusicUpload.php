@@ -3,10 +3,12 @@
 namespace App\Containers\MusicSection\Upload\Models;
 
 use App\Containers\AppSection\User\Models\User;
+use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MusicUpload extends Model
@@ -15,8 +17,6 @@ class MusicUpload extends Model
 
     protected $fillable = [
         'user_id',
-        'artist_id',
-        'artist_name',
         'source_path',
         'status',
         'started_at',
@@ -49,9 +49,16 @@ class MusicUpload extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function artist(): BelongsTo
+    public function artists(): BelongsToMany
     {
-        return $this->belongsTo(Artist::class);
+        return $this->belongsToMany(Artist::class, 'music_upload_artist', 'upload_id', 'artist_id')
+                    ->withTimestamps();
+    }
+
+    public function albums(): BelongsToMany
+    {
+        return $this->belongsToMany(Album::class, 'music_upload_album', 'upload_id', 'album_id')
+                    ->withTimestamps();
     }
 
     public function tracks(): HasMany

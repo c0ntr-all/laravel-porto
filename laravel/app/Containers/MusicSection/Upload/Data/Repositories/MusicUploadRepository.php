@@ -18,12 +18,21 @@ class MusicUploadRepository
         return QueryBuilder::for(MusicUpload::class)
                            ->allowedFilters([
                                AllowedFilter::exact('status'),
-                               AllowedFilter::exact('artist_id'),
-                               AllowedFilter::partial('artist_name'),
+                               AllowedFilter::callback('artist_id', function ($query, $value) {
+                                   $ids = array_map('intval', (array) $value);
+                                   $query->whereHas('artists', function ($query) use ($ids) {
+                                       $query->whereIn('music_artists.id', $ids);
+                                   });
+                               }),
+                               AllowedFilter::callback('artist_name', function ($query, $value) {
+                                   $query->whereHas('artists', function ($query) use ($value) {
+                                       $query->where('music_artists.name', 'like', '%' . $value . '%');
+                                   });
+                               }),
                            ])
                            ->allowedSorts(['created_at', 'started_at', 'finished_at'])
-                           ->allowedIncludes(['artist', 'tracks'])
-                           ->with(['artist'])
+                           ->allowedIncludes(['artists', 'albums', 'albums.artists', 'tracks', 'tracks.album', 'tracks.artist'])
+                           ->with(['artists', 'albums'])
                            ->orderByDesc('created_at')
                            ->cursorPaginate(20);
     }
@@ -33,10 +42,14 @@ class MusicUploadRepository
         return QueryBuilder::for($upload->tracks())
                            ->allowedFilters([
                                AllowedFilter::exact('status'),
+                               AllowedFilter::exact('album_id'),
+                               AllowedFilter::exact('artist_id'),
                                AllowedFilter::partial('album_name'),
                                AllowedFilter::partial('track_name'),
                            ])
                            ->allowedSorts(['created_at', 'album_name', 'track_name'])
+                           ->allowedIncludes(['track', 'album', 'album.artists', 'artist'])
+                           ->with(['album', 'artist'])
                            ->orderBy('id')
                            ->cursorPaginate(50);
     }
@@ -77,9 +90,13 @@ class MusicUploadRepository
         ?string $trackName = null,
         ?array $snapshot = null,
         ?string $errorMessage = null,
+        ?int $albumId = null,
+        ?int $artistId = null,
     ): MusicUploadTrack {
         return $upload->tracks()->create([
             'track_id' => $trackId,
+            'album_id' => $albumId,
+            'artist_id' => $artistId,
             'album_name' => $albumName,
             'track_name' => $trackName,
             'source_path' => $sourcePath,

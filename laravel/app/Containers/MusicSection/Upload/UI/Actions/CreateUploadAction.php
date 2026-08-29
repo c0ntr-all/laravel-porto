@@ -30,7 +30,7 @@ class CreateUploadAction extends BaseAction
             // Session already contains failed status and error_message.
         }
 
-        return $upload->fresh(['artist']) ?? $upload;
+        return $upload->fresh(['artists', 'albums.artists', 'tracks.album', 'tracks.artist']) ?? $upload;
     }
 
     public function asController(CreateRequest $request): JsonResponse
@@ -42,7 +42,7 @@ class CreateUploadAction extends BaseAction
 
         return fractal($upload, new UploadTransformer())
             ->withResourceName('uploads')
-            ->parseIncludes(['artist'])
+            ->parseIncludes(['artists', 'albums.artists', 'tracks'])
             ->addMeta(['message' => 'Upload session finished with status ' . $upload->status->value . '.'])
             ->respond(201, [], JSON_PRETTY_PRINT);
     }

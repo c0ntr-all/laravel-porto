@@ -6,36 +6,29 @@
         :key="track.id"
         :track="track"
         :actions="playlistActions"
-        :playlistId="playlistId || '0'"
+        :playlist-id="playlistId"
         @play="initPlay(track)"
-        @remove="removeTrackFromList"
+        @remove="playlistStore.removeTrackLocal"
       />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
+import { useMusicPlaylistStore } from 'src/stores/modules/musicPlaylistStore'
 import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
-import { ITrack } from 'src/components/client/Music/types'
+import { ITrack } from 'src/types'
 
-const props = defineProps<{
-  tracks: ITrack[],
-  playlistId: string
-}>()
+const playlistStore = useMusicPlaylistStore()
 const musicPlayer = useMusicPlayer()
 
 const playlistActions = ['addToPlaylist', 'deleteTrackFromPlaylist']
-const tracks = ref(props.tracks)
+const tracks = computed(() => playlistStore.playlist?.tracks ?? [])
+const playlistId = computed(() => playlistStore.playlist?.id ?? '0')
 
 const initPlay = (track: ITrack) => {
   musicPlayer.toggleTrack(track, tracks.value)
-}
-const removeTrackFromList = (trackId: string) => {
-  const index = tracks.value.findIndex(item => item.id === trackId)
-  if (index !== -1) {
-    tracks.value.splice(index, 1)
-  }
 }
 </script>
 <style lang="scss" scoped>

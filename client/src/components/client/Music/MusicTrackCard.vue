@@ -1,7 +1,10 @@
 <template>
   <div
     class="music-track flex no-wrap self-start items-center col-grow q-pr-sm rounded-borders"
-    :class="{'music-track--active': isCurrent}"
+    :class="{
+      'music-track--active': isCurrent,
+      'music-track--with-add': canAddToThisPlaylist
+    }"
   >
     <div class="music-track__left" @click="handlePlay">
       <div class="music-track-cover q-mr-md">
@@ -55,7 +58,23 @@
         <div class="music-track__time">
           {{ track.duration }}
         </div>
-        <div class="music-track__more">
+        <q-btn
+          v-if="canAddToThisPlaylist"
+          class="music-track__add"
+          :icon="inPlaylist ? 'done' : 'add'"
+          :color="inPlaylist ? 'positive' : 'primary'"
+          :disable="inPlaylist"
+          :loading="adding"
+          round
+          flat
+          dense
+          @click.stop="handleFunction('addToThisPlaylist')"
+        >
+          <q-tooltip>
+            {{ inPlaylist ? 'Already in playlist' : 'Add to playlist' }}
+          </q-tooltip>
+        </q-btn>
+        <div v-if="filteredActions.length" class="music-track__more">
           <q-btn color="grey-7" icon="more_horiz" round flat>
             <q-menu cover auto-close>
               <q-list>
@@ -209,11 +228,13 @@ interface GetPlaylistsApiResponse {
   }
 }
 
-const emit = defineEmits(['play', 'remove'])
+const emit = defineEmits(['play', 'remove', 'add'])
 const props = defineProps<{
   track: ITrack
   actions?: string[]
   playlistId?: string
+  inPlaylist?: boolean
+  adding?: boolean
 }>()
 const musicPlayer = useMusicPlayer()
 const isCurrent = computed(() => musicPlayer.isCurrentTrack(props.track.id))
@@ -221,6 +242,10 @@ const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
 
 const availableActions: Action[] = [{
   name: 'addToPlaylist',
+  label: 'Add to playlist',
+  icon: 'add'
+}, {
+  name: 'addToThisPlaylist',
   label: 'Add to playlist',
   icon: 'add'
 }, {
@@ -237,8 +262,14 @@ const filteredPlaylists = ref<Playlist[]>([])
 const playlistSearch = ref('')
 const selectedPlaylistsIds = ref<string[]>([])
 
+const canAddToThisPlaylist = computed(() => (
+  Boolean(props.actions?.includes('addToThisPlaylist'))
+))
+
 const filteredActions = computed(() => {
-  return availableActions.filter(item => props.actions?.includes(item.name))
+  return availableActions.filter(item => (
+    props.actions?.includes(item.name) && item.name !== 'addToThisPlaylist'
+  ))
 })
 
 const rateTrack = async (value: number): Promise<void> => {
@@ -289,6 +320,12 @@ const handleFunction = (actionName: string) => {
   switch (actionName) {
     case 'addToPlaylist':
       showPlaylistModal.value = true
+      break
+
+    case 'addToThisPlaylist':
+      if (!props.inPlaylist) {
+        emit('add', track.value)
+      }
       break
 
     case 'deleteTrackFromPlaylist':
@@ -422,6 +459,11 @@ watch(playlistSearch, (value) => {
     height: 48px;
   }
 
+  &__add {
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
   &__time {
     flex-shrink: 0;
     color: #818c99;
@@ -458,7 +500,9 @@ watch(playlistSearch, (value) => {
     .music-track__more {
       visibility: visible;
     }
+  }
 
+  &:hover:not(.music-track--with-add) {
     .music-track__time {
       visibility: hidden;
     }

@@ -10,9 +10,10 @@ class CreateRequest extends AuthenticatedRequest
     {
         return [
             'name' => 'required|string|unique:music_tags|max:50',
+            'slug' => 'sometimes|nullable|string|max:50|unique:music_tags,slug',
             'description' => 'sometimes|nullable|string|max:30000',
             'parent_id' => 'sometimes|nullable|integer|exists:music_tags,id',
-            'group_id' => 'sometimes|nullable|integer|exists:music_tag_groups,id',
+            'group_id' => 'required_without:parent_id|nullable|integer|exists:music_tag_groups,id',
             'is_active' => 'sometimes|boolean',
         ];
     }

@@ -19,6 +19,10 @@ class MusicTagObserver
 
     protected function setSlug(MusicTag $tag): void
     {
-        $tag->slug = Str::slug($tag->name);
+        if ($tag->slug) {
+            return;
+        }
+
+        $tag->slug = Str::slug((string) $tag->name);
     }
 }

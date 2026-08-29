@@ -34,7 +34,7 @@ class TagRepository
                                AllowedFilter::exact('is_active'),
                            ])
                            ->allowedSorts(['name', 'created_at'])
-                           ->with('tags')
+                           ->with(['tags', 'group'])
                            ->whereNull('parent_id')
                            ->get();
     }

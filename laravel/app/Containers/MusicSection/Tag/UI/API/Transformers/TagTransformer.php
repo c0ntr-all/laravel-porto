@@ -17,6 +17,7 @@ class TagTransformer extends TransformerAbstract
 
     protected array $defaultIncludes = [
         'tags',
+        'group',
     ];
 
     public function transform(MusicTag $tag): array

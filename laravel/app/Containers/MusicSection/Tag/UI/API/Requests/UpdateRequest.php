@@ -18,6 +18,13 @@ class UpdateRequest extends AuthenticatedRequest
                 'max:50',
                 Rule::unique('music_tags', 'name')->ignore($tag),
             ],
+            'slug' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('music_tags', 'slug')->ignore($tag),
+            ],
             'description' => 'sometimes|string|nullable|max:30000',
             'parent_id' => 'sometimes|nullable|integer|exists:music_tags,id',
             'group_id' => 'sometimes|nullable|integer|exists:music_tag_groups,id',

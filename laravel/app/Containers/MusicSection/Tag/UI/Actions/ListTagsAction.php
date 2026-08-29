@@ -29,7 +29,7 @@ class ListTagsAction extends BaseAction
 
         return fractal($tags, new TagTransformer())
             ->withResourceName('tags')
-            ->parseIncludes(['tags'])
+            ->parseIncludes(['tags', 'group'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

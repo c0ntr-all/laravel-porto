@@ -48,6 +48,6 @@ class MusicTag extends Model
 
     public function tags(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'parent_id')->with('tags');
+        return $this->hasMany(__CLASS__, 'parent_id')->with(['tags', 'group']);
     }
 }

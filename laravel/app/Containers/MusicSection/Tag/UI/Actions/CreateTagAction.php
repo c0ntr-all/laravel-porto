@@ -29,10 +29,11 @@ class CreateTagAction extends BaseAction
         $dto = TagCreateData::from($request->validated());
         $dto->user_id = auth()->user()->id;
 
-        $tag = $this->handle($dto);
+        $tag = $this->handle($dto)->load('group');
 
         return fractal($tag, new TagTransformer())
             ->withResourceName('tags')
+            ->parseIncludes(['group'])
             ->addMeta(['message' => 'Tag created successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

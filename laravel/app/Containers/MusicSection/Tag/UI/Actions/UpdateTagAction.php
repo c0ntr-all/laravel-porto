@@ -25,10 +25,11 @@ class UpdateTagAction extends BaseAction
 
     public function asController(MusicTag $tag, UpdateRequest $request): JsonResponse
     {
-        $tag = $this->handle($tag, TagUpdateData::from($request->validated()));
+        $tag = $this->handle($tag, TagUpdateData::from($request->validated()))->load('group');
 
         return fractal($tag, new TagTransformer())
             ->withResourceName('tags')
+            ->parseIncludes(['group'])
             ->addMeta(['message' => 'Tag updated successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Track\Data\Repositories;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Track\Data\Filters\TrackSearchFilter;
 use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
 use App\Containers\MusicSection\Track\Models\Track;
@@ -15,10 +16,7 @@ class TrackRepository
     public function getWithCursor(): CursorPaginator
     {
         return QueryBuilder::for(Track::class)
-                           ->allowedFilters([
-                               AllowedFilter::partial('name'),
-                               AllowedFilter::exact('album_id'),
-                           ])
+                           ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'number'])
                            ->allowedIncludes(['tags', 'artists', 'album'])
                            ->with(['tags', 'artists', 'rate'])
@@ -35,10 +33,7 @@ class TrackRepository
     public function listTracksByAlbumIdsWithCursor(array $albumIds): CursorPaginator
     {
         return QueryBuilder::for(Track::whereIn('album_id', $albumIds))
-                           ->allowedFilters([
-                               AllowedFilter::partial('name'),
-                               AllowedFilter::exact('album_id'),
-                           ])
+                           ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'number'])
                            ->with(['tags', 'artists', 'rate'])
                            ->cursorPaginate(50);
@@ -110,5 +105,17 @@ class TrackRepository
     public function syncArtistsWithoutDetaching(Track $track, array $artistsIds): array
     {
         return $track->artists()->syncWithoutDetaching($artistsIds);
+    }
+
+    /**
+     * @return list<AllowedFilter>
+     */
+    private function allowedFilters(): array
+    {
+        return [
+            AllowedFilter::partial('name'),
+            AllowedFilter::exact('album_id'),
+            AllowedFilter::custom('search', new TrackSearchFilter()),
+        ];
     }
 }

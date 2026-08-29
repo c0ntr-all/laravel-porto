@@ -1,14 +1,8 @@
-import { IArtistShort, IJsonApiResponse, ITrack } from 'src/types'
+import { IJsonApiResponse, ITrack } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
+import { normalizeArtistShort } from 'src/api/mappers/Music/artist.mapper'
 import { asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeMusicTags } from 'src/api/mappers/Music/tag.mapper'
-
-export function normalizeArtistShort(raw: Record<string, unknown>): IArtistShort {
-  return {
-    id: String(raw.id),
-    name: String(raw.name ?? '')
-  }
-}
 
 export function normalizeTrack(
   raw: Record<string, unknown>,

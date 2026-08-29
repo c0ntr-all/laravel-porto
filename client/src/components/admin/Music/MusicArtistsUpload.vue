@@ -23,39 +23,38 @@
       dense
     />
   </form>
+
+  <div class="text-h6 q-mb-md">Upload sessions</div>
+  <MusicUploadsTable />
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import type { QInput } from 'quasar'
+import { useMusicUploadStore } from 'src/stores/modules/musicUploadStore'
+import MusicUploadsTable from 'src/components/admin/Music/MusicUploadsTable.vue'
 
-interface IUploadArtistResponse {
-  meta: {
-    message: string
-  }
-}
-
+const store = useMusicUploadStore()
 const fullPath = ref<string | null>(null)
-const fullPathRef = ref()
+const fullPathRef = ref<QInput | null>(null)
 const processLoading = ref(false)
 
 const uploadArtist = async () => {
-  processLoading.value = true
-  fullPathRef.value.validate()
+  const isValid = await fullPathRef.value?.validate()
+  if (!isValid || !fullPath.value) {
+    return
+  }
 
-  await api.post<IUploadArtistResponse>('v1/music/uploads', {
-    path: fullPath.value
-  }).then(response => {
-    handleApiSuccess(response.data)
-  }).catch(error => {
-    handleApiError(error)
-  }).finally(() => {
+  processLoading.value = true
+
+  try {
+    await store.createUpload(fullPath.value)
+  } finally {
     processLoading.value = false
-  })
+  }
 }
 
 const onReset = () => {
   fullPath.value = null
-  fullPathRef.value.resetValidation()
+  fullPathRef.value?.resetValidation()
 }
 </script>

@@ -1,6 +1,14 @@
-import { IJsonApiResponse, IArtist } from 'src/types'
+import { IArtist, IArtistShort, IJsonApiResponse } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
+import { asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeMusicTags } from 'src/api/mappers/Music/tag.mapper'
+
+export function normalizeArtistShort(raw: Record<string, unknown>): IArtistShort {
+  return {
+    id: String(raw.id),
+    name: String(raw.name ?? '')
+  }
+}
 
 export function normalizeArtist(raw: Record<string, unknown>): IArtist {
   return {
@@ -11,6 +19,10 @@ export function normalizeArtist(raw: Record<string, unknown>): IArtist {
     created_at: raw.created_at ? String(raw.created_at) : undefined,
     tags: normalizeMusicTags(raw.tags)
   }
+}
+
+export function normalizeArtistsShort(value: unknown): IArtistShort[] {
+  return asRecords(value).map(normalizeArtistShort)
 }
 
 export function mapArtistResponse(response: IJsonApiResponse): IArtist {

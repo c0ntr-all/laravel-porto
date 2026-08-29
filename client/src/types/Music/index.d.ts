@@ -1,4 +1,5 @@
 export * from './tag'
+export * from './tagGroup'
 export * from './artist'
 export * from './album'
 export * from './track'

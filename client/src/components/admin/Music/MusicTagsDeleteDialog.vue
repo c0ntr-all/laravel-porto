@@ -1,83 +1,58 @@
 <template>
-  <q-dialog v-model="show">
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card class="tag-dialog">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Are you sure?</div>
+        <div class="text-h6">Delete tag</div>
         <q-space/>
         <q-btn icon="close" flat round dense v-close-popup/>
       </q-card-section>
 
       <q-card-section>
-        <p>Delete tag <b>{{ tag.name }}</b></p>
+        Delete tag <b>{{ tag?.name }}</b> and all nested sub-tags?
       </q-card-section>
 
-      <q-card-section>
-        <q-btn @click="deleteTag" color="primary">Delete</q-btn>
+      <q-card-section align="right">
+        <q-btn flat label="Cancel" v-close-popup/>
+        <q-btn
+          color="negative"
+          label="Delete"
+          :loading="store.isSaving"
+          @click="removeTag"
+        />
       </q-card-section>
     </q-card>
   </q-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, watchEffect } from 'vue'
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-
-interface ITagProp {
-  id: string
-  name: string
-  content: string | null
-  is_base: boolean
-  parentTag?: ITagProp
-}
-
-interface IDeleteTagResponse {
-  data: {
-    id: string
-    attributes: {
-      title: string
-      created_at: string
-    }
-  }
-  meta: {
-    message: string
-  }
-}
+import { useMusicTagStore } from 'src/stores/modules/musicTagStore'
+import { IMusicTag } from 'src/types'
 
 const props = defineProps<{
-  modelValue: any,
-  tag: ITagProp
+  modelValue: boolean
+  tag?: IMusicTag | null
 }>()
+
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'deleted', value: string): void
+  'update:modelValue': [value: boolean]
 }>()
-const show = ref(props.modelValue)
-const tag = ref<ITagProp>(props.tag)
 
-const deleteTag = async () => {
-  await api.delete<IDeleteTagResponse>(`v1/music/tags/${tag.value.id}`)
-    .then(response => {
-      emit('deleted', tag.value.id)
+const store = useMusicTagStore()
 
-      handleApiSuccess(response.data)
-    }).catch(error => {
-      handleApiError(error)
-    }).finally(() => {
-      show.value = false
-    })
-}
-
-watchEffect(() => {
-  show.value = props.modelValue
-})
-watch(show, (newVal) => {
-  if (newVal !== props.modelValue) {
-    emit('update:modelValue', newVal)
+const removeTag = async () => {
+  if (!props.tag) {
+    return
   }
-})
+
+  const deleted = await store.deleteTag(props.tag.id)
+  if (deleted) {
+    emit('update:modelValue', false)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
-
+.tag-dialog {
+  min-width: 400px;
+}
 </style>

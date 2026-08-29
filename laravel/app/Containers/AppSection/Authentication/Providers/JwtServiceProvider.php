@@ -12,10 +12,18 @@ class JwtServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->singleton(Configuration::class, function ($app) {
+        $this->app->singleton(Configuration::class, function () {
+            $secret = config('passport.personal_access_client.secret');
+
+            if (!is_string($secret) || $secret === '') {
+                throw new \RuntimeException(
+                    'Passport personal access client secret is not configured. Set PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET in your .env file.'
+                );
+            }
+
             return Configuration::forSymmetricSigner(
-                new \Lcobucci\JWT\Signer\Hmac\Sha256(), // Алгоритм подписания
-                \Lcobucci\JWT\Signer\Key\InMemory::plainText(env('PASSPORT_CLIENT_SECRET')) // Ключ для работы
+                new \Lcobucci\JWT\Signer\Hmac\Sha256(),
+                \Lcobucci\JWT\Signer\Key\InMemory::plainText($secret)
             );
         });
     }

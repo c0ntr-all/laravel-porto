@@ -11,10 +11,13 @@ class TagResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'group' => $this->tagables->group ? [
-                'id' => $this->tagables->group->id,
-                'name' => $this->tagables->group->name
-            ] : null
+            'tracks_count' => $this->pivot->tracks_count ?? null,
+            'percentage' => $this->pivot->percentage ?? null,
+            'group' => $this->group ? [
+                'id' => $this->group->id,
+                'name' => $this->group->name,
+                'slug' => $this->group->slug,
+            ] : null,
         ];
     }
 }

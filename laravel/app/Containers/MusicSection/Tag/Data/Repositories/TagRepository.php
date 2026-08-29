@@ -16,7 +16,8 @@ class TagRepository
         return QueryBuilder::for(MusicTag::class)
                            ->allowedFilters([
                                AllowedFilter::partial('name'),
-                               AllowedFilter::exact('is_base'),
+                               AllowedFilter::exact('group_id'),
+                               AllowedFilter::exact('is_active'),
                                AllowedFilter::exact('parent_id'),
                            ])
                            ->allowedSorts(['name', 'created_at'])
@@ -29,7 +30,8 @@ class TagRepository
         return QueryBuilder::for(MusicTag::class)
                            ->allowedFilters([
                                AllowedFilter::partial('name'),
-                               AllowedFilter::exact('is_base'),
+                               AllowedFilter::exact('group_id'),
+                               AllowedFilter::exact('is_active'),
                            ])
                            ->allowedSorts(['name', 'created_at'])
                            ->with('tags')

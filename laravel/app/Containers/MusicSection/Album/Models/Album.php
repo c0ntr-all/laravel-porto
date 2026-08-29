@@ -3,7 +3,9 @@
 namespace App\Containers\MusicSection\Album\Models;
 
 use App\Containers\MusicSection\Artist\Models\Artist;
-use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
+use App\Containers\MusicSection\Tag\Models\MusicAlbumAggregatedTag;
+use App\Containers\MusicSection\Tag\Models\MusicUserAlbumAggregatedTag;
+use App\Containers\MusicSection\Tag\Models\Traits\HasAggregatedMusicTags;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
@@ -58,7 +60,7 @@ use Illuminate\Support\Carbon;
 class Album extends Model
 {
     use SoftDeletes,
-        HasMusicTags,
+        HasAggregatedMusicTags,
         HasImage;
 
     protected $table = 'music_albums';
@@ -98,5 +100,30 @@ class Album extends Model
     public function tracks(): HasMany
     {
         return $this->hasMany(Track::class, 'album_id', 'id');
+    }
+
+    public function aggregatedTags(): HasMany
+    {
+        return $this->hasMany(MusicAlbumAggregatedTag::class, 'album_id');
+    }
+
+    public function userAggregatedTags(): HasMany
+    {
+        return $this->hasMany(MusicUserAlbumAggregatedTag::class, 'album_id');
+    }
+
+    protected function aggregatedTagsTable(): string
+    {
+        return 'music_album_aggregated_tags';
+    }
+
+    protected function aggregatedTagsForeignKey(): string
+    {
+        return 'album_id';
+    }
+
+    protected function userAggregatedTagsTable(): string
+    {
+        return 'music_user_album_aggregated_tags';
     }
 }

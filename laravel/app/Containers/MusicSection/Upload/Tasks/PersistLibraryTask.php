@@ -366,7 +366,7 @@ class PersistLibraryTask extends ParentTask
             }
 
             $this->syncArtistsForTrackTask->run($track, [$artist->id]);
-            $this->syncGenre($track, $album, $artist, $trackDto->genre, $tags, $status === UploadTrackStatusEnum::Created);
+            $this->syncGenre($track, $trackDto->genre, $tags, $status === UploadTrackStatusEnum::Created);
 
             $this->musicUploadRepository->addTrackLog(
                 $upload,
@@ -420,7 +420,7 @@ class PersistLibraryTask extends ParentTask
             && $track->path === $dto->windows_path;
     }
 
-    private function syncGenre(Track $track, Album $album, Artist $artist, ?string $genre, array $tags, bool $isNew): void
+    private function syncGenre(Track $track, ?string $genre, array $tags, bool $isNew): void
     {
         if (!$isNew || !$genre || !array_key_exists($genre, $tags)) {
             return;
@@ -428,8 +428,6 @@ class PersistLibraryTask extends ParentTask
 
         $dto = SyncTagsDto::from(['tags' => [$tags[$genre]]]);
         $this->syncTagsTask->run($track, $dto);
-        $this->syncTagsTask->run($album, $dto);
-        $this->syncTagsTask->run($artist, $dto);
     }
 
     private function snapshot(ParsedTrackDto $dto): array

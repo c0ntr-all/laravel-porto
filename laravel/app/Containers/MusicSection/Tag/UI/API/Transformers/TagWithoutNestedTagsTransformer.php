@@ -12,9 +12,13 @@ class TagWithoutNestedTagsTransformer extends TransformerAbstract
         return [
             'id' => $tag->id,
             'name' => $tag->name,
-            'content' => $tag->content,
-            'is_base' => $tag->is_base,
+            'slug' => $tag->slug,
+            'description' => $tag->description,
+            'is_active' => $tag->is_active,
             'parent_id' => $tag->parent_id,
+            'group_id' => $tag->group_id,
+            'tracks_count' => $tag->pivot?->tracks_count,
+            'percentage' => $tag->pivot?->percentage,
         ];
     }
 }

@@ -18,9 +18,10 @@ class UpdateRequest extends AuthenticatedRequest
                 'max:50',
                 Rule::unique('music_tags', 'name')->ignore($tag),
             ],
-            'content' => 'sometimes|string|nullable|max:30000',
+            'description' => 'sometimes|string|nullable|max:30000',
             'parent_id' => 'sometimes|nullable|integer|exists:music_tags,id',
-            'is_base' => 'sometimes|boolean',
+            'group_id' => 'sometimes|nullable|integer|exists:music_tag_groups,id',
+            'is_active' => 'sometimes|boolean',
         ];
     }
 }

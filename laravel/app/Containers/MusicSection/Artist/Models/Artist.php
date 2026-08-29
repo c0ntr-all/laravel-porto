@@ -3,13 +3,15 @@
 namespace App\Containers\MusicSection\Artist\Models;
 
 use App\Containers\MusicSection\Album\Models\Album;
-use App\Containers\MusicSection\Tag\Models\MusicTag;
-use App\Containers\MusicSection\Tag\Models\Traits\HasMusicTags;
+use App\Containers\MusicSection\Tag\Models\MusicArtistAggregatedTag;
+use App\Containers\MusicSection\Tag\Models\MusicUserArtistAggregatedTag;
+use App\Containers\MusicSection\Tag\Models\Traits\HasAggregatedMusicTags;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -55,7 +57,7 @@ class Artist extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    use HasMusicTags;
+    use HasAggregatedMusicTags;
     use HasImage;
 
     protected $table = 'music_artists';
@@ -72,5 +74,35 @@ class Artist extends Model
     public function albums(): BelongsToMany
     {
         return $this->belongsToMany(Album::class, 'music_album_artist', 'artist_id', 'album_id');
+    }
+
+    public function tracks(): BelongsToMany
+    {
+        return $this->belongsToMany(Track::class, 'music_track_artist', 'artist_id', 'track_id');
+    }
+
+    public function aggregatedTags(): HasMany
+    {
+        return $this->hasMany(MusicArtistAggregatedTag::class, 'artist_id');
+    }
+
+    public function userAggregatedTags(): HasMany
+    {
+        return $this->hasMany(MusicUserArtistAggregatedTag::class, 'artist_id');
+    }
+
+    protected function aggregatedTagsTable(): string
+    {
+        return 'music_artist_aggregated_tags';
+    }
+
+    protected function aggregatedTagsForeignKey(): string
+    {
+        return 'artist_id';
+    }
+
+    protected function userAggregatedTagsTable(): string
+    {
+        return 'music_user_artist_aggregated_tags';
     }
 }

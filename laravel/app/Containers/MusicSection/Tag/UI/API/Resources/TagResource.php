@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace App\Containers\MusicSection\Tag\UI\API\Requests;
+namespace App\Containers\MusicSection\Tag\UI\API\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,8 +12,9 @@ class TagResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'content' => $this->content,
-            'is_base' => $this->is_base,
+            'description' => $this->description,
+            'is_active' => $this->is_active,
+            'group_id' => $this->group_id,
             'createdAt' => $this->created_at,
         ];
     }

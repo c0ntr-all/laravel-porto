@@ -6,19 +6,14 @@ use App\Ship\Parents\Requests\AuthenticatedRequest;
 
 class CreateRequest extends AuthenticatedRequest
 {
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [
             'name' => 'required|string|unique:music_tags|max:50',
-            'content' => 'sometimes|string|max:30000',
+            'description' => 'sometimes|nullable|string|max:30000',
             'parent_id' => 'sometimes|nullable|integer|exists:music_tags,id',
-            'is_base' => 'sometimes|boolean',
+            'group_id' => 'sometimes|nullable|integer|exists:music_tag_groups,id',
+            'is_active' => 'sometimes|boolean',
         ];
     }
 }

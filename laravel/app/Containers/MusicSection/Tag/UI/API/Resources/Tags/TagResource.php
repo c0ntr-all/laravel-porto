@@ -12,8 +12,8 @@ class TagResource extends JsonResource
             'id' => $this->id,
             'label' => $this->name,
             'slug' => $this->slug,
-            'content' => $this->content,
-            'common' => $this->common,
+            'description' => $this->description,
+            'is_active' => $this->is_active,
             'created_at' => $this->created_at,
         ];
     }

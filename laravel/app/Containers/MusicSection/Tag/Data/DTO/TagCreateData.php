@@ -8,11 +8,12 @@ class TagCreateData extends Data
 {
     public int $user_id;
     public ?int $parent_id = null;
+    public ?int $group_id = null;
     public string $name;
-    public ?string $content = null;
-    public bool $is_base = true;
+    public ?string $description = null;
+    public bool $is_active = true;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 }

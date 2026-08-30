@@ -23,6 +23,6 @@ class ListAlbumsByNameTask extends Task
      */
     public function run(Artist $artist, string $name): ?Album
     {
-        return $this->albumRepository->listAlbumsByName($artist, $name);
+        return $this->albumRepository->findRootByName($artist, $name);
     }
 }

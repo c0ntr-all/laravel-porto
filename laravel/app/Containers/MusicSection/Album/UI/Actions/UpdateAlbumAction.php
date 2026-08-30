@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Album\UI\Actions;
 
 use App\Containers\MusicSection\Album\Data\DTO\UpdateAlbumDto;
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Tasks\AssertAlbumCanBeGroupedUnderTask;
 use App\Containers\MusicSection\Album\Tasks\SyncArtistsForAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\UpdateAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\UploadAlbumCoverTask;
@@ -20,6 +21,7 @@ class UpdateAlbumAction extends BaseAction
     public function __construct(
         private readonly UpdateAlbumTask $updateAlbumTask,
         private readonly SyncArtistsForAlbumTask $syncArtistsForAlbumTask,
+        private readonly AssertAlbumCanBeGroupedUnderTask $assertAlbumCanBeGroupedUnderTask,
         private readonly SyncTagsTask $syncTagsTask,
         private readonly UploadAlbumCoverTask $uploadAlbumCoverTask
     )
@@ -29,6 +31,14 @@ class UpdateAlbumAction extends BaseAction
     public function handle(Album $album, array $requestData): Album
     {
         return DB::transaction(function () use ($album, $requestData) {
+            $artistIds = $requestData['artist_ids']
+                ?? $album->artists()->pluck('music_artists.id')->map(static fn (mixed $id): int => (int) $id)->all();
+            $parentId = array_key_exists('parent_id', $requestData)
+                ? ($requestData['parent_id'] !== null ? (int) $requestData['parent_id'] : null)
+                : ($album->parent_id !== null ? (int) $album->parent_id : null);
+
+            $this->assertAlbumCanBeGroupedUnderTask->run($parentId, $artistIds, $album);
+
             $dto = UpdateAlbumDto::from($requestData);
 
             if (!empty($requestData['image_file'])) {
@@ -52,7 +62,7 @@ class UpdateAlbumAction extends BaseAction
                 $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags']]));
             }
 
-            return $album->load(['artists', 'tags']);
+            return $album->load(['artists', 'tags', 'versions', 'parent']);
         });
     }
 
@@ -61,7 +71,7 @@ class UpdateAlbumAction extends BaseAction
         $album = $this->handle($album, $request->validated());
 
         return fractal($album, new AlbumTransformer())
-            ->parseIncludes(['artists', 'tags'])
+            ->parseIncludes(['artists', 'tags', 'versions', 'parent'])
             ->withResourceName('albums')
             ->addMeta(['message' => 'Album updated successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

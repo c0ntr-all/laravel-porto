@@ -28,6 +28,6 @@ class AlbumType extends Model
 
     public function albums(): HasMany
     {
-        return $this->hasMany(Album::class, 'album_id', 'id');
+        return $this->hasMany(Album::class, 'album_type_id');
     }
 }

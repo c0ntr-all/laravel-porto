@@ -19,8 +19,10 @@ class BuildLibraryTreeTask extends ParentTask
         'deluxe',
         'expanded',
         'anniversary',
-        'digipack',
-        'digipak',
+        'rerecorded',
+        'remix',
+        'remaster',
+        'bonus',
     ];
 
     /**
@@ -114,7 +116,7 @@ class BuildLibraryTreeTask extends ParentTask
                 continue;
             }
 
-            $track->original_album = trim(str_replace('(' . $attribute . ')', '', $track->album));
+            $track->original_album = trim(preg_replace('/\s+/', ' ', str_replace('(' . $attribute . ')', '', $track->album)) ?? '');
             if ($this->isVersionString($lowerAttr)) {
                 $track->album_version = $attribute;
             }

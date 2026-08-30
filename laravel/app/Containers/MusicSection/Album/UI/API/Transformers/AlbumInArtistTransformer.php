@@ -8,22 +8,26 @@ use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\TransformerAbstract;
 
-/**
- * Transformer for Album in album page
- */
 class AlbumInArtistTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'artists', 'tags'
+        'artists', 'tags', 'versions',
+    ];
+
+    protected array $defaultIncludes = [
+        'versions',
     ];
 
     public function transform(Album $album): array
     {
         return [
             'id' => $album->id,
+            'parent_id' => $album->parent_id,
             'name' => $album->name,
+            'edition' => $album->edition,
             'date' => $album->date?->format('Y-m-d'),
             'image' => $album->full_image,
+            'versions_count' => $album->versions_count ?? $album->versions->count(),
         ];
     }
 
@@ -35,5 +39,11 @@ class AlbumInArtistTransformer extends TransformerAbstract
     public function includeTags(Album $album): Collection
     {
         return $this->collection($album->tags, new TagTransformer(), 'tags');
+    }
+
+    public function includeVersions(Album $album): Collection
+    {
+        return $this->collection($album->versions, new VersionTransformer(), 'versions')
+                    ->setMeta(['count' => $album->versions->count()]);
     }
 }

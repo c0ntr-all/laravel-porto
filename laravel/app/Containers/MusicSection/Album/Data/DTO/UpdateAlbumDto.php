@@ -3,15 +3,16 @@
 namespace App\Containers\MusicSection\Album\Data\DTO;
 
 use App\Ship\Parents\DTO\Data;
+use Spatie\LaravelData\Optional;
 
 class UpdateAlbumDto extends Data
 {
-    public ?int $parent_id = null;
+    public int|Optional|null $parent_id;
     public ?int $album_type_id = null;
     public ?string $name = null;
     public ?string $description = null;
     public mixed $attributes = null;
-    public ?string $edition = null;
+    public string|Optional|null $edition;
     public ?string $date = null;
     public ?bool $is_date_verified = null;
     public ?string $image = null;

@@ -87,7 +87,15 @@ class PersistLibraryTask extends ParentTask
             $total = $this->countTracks($tree);
             $albumIds = [];
 
-            foreach ($tree['albums'] as $albumData) {
+            $albums = $tree['albums'];
+            usort($albums, static function (array $left, array $right): int {
+                $leftRoot = empty($left['original_album']) ? 0 : 1;
+                $rightRoot = empty($right['original_album']) ? 0 : 1;
+
+                return $leftRoot <=> $rightRoot;
+            });
+
+            foreach ($albums as $albumData) {
                 $albumArtists = $this->resolveAlbumArtists(
                     $albumData,
                     $userId,
@@ -275,6 +283,7 @@ class PersistLibraryTask extends ParentTask
                 'path' => $payload['path'],
                 'album_type_id' => $payload['album_type_id'],
                 'parent_id' => $payload['parent_id'],
+                'edition' => $payload['edition'],
                 'is_date_verified' => false,
             ]));
 

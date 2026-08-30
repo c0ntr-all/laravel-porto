@@ -7,25 +7,29 @@ use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistInAlbumTransfor
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\MusicSection\Track\UI\API\Transformers\TrackTransformer;
 use League\Fractal\Resource\Collection;
+use League\Fractal\Resource\Item;
+use League\Fractal\Resource\NullResource;
 use League\Fractal\TransformerAbstract;
 
-/**
- * Transformer for Album in album page
- */
 class AlbumTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'artists', 'tracks', 'tags', 'versions'
+        'artists', 'tracks', 'tags', 'versions', 'parent',
     ];
 
     public function transform(Album $album): array
     {
         return [
             'id' => $album->id,
+            'parent_id' => $album->parent_id,
+            'album_type_id' => $album->album_type_id,
             'name' => $album->name,
+            'edition' => $album->edition,
             'date' => $album->date?->format('Y-m-d'),
             'description' => $album->description,
             'image' => $album->full_image,
+            'is_version' => $album->parent_id !== null,
+            'versions_count' => $album->versions_count ?? $album->versions->count(),
             'created_at' => $album->created_at->format('Y-m-d H:i:s'),
         ];
     }
@@ -49,5 +53,14 @@ class AlbumTransformer extends TransformerAbstract
     {
         return $this->collection($album->versions, new VersionTransformer(), 'versions')
                     ->setMeta(['count' => $album->versions->count()]);
+    }
+
+    public function includeParent(Album $album): Item|NullResource
+    {
+        if (!$album->parent) {
+            return $this->null();
+        }
+
+        return $this->item($album->parent, new VersionTransformer(), 'albums');
     }
 }

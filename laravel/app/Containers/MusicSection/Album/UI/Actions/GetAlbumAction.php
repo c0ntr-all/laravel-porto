@@ -13,7 +13,7 @@ class GetAlbumAction extends BaseAction
 
     public function handle(Album $album): Album
     {
-        return $album->load(['tracks.artists', 'tracks.rate', 'tags', 'versions']);
+        return $album->load(['tracks.artists', 'tracks.rate', 'tags', 'versions', 'parent', 'artists']);
     }
 
     public function asController(Album $album, GetRequest $request): JsonResponse
@@ -22,7 +22,7 @@ class GetAlbumAction extends BaseAction
 
         return fractal($album, new AlbumTransformer())
             ->withResourceName('albums')
-            ->parseIncludes(['artists', 'tracks', 'tags', 'versions'])
+            ->parseIncludes(['artists', 'tracks', 'tags', 'versions', 'parent'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

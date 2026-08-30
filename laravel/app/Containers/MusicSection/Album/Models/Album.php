@@ -9,6 +9,7 @@ use App\Containers\MusicSection\Tag\Models\Traits\HasAggregatedMusicTags;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -82,19 +83,40 @@ class Album extends Model
         'attributes' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Album $album): void {
+            if (method_exists($album, 'isForceDeleting') && $album->isForceDeleting()) {
+                return;
+            }
+
+            $album->versions()->update(['parent_id' => null]);
+        });
+    }
+
     public function artists(): BelongsToMany
     {
         return $this->belongsToMany(Artist::class, 'music_album_artist', 'album_id', 'artist_id');
     }
 
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(__CLASS__, 'parent_id');
+    }
+
     /**
-     * Only one nesting level can be.
-     *
-     * @return HasMany
+     * Direct versions of this album. Nesting is limited to one level.
      */
     public function versions(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'parent_id', 'id');
+        return $this->hasMany(__CLASS__, 'parent_id', 'id')
+                    ->orderBy('date')
+                    ->orderBy('name');
+    }
+
+    public function albumType(): BelongsTo
+    {
+        return $this->belongsTo(AlbumType::class, 'album_type_id');
     }
 
     public function tracks(): HasMany

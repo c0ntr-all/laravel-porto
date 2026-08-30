@@ -9,6 +9,7 @@ use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
+use Spatie\LaravelData\Optional;
 use Spatie\QueryBuilder\AllowedFilter;
 
 class AlbumRepository
@@ -20,24 +21,25 @@ class AlbumRepository
      */
     public function getWithCursor(): CursorPaginator
     {
-        return QueryBuilder::for(Album::class)
+        $query = QueryBuilder::for(Album::class)
                            ->allowedFilters([
                                AllowedFilter::partial('name'),
                                AllowedFilter::exact('album_type_id'),
                                AllowedFilter::exact('parent_id'),
                            ])
                            ->allowedSorts(['name', 'created_at', 'date'])
-                           ->allowedIncludes(['tags', 'artists'])
-                           ->with(['tags', 'artists'])
-                           ->orderByDesc('created_at')
-                           ->cursorPaginate(100);
+                           ->allowedIncludes(['tags', 'artists', 'versions', 'parent'])
+                           ->with(['tags', 'artists']);
+
+        if (!request()->has('filter.parent_id')) {
+            $query->whereNull('parent_id')->with('versions');
+        }
+
+        return $query->orderByDesc('created_at')->cursorPaginate(100);
     }
 
     /**
-     * Get list of core albums (without versions) for Artist
-     *
-     * @param Artist $artist
-     * @return Collection
+     * Root albums for an artist, with nested versions.
      */
     public function listAlbumsWithoutVersions(Artist $artist): Collection
     {
@@ -47,22 +49,17 @@ class AlbumRepository
                                AllowedFilter::exact('album_type_id'),
                            ])
                            ->allowedSorts(['name', 'date', 'created_at'])
+                           ->with(['versions', 'artists', 'tags'])
                            ->whereNull('parent_id')
                            ->get();
     }
 
-    /**
-     * Get list of albums by name for Artist
-     *
-     * @param Artist $artist
-     * @param string $name
-     * @return Album|null
-     */
-    public function listAlbumsByName(Artist $artist, string $name): ?Album
+    public function findRootByName(Artist $artist, string $name): ?Album
     {
-        return QueryBuilder::for($artist->albums())
-                           ->where('name', 'like', '%' . $name . '%')
-                           ->first();
+        return $artist->albums()
+            ->whereNull('parent_id')
+            ->where('name', $name)
+            ->first();
     }
 
     public function findByPath(string $path): ?Album
@@ -78,6 +75,7 @@ class AlbumRepository
             'name' => $dto->name,
             'description' => $dto->description,
             'attributes' => $dto->attributes,
+            'edition' => $dto->edition,
             'date' => $dto->date,
             'is_date_verified' => $dto->is_date_verified,
             'image' => $dto->image,
@@ -87,7 +85,23 @@ class AlbumRepository
 
     public function update(Album $album, UpdateAlbumDto $dto): Album
     {
-        $album->update(collect($dto->toArray())->filter(fn (mixed $value) => $value !== null)->all());
+        $attributes = [];
+
+        foreach ($dto->toArray() as $key => $value) {
+            if ($value instanceof Optional) {
+                continue;
+            }
+
+            if ($value === null && !in_array($key, ['parent_id', 'edition'], true)) {
+                continue;
+            }
+
+            $attributes[$key] = $value;
+        }
+
+        if ($attributes !== []) {
+            $album->update($attributes);
+        }
 
         return $album;
     }
@@ -111,6 +125,7 @@ class AlbumRepository
             'parent_id' => $dto->parent_id,
             'album_type_id' => $dto->album_type_id,
             'attributes' => $dto->attributes,
+            'edition' => $dto->edition,
             'description' => $dto->description,
             'is_date_verified' => $dto->is_date_verified,
             'image' => $dto->image,

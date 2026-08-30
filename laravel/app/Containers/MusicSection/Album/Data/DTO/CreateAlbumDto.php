@@ -14,6 +14,7 @@ class CreateAlbumDto extends Data
     public ?string $attributes = null;
     public string $name;
     public ?string $description = null;
+    public ?string $edition = null;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
     public ?string $date = null;
     public bool $is_date_verified = false;

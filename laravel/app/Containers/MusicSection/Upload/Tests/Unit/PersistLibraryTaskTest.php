@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Upload\Tests\Unit;
 
 use App\Containers\AppSection\User\Models\User;
+use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Upload\Data\DTO\ParsedTrackDto;
 use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
 use App\Containers\MusicSection\Upload\Enums\UploadTrackStatusEnum;
@@ -182,6 +183,71 @@ class PersistLibraryTaskTest extends TestCase
         $this->assertEquals(['In Tongues We Speak'], $upload->albums()->pluck('name')->all());
         $this->assertDatabaseCount('music_upload_artist', 2);
         $this->assertDatabaseCount('music_upload_album', 1);
+    }
+
+    public function test_it_links_a_remaster_as_a_version_of_the_original_album(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $upload = $this->makeSession($user);
+        $tree = [
+            'name' => 'Metallica',
+            'path' => 'F:\\Music\\Metallica',
+            'albums' => [
+                [
+                    'name' => 'Master Of Puppets (Remastered)',
+                    'date' => '2017-01-01',
+                    'path' => 'F:\\Music\\Metallica\\Master Of Puppets Remastered',
+                    'album_type_id' => 1,
+                    'original_album' => 'Master Of Puppets',
+                    'attributes' => 'Remastered',
+                    'image' => null,
+                    'artists' => ['Metallica'],
+                    'tracks' => [
+                        $this->makeTrackDto(
+                            title: 'Battery',
+                            album: 'Master Of Puppets (Remastered)',
+                            artist: 'Metallica',
+                            windowsPath: 'F:\\Music\\Metallica\\Master Of Puppets Remastered\\01. Battery.mp3',
+                            albumPath: 'F:\\Music\\Metallica\\Master Of Puppets Remastered',
+                            number: 1,
+                        ),
+                    ],
+                ],
+                [
+                    'name' => 'Master Of Puppets',
+                    'date' => '1986-03-03',
+                    'path' => 'F:\\Music\\Metallica\\Master Of Puppets',
+                    'album_type_id' => 1,
+                    'original_album' => null,
+                    'attributes' => null,
+                    'image' => null,
+                    'artists' => ['Metallica'],
+                    'tracks' => [
+                        $this->makeTrackDto(
+                            title: 'Battery',
+                            album: 'Master Of Puppets',
+                            artist: 'Metallica',
+                            windowsPath: 'F:\\Music\\Metallica\\Master Of Puppets\\01. Battery.mp3',
+                            albumPath: 'F:\\Music\\Metallica\\Master Of Puppets',
+                            number: 1,
+                        ),
+                    ],
+                ],
+            ],
+        ];
+
+        app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+
+        $original = Album::query()->where('name', 'Master Of Puppets')->whereNull('parent_id')->first();
+        $remaster = Album::query()->where('name', 'Master Of Puppets (Remastered)')->first();
+
+        $this->assertNotNull($original);
+        $this->assertNotNull($remaster);
+        $this->assertSame($original->id, $remaster->parent_id);
+        $this->assertSame('Remastered', $remaster->edition);
+        $this->assertCount(1, $original->versions);
     }
 
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload

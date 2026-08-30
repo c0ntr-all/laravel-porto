@@ -16,8 +16,8 @@ class AlbumResource extends JsonResource
             'id' => $this->id,
             'parent_id' => $this->parent_id,
             'name' => $this->name,
-            'date' => $this->date->format('Y-m-d'),
-            'content' => $this->content,
+            'date' => $this->date?->format('Y-m-d'),
+            'edition' => $this->edition,
             'image' => $this->full_image,
             'createdAt' => $this->created_at,
             //todo: Сделать массив исполнителей, когда сплит или фит или еще чего

@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Album\UI\Actions;
 
 use App\Containers\MusicSection\Album\Data\DTO\CreateAlbumDto;
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Tasks\AssertAlbumCanBeGroupedUnderTask;
 use App\Containers\MusicSection\Album\Tasks\CreateAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\SyncArtistsForAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\UploadAlbumCoverTask;
@@ -21,6 +22,7 @@ class CreateAlbumAction extends BaseAction
     public function __construct(
         private readonly CreateAlbumTask $createAlbumTask,
         private readonly SyncArtistsForAlbumTask $syncArtistsForAlbumTask,
+        private readonly AssertAlbumCanBeGroupedUnderTask $assertAlbumCanBeGroupedUnderTask,
         private readonly SyncTagsTask $syncTagsTask,
         private readonly UploadAlbumCoverTask $uploadAlbumCoverTask
     )
@@ -30,12 +32,18 @@ class CreateAlbumAction extends BaseAction
     public function handle(array $requestData): Album
     {
         return DB::transaction(function () use ($requestData) {
+            $this->assertAlbumCanBeGroupedUnderTask->run(
+                isset($requestData['parent_id']) ? (int) $requestData['parent_id'] : null,
+                $requestData['artist_ids'],
+            );
+
             $dto = CreateAlbumDto::from([
                 'user_id' => auth()->id(),
                 'name' => $requestData['name'],
                 'description' => $requestData['description'] ?? null,
                 'parent_id' => $requestData['parent_id'] ?? null,
                 'album_type_id' => $requestData['album_type_id'] ?? 1,
+                'edition' => $requestData['edition'] ?? null,
                 'date' => $requestData['date'] ?? null,
                 'is_date_verified' => $requestData['is_date_verified'] ?? false,
                 'path' => $requestData['path'] ?? (Str::slug($requestData['name']) ?: 'album-'.uniqid()),
@@ -57,7 +65,7 @@ class CreateAlbumAction extends BaseAction
                 $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags']]));
             }
 
-            return $album->load(['artists', 'tags']);
+            return $album->load(['artists', 'tags', 'versions', 'parent']);
         });
     }
 
@@ -66,7 +74,7 @@ class CreateAlbumAction extends BaseAction
         $album = $this->handle($request->validated());
 
         return fractal($album, new AlbumTransformer())
-            ->parseIncludes(['artists', 'tags'])
+            ->parseIncludes(['artists', 'tags', 'versions', 'parent'])
             ->withResourceName('albums')
             ->addMeta(['message' => 'Album created successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

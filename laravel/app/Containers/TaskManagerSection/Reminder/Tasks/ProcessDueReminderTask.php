@@ -12,7 +12,7 @@ class ProcessDueReminderTask extends ParentTask
 {
     public function __construct(
         private readonly SendReminderNotificationTask $sendReminderNotificationTask,
-        private readonly AdvanceReminderAfterNotifyTask $advanceReminderAfterNotifyTask,
+        private readonly MarkReminderAsNotifiedTask $markReminderAsNotifiedTask,
         private readonly ReminderRepository $reminderRepository
     ) {
     }
@@ -49,8 +49,9 @@ class ProcessDueReminderTask extends ParentTask
 
         try {
             $this->sendReminderNotificationTask->run($claimed);
+            $result = $this->markReminderAsNotifiedTask->run($claimed);
 
-            return $this->advanceReminderAfterNotifyTask->run($claimed);
+            return $result['reminder'];
         } catch (Throwable $exception) {
             $claimed->next_remind_at = now();
             $this->reminderRepository->save($claimed);

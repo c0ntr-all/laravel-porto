@@ -8,6 +8,7 @@ use App\Containers\TaskManagerSection\Task\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $next_remind_at
  * @property \Illuminate\Support\Carbon|null $last_reminded_at
+ * @property \Illuminate\Support\Carbon|null $last_completed_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @mixin \Eloquent
@@ -42,12 +44,14 @@ class Reminder extends Model
         'is_active',
         'next_remind_at',
         'last_reminded_at',
+        'last_completed_at',
     ];
 
     protected $casts = [
         'datetime' => 'datetime',
         'next_remind_at' => 'datetime',
         'last_reminded_at' => 'datetime',
+        'last_completed_at' => 'datetime',
         'is_active' => 'bool',
         'interval_value' => 'integer',
         'to_remind_before_value' => 'integer',
@@ -58,6 +62,11 @@ class Reminder extends Model
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
+    }
+
+    public function occurrences(): HasMany
+    {
+        return $this->hasMany(ReminderOccurrence::class)->orderByDesc('scheduled_at');
     }
 
     public function scopeDue(Builder $query, ?\DateTimeInterface $at = null): Builder
@@ -73,5 +82,21 @@ class Reminder extends Model
         return $this->interval_value !== null
             && $this->interval_value >= 1
             && $this->interval_unit !== null;
+    }
+
+    /**
+     * Recurring reminder was notified and waits for user "done" before advancing.
+     */
+    public function isAwaitingCompletion(): bool
+    {
+        return $this->is_active
+            && $this->hasRecurrence()
+            && $this->datetime !== null
+            && $this->next_remind_at === null;
+    }
+
+    public function canBeCompleted(): bool
+    {
+        return $this->is_active && $this->datetime !== null;
     }
 }

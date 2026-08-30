@@ -4,6 +4,7 @@ namespace App\Containers\TaskManagerSection\Reminder\UI\API\Transformers;
 
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
+use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
@@ -11,6 +12,7 @@ class ReminderTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
         'task',
+        'occurrences',
     ];
 
     public function transform(Reminder $reminder): array
@@ -20,6 +22,8 @@ class ReminderTransformer extends TransformerAbstract
             'task_id' => (string) $reminder->task_id,
             'user_id' => (string) $reminder->user_id,
             'is_active' => (bool) $reminder->is_active,
+            'awaiting_completion' => $reminder->isAwaitingCompletion(),
+            'can_complete' => $reminder->canBeCompleted(),
             'datetime' => $reminder->datetime?->format('Y-m-d H:i:s'),
             'interval' => $reminder->interval_value && $reminder->interval_unit
                 ? [
@@ -35,6 +39,7 @@ class ReminderTransformer extends TransformerAbstract
                 : null,
             'next_remind_at' => $reminder->next_remind_at?->format('Y-m-d H:i:s'),
             'last_reminded_at' => $reminder->last_reminded_at?->format('Y-m-d H:i:s'),
+            'last_completed_at' => $reminder->last_completed_at?->format('Y-m-d H:i:s'),
             'created_at' => $reminder->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $reminder->updated_at?->format('Y-m-d H:i:s'),
         ];
@@ -47,5 +52,15 @@ class ReminderTransformer extends TransformerAbstract
         }
 
         return $this->item($reminder->task, new TaskTransformer(), 'tasks');
+    }
+
+    public function includeOccurrences(Reminder $reminder): Collection
+    {
+        $occurrences = $reminder->relationLoaded('occurrences')
+            ? $reminder->occurrences
+            : $reminder->occurrences()->limit(50)->get();
+
+        return $this->collection($occurrences, new ReminderOccurrenceTransformer(), 'reminder-occurrences')
+                    ->setMeta(['count' => $occurrences->count()]);
     }
 }

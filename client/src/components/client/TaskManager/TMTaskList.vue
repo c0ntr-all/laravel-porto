@@ -1,7 +1,36 @@
 <template>
   <q-card class="list bg-grey-4">
     <q-card-section class="list__header">
-      <p>{{ list.title }}</p>
+      <q-input
+        v-if="isEditingTitle"
+        v-model="titleDraft"
+        class="list__header-input"
+        maxlength="30"
+        dense
+        borderless
+        autofocus
+        @keyup.enter.prevent="saveTitle"
+        @keyup.esc="cancelEditTitle"
+        @blur="saveTitle"
+      />
+      <p
+        v-else
+        class="list__title"
+        @click="startEditTitle"
+      >
+        {{ list.title }}
+      </p>
+      <q-btn
+        class="list__delete"
+        icon="delete_outline"
+        size="sm"
+        flat
+        round
+        dense
+        @click="confirmDelete"
+      >
+        <q-tooltip>Удалить список</q-tooltip>
+      </q-btn>
     </q-card-section>
     <q-separator dark/>
     <q-card-section class="list__body">
@@ -61,6 +90,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, nextTick } from 'vue'
+import { Dialog } from 'quasar'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { handleApiError } from 'src/utils/jsonapi'
 import { ITask, ITaskList } from 'src/types/TaskManager/task'
@@ -74,6 +104,8 @@ const props = defineProps<{
 }>()
 
 const showAddForm = ref<boolean>(false)
+const isEditingTitle = ref(false)
+const titleDraft = ref(props.list.title)
 const taskAddTextarea = ref<HTMLElement | null>(null)
 const model = ref<{ taskTitle: string, taskContent: string }>({
   taskTitle: '',
@@ -106,6 +138,42 @@ const closeAddForm = () => {
   showAddForm.value = false
 }
 
+const startEditTitle = () => {
+  titleDraft.value = props.list.title
+  isEditingTitle.value = true
+}
+
+const cancelEditTitle = () => {
+  titleDraft.value = props.list.title
+  isEditingTitle.value = false
+}
+
+const saveTitle = async () => {
+  if (!isEditingTitle.value) return
+
+  const nextTitle = titleDraft.value.trim()
+  isEditingTitle.value = false
+
+  if (!nextTitle || nextTitle === props.list.title) {
+    titleDraft.value = props.list.title
+    return
+  }
+
+  await taskStore.updateTaskList(props.list.id, { title: nextTitle })
+}
+
+const confirmDelete = () => {
+  Dialog.create({
+    title: 'Удалить список?',
+    message: `Список «${props.list.title}» и все задачи в нём будут удалены.`,
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Удалить', color: 'negative' },
+    persistent: true
+  }).onOk(() => {
+    taskStore.deleteTaskList(props.list.id)
+  })
+}
+
 const clearModel = () => {
   model.value.taskTitle = ''
 }
@@ -134,41 +202,43 @@ const createTask = async (): Promise<void> => {
   box-sizing: border-box;
 
   &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
     padding: 8px;
+  }
 
-    p {
-      margin: 0;
+  &__title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #091e4214;
     }
+  }
 
-    &-name {
-      background: #0000;
+  &__header-input {
+    flex: 1;
+    min-width: 0;
+
+    :deep(.q-field__control) {
+      padding: 0 6px;
+      background: #fff;
       border-radius: 3px;
-      box-shadow: none;
-      font-weight: 600;
-      height: 28px;
-      margin: -4px 0;
-      max-height: 256px;
-      min-height: 20px;
-      padding: 4px 8px;
-      border: none;
-      resize: none;
-      overflow: hidden;
-      overflow-wrap: break-word;
-
-      &.is-active {
-        background-color: #fff;
-        box-shadow: inset 0 0 0 2px #0079bf;
-      }
+      box-shadow: inset 0 0 0 2px #0079bf;
     }
+  }
 
-    &--cover {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      top: 0;
-      cursor: pointer;
-    }
+  &__delete {
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 
   &__body {

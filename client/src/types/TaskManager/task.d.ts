@@ -245,3 +245,8 @@ export interface ITaskListsGetResponse extends ITaskListResponse {
 export interface ITaskListGetResponse extends ITaskListResponse {}
 export interface ITaskListCreateResponse extends ITaskListResponse {}
 export interface ITaskListUpdateResponse extends ITaskListResponse {}
+export interface ITaskListDeleteResponse {
+  meta?: {
+    message?: string
+  }
+}

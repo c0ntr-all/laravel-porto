@@ -8,7 +8,8 @@ import {
   ITaskCreateResponse,
   ITaskUpdateResponse,
   ITaskDeleteResponse,
-  ITaskListCreateResponse, IChecklistCreatePayload, IChecklistCreateResponse, IChecklistUpdatePayload,
+  ITaskListCreateResponse, ITaskListUpdatePayload, ITaskListUpdateResponse, ITaskListDeleteResponse,
+  IChecklistCreatePayload, IChecklistCreateResponse, IChecklistUpdatePayload,
   IChecklistUpdateResponse, IChecklistItemCreatePayload, IChecklistItemCreateResponse, IChecklistItemUpdatePayload,
   IChecklistItemUpdateResponse, IChecklistItemDeleteResponse, IProgressCreatePayload, IProgressCreateResponse,
   IReminderCreatePayload, IReminderCreateResponse, IReminderUpdatePayload, IReminderUpdateResponse,
@@ -18,12 +19,25 @@ import {
 
 export const taskApi = {
   async getTaskLists(): Promise<ITaskListsGetResponse> {
-    const response = await api.get('v1/task-manager/task-lists')
+    const response = await api.get('v1/task-manager/task-lists?include=tasks')
 
     return response.data
   },
   async createTaskList(payload: ITaskListCreatePayload): Promise<ITaskListCreateResponse> {
     const response = await api.post('v1/task-manager/task-lists', payload)
+
+    return response.data
+  },
+  async updateTaskList(
+    id: string,
+    payload: ITaskListUpdatePayload
+  ): Promise<ITaskListUpdateResponse> {
+    const response = await api.patch(`v1/task-manager/task-lists/${id}`, payload)
+
+    return response.data
+  },
+  async deleteTaskList(id: string): Promise<ITaskListDeleteResponse | void> {
+    const response = await api.delete(`v1/task-manager/task-lists/${id}`)
 
     return response.data
   },

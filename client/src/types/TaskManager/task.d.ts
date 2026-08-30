@@ -134,6 +134,7 @@ export interface ITaskFields {
   reminders_count: number
   checklists_count: number
   progresses_count: number
+  created_at: string
 }
 export interface ITask extends ITaskFields {
   id: string

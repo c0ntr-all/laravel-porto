@@ -12,8 +12,13 @@ use Spatie\QueryBuilder\AllowedFilter;
 
 class ArtistRepository
 {
-    public function getWithCursor(): CursorPaginator
+    public const DEFAULT_PER_PAGE = 12;
+    public const MAX_PER_PAGE = 100;
+
+    public function getWithCursor(?int $perPage = null): CursorPaginator
     {
+        $perPage = $this->normalizePerPage($perPage);
+
         return QueryBuilder::for(Artist::class)
                            ->allowedFilters([
                                AllowedFilter::partial('name'),
@@ -22,8 +27,10 @@ class ArtistRepository
                            ->allowedSorts(['name', 'created_at'])
                            ->allowedIncludes(['tags'])
                            ->with(['tags'])
-                           ->orderByDesc('created_at')
-                           ->cursorPaginate(12);
+                           ->defaultSort('-created_at')
+                           ->orderByDesc('id')
+                           ->cursorPaginate($perPage)
+                           ->withQueryString();
     }
 
     public function getWithPaginate(): LengthAwarePaginator
@@ -104,5 +111,14 @@ class ArtistRepository
             ->except($except)
             ->filter(fn (mixed $value) => $value !== null)
             ->all();
+    }
+
+    private function normalizePerPage(?int $perPage): int
+    {
+        if ($perPage === null || $perPage < 1) {
+            return self::DEFAULT_PER_PAGE;
+        }
+
+        return min($perPage, self::MAX_PER_PAGE);
     }
 }

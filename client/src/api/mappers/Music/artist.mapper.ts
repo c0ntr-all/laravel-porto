@@ -34,3 +34,7 @@ export function mapArtistResponse(response: IJsonApiResponse): IArtist {
 
   return normalizeArtist(raw)
 }
+
+export function mapArtistsResponse(response: IJsonApiResponse): IArtist[] {
+  return mapResponse(response).map(normalizeArtist)
+}

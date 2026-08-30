@@ -5,8 +5,8 @@
         <q-card-section>
           <div class="flex justify-between items-end">
             <MusicTabArtistsFilter
-              @submitFilter="getArtists"
-              @resetFilter="getArtists"
+              @submitFilter="reloadArtists"
+              @resetFilter="reloadArtists"
             />
           </div>
         </q-card-section>
@@ -20,16 +20,25 @@
       />
       <q-card flat>
         <q-card-section>
-          <MusicArtistsListSkeleton v-if="loading"/>
-          <template v-else>
+          <MusicArtistsListSkeleton v-if="catalog.isArtistsLoading"/>
+          <template v-else-if="catalog.artists.length">
             <MusicArtistsList
-              v-if="artists.length"
-              :pagination="pagination"
-              :artists="artists"
+              :artists="catalog.artists"
               :card-mode="cardMode"
             />
-            <AppNoResultsPlug v-else/>
+            <div
+              v-if="catalog.hasMoreArtists"
+              ref="sentinel"
+              class="artists-list-sentinel"
+            />
+            <div
+              v-if="catalog.isArtistsLoadingMore"
+              class="flex justify-center q-my-md"
+            >
+              <q-spinner color="primary" size="2em"/>
+            </div>
           </template>
+          <AppNoResultsPlug v-else/>
         </q-card-section>
       </q-card>
     </div>
@@ -37,116 +46,83 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-import { AxiosError } from 'axios'
-import { api } from 'src/boot/axios'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useMusicCatalogStore } from 'src/stores/modules/musicCatalogStore'
 import MusicArtistsList from 'src/components/client/Music/MusicArtistsList.vue'
 import MusicArtistsListSkeleton from 'src/components/client/Music/MusicArtistsListSkeleton.vue'
 import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFilter.vue'
 import MusicTabArtistsSearch from 'src/components/client/Music/MusicTabArtistsSearch.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
-import { IArtist, ITagShort } from 'src/components/client/Music/types'
 
-interface IResponseArtist {
-  type: string
-  id: string
-  attributes: {
-    name: string
-    content: string
-    image: string
-    created_at: string
-  }
-  relationships: any
-}
-
-interface IGetArtistsResponse {
-  data: IResponseArtist[],
-  included: any
-  meta: {
-    message?: string
-  }
-}
-
-interface Pagination {
-  perPage: number
-  hasPages: boolean
-  nextPageUrl: string
-  prevPageUrl: string
-}
-
-const artists = ref<IArtist[]>([])
-const pagination = ref<Pagination>({
-  perPage: 0,
-  hasPages: false,
-  nextPageUrl: '',
-  prevPageUrl: ''
-})
-const loading = ref(true)
+const catalog = useMusicCatalogStore()
 const cardMode = ref<'card' | 'row'>('row')
+const sentinel = ref<HTMLElement | null>(null)
 
-const getArtists = async(filters?: Record<string, any>): Promise<void> => {
-  loading.value = true
-  filters = filters || {}
+let observer: IntersectionObserver | null = null
 
-  await api.get<IGetArtistsResponse>('v1/music/artists', filters).then(response => {
-    artists.value = (response.data.data as IResponseArtist[]).map((responseArtist: IResponseArtist) => {
-      return {
-        id: responseArtist.id,
-        name: responseArtist.attributes.name,
-        content: responseArtist.attributes.content,
-        image: responseArtist.attributes.image,
-        relationships: {
-          tags: getIncluded<ITagShort>('tags', responseArtist.relationships, response.data.included) as { data: ITagShort[] }
-        }
-      }
-    })
-    // pagination.value = response.data.data.pagination
-  }).catch((error: AxiosError<{ message: string }>) => {
-    handleApiError(error)
-  }).finally(() => {
-    loading.value = false
-  })
-}
-
-const loadMoreArtists = async (): Promise<void> => {
-  if (pagination.value.hasPages) {
-    loading.value = true
-    const obUrl = new URL(pagination.value.nextPageUrl)
-    const cursor = obUrl.searchParams.get('cursor')
-
-    await api.post('music/artists', { cursor }).then(response => {
-      pagination.value = response.data.data.pagination
-      artists.value.push(...response.data.data.items)
-    }).catch((error: AxiosError<{ message: string }>) => {
-      handleApiError(error)
-    }).finally(() => {
-      loading.value = false
-    })
-  }
+const reloadArtists = () => {
+  return catalog.getArtists()
 }
 
 const search = (searchText: string) => {
-  getArtists({ filters: { search: searchText } })
+  return catalog.getArtists({ name: searchText })
 }
 
 const resetSearch = () => {
-  getArtists()
+  return catalog.getArtists({ name: '' })
 }
 
 const switchCardMode = (mode: 'card' | 'row') => {
   cardMode.value = mode
 }
 
-onMounted(() => {
-  window.onscroll = () => {
-    const bottomWindow = document.documentElement.scrollTop + window.innerHeight === document.documentElement.offsetHeight
+const disconnectObserver = () => {
+  observer?.disconnect()
+  observer = null
+}
 
-    if (bottomWindow) {
-      loadMoreArtists()
-    }
+const observeSentinel = () => {
+  disconnectObserver()
+
+  if (!sentinel.value) {
+    return
   }
 
-  getArtists()
+  observer = new IntersectionObserver((entries) => {
+    if (!entries.some(entry => entry.isIntersecting)) {
+      return
+    }
+
+    if (!catalog.hasMoreArtists || catalog.isArtistsLoading || catalog.isArtistsLoadingMore) {
+      return
+    }
+
+    void catalog.getArtists({ append: true })
+  }, {
+    root: null,
+    rootMargin: '320px 0px',
+    threshold: 0
+  })
+
+  observer.observe(sentinel.value)
+}
+
+watch(sentinel, () => {
+  observeSentinel()
+}, { flush: 'post' })
+
+onMounted(() => {
+  void catalog.getArtists()
+})
+
+onUnmounted(() => {
+  disconnectObserver()
 })
 </script>
+
+<style lang="scss" scoped>
+.artists-list-sentinel {
+  width: 100%;
+  height: 1px;
+}
+</style>

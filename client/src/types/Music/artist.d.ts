@@ -13,3 +13,8 @@ export interface IArtist {
   created_at?: string
   tags: IMusicTag[]
 }
+
+export interface IArtistListQuery {
+  name?: string
+  cursor?: string | null
+}

@@ -24,9 +24,21 @@ export interface IJsonApiResponse<T = IJsonApiResource> {
   data: T | T[];
   included?: IJsonApiResource[];
   meta?: {
-    count?: number,
+    count?: number
     message?: string
     correlation_uuid?: string
+    per_page?: number
+    has_more?: boolean
+    next_cursor?: string | null
+    prev_cursor?: string | null
+    next_page_url?: string | null
+    prev_page_url?: string | null
+    cursor?: {
+      current?: string | null
+      prev?: string | null
+      next?: string | null
+      count?: number
+    }
   }
   links?: {
     first?: string | null

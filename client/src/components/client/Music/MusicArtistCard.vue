@@ -2,12 +2,14 @@
   <q-card class="artist-card">
     <q-img :src="artist.image" :alt="artist.name + ' image'">
       <div class="absolute-bottom text-h6">
-        <router-link :to="`/music/artists/${artist.id}/albums`" class="artist-card__link">{{ artist.name }}</router-link>
+        <router-link :to="`/music/artists/${artist.id}/albums`" class="artist-card__link">
+          {{ artist.name }}
+        </router-link>
       </div>
     </q-img>
     <q-card-section class="q-pa-sm">
       <q-chip
-        v-for="tag in artist.relationships.tags.data"
+        v-for="tag in artist.tags"
         :key="tag.id"
         size="sm"
         color="primary"
@@ -21,13 +23,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { IArtist } from 'src/components/client/Music/types'
+import { IArtist } from 'src/types'
 
-const props = defineProps<{
+defineProps<{
   artist: IArtist
 }>()
-const artist = ref(props.artist)
 </script>
 
 <style lang="scss" scoped>

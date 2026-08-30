@@ -1,7 +1,7 @@
 import { Notify } from 'quasar'
 import { AxiosError } from 'axios'
 import { StoreEntity } from 'src/types/store'
-import { IJsonApiResource } from 'src/types'
+import { IJsonApiResource, IJsonApiResponse } from 'src/types'
 import { updateObject } from 'src/utils/helpers'
 
 interface IIncluded {
@@ -281,6 +281,21 @@ export function extractCursorFromLink(link?: string | { href?: string } | null):
   } catch {
     return null
   }
+}
+
+export function extractCursorFromResponse(response: IJsonApiResponse): string | null {
+  return response.meta?.next_cursor
+    ?? response.meta?.cursor?.next
+    ?? extractCursorFromLink(response.links?.next)
+    ?? extractCursorFromLink(response.meta?.next_page_url)
+}
+
+export function hasMoreFromResponse(response: IJsonApiResponse): boolean {
+  if (typeof response.meta?.has_more === 'boolean') {
+    return response.meta.has_more
+  }
+
+  return Boolean(extractCursorFromResponse(response))
 }
 
 // NEW

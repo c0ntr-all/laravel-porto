@@ -13,9 +13,11 @@ class ReminderCreateData extends Data
     public int $task_id;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i')]
     public Carbon $datetime;
-    public string $to_remind_before;
-    public string $interval;
-    public bool $is_active = false;
+    public ?int $interval_value = null;
+    public ?string $interval_unit = null;
+    public ?int $to_remind_before_value = null;
+    public ?string $to_remind_before_unit = null;
+    public bool $is_active = true;
 
     public function __construct(
     ) {

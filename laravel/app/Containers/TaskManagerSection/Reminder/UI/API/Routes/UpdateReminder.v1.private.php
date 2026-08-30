@@ -3,5 +3,5 @@
 use App\Containers\TaskManagerSection\Reminder\UI\Actions\UpdateReminderAction;
 use Illuminate\Support\Facades\Route;
 
-Route::patch('task-manager/tasks/{task}/reminder/{reminder}', UpdateReminderAction::class)
+Route::patch('task-manager/tasks/{task}/reminder', UpdateReminderAction::class)
      ->middleware(['auth:api']);

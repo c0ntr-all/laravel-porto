@@ -66,6 +66,6 @@ class TaskTransformer extends TransformerAbstract
             return null;
         }
 
-        return $this->item($task->reminder, new ReminderTransformer(), 'reminder');
+        return $this->item($task->reminder, new ReminderTransformer(), 'reminders');
     }
 }

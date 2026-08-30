@@ -24,7 +24,8 @@ class ShipServiceProvider extends ServiceProvider
         LocalizationServiceProvider::class,
         AuthServiceProvider::class,
         JwtServiceProvider::class,
-        TelescopeServiceProvider::class
+        TelescopeServiceProvider::class,
+        \App\Containers\AppSection\Notification\Providers\NotificationServiceProvider::class,
     ];
 
     /**

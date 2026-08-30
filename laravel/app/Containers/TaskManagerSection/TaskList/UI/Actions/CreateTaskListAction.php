@@ -5,18 +5,16 @@ namespace App\Containers\TaskManagerSection\TaskList\UI\Actions;
 use App\Containers\TaskManagerSection\TaskList\Data\DTO\TaskListCreateData;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskList\Tasks\CreateTaskListTask;
-use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\UpdateRequest;
+use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\CreateRequest;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTransformer;
-use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
+use Illuminate\Http\JsonResponse;
 
 class CreateTaskListAction extends BaseAction
 {
-
     public function __construct(
         private readonly CreateTaskListTask $createTaskListTask
-    )
-    {
+    ) {
     }
 
     public function handle(TaskListCreateData $dto): TaskList
@@ -24,7 +22,7 @@ class CreateTaskListAction extends BaseAction
         return $this->createTaskListTask->run($dto);
     }
 
-    public function asController(UpdateRequest $request): JsonResponse
+    public function asController(CreateRequest $request): JsonResponse
     {
         $dto = TaskListCreateData::from($request->validated());
         $dto->user_id = auth()->user()->id;
@@ -34,6 +32,6 @@ class CreateTaskListAction extends BaseAction
         return fractal($taskList, new TaskListTransformer())
             ->withResourceName('task-lists')
             ->addMeta(['message' => 'New task list successfully created!'])
-            ->respond(200, [], JSON_PRETTY_PRINT);
+            ->respond(201, [], JSON_PRETTY_PRINT);
     }
 }

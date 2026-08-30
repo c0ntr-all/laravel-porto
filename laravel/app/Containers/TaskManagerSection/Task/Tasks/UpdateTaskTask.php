@@ -11,15 +11,9 @@ class UpdateTaskTask extends ParentTask
 {
     public function __construct(
         private readonly TaskRepository $taskRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param Task $task
-     * @param TaskUpdateData $dto
-     * @return Task
-     */
     public function run(Task $task, TaskUpdateData $dto): Task
     {
         return $this->taskRepository->update($task, $dto);

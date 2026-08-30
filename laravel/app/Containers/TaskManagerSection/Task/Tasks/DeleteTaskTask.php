@@ -10,16 +10,11 @@ class DeleteTaskTask extends ParentTask
 {
     public function __construct(
         private readonly TaskRepository $taskRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param Task $task
-     * @return bool
-     */
     public function run(Task $task): bool
     {
-        return $this->taskRepository->deleteTask($task);
+        return $this->taskRepository->delete($task);
     }
 }

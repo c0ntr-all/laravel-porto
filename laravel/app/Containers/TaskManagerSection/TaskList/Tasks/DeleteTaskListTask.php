@@ -4,22 +4,17 @@ namespace App\Containers\TaskManagerSection\TaskList\Tasks;
 
 use App\Containers\TaskManagerSection\TaskList\Data\Repositories\TaskListRepository;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
-use App\Ship\Parents\Tasks\Task;
+use App\Ship\Parents\Tasks\Task as ParentTask;
 
-class DeleteTaskListTask extends Task
+class DeleteTaskListTask extends ParentTask
 {
     public function __construct(
         private readonly TaskListRepository $taskListRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param TaskList $taskList
-     * @return bool
-     */
     public function run(TaskList $taskList): bool
     {
-        return $this->taskListRepository->deleteTaskList($taskList);
+        return $this->taskListRepository->delete($taskList);
     }
 }

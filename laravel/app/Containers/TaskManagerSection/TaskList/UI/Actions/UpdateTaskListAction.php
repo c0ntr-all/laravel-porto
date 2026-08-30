@@ -7,16 +7,14 @@ use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskList\Tasks\UpdateTaskListTask;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\UpdateRequest;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTransformer;
-use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
+use Illuminate\Http\JsonResponse;
 
 class UpdateTaskListAction extends BaseAction
 {
-
     public function __construct(
         private readonly UpdateTaskListTask $updateTaskListTask
-    )
-    {
+    ) {
     }
 
     public function handle(TaskList $taskList, TaskListUpdateData $dto): TaskList
@@ -27,11 +25,11 @@ class UpdateTaskListAction extends BaseAction
     public function asController(TaskList $taskList, UpdateRequest $request): JsonResponse
     {
         $dto = TaskListUpdateData::from($request->validated());
-
         $taskList = $this->handle($taskList, $dto);
 
         return fractal($taskList, new TaskListTransformer())
             ->withResourceName('task-lists')
+            ->addMeta(['message' => 'Task list successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -6,49 +6,55 @@ use App\Containers\TaskManagerSection\TaskList\Data\DTO\TaskListCreateData;
 use App\Containers\TaskManagerSection\TaskList\Data\DTO\TaskListUpdateData;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use Illuminate\Database\Eloquent\Collection;
+use Spatie\LaravelData\Optional;
 
 class TaskListRepository
 {
     /**
-     * @return Collection
+     * @param list<string> $with
      */
-    public function getTaskLists(): Collection
+    public function list(array $with = []): Collection
     {
-        return TaskList::with([
-            'tasks.reminder',
-            'tasks.comments.user',
-            'tasks.checklists.checklistItems',
-            'tasks.progress'
-        ])->get();
+        $query = TaskList::query()->orderByDesc('id');
+
+        if ($with !== []) {
+            $query->with($with);
+        }
+
+        return $query->get();
     }
 
-    /**
-     * @param TaskList $taskList
-     * @param TaskListUpdateData $dto
-     * @return TaskList
-     */
-    public function updateTaskList(TaskList $taskList, TaskListUpdateData $dto): TaskList
+    public function find(TaskList $taskList, array $with = []): TaskList
     {
-        $taskList->update($dto->toArray());
+        if ($with !== []) {
+            $taskList->load($with);
+        }
 
         return $taskList;
     }
 
-    /**
-     * @param TaskListCreateData $dto
-     * @return TaskList
-     */
-    public function createTaskList(TaskListCreateData $dto): TaskList
+    public function create(TaskListCreateData $dto): TaskList
     {
         return TaskList::create($dto->toArray());
     }
 
-    /**
-     * @param TaskList $taskList
-     * @return bool|null
-     */
-    public function deleteTaskList(TaskList $taskList): ?bool
+    public function update(TaskList $taskList, TaskListUpdateData $dto): TaskList
     {
-        return $taskList->delete();
+        $attributes = [];
+
+        if (!($dto->title instanceof Optional)) {
+            $attributes['title'] = $dto->title;
+        }
+
+        if ($attributes !== []) {
+            $taskList->update($attributes);
+        }
+
+        return $taskList->refresh();
+    }
+
+    public function delete(TaskList $taskList): bool
+    {
+        return (bool) $taskList->delete();
     }
 }

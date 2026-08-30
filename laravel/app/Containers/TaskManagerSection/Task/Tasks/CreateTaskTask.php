@@ -11,16 +11,11 @@ class CreateTaskTask extends ParentTask
 {
     public function __construct(
         private readonly TaskRepository $taskRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param TaskCreateData $dto
-     * @return Task
-     */
     public function run(TaskCreateData $dto): Task
     {
-        return $this->taskRepository->createTask($dto);
+        return $this->taskRepository->create($dto);
     }
 }

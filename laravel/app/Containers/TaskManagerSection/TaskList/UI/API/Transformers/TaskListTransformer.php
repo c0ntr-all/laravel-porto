@@ -10,21 +10,29 @@ use League\Fractal\TransformerAbstract;
 class TaskListTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'tasks'
+        'tasks',
     ];
 
     public function transform(TaskList $taskList): array
     {
         return [
-            'id' => $taskList->id,
+            'id' => (string) $taskList->id,
             'title' => $taskList->title,
-            'created_at' => $taskList->created_at->format('Y-m-d H:i:s'),
+            'tasks_count' => $taskList->relationLoaded('tasks')
+                ? $taskList->tasks->count()
+                : $taskList->tasks()->count(),
+            'created_at' => $taskList->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $taskList->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 
     public function includeTasks(TaskList $taskList): Collection
     {
-        return $this->collection($taskList->tasks, new TaskTransformer(), 'tasks')
-                    ->setMeta(['count' => $taskList->tasks->count()]);
+        $tasks = $taskList->relationLoaded('tasks')
+            ? $taskList->tasks
+            : $taskList->tasks()->get();
+
+        return $this->collection($tasks, new TaskTransformer(), 'tasks')
+                    ->setMeta(['count' => $tasks->count()]);
     }
 }

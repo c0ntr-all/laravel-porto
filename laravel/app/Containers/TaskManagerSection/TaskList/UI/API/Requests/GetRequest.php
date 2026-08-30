@@ -4,12 +4,10 @@ namespace App\Containers\TaskManagerSection\TaskList\UI\API\Requests;
 
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 
-class UpdateRequest extends AuthenticatedRequest
+class GetRequest extends AuthenticatedRequest
 {
     public function rules(): array
     {
-        return [
-            'title' => 'sometimes|required|string|max:30',
-        ];
+        return [];
     }
 }

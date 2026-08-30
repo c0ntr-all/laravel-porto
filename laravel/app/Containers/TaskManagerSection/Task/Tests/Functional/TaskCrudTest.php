@@ -28,7 +28,7 @@ class TaskCrudTest extends TestCase
                 'content' => 'Some content',
             ]);
 
-        $response->assertOk()
+        $response->assertCreated()
             ->assertJsonStructure([
                 'data' => ['id', 'attributes' => ['title', 'content']],
                 'meta' => ['message'],
@@ -53,12 +53,52 @@ class TaskCrudTest extends TestCase
                 'task_list_id' => $taskList->id,
             ]);
 
-        $response->assertOk();
+        $response->assertCreated();
 
         $this->assertDatabaseHas('tm_tasks', [
             'title' => 'Task in List',
             'task_list_id' => $taskList->id,
         ]);
+    }
+
+    public function test_user_can_list_tasks(): void
+    {
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Listed Task',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/task-manager/tasks');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.count', 1);
+    }
+
+    public function test_user_can_list_unlisted_tasks(): void
+    {
+        $taskList = TaskList::create([
+            'user_id' => $this->user->id,
+            'title' => 'Board',
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'task_list_id' => $taskList->id,
+            'title' => 'In List',
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Inbox',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/task-manager/tasks?unlisted=1');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.count', 1)
+            ->assertJsonPath('data.0.attributes.title', 'Inbox');
     }
 
     public function test_user_cannot_create_task_without_title(): void

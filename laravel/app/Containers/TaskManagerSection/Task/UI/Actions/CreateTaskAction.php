@@ -79,6 +79,6 @@ class CreateTaskAction extends UseCaseAction
             $fractal->parseIncludes(['checklists.checklistItems']);
         }
 
-        return $fractal->respond(200, [], JSON_PRETTY_PRINT);
+        return $fractal->respond(201, [], JSON_PRETTY_PRINT);
     }
 }

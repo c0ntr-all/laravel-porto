@@ -12,3 +12,8 @@ export enum ReminderBeforeUnitEnum {
   DAY = 'day',
   WEEK = 'week'
 }
+
+export enum ReminderOccurrenceStatusEnum {
+  NOTIFIED = 'notified',
+  COMPLETED = 'completed'
+}

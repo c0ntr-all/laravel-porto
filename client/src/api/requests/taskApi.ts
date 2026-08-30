@@ -12,7 +12,8 @@ import {
   IChecklistUpdateResponse, IChecklistItemCreatePayload, IChecklistItemCreateResponse, IChecklistItemUpdatePayload,
   IChecklistItemUpdateResponse, IChecklistItemDeleteResponse, IProgressCreatePayload, IProgressCreateResponse,
   IReminderCreatePayload, IReminderCreateResponse, IReminderUpdatePayload, IReminderUpdateResponse,
-  IReminderDeleteResponse
+  IReminderDeleteResponse, IReminderOccurrenceCreatePayload, IReminderOccurrenceCreateResponse,
+  IReminderOccurrenceListResponse
 } from 'src/types'
 
 export const taskApi = {
@@ -132,6 +133,25 @@ export const taskApi = {
   async deleteReminder(taskId: string): Promise<IReminderDeleteResponse> {
     const url = `v1/task-manager/tasks/${taskId}/reminder`
     const response = await api.delete(url)
+
+    return response.data
+  },
+
+  async getReminderOccurrences(taskId: string): Promise<IReminderOccurrenceListResponse> {
+    const url = `v1/task-manager/tasks/${taskId}/reminder/occurrences`
+    const response = await api.get(url)
+
+    return response.data
+  },
+
+  async createReminderOccurrence(
+    taskId: string,
+    payload: IReminderOccurrenceCreatePayload
+  ): Promise<IReminderOccurrenceCreateResponse> {
+    const url = `v1/task-manager/tasks/${taskId}/reminder/occurrences`
+    const response = await api.post(url, payload, {
+      params: { include: 'reminder' }
+    })
 
     return response.data
   }

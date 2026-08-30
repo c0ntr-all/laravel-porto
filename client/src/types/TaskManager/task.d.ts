@@ -106,11 +106,14 @@ export interface IReminderFields {
   task_id: string
   user_id: string
   is_active: boolean
+  awaiting_completion?: boolean
+  can_complete?: boolean
   interval: IReminderDuration | null
   to_remind_before: IReminderDuration | null
   datetime: string
   next_remind_at: string | null
   last_reminded_at: string | null
+  last_completed_at: string | null
   created_at: string
   updated_at: string
 }
@@ -141,6 +144,37 @@ export interface IReminderDeleteResponse {
   meta?: {
     message?: string
   }
+}
+
+export type ReminderOccurrenceStatus = 'notified' | 'completed'
+
+export interface IReminderOccurrenceFields {
+  reminder_id: string
+  task_id: string
+  status: ReminderOccurrenceStatus
+  scheduled_at: string
+  notified_at: string | null
+  completed_at: string | null
+  is_overdue: boolean
+  created_at: string
+  updated_at: string
+}
+export interface IReminderOccurrence extends IReminderOccurrenceFields {
+  id: string
+}
+export interface IReminderOccurrenceCreatePayload {
+  status: 'completed'
+  completed_at?: string
+}
+export interface IReminderOccurrenceResource extends IJsonApiResource {
+  attributes: IReminderOccurrenceFields
+}
+export interface IReminderOccurrenceResponse extends IJsonApiResponse<IReminderOccurrenceResource> {
+  data: IReminderOccurrenceResource
+}
+export interface IReminderOccurrenceCreateResponse extends IReminderOccurrenceResponse {}
+export interface IReminderOccurrenceListResponse extends IJsonApiResponse<IReminderOccurrenceResource> {
+  data: IReminderOccurrenceResource[]
 }
 
 /**

@@ -6,7 +6,7 @@ import {
   ITaskList, ITask, IProgress, IChecklist, IChecklistItem, ITaskListCreatePayload, ITaskCreatePayload,
   ITaskUpdatePayload, IChecklistItemCreatePayload, IChecklistCreatePayload,
   IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload,
-  IReminderUpdatePayload, IReminderItem,
+  IReminderUpdatePayload, IReminderItem, IReminderOccurrence,
   IUseCaseLog, IComment, ICommentCreatePayload, IFilter
 } from 'src/types'
 import { IUser } from 'src/types/user'
@@ -25,6 +25,7 @@ export const useTaskStore = defineStore('task', () => {
   const checklists = reactive<StoreEntity<IChecklist>>({ byId: {}, allIds: [] })
   const checklistItems = reactive<StoreEntity<IChecklistItem>>({ byId: {}, allIds: [] })
   const reminder = reactive<StoreEntity<IReminderItem>>({ byId: {}, allIds: [] })
+  const reminderOccurrences = reactive<StoreEntity<IReminderOccurrence>>({ byId: {}, allIds: [] })
   const comments = reactive<StoreEntity<IComment>>({ byId: {}, allIds: [] })
   const useCaseLogs = reactive<StoreEntity<IUseCaseLog>>({ byId: {}, allIds: [] })
   const users = reactive<StoreEntity<IUser>>({ byId: {}, allIds: [] })
@@ -36,6 +37,7 @@ export const useTaskStore = defineStore('task', () => {
     checklists: StoreEntity<IChecklist>
     checklistItems: StoreEntity<IChecklistItem>
     reminder: StoreEntity<IReminderItem>
+    reminderOccurrences: StoreEntity<IReminderOccurrence>
     comments: StoreEntity<IComment>
     useCaseLogs: StoreEntity<IUseCaseLog>
     users: StoreEntity<IUser>
@@ -49,6 +51,7 @@ export const useTaskStore = defineStore('task', () => {
     checklists,
     checklistItems,
     reminder,
+    reminderOccurrences,
     comments,
     useCaseLogs,
     users
@@ -452,12 +455,76 @@ export const useTaskStore = defineStore('task', () => {
       delete reminder.byId[reminderId]
       reminder.allIds = reminder.allIds.filter(id => id !== reminderId)
 
+      reminderOccurrences.allIds = reminderOccurrences.allIds.filter(id => {
+        const occurrence = reminderOccurrences.byId[id]
+        if (occurrence?.reminder_id === reminderId) {
+          delete reminderOccurrences.byId[id]
+          return false
+        }
+
+        return true
+      })
+
       if (task) {
         task.reminderIds = (task.reminderIds || []).filter(id => id !== reminderId)
         task.reminders_count = Math.max(0, (task.reminders_count || 1) - 1)
       }
 
       handleApiSuccess(responseData)
+    } catch (error: unknown) {
+      handleApiError(error)
+    }
+  }
+
+  async function getReminderOccurrences(taskId: string): Promise<void> {
+    try {
+      const responseData = await taskApi.getReminderOccurrences(taskId)
+      const data = Array.isArray(responseData.data) ? responseData.data : [responseData.data]
+      const entities = normalizeEntityCollection(data, responseData.included)
+
+      for (const type in entities) {
+        if (type !== 'reminder-occurrences') continue
+
+        for (const id in entities[type]) {
+          upsertEntity(reminderOccurrences, entities[type][id] as IReminderOccurrence)
+        }
+      }
+    } catch (error: unknown) {
+      handleApiError(error)
+    }
+  }
+
+  async function completeReminder(taskId: string): Promise<IReminderOccurrence | undefined> {
+    try {
+      const responseData = await taskApi.createReminderOccurrence(taskId, {
+        status: 'completed'
+      })
+      const { entity, related } = normalizeEntity<IReminderOccurrence>(
+        responseData.data,
+        responseData.included
+      )
+
+      upsertEntity(reminderOccurrences, entity)
+
+      const relatedReminders = (related.reminder || related.reminders) as unknown as IReminderItem[] | undefined
+      const includedReminders = relatedReminders?.length
+        ? relatedReminders
+        : (responseData.included || [])
+          .filter(item => item.type === 'reminders' || item.type === 'reminder')
+          .map(item => ({
+            id: item.id,
+            ...(item.attributes || {})
+          } as IReminderItem))
+
+      for (const item of includedReminders) {
+        if (!item.id) continue
+        const current = reminder.byId[item.id]
+        upsertEntity(reminder, current ? updateObject(current, item) : item)
+      }
+
+      handleApiSuccess(responseData)
+
+      return entity
     } catch (error: unknown) {
       handleApiError(error)
     }
@@ -567,6 +634,7 @@ export const useTaskStore = defineStore('task', () => {
     checklists,
     checklistItems,
     reminder,
+    reminderOccurrences,
     comments,
     useCaseLogs,
     users,
@@ -587,6 +655,8 @@ export const useTaskStore = defineStore('task', () => {
     createReminder,
     updateReminder,
     deleteReminder,
+    getReminderOccurrences,
+    completeReminder,
     getComments,
     createComment,
     getUseCaseLogs

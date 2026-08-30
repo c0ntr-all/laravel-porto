@@ -39,6 +39,12 @@
     <div class="reminder-card__relative">
       {{ relativeLabel }}
     </div>
+    <div
+      v-if="lastCompletedLabel"
+      class="reminder-card__last-done"
+    >
+      {{ lastCompletedLabel }}
+    </div>
 
     <div
       v-if="intervalLabel || remindBeforeLabel"
@@ -65,6 +71,23 @@
         {{ remindBeforeLabel }}
       </q-chip>
     </div>
+
+    <q-btn
+      v-if="canComplete"
+      :loading="isCompleting"
+      class="reminder-card__complete"
+      color="grey-8"
+      :label="completeLabel"
+      icon="done"
+      outline
+      dense
+      no-caps
+      @click="completeOccurrence"
+    >
+      <q-tooltip v-if="isRecurring">
+        Закроет текущий цикл и перенесёт дату на следующий
+      </q-tooltip>
+    </q-btn>
   </article>
 </template>
 
@@ -74,10 +97,12 @@ import { Dialog } from 'quasar'
 import { IReminderItem } from 'src/types/TaskManager/task'
 import { humanDatetime } from 'src/utils/datetime'
 import {
+  canCompleteReminder,
   formatRemindBefore,
   formatReminderInterval,
   formatReminderRelative,
-  getReminderUrgency
+  getReminderUrgency,
+  isRecurringReminder
 } from 'src/utils/reminder'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 
@@ -89,15 +114,24 @@ const props = defineProps<{
 }>()
 
 const now = ref(Date.now())
+const isCompleting = ref(false)
 let ticker: ReturnType<typeof setInterval> | null = null
 
 const urgency = computed(() => getReminderUrgency(props.reminder, now.value))
 const relativeLabel = computed(() => formatReminderRelative(props.reminder.datetime, now.value))
 const intervalLabel = computed(() => formatReminderInterval(props.reminder.interval))
 const remindBeforeLabel = computed(() => formatRemindBefore(props.reminder.to_remind_before))
+const isRecurring = computed(() => isRecurringReminder(props.reminder))
+const canComplete = computed(() => canCompleteReminder(props.reminder))
+
+const lastCompletedLabel = computed(() => {
+  if (!props.reminder.last_completed_at) return null
+  return `Последнее выполнение: ${humanDatetime(props.reminder.last_completed_at)}`
+})
 
 const statusLabel = computed(() => {
   if (urgency.value === 'inactive') return 'Напоминание выключено'
+  if (props.reminder.awaiting_completion) return 'Нужно подтвердить'
   if (urgency.value === 'overdue') return 'Просрочено'
   if (urgency.value === 'due-soon') return 'Скоро'
   return 'Напоминание'
@@ -105,6 +139,7 @@ const statusLabel = computed(() => {
 
 const statusIcon = computed(() => {
   if (urgency.value === 'inactive') return 'notifications_off'
+  if (props.reminder.awaiting_completion) return 'notification_important'
   if (urgency.value === 'overdue') return 'notification_important'
   return 'alarm'
 })
@@ -116,14 +151,30 @@ const chipColor = computed(() => {
   return 'primary'
 })
 
+const completeLabel = computed(() => {
+  if (isRecurring.value) return 'Отметить выполненным'
+  return 'Выполнено'
+})
+
 async function toggleActive(isActive: boolean) {
   await taskStore.updateReminder(props.taskId, { is_active: isActive })
+}
+
+async function completeOccurrence() {
+  if (isCompleting.value || !canComplete.value) return
+
+  isCompleting.value = true
+  try {
+    await taskStore.completeReminder(props.taskId)
+  } finally {
+    isCompleting.value = false
+  }
 }
 
 function confirmDelete() {
   Dialog.create({
     title: 'Удалить напоминание?',
-    message: 'Напоминание будет удалено. Его можно будет создать заново.',
+    message: 'Напоминание и история отметок будут удалены.',
     cancel: { label: 'Отмена', flat: true },
     ok: { label: 'Удалить', color: 'negative' },
     persistent: true
@@ -232,11 +283,21 @@ onUnmounted(() => {
     font-weight: 600;
   }
 
+  &__last-done {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
   &__meta {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 10px;
+  }
+
+  &__complete {
+    margin-top: 12px;
   }
 }
 </style>

@@ -74,6 +74,18 @@ export function formatRemindBefore(offset: IReminderDuration | null | undefined)
   return `За ${formatDuration(offset.value, offset.unit)} до события`
 }
 
+export function isRecurringReminder(reminder: IReminderItem): boolean {
+  return Boolean(reminder.interval?.value && reminder.interval.unit)
+}
+
+export function canCompleteReminder(reminder: IReminderItem): boolean {
+  if (typeof reminder.can_complete === 'boolean') {
+    return reminder.can_complete
+  }
+
+  return reminder.is_active && Boolean(reminder.datetime)
+}
+
 export function formatDuration(value: number, unit: ReminderTimeUnit): string {
   return `${value} ${pluralizeRu(value, UNIT_FORMS[unit])}`
 }

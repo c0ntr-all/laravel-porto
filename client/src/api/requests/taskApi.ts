@@ -11,7 +11,8 @@ import {
   ITaskListCreateResponse, IChecklistCreatePayload, IChecklistCreateResponse, IChecklistUpdatePayload,
   IChecklistUpdateResponse, IChecklistItemCreatePayload, IChecklistItemCreateResponse, IChecklistItemUpdatePayload,
   IChecklistItemUpdateResponse, IChecklistItemDeleteResponse, IProgressCreatePayload, IProgressCreateResponse,
-  IReminderCreatePayload, IReminderCreateResponse
+  IReminderCreatePayload, IReminderCreateResponse, IReminderUpdatePayload, IReminderUpdateResponse,
+  IReminderDeleteResponse
 } from 'src/types'
 
 export const taskApi = {
@@ -114,6 +115,23 @@ export const taskApi = {
   ): Promise<IReminderCreateResponse> {
     const url = `v1/task-manager/tasks/${taskId}/reminder`
     const response = await api.post(url, payload)
+
+    return response.data
+  },
+
+  async updateReminder(
+    taskId: string,
+    payload: IReminderUpdatePayload
+  ): Promise<IReminderUpdateResponse> {
+    const url = `v1/task-manager/tasks/${taskId}/reminder`
+    const response = await api.patch(url, payload)
+
+    return response.data
+  },
+
+  async deleteReminder(taskId: string): Promise<IReminderDeleteResponse> {
+    const url = `v1/task-manager/tasks/${taskId}/reminder`
+    const response = await api.delete(url)
 
     return response.data
   }

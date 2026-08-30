@@ -1,7 +1,10 @@
 <template>
   <div class="reminders">
-    <div class="text-h6 q-mb-sm">Event date</div>
-    <TMReminderItem :reminder="reminder" />
+    <div class="text-h6 q-mb-sm">Напоминание</div>
+    <TMReminderItem
+      :reminder="reminder"
+      :task-id="taskId"
+    />
   </div>
 </template>
 
@@ -11,6 +14,7 @@ import TMReminderItem from 'src/components/client/TaskManager/TMReminderItem.vue
 
 defineProps<{
   reminder: IReminderItem
+  taskId: string
 }>()
 </script>
 

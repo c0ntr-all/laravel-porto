@@ -23,7 +23,10 @@
         </q-card-section>
 
         <q-card-section v-if="reminder">
-          <TMReminder :reminder="reminder" />
+          <TMReminder
+            :reminder="reminder"
+            :task-id="task.id"
+          />
         </q-card-section>
 
         <template v-if="checklists.length">

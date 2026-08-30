@@ -5,7 +5,8 @@ import { updateObject } from 'src/utils/helpers'
 import {
   ITaskList, ITask, IProgress, IChecklist, IChecklistItem, ITaskListCreatePayload, ITaskCreatePayload,
   ITaskUpdatePayload, IChecklistItemCreatePayload, IChecklistCreatePayload,
-  IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload, IReminderItem,
+  IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload,
+  IReminderUpdatePayload, IReminderItem,
   IUseCaseLog, IComment, ICommentCreatePayload, IFilter
 } from 'src/types'
 import { IUser } from 'src/types/user'
@@ -391,7 +392,7 @@ export const useTaskStore = defineStore('task', () => {
   async function createReminder(
     taskId: string,
     payload: IReminderCreatePayload
-  ): Promise<void> {
+  ): Promise<IReminderItem | undefined> {
     try {
       const responseData = await taskApi.createReminder(taskId, payload)
       const { entity } = normalizeEntity<IReminderItem>(responseData.data, responseData.included)
@@ -399,11 +400,62 @@ export const useTaskStore = defineStore('task', () => {
       upsertEntity(reminder, entity)
 
       const task = tasks.byId[taskId]
-      if (task.reminderIds && !task.reminderIds.includes(entity.id)) {
-        task.reminderIds.push(entity.id)
+      if (task) {
+        if (!task.reminderIds) {
+          task.reminderIds = []
+        }
+
+        if (!task.reminderIds.includes(entity.id)) {
+          task.reminderIds.push(entity.id)
+        }
+
+        task.reminders_count++
       }
 
-      task.reminders_count++
+      handleApiSuccess(responseData)
+
+      return entity
+    } catch (error: unknown) {
+      handleApiError(error)
+    }
+  }
+
+  async function updateReminder(
+    taskId: string,
+    payload: IReminderUpdatePayload
+  ): Promise<void> {
+    try {
+      const responseData = await taskApi.updateReminder(taskId, payload)
+      const { entity } = normalizeEntity<IReminderItem>(responseData.data, responseData.included)
+
+      const current = reminder.byId[entity.id]
+      const updated = current ? updateObject(current, entity) : entity
+
+      upsertEntity(reminder, updated)
+
+      handleApiSuccess(responseData)
+    } catch (error: unknown) {
+      handleApiError(error)
+    }
+  }
+
+  async function deleteReminder(taskId: string): Promise<void> {
+    try {
+      const task = tasks.byId[taskId]
+      const reminderId = task?.reminderIds?.[0]
+        || Object.values(reminder.byId).find(item => item.task_id === taskId)?.id
+
+      if (!reminderId) return
+
+      const responseData = await taskApi.deleteReminder(taskId)
+
+      delete reminder.byId[reminderId]
+      reminder.allIds = reminder.allIds.filter(id => id !== reminderId)
+
+      if (task) {
+        task.reminderIds = (task.reminderIds || []).filter(id => id !== reminderId)
+        task.reminders_count = Math.max(0, (task.reminders_count || 1) - 1)
+      }
 
       handleApiSuccess(responseData)
     } catch (error: unknown) {
@@ -533,6 +585,8 @@ export const useTaskStore = defineStore('task', () => {
     deleteChecklistItem,
     createProgress,
     createReminder,
+    updateReminder,
+    deleteReminder,
     getComments,
     createComment,
     getUseCaseLogs

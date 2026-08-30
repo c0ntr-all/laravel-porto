@@ -89,6 +89,15 @@ export interface IProgressResponse extends IJsonApiResponse<IProgressResource> {
 export interface IProgressCreateResponse extends IProgressResponse {}
 export interface IProgressUpdateResponse extends IProgressResponse {}
 
+export type ReminderTimeUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
+export type ReminderIntervalUnit = 'hour' | 'day' | 'week' | 'month' | 'year'
+export type ReminderBeforeUnit = 'minute' | 'hour' | 'day' | 'week'
+
+export interface IReminderDuration {
+  value: number
+  unit: ReminderTimeUnit
+}
+
 /**
  * Only backend fields
  */
@@ -97,9 +106,11 @@ export interface IReminderFields {
   task_id: string
   user_id: string
   is_active: boolean
-  interval: string
-  to_remind_before: string
+  interval: IReminderDuration | null
+  to_remind_before: IReminderDuration | null
   datetime: string
+  next_remind_at: string | null
+  last_reminded_at: string | null
   created_at: string
   updated_at: string
 }
@@ -107,10 +118,16 @@ export interface IReminderItem extends IReminderFields {
   id: string
 }
 export interface IReminderCreatePayload {
+  datetime: string
   is_active: boolean
-  interval?: string
-  to_remind_before?: string
+  interval?: IReminderDuration | null
+  to_remind_before?: IReminderDuration | null
+}
+export interface IReminderUpdatePayload {
   datetime?: string
+  is_active?: boolean
+  interval?: IReminderDuration | null
+  to_remind_before?: IReminderDuration | null
 }
 export interface IReminderResource extends IJsonApiResource {
   attributes: IReminderFields
@@ -120,6 +137,11 @@ export interface IReminderResponse extends IJsonApiResponse<IReminderResource> {
 }
 export interface IReminderCreateResponse extends IReminderResponse {}
 export interface IReminderUpdateResponse extends IReminderResponse {}
+export interface IReminderDeleteResponse {
+  meta?: {
+    message?: string
+  }
+}
 
 /**
  * Only backend fields

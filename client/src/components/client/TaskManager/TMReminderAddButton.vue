@@ -8,61 +8,88 @@
   >
     <q-menu ref="newReminderMenuRef">
       <div class="row no-wrap q-pa-md">
-        <div style="width: 250px">
+        <div class="reminder-form">
           <div class="text-h6 q-mb-md">Adding reminder</div>
           <div class="flex column q-gutter-sm">
             <AppDatetimeField v-model="reminderModel.datetime" />
-            <q-select
-              v-model="reminderModel.interval"
-              :options="reminderIntervals"
-              label="Интервал"
-              :options-html="true"
-              filled
-              dense
-            />
+
             <q-toggle
-              v-model="reminderModel.is_to_remind_before"
-              checked-icon="add"
-              unchecked-icon="remove"
-              label="Напомнить"
+              v-model="reminderModel.is_repeating"
+              label="Повторять"
               left-label
             />
-            <template v-if="reminderModel.is_to_remind_before">
-              <div class="row q-col-gutter-sm">
-                <div class="col-6">
-                  <q-select
-                    v-model="reminderModel.when_to_remind_before_number"
-                    :options="whenToRemindBeforeNumberOptions"
-                    :options-html="true"
-                    filled
-                    dense
-                  />
-                </div>
-                <div class="col-6">
-                  <q-select
-                    v-model="reminderModel.when_to_remind_before_point"
-                    :options="whenToRemindBeforePointOptions"
-                    :options-html="true"
-                    filled
-                    dense
-                  />
-                </div>
+            <div
+              v-if="reminderModel.is_repeating"
+              class="row q-col-gutter-sm"
+            >
+              <div class="col-5">
+                <q-input
+                  v-model.number="reminderModel.interval_value"
+                  type="number"
+                  min="1"
+                  max="999"
+                  label="Каждые"
+                  filled
+                  dense
+                />
               </div>
-            </template>
+              <div class="col-7">
+                <q-select
+                  v-model="reminderModel.interval_unit"
+                  :options="intervalUnitOptions"
+                  emit-value
+                  map-options
+                  filled
+                  dense
+                />
+              </div>
+            </div>
+
+            <q-toggle
+              v-model="reminderModel.is_to_remind_before"
+              label="Напомнить заранее"
+              left-label
+            />
+            <div
+              v-if="reminderModel.is_to_remind_before"
+              class="row q-col-gutter-sm"
+            >
+              <div class="col-5">
+                <q-input
+                  v-model.number="reminderModel.remind_before_value"
+                  type="number"
+                  min="1"
+                  max="9999"
+                  label="За"
+                  filled
+                  dense
+                />
+              </div>
+              <div class="col-7">
+                <q-select
+                  v-model="reminderModel.remind_before_unit"
+                  :options="remindBeforeUnitOptions"
+                  emit-value
+                  map-options
+                  filled
+                  dense
+                />
+              </div>
+            </div>
+
             <q-toggle
               v-model="reminderModel.is_active"
-              checked-icon="add"
-              unchecked-icon="remove"
               label="Active"
               left-label
             />
 
             <q-btn
-              @click="createReminder"
+              :loading="isSubmitting"
               class="q-mb-xs"
               label="Add"
               color="primary"
               unelevated
+              @click="createReminder"
             />
           </div>
         </div>
@@ -72,11 +99,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { list } from 'radash'
+import { ref } from 'vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { getCurrentDateTime } from 'src/utils/datetime'
+import { toReminderDatetime } from 'src/utils/reminder'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+import {
+  ReminderBeforeUnitEnum,
+  ReminderIntervalUnitEnum
+} from 'src/enums/TaskManager/ReminderTimeUnitEnum'
+import {
+  IReminderCreatePayload,
+  ReminderBeforeUnit,
+  ReminderIntervalUnit
+} from 'src/types/TaskManager/task'
+
+interface IReminderMenuRef {
+  hide: () => void
+}
+
+interface IReminderFormModel {
+  datetime: string
+  is_repeating: boolean
+  interval_value: number
+  interval_unit: ReminderIntervalUnit
+  is_to_remind_before: boolean
+  remind_before_value: number
+  remind_before_unit: ReminderBeforeUnit
+  is_active: boolean
+}
 
 const taskStore = useTaskStore()
 
@@ -85,126 +136,90 @@ const props = defineProps<{
   isReminderAvailable: boolean,
 }>()
 
-const minutesOptions = list(1, 60)
-const hoursOptions = list(1, 24)
-const daysOptions = list(1, 30)
-const weeksOptions = list(1, 4)
-const monthsOptions = list(1, 12)
+const intervalUnitOptions = [
+  { label: 'час', value: ReminderIntervalUnitEnum.HOUR },
+  { label: 'день', value: ReminderIntervalUnitEnum.DAY },
+  { label: 'неделя', value: ReminderIntervalUnitEnum.WEEK },
+  { label: 'месяц', value: ReminderIntervalUnitEnum.MONTH },
+  { label: 'год', value: ReminderIntervalUnitEnum.YEAR }
+]
 
-const whenToRemindBeforePointOptions = [{
-  label: 'мин.',
-  value: 'minutes'
-}, {
-  label: 'ч.',
-  value: 'hours'
-}, {
-  label: 'дн.',
-  value: 'days'
-}, {
-  label: 'нед.',
-  value: 'weeks'
-}, {
-  label: 'мес.',
-  value: 'months'
-}]
-const whenToRemindBeforeNumberOptions = computed(() => {
-  const point = reminderModel.value.when_to_remind_before_point.value
+const remindBeforeUnitOptions = [
+  { label: 'мин.', value: ReminderBeforeUnitEnum.MINUTE },
+  { label: 'час', value: ReminderBeforeUnitEnum.HOUR },
+  { label: 'день', value: ReminderBeforeUnitEnum.DAY },
+  { label: 'неделя', value: ReminderBeforeUnitEnum.WEEK }
+]
 
-  switch (point) {
-    case 'minutes':
-      return minutesOptions
-    case 'hours':
-      return hoursOptions
-    case 'days':
-      return daysOptions
-    case 'weeks':
-      return weeksOptions
-    case 'months':
-      return monthsOptions
-    default:
-      return []
-  }
-})
+const newReminderMenuRef = ref<IReminderMenuRef | null>(null)
+const isSubmitting = ref(false)
+const reminderModel = ref<IReminderFormModel>(createDefaultModel())
 
-const defaultInterval = {
-  label: 'Не повторять',
-  value: null
-}
-
-const reminderModel = ref({
-  datetime: getCurrentDateTime(),
-  interval: defaultInterval,
-  is_to_remind_before: false,
-  when_to_remind_before_number: ref(1),
-  when_to_remind_before_point: ref(whenToRemindBeforePointOptions[0]),
-  is_active: true
-})
-const reminderIntervals = [{
-  label: 'Не повторять',
-  value: null
-}, {
-  label: '1 час',
-  value: '1 hour'
-}, {
-  label: '1 день',
-  value: '1 day'
-}, {
-  label: '1 неделя',
-  value: '1 week'
-}, {
-  label: '1 месяц',
-  value: '1 month'
-}, {
-  label: '1 год',
-  value: '1 year'
-}]
-
-const prepareRequestData = (object: object) => {
-  const fieldsToRemove = ['is_to_remind_before']
-  const labelValueFields = ['interval']
-
-  const result = JSON.parse(JSON.stringify(object))
-
-  if (result.is_to_remind_before) {
-    const number = result.when_to_remind_before_number?.value || result.when_to_remind_before_number
-    const point = result.when_to_remind_before_point?.value || result.when_to_remind_before_point
-
-    result.remind_before = `${number} ${point}`
-
-    delete result.when_to_remind_before_number
-    delete result.when_to_remind_before_point
-  }
-
-  fieldsToRemove.forEach(field => delete result[field])
-
-  labelValueFields.forEach(field => {
-    if (result[field] && typeof result[field] === 'object') {
-      result[field] = result[field].value
-    }
-  })
-
-  return result
-}
-
-const clearReminderModel = () => {
-  reminderModel.value = {
+function createDefaultModel(): IReminderFormModel {
+  return {
     datetime: getCurrentDateTime(),
-    interval: defaultInterval,
+    is_repeating: false,
+    interval_value: 1,
+    interval_unit: ReminderIntervalUnitEnum.DAY,
     is_to_remind_before: false,
-    when_to_remind_before_number: ref(1),
-    when_to_remind_before_point: ref(whenToRemindBeforePointOptions[0]),
+    remind_before_value: 30,
+    remind_before_unit: ReminderBeforeUnitEnum.MINUTE,
     is_active: true
   }
 }
 
+function toPayload(model: IReminderFormModel): IReminderCreatePayload {
+  const payload: IReminderCreatePayload = {
+    datetime: toReminderDatetime(model.datetime),
+    is_active: model.is_active
+  }
+
+  if (model.is_repeating) {
+    payload.interval = {
+      value: Number(model.interval_value),
+      unit: model.interval_unit
+    }
+  }
+
+  if (model.is_to_remind_before) {
+    payload.to_remind_before = {
+      value: Number(model.remind_before_value),
+      unit: model.remind_before_unit
+    }
+  }
+
+  return payload
+}
+
+function isPayloadValid(payload: IReminderCreatePayload): boolean {
+  if (!payload.datetime) return false
+  if (payload.interval && (!payload.interval.value || payload.interval.value < 1)) return false
+  if (payload.to_remind_before && (!payload.to_remind_before.value || payload.to_remind_before.value < 1)) {
+    return false
+  }
+
+  return true
+}
+
 const createReminder = async () => {
-  const preparedRequestData = prepareRequestData(reminderModel.value)
-  await taskStore.createReminder(props.taskId, preparedRequestData).then(() => {
-    clearReminderModel()
-  })
+  const payload = toPayload(reminderModel.value)
+  if (!isPayloadValid(payload) || isSubmitting.value) return
+
+  isSubmitting.value = true
+  try {
+    const created = await taskStore.createReminder(props.taskId, payload)
+    if (created) {
+      reminderModel.value = createDefaultModel()
+      newReminderMenuRef.value?.hide()
+    }
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <style scoped lang="scss">
-
+.reminder-form {
+  width: 280px;
+}
 </style>

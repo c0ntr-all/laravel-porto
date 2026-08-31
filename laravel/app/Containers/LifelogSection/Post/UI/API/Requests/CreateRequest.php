@@ -2,7 +2,9 @@
 
 namespace App\Containers\LifelogSection\Post\UI\API\Requests;
 
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
+use Illuminate\Validation\Rule;
 
 class CreateRequest extends AuthenticatedRequest
 {
@@ -24,7 +26,11 @@ class CreateRequest extends AuthenticatedRequest
             'new_tags' => 'sometimes|array',
             'new_tags.*' => 'sometimes|string|max:20',
             'attachments' => 'sometimes|array',
-            'attachments.*' => 'sometimes|array',
+            'attachments.*.type' => [
+                'required',
+                Rule::in(ContainerAliasEnum::galleryFileableTypes()),
+            ],
+            'attachments.*.id' => 'required|uuid',
         ];
     }
 }

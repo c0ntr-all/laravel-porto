@@ -91,7 +91,7 @@ class UploadImagesFromWindowsAction extends UseCaseAction
         $images = $this->handle($album, $dto);
 
         return fractal($images, new ImageTransformer())
-            ->withResourceName('images')
+            ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->addMeta(['message' => 'Image successfully uploaded!', 'count' => $images->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

@@ -8,19 +8,21 @@ use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Containers\GallerySection\Video\UI\API\Transformers\VideoTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use League\Fractal\TransformerAbstract;
 
 class AttachmentTransformer extends TransformerAbstract
 {
     public function transform(Attachment $attachment): array
     {
-        $fileableType = $attachment->fileable_type;
+        $fileableType = ContainerAliasEnum::toCanonicalMorphAlias((string) $attachment->fileable_type);
         $fileable = $attachment->fileable;
+        $fileableClass = Relation::getMorphedModel((string) $attachment->fileable_type);
 
-        $data = match($fileableType) {
-            ContainerAliasEnum::GALLERY_IMAGE->value => app(ImageTransformer::class)->transform($fileable),
-            ContainerAliasEnum::GALLERY_VIDEO->value => app(VideoTransformer::class)->transform($fileable),
-            default => throw new \RuntimeException('Unknown attachment type: ' . $fileableType),
+        $data = match ($fileableClass) {
+            Image::class => app(ImageTransformer::class)->transform($fileable),
+            Video::class => app(VideoTransformer::class)->transform($fileable),
+            default => throw new \RuntimeException('Unknown attachment type: ' . $attachment->fileable_type),
         };
 
         // TODO: В будущем надо сделать как и полагается в json api: attachment - Один слой, а Image, Video - included

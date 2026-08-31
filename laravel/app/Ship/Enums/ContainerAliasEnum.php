@@ -60,4 +60,27 @@ enum ContainerAliasEnum: string
 
         return array_search(get_class($model), $morphMap);
     }
+
+    /**
+     * @return list<string>
+     */
+    public static function galleryFileableTypes(): array
+    {
+        return [
+            self::GALLERY_IMAGE->value,
+            self::GALLERY_VIDEO->value,
+            'images',
+            'videos',
+        ];
+    }
+
+    public static function toCanonicalMorphAlias(string $type): string
+    {
+        return match ($type) {
+            'images', self::GALLERY_IMAGE->value => self::GALLERY_IMAGE->value,
+            'videos', self::GALLERY_VIDEO->value => self::GALLERY_VIDEO->value,
+            'albums', self::GALLERY_ALBUM->value => self::GALLERY_ALBUM->value,
+            default => $type,
+        };
+    }
 }

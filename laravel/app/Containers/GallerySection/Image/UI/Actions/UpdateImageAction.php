@@ -45,7 +45,7 @@ class UpdateImageAction extends UseCaseAction
         $image = $this->handle($image, $dto);
 
         return fractal($image, new ImageTransformer())
-            ->withResourceName('images')
+            ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->addMeta(['message' => 'Image successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

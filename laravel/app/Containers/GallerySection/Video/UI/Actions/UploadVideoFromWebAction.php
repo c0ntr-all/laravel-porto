@@ -58,7 +58,7 @@ class UploadVideoFromWebAction extends UseCaseAction
         $video = $this->handle($album, $dto);
 
         return fractal($video, new VideoTransformer())
-            ->withResourceName('videos')
+            ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
             ->addMeta(['message' => 'Video successfully uploaded!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

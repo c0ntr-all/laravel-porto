@@ -59,7 +59,7 @@ class VideoSourcesTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.0.type', 'videos')
+            ->assertJsonPath('data.0.type', 'gallery_videos')
             ->assertJsonPath('data.0.attributes.source', FileSourceEnum::WINDOWS->value);
 
         $videoId = $response->json('data.0.id');
@@ -97,7 +97,7 @@ class VideoSourcesTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.type', 'videos')
+            ->assertJsonPath('data.type', 'gallery_videos')
             ->assertJsonPath('data.attributes.source', FileSourceEnum::WEB->value)
             ->assertJsonPath('data.attributes.original_path', 'https://cdn.example.com/clip.mp4');
     }
@@ -121,7 +121,7 @@ class VideoSourcesTest extends TestCase
             ->assertJsonPath('meta.videos_count', 1);
 
         $types = collect($response->json('included'))->pluck('type')->all();
-        $this->assertContains('videos', $types);
+        $this->assertContains('gallery_videos', $types);
     }
 
     public function test_user_can_list_update_and_delete_video(): void

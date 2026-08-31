@@ -59,7 +59,7 @@ class ImageSourcesTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.type', 'images')
+            ->assertJsonPath('data.type', 'gallery_images')
             ->assertJsonPath('data.attributes.source', FileSourceEnum::DEVICE->value);
 
         $this->assertDatabaseHas('gallery_images', [
@@ -88,7 +88,7 @@ class ImageSourcesTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.type', 'images')
+            ->assertJsonPath('data.type', 'gallery_images')
             ->assertJsonPath('data.attributes.source', FileSourceEnum::WEB->value)
             ->assertJsonPath('data.attributes.original_path', 'https://cdn.example.com/photo.png');
     }
@@ -105,7 +105,7 @@ class ImageSourcesTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.0.type', 'images')
+            ->assertJsonPath('data.0.type', 'gallery_images')
             ->assertJsonPath('data.0.attributes.source', FileSourceEnum::WINDOWS->value);
 
         $imageId = $response->json('data.0.id');
@@ -141,7 +141,7 @@ class ImageSourcesTest extends TestCase
             ->getJson("/api/v1/gallery/albums/{$this->album->id}/images")
             ->assertOk()
             ->assertJsonPath('meta.count', 1)
-            ->assertJsonPath('data.0.type', 'images');
+            ->assertJsonPath('data.0.type', 'gallery_images');
 
         $this->actingAs($this->user, 'api')
             ->patchJson("/api/v1/gallery/images/{$image->id}", [

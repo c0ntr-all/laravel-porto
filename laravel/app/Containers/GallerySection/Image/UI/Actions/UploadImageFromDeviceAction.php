@@ -85,7 +85,7 @@ class UploadImageFromDeviceAction extends UseCaseAction
         $result = $this->handle($album, $uploadImagesDto);
 
         return fractal($result, new ImageTransformer())
-            ->withResourceName('images')
+            ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->addMeta(['message' => 'Image successfully uploaded!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

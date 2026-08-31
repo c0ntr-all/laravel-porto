@@ -45,7 +45,7 @@ class UpdateVideoAction extends UseCaseAction
         $video = $this->handle($video, $dto);
 
         return fractal($video, new VideoTransformer())
-            ->withResourceName('videos')
+            ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
             ->addMeta(['message' => 'Video successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

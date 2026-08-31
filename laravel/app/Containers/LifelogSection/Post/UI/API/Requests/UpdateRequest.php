@@ -30,7 +30,7 @@ class UpdateRequest extends AuthenticatedRequest
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',
-                Rule::in([ContainerAliasEnum::GALLERY_IMAGE->value, ContainerAliasEnum::GALLERY_VIDEO->value]),
+                Rule::in(ContainerAliasEnum::galleryFileableTypes()),
             ],
             'attachments.*.id' => 'required|uuid',
         ];

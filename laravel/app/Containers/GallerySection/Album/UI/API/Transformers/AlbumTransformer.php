@@ -6,6 +6,7 @@ use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Containers\GallerySection\Video\UI\API\Transformers\VideoTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
@@ -39,7 +40,7 @@ class AlbumTransformer extends TransformerAbstract
     {
         $images = $album->relationLoaded('images') ? $album->images : $album->images()->get();
 
-        return $this->collection($images, new ImageTransformer(), 'images')
+        return $this->collection($images, new ImageTransformer(), ContainerAliasEnum::GALLERY_IMAGE->value)
                     ->setMeta(['count' => $images->count()]);
     }
 
@@ -47,7 +48,7 @@ class AlbumTransformer extends TransformerAbstract
     {
         $videos = $album->relationLoaded('videos') ? $album->videos : $album->videos()->get();
 
-        return $this->collection($videos, new VideoTransformer(), 'videos')
+        return $this->collection($videos, new VideoTransformer(), ContainerAliasEnum::GALLERY_VIDEO->value)
                     ->setMeta(['count' => $videos->count()]);
     }
 

@@ -6,6 +6,7 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Tasks\ListImagesTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\ListImagesRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,7 @@ class ListImagesAction extends BaseAction
         $images = $this->handle($album);
 
         return fractal($images, new ImageTransformer())
-            ->withResourceName('images')
+            ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->addMeta(['count' => $images->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

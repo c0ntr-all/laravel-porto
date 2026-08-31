@@ -66,7 +66,7 @@ class UploadVideosFromWindowsAction extends UseCaseAction
         $videos = $this->handle($album, $dto);
 
         return fractal($videos, new VideoTransformer())
-            ->withResourceName('videos')
+            ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
             ->addMeta(['message' => 'Video successfully uploaded!', 'count' => $videos->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

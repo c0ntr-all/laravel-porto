@@ -77,7 +77,7 @@ class UploadVideoFromDeviceAction extends UseCaseAction
         $result = $this->handle($album, $uploadVideoDto);
 
         return fractal($result, new VideoTransformer())
-            ->withResourceName('videos')
+            ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
             ->addMeta(['message' => 'Video successfully uploaded!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

@@ -29,7 +29,7 @@ class CreatePostAttachmentsTask extends ParentTask
                 'user_id' => $userId,
                 'attachable_type' => ContainerAliasEnum::LL_POST->value,
                 'attachable_id' => $post->id,
-                'fileable_type' => $attachment['type'],
+                'fileable_type' => ContainerAliasEnum::toCanonicalMorphAlias($attachment['type']),
                 'fileable_id' => $attachment['id'],
             ]);
             // TODO: cross-section dependency

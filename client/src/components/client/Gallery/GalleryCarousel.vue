@@ -31,12 +31,16 @@
           >
             <AppVideo
               v-if="isGalleryVideo(slide) && slide.id === currentSlideId"
-              :src="slide.original_path"
+              :src="resolveMediaUrl(slide.original_path)"
               :autoplay="true"
             />
             <q-img
               v-else
-              :src="isGalleryVideo(slide) ? (slide.list_thumb_path || slide.preview_thumb_path) : slide.preview_thumb_path"
+              :src="resolveMediaUrl(
+                isGalleryVideo(slide)
+                  ? (slide.list_thumb_path || slide.preview_thumb_path)
+                  : slide.preview_thumb_path
+              )"
               :style="imageStyle"
               fit="contain"
             />
@@ -54,7 +58,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IImageSource } from 'src/types/carousel'
 import AppVideo from 'src/components/default/AppVideo.vue'
-import { isGalleryVideo } from 'src/utils/gallery'
+import { isGalleryVideo, resolveMediaUrl } from 'src/utils/gallery'
 
 // --- Props ---
 const props = defineProps<{

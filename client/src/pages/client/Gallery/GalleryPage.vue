@@ -6,6 +6,7 @@
       <div class="gallery-toolbar__count">
         {{ albumsCountLabel }}
       </div>
+      <GalleryCreateAlbumButton />
     </div>
 
     <div v-if="galleryStore.albums.length" class="gallery-grid">
@@ -19,7 +20,7 @@
     <q-card v-else class="q-mb-md" flat>
       <AppNoResultsPlug
         title="No albums yet"
-        body="Albums will appear here once they are created."
+        body="Create an album to start collecting photos and videos."
       />
     </q-card>
   </template>
@@ -29,6 +30,7 @@
 import { computed, onMounted } from 'vue'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
 import GalleryAlbumCard from 'src/components/client/Gallery/GalleryAlbumCard.vue'
+import GalleryCreateAlbumButton from 'src/components/client/Gallery/GalleryCreateAlbumButton.vue'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
@@ -54,6 +56,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 1rem;
 
   &__count {

@@ -9,7 +9,7 @@
     <div class="album-head q-mb-lg">
       <div class="album-head__cover">
         <q-img
-          v-if="galleryStore.album.image"
+          v-if="hasCover"
           :src="galleryStore.album.image"
           :alt="galleryStore.album.name"
           class="album-head__image"
@@ -24,10 +24,29 @@
         <div v-else class="album-head__placeholder">
           <q-icon name="photo_library" size="48px" />
         </div>
+        <button
+          class="album-head__cover-edit"
+          type="button"
+          @click="showCoverDialog = true"
+        >
+          <q-icon name="photo_camera" size="18px" />
+          Change cover
+        </button>
       </div>
 
       <div class="album-head__info">
-        <h1 class="album-head__name">{{ galleryStore.album.name }}</h1>
+        <div class="album-head__title-row">
+          <h1 class="album-head__name">{{ galleryStore.album.name }}</h1>
+          <q-chip
+            v-if="galleryStore.album.is_system"
+            color="primary"
+            text-color="white"
+            size="sm"
+            dense
+          >
+            System
+          </q-chip>
+        </div>
         <p v-if="galleryStore.album.description" class="album-head__description">
           {{ galleryStore.album.description }}
         </p>
@@ -37,7 +56,15 @@
           <span v-if="mediaCounts.videos">{{ videosLabel }}</span>
         </div>
         <div class="album-head__actions">
-          <GalleryUploadButton />
+          <GalleryUploadButton v-if="!galleryStore.album.is_system" />
+          <q-btn
+            outline
+            no-caps
+            color="primary"
+            icon="image"
+            label="Change cover"
+            @click="showCoverDialog = true"
+          />
         </div>
       </div>
     </div>
@@ -71,7 +98,7 @@
       <AppNoResultsPlug
         v-else
         title="This album is empty"
-        body="Add photos or videos from a device, a link, or a local path."
+        :body="emptyBody"
       />
     </div>
 
@@ -80,6 +107,8 @@
       v-model:current-slide-id="currentSlideId"
       :slides="galleryStore.album.media"
     />
+
+    <GalleryCoverDialog v-model="showCoverDialog" />
   </template>
 
   <AppNoResultsPlug
@@ -94,12 +123,13 @@ import { computed, ref, watch } from 'vue'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
 import { countMediaByKind } from 'src/api/mappers/gallery.mapper'
 import { GalleryMediaFilter } from 'src/types/gallery'
-import { isGalleryVideo } from 'src/utils/gallery'
+import { isGalleryVideo, hasAlbumCover } from 'src/utils/gallery'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import GalleryMediaCard from 'src/components/client/Gallery/GalleryMediaCard.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import AlbumPageSkeleton from 'src/pages/client/Gallery/AlbumPageSkeleton.vue'
 import GalleryUploadButton from 'src/components/client/Gallery/GalleryUploadButton.vue'
+import GalleryCoverDialog from 'src/components/client/Gallery/GalleryCoverDialog.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const props = defineProps<{
@@ -110,6 +140,7 @@ const galleryStore = useGalleryStore()
 const mediaFilter = ref<GalleryMediaFilter>('all')
 const showCarousel = ref(false)
 const currentSlideId = ref('')
+const showCoverDialog = ref(false)
 
 const mediaCounts = computed(() => countMediaByKind(galleryStore.album?.media ?? []))
 
@@ -145,6 +176,14 @@ const showMediaFilter = computed(() => (
   mediaCounts.value.photos > 0 && mediaCounts.value.videos > 0
 ))
 
+const emptyBody = computed(() => (
+  galleryStore.album?.is_system
+    ? 'This system album is filled automatically.'
+    : 'Add photos or videos from a device, a link, or a local path.'
+))
+
+const hasCover = computed(() => hasAlbumCover(galleryStore.album?.image))
+
 const visibleMedia = computed(() => {
   const items = galleryStore.album?.media ?? []
 
@@ -175,11 +214,42 @@ watch(() => props.id, (id) => {
   align-items: flex-start;
 
   &__cover {
+    position: relative;
     flex: 0 0 220px;
     width: 220px;
     overflow: hidden;
     border-radius: 18px;
     box-shadow: 0 10px 24px rgba(40, 47, 83, 0.12);
+
+    &:hover .album-head__cover-edit {
+      opacity: 1;
+    }
+  }
+
+  &__cover-edit {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border: 0;
+    background: linear-gradient(transparent, rgba(18, 18, 18, 0.78));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  @media (hover: none) {
+    .album-head__cover-edit {
+      opacity: 1;
+    }
   }
 
   &__image,
@@ -203,8 +273,16 @@ watch(() => props.id, (id) => {
     padding-top: 0.25rem;
   }
 
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+
   &__name {
-    margin: 0 0 0.5rem;
+    margin: 0;
     font-size: 36px;
     line-height: 1.15;
     font-weight: 700;

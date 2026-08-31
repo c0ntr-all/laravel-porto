@@ -24,17 +24,23 @@ function asRecords(value: unknown): Record<string, unknown>[] {
 }
 
 function mediaFromRaw(raw: Record<string, unknown>): IGalleryMediaItem[] {
-  const source = raw.media ?? raw.images
+  const items: IGalleryMediaItem[] = []
+  const seen = new Set<string>()
 
-  if (Array.isArray(source)) {
-    return asRecords(source).map(normalizeGalleryMedia)
+  for (const source of [raw.media, raw.images, raw.videos]) {
+    for (const item of asRecords(source)) {
+      const media = normalizeGalleryMedia(item)
+
+      if (seen.has(media.id)) {
+        continue
+      }
+
+      seen.add(media.id)
+      items.push(media)
+    }
   }
 
-  if (source && typeof source === 'object' && Array.isArray((source as { data?: unknown }).data)) {
-    return asRecords((source as { data: unknown[] }).data).map(normalizeGalleryMedia)
-  }
-
-  return []
+  return items
 }
 
 function resolveKind(raw: Record<string, unknown>): GalleryMediaKind {
@@ -75,11 +81,11 @@ export function normalizeGalleryMedia(raw: Record<string, unknown>): IGalleryMed
   return {
     id: String(raw.id),
     type: kind,
-    name: String(raw.name ?? ''),
+    name: String(raw.name ?? raw.original_name ?? ''),
     description: raw.description == null ? null : String(raw.description),
     original_path: String(raw.original_path ?? ''),
     list_thumb_path: String(raw.list_thumb_path ?? ''),
-    preview_thumb_path: String(raw.preview_thumb_path ?? ''),
+    preview_thumb_path: String(raw.preview_thumb_path ?? raw.list_thumb_path ?? ''),
     attachment_type: attachmentType || (kind === 'video' ? 'gallery_videos' : 'gallery_images'),
     width: Number(raw.width ?? 0),
     height: Number(raw.height ?? 0),
@@ -92,6 +98,12 @@ export function normalizeGalleryAlbum(
   metaCount?: number
 ): IGalleryAlbum {
   const media = mediaFromRaw(raw)
+  const systemCode = raw.system_code == null || raw.system_code === ''
+    ? null
+    : String(raw.system_code)
+  const imagesCount = raw.images_count == null ? null : Number(raw.images_count)
+  const videosCount = raw.videos_count == null ? null : Number(raw.videos_count)
+  const counted = (imagesCount ?? 0) + (videosCount ?? 0)
 
   return {
     id: String(raw.id),
@@ -99,8 +111,15 @@ export function normalizeGalleryAlbum(
     image: String(raw.image ?? ''),
     description: raw.description == null ? null : String(raw.description),
     created_at: String(raw.created_at ?? ''),
+    system_code: systemCode,
+    is_system: Boolean(systemCode),
     media,
-    media_count: Number(raw.media_count ?? metaCount ?? media.length)
+    media_count: Number(
+      raw.media_count ??
+      (imagesCount != null || videosCount != null ? counted : undefined) ??
+      metaCount ??
+      media.length
+    )
   }
 }
 

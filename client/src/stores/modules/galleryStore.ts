@@ -8,11 +8,12 @@ import {
   mapGalleryAlbumsResponse,
   mapGalleryMediaUploadResponse
 } from 'src/api/mappers/gallery.mapper'
-import { GalleryMediaKind, IGalleryAlbum, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
+import { GalleryMediaKind, IGalleryAlbum, IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
 import {
   galleryUploadUrl,
   isVideoFile,
-  resolveMediaKind
+  resolveMediaKind,
+  toAlbumCoverValue
 } from 'src/utils/gallery'
 
 function uniqueMedia(
@@ -38,9 +39,34 @@ export const useGalleryStore = defineStore('gallery', () => {
   const isAlbumsLoading = ref(false)
   const isAlbumLoading = ref(false)
   const isUploading = ref(false)
+  const isSaving = ref(false)
   const error = ref<string | null>(null)
 
   const media = computed(() => album.value?.media ?? [])
+
+  function mergeAlbum(current: IGalleryAlbum, incoming: IGalleryAlbum): IGalleryAlbum {
+    return {
+      ...current,
+      ...incoming,
+      media: incoming.media.length ? incoming.media : current.media,
+      media_count: incoming.media.length ? incoming.media_count : current.media_count
+    }
+  }
+
+  function upsertAlbum(incoming: IGalleryAlbum): void {
+    if (album.value?.id === incoming.id) {
+      album.value = mergeAlbum(album.value, incoming)
+    }
+
+    const index = albums.value.findIndex(item => item.id === incoming.id)
+
+    if (index === -1) {
+      albums.value = [incoming, ...albums.value]
+      return
+    }
+
+    albums.value.splice(index, 1, mergeAlbum(albums.value[index] as IGalleryAlbum, incoming))
+  }
 
   function addMedia(items: IGalleryMediaItem[]): void {
     if (!album.value || items.length === 0) {
@@ -58,6 +84,8 @@ export const useGalleryStore = defineStore('gallery', () => {
       media: [...album.value.media, ...appended],
       media_count: album.value.media_count + appended.length
     }
+
+    upsertAlbum(album.value)
   }
 
   async function getAlbums(): Promise<void> {
@@ -86,6 +114,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     try {
       const response = await galleryApi.getAlbum(id)
       album.value = mapGalleryAlbumResponse(response)
+      upsertAlbum(album.value)
 
       return album.value
     } catch (err) {
@@ -240,6 +269,89 @@ export const useGalleryStore = defineStore('gallery', () => {
     }
   }
 
+  async function createAlbum(payload: IGalleryAlbumCreateDto): Promise<IGalleryAlbum | null> {
+    isSaving.value = true
+
+    try {
+      const response = await galleryApi.createAlbum({
+        name: payload.name.trim(),
+        description: payload.description?.trim() || null
+      })
+      const created = mapGalleryAlbumResponse(response)
+
+      albums.value = [created, ...albums.value.filter(item => item.id !== created.id)]
+      handleApiSuccess(response)
+
+      return created
+    } catch (err) {
+      handleApiError(err)
+      return null
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  async function updateAlbum(payload: IGalleryAlbumUpdateDto): Promise<IGalleryAlbum | null> {
+    if (!album.value) {
+      return null
+    }
+
+    isSaving.value = true
+
+    try {
+      const response = await galleryApi.updateAlbum(album.value.id, payload)
+      const updated = mapGalleryAlbumResponse(response)
+
+      upsertAlbum(updated)
+      handleApiSuccess(response)
+
+      return updated
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  async function updateCoverFromMedia(item: IGalleryMediaItem): Promise<void> {
+    const cover = toAlbumCoverValue(item.list_thumb_path || item.original_path)
+
+    if (!cover) {
+      return
+    }
+
+    await updateAlbum({ image: cover })
+  }
+
+  async function updateCoverFromFile(file: File): Promise<void> {
+    if (!album.value) {
+      return
+    }
+
+    isUploading.value = true
+
+    try {
+      const response = await galleryApi.upload(
+        galleryUploadUrl(album.value.id, 'photo', 'device'),
+        file,
+        () => undefined
+      )
+      const mapped = mapGalleryMediaUploadResponse(response)
+
+      addMedia(mapped)
+
+      if (mapped[0]) {
+        await updateCoverFromMedia(mapped[0])
+      }
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      isUploading.value = false
+    }
+  }
+
   return {
     albums,
     album,
@@ -247,10 +359,15 @@ export const useGalleryStore = defineStore('gallery', () => {
     isAlbumsLoading,
     isAlbumLoading,
     isUploading,
+    isSaving,
     error,
     getAlbums,
     getAlbum,
     addMedia,
+    createAlbum,
+    updateAlbum,
+    updateCoverFromMedia,
+    updateCoverFromFile,
     uploadFiles,
     uploadDeviceFiles,
     uploadFromWeb,

@@ -2,6 +2,7 @@ import { api } from 'src/boot/axios'
 import { ApiRequestContext, IJsonApiResponse } from 'src/types'
 import { mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
 import { buildCorrelationHeaders } from 'src/utils/correlation'
+import { IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto } from 'src/types/gallery'
 
 export const galleryApi = {
   async getAlbums(): Promise<IJsonApiResponse> {
@@ -12,6 +13,29 @@ export const galleryApi = {
 
   async getAlbum(id: string): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/gallery/albums/${id}`)
+
+    return response.data
+  },
+
+  async createAlbum(
+    payload: IGalleryAlbumCreateDto,
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.post('v1/gallery/albums', payload, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async updateAlbum(
+    id: string,
+    payload: IGalleryAlbumUpdateDto,
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.patch(`v1/gallery/albums/${id}`, payload, {
+      headers: buildCorrelationHeaders(ctx)
+    })
 
     return response.data
   },

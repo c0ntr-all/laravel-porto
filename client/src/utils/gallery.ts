@@ -9,6 +9,7 @@ const IMAGE_EXTENSIONS = new Set([
 ])
 
 export const GALLERY_MEDIA_ACCEPT = 'image/*,video/*'
+export const GALLERY_IMAGE_ACCEPT = 'image/*'
 
 export function getPathExtension(path: string): string {
   const clean = path.split('?')[0].split('#')[0]
@@ -115,4 +116,64 @@ export function isHttpUrl(value: string): boolean {
   } catch {
     return false
   }
+}
+
+export function isSystemGalleryAlbum(album: { system_code?: string | null; is_system?: boolean }): boolean {
+  return Boolean(album.is_system || album.system_code)
+}
+
+export function hasAlbumCover(image: string | null | undefined): boolean {
+  if (!image) {
+    return false
+  }
+
+  return !image.includes('no-image.jpg')
+}
+
+export function toAlbumCoverValue(url: string): string {
+  const trimmed = url.trim()
+  const marker = '/storage/'
+  const index = trimmed.indexOf(marker)
+
+  if (index >= 0) {
+    return trimmed.slice(index + marker.length)
+  }
+
+  return trimmed
+}
+
+export function resolveMediaUrl(path?: string | null): string {
+  if (!path) return ''
+
+  const trimmed = path.trim()
+  if (!trimmed) return ''
+  if (isHttpUrl(trimmed)) return trimmed
+
+  const apiHost = (process.env.host ?? '').replace(/\/$/, '')
+  const siteOrigin = apiHost.replace(/\/api$/, '')
+
+  if (trimmed.startsWith('/')) {
+    return `${siteOrigin}${trimmed}`
+  }
+
+  return `${siteOrigin}/${trimmed}`
+}
+
+export function getAttachmentThumbSrc(attachment: {
+  list_thumb_path?: string | null
+  preview_thumb_path?: string | null
+  original_path?: string | null
+}): string {
+  const candidates = [
+    attachment.list_thumb_path,
+    attachment.preview_thumb_path,
+    attachment.original_path
+  ]
+
+  for (const candidate of candidates) {
+    const resolved = resolveMediaUrl(candidate)
+    if (resolved) return resolved
+  }
+
+  return ''
 }

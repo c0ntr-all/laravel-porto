@@ -1,6 +1,18 @@
 export type GalleryMediaKind = 'photo' | 'video'
 export type GalleryMediaFilter = 'all' | GalleryMediaKind
 export type GalleryUploadSource = 'device' | 'web' | 'windows'
+export type GallerySystemCode = 'save' | 'upload'
+
+export interface IGalleryAlbumCreateDto {
+  name: string
+  description?: string | null
+}
+
+export interface IGalleryAlbumUpdateDto {
+  name?: string
+  description?: string | null
+  image?: string | null
+}
 
 export interface IUploadItem {
   id: string
@@ -49,6 +61,8 @@ export interface IGalleryAlbum {
   image: string
   description: string | null
   created_at: string
+  system_code: GallerySystemCode | string | null
+  is_system: boolean
   media: IGalleryMediaItem[]
   media_count: number
 }

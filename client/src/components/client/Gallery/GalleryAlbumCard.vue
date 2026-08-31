@@ -6,7 +6,7 @@
     <div class="album-card__cover-wrap">
       <div class="album-card__cover">
         <q-img
-          v-if="album.image"
+          v-if="hasCover"
           :src="album.image"
           :alt="album.name"
           class="album-card__image"
@@ -26,6 +26,7 @@
           <q-icon name="collections" size="14px" />
           {{ album.media_count }}
         </div>
+        <div v-if="album.is_system" class="album-card__badge">System</div>
       </div>
     </div>
 
@@ -43,10 +44,13 @@
 import { computed } from 'vue'
 import { date } from 'quasar'
 import { IGalleryAlbum } from 'src/types/gallery'
+import { hasAlbumCover } from 'src/utils/gallery'
 
 const props = defineProps<{
   album: IGalleryAlbum
 }>()
+
+const hasCover = computed(() => hasAlbumCover(props.album.image))
 
 const formattedDate = computed(() => {
   if (!props.album.created_at) {
@@ -150,6 +154,20 @@ const formattedDate = computed(() => {
     color: #fff;
     font-size: 12px;
     line-height: 1;
+    backdrop-filter: blur(6px);
+  }
+
+  &__badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(108, 95, 252, 0.9);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     backdrop-filter: blur(6px);
   }
 

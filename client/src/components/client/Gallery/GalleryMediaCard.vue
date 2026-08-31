@@ -1,5 +1,10 @@
 <template>
-  <button class="media-card" type="button" @click="emit('click')">
+  <button
+    class="media-card"
+    type="button"
+    :class="{ 'media-card--selected': selected }"
+    @click="emit('click')"
+  >
     <q-img
       class="media-card__image"
       :src="media.list_thumb_path"
@@ -9,6 +14,9 @@
       <div v-if="isVideo" class="media-card__overlay">
         <q-icon class="media-card__play" name="play_circle" />
         <span v-if="duration" class="media-card__duration">{{ duration }}</span>
+      </div>
+      <div v-else-if="selected" class="media-card__overlay media-card__overlay--selected">
+        <q-icon class="media-card__check" name="check_circle" />
       </div>
 
       <template #error>
@@ -31,6 +39,7 @@ import { formatMediaDuration, isGalleryVideo } from 'src/utils/gallery'
 
 const props = defineProps<{
   media: IGalleryMediaItem
+  selected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -81,10 +90,19 @@ const duration = computed(() => formatMediaDuration(props.media.duration))
     transition: background 0.2s ease;
   }
 
-  &__play {
+  &__play,
+  &__check {
     font-size: 42px;
     color: #fff;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+  }
+
+  &__overlay--selected {
+    background: rgba(108, 95, 252, 0.42);
+  }
+
+  &--selected {
+    box-shadow: 0 0 0 3px $primary;
   }
 
   &__duration {

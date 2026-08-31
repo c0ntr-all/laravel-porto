@@ -23,7 +23,7 @@ const props = defineProps<{
   image: IGalleryImage
 }>()
 
-const shortDuration = computed(() => props.image.duration.slice(3, 9))
+const shortDuration = computed(() => props.image.duration?.slice(3, 9) ?? '')
 </script>
 
 <style lang="scss" scoped>

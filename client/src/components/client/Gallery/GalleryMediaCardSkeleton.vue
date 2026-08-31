@@ -1,16 +1,14 @@
 <template>
-  <q-card class="media-card col-2">
-    <q-skeleton class="media-card__image" height="200px" square />
-  </q-card>
+  <q-skeleton class="media-card-skeleton" square />
 </template>
 
 <script lang="ts" setup>
 </script>
 
 <style lang="scss" scoped>
-.media-card {
-  &__image {
-    max-height: 176px;
-  }
+.media-card-skeleton {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
 }
 </style>

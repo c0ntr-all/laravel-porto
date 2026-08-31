@@ -1,181 +1,274 @@
 <template>
-  <div class="q-mb-sm">
-    <AppBackButton link="/gallery" text="Back To Albums"/>
+  <div class="q-mb-md">
+    <AppBackButton link="/gallery" text="Back to albums" />
   </div>
 
-  <template v-if="album">
-    <q-card class="content-container q-mb-md" flat>
-      <q-card-section class="content-container__section">
-        <div class="row">
-          <div class="col-md-6">
-            <p>Album <b>{{ album.name }}</b></p>
-            <p>{{ album.description }}</p>
-          </div>
-          <div class="col-md-6 flex justify-end items-start">
-            <GalleryUploadButton/>
-          </div>
+  <AlbumPageSkeleton v-if="galleryStore.isAlbumLoading && !galleryStore.album" />
+
+  <template v-else-if="galleryStore.album">
+    <div class="album-head q-mb-lg">
+      <div class="album-head__cover">
+        <q-img
+          v-if="galleryStore.album.image"
+          :src="galleryStore.album.image"
+          :alt="galleryStore.album.name"
+          class="album-head__image"
+          fit="cover"
+        >
+          <template #error>
+            <div class="album-head__placeholder">
+              <q-icon name="photo_library" size="48px" />
+            </div>
+          </template>
+        </q-img>
+        <div v-else class="album-head__placeholder">
+          <q-icon name="photo_library" size="48px" />
         </div>
-      </q-card-section>
-      <q-card-section>
-        <p>Total Items: {{ total }}</p>
-        <div class="row q-gutter-md">
-          <GalleryMediaCard
-            v-for="media in album.images.data"
-            :key="media.id"
-            :media="media"
-            @click="openCarousel(media.id)"
-          />
+      </div>
+
+      <div class="album-head__info">
+        <h1 class="album-head__name">{{ galleryStore.album.name }}</h1>
+        <p v-if="galleryStore.album.description" class="album-head__description">
+          {{ galleryStore.album.description }}
+        </p>
+        <div class="album-head__stats">
+          <span>{{ totalLabel }}</span>
+          <span v-if="mediaCounts.photos">{{ photosLabel }}</span>
+          <span v-if="mediaCounts.videos">{{ videosLabel }}</span>
         </div>
-      </q-card-section>
-    </q-card>
+        <div class="album-head__actions">
+          <GalleryUploadButton />
+        </div>
+      </div>
+    </div>
+
+    <div class="album-body">
+      <div v-if="showMediaFilter" class="album-body__toolbar">
+        <q-btn-toggle
+          v-model="mediaFilter"
+          unelevated
+          no-caps
+          toggle-color="primary"
+          :options="filterOptions"
+        />
+      </div>
+
+      <div v-if="visibleMedia.length" class="media-grid">
+        <GalleryMediaCard
+          v-for="item in visibleMedia"
+          :key="item.id"
+          :media="item"
+          @click="openCarousel(item.id)"
+        />
+      </div>
+
+      <AppNoResultsPlug
+        v-else-if="galleryStore.album.media.length"
+        title="Nothing in this filter"
+        body="Try another type or add more media."
+      />
+
+      <AppNoResultsPlug
+        v-else
+        title="This album is empty"
+        body="Add photos or videos from a device, a link, or a local path."
+      />
+    </div>
 
     <GalleryCarousel
       v-model="showCarousel"
       v-model:current-slide-id="currentSlideId"
-      :slides="album.images.data"
+      :slides="galleryStore.album.media"
     />
   </template>
 
-  <template v-else>
-    <AlbumPageSkeleton/>
-  </template>
+  <AppNoResultsPlug
+    v-else
+    title="Album not found"
+    body="This album does not exist or is unavailable."
+  />
 </template>
 
 <script lang="ts" setup>
-import { api } from 'src/boot/axios'
-import { handleApiError, handleApiSuccess, normalizeApiItemResponse } from 'src/utils/jsonapi'
-import { onMounted, provide, ref } from 'vue'
-import { IAlbum, IMediaItem } from 'src/components/client/Gallery/types'
-import { IIncludedItem, IRelationshipData } from 'src/components/types'
+import { computed, ref, watch } from 'vue'
+import { useGalleryStore } from 'src/stores/modules/galleryStore'
+import { countMediaByKind } from 'src/api/mappers/gallery.mapper'
+import { GalleryMediaFilter } from 'src/types/gallery'
+import { isGalleryVideo } from 'src/utils/gallery'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import GalleryMediaCard from 'src/components/client/Gallery/GalleryMediaCard.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import AlbumPageSkeleton from 'src/pages/client/Gallery/AlbumPageSkeleton.vue'
 import GalleryUploadButton from 'src/components/client/Gallery/GalleryUploadButton.vue'
-
-interface IGetAlbumApiResponse {
-  data: {
-    type: string
-    id: string
-    attributes: {
-      name: string
-      image: string
-      description: string | null
-      created_at: string
-    }
-    relationships: {
-      media: {
-        data: IRelationshipData[]
-        meta: {
-          count: number
-        }
-      }
-    }
-  }
-  included: IIncludedItem[]
-  meta: {
-    count: number
-  }
-}
-
-interface IResponseMediaItem {
-  id: string
-  type: string
-  attributes: {
-    type: 'photo' | 'video'
-    name: string
-    description: string
-    original_path: string
-    list_thumb_path: string
-    preview_thumb_path: string
-    attachment_type: string
-    width: number
-    height: number
-  }
-}
-
-interface IUploadApiResponse {
-  data: IResponseMediaItem[]
-  meta: {
-    message: string
-  }
-}
-
-interface IWebUploadApiResponse {
-  data: IResponseMediaItem
-  meta: {
-    message: string
-  }
-}
+import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const props = defineProps<{
   id: string
 }>()
-const album = ref<IAlbum | null>(null)
-const total = ref(0)
-const loading = ref<boolean>(true)
+
+const galleryStore = useGalleryStore()
+const mediaFilter = ref<GalleryMediaFilter>('all')
 const showCarousel = ref(false)
-const currentSlideId = ref<string>('')
+const currentSlideId = ref('')
 
-const getAlbum = async (id: string): Promise<void> => {
-  await api.get<IGetAlbumApiResponse>(`v1/gallery/albums/${id}`)
-    .then(response => {
-      const normalizedResponse = normalizeApiItemResponse(response.data)
+const mediaCounts = computed(() => countMediaByKind(galleryStore.album?.media ?? []))
 
-      album.value = normalizedResponse.data as unknown as IAlbum
-      total.value = response.data.meta.count
-    }).catch(error => {
-      handleApiError(error)
-    }).finally(() => {
-      loading.value = false
-    })
-}
+const totalLabel = computed(() => {
+  const count = galleryStore.album?.media_count ?? 0
 
-const uploadMedia = async (data: [] | string, type: string): Promise<void> => {
-  const endpoints: Record<typeof type, string> = {
-    windows: `v1/gallery/albums/${album.value!.id}/images/upload-windows`,
-    web: `v1/gallery/albums/${album.value!.id}/images/upload-web`
-  }
-
-  await api.post<IUploadApiResponse | IWebUploadApiResponse>(
-    endpoints[type],
-    type === 'windows' ? { paths: data } : { link: data }
-  ).then(response => {
-    const responseData = response.data.data
-
-    const newMedia = Array.isArray(responseData)
-      ? responseData.map(formatMediaItem)
-      : [formatMediaItem(responseData)]
-
-    addMediaToAlbum(newMedia)
-
-    handleApiSuccess(response.data)
-  }).catch(error => {
-    handleApiError(error)
-  })
-}
-
-const formatMediaItem = (item: IResponseMediaItem): IMediaItem => ({
-  id: item.id,
-  ...item.attributes
+  return count === 1 ? '1 item' : `${count} items`
 })
 
-const addMediaToAlbum = (media: IMediaItem[]) => {
-  album.value?.images.data.push(...media)
-}
-const openCarousel = (id: string) => {
+const photosLabel = computed(() => (
+  mediaCounts.value.photos === 1 ? '1 photo' : `${mediaCounts.value.photos} photos`
+))
+
+const videosLabel = computed(() => (
+  mediaCounts.value.videos === 1 ? '1 video' : `${mediaCounts.value.videos} videos`
+))
+
+const filterOptions = computed(() => {
+  const options = [{ label: 'All', value: 'all' }]
+
+  if (mediaCounts.value.photos) {
+    options.push({ label: 'Photos', value: 'photo' })
+  }
+
+  if (mediaCounts.value.videos) {
+    options.push({ label: 'Videos', value: 'video' })
+  }
+
+  return options
+})
+
+const showMediaFilter = computed(() => (
+  mediaCounts.value.photos > 0 && mediaCounts.value.videos > 0
+))
+
+const visibleMedia = computed(() => {
+  const items = galleryStore.album?.media ?? []
+
+  if (mediaFilter.value === 'all') {
+    return items
+  }
+
+  return items.filter(item => (
+    mediaFilter.value === 'video' ? isGalleryVideo(item) : !isGalleryVideo(item)
+  ))
+})
+
+function openCarousel(id: string): void {
   currentSlideId.value = id
   showCarousel.value = true
 }
 
-provide('albumId', props.id)
-provide('uploadMedia', uploadMedia)
-provide('addMediaToAlbum', addMediaToAlbum)
-
-onMounted(() => {
-  getAlbum(props.id)
-})
+watch(() => props.id, (id) => {
+  mediaFilter.value = 'all'
+  void galleryStore.getAlbum(id)
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
+.album-head {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+
+  &__cover {
+    flex: 0 0 220px;
+    width: 220px;
+    overflow: hidden;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(40, 47, 83, 0.12);
+  }
+
+  &__image,
+  &__placeholder {
+    width: 220px;
+    height: 220px;
+  }
+
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9aa0b8;
+    background:
+      linear-gradient(135deg, rgba(108, 95, 252, 0.12), rgba(38, 166, 154, 0.08));
+  }
+
+  &__info {
+    min-width: 0;
+    flex: 1;
+    padding-top: 0.25rem;
+  }
+
+  &__name {
+    margin: 0 0 0.5rem;
+    font-size: 36px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #282f53;
+  }
+
+  &__description {
+    margin: 0 0 0.75rem;
+    max-width: 640px;
+    color: #55586d;
+    line-height: 1.45;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 14px;
+    color: #777a8f;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+.album-body {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #fff;
+
+  &__toolbar {
+    margin-bottom: 1rem;
+  }
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  .album-head {
+    flex-direction: column;
+
+    &__cover,
+    &__image,
+    &__placeholder {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    &__image,
+    &__placeholder {
+      height: auto;
+      aspect-ratio: 1;
+    }
+
+    &__name {
+      font-size: 28px;
+    }
+  }
+}
 </style>

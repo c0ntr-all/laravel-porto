@@ -1,28 +1,22 @@
 <template>
-  <q-card class="content-container q-mb-md" flat>
-    <q-card-section class="content-container__section">
-      <p>
-        <q-skeleton type="text" :width="'150px'" />
-      </p>
-      <p>
-        <q-skeleton type="text" :width="'350px'" />
-        <q-skeleton type="text" :width="'350px'" />
-        <q-skeleton type="text" :width="'350px'" />
-        <q-skeleton type="text" :width="'350px'" />
-      </p>
-    </q-card-section>
-    <q-card-section>
-      <p>
-        <q-skeleton type="text" :width="'100px'" />
-      </p>
-      <div class="row q-gutter-md">
-        <GalleryMediaCardSkeleton
-          v-for="q in Math.floor(Math.random() * 30)"
-          :key="q"
-        />
-      </div>
-    </q-card-section>
-  </q-card>
+  <div class="album-head q-mb-lg">
+    <q-skeleton class="album-head__cover" square />
+    <div class="album-head__info">
+      <q-skeleton type="text" width="240px" class="text-h4" />
+      <q-skeleton type="text" width="70%" />
+      <q-skeleton type="text" width="40%" />
+      <q-skeleton type="QBtn" width="120px" />
+    </div>
+  </div>
+
+  <div class="album-body">
+    <div class="media-grid">
+      <GalleryMediaCardSkeleton
+        v-for="index in 12"
+        :key="index"
+      />
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -30,5 +24,32 @@ import GalleryMediaCardSkeleton from 'src/components/client/Gallery/GalleryMedia
 </script>
 
 <style lang="scss" scoped>
+.album-head {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
 
+  &__cover {
+    width: 220px;
+    height: 220px;
+    border-radius: 18px;
+  }
+
+  &__info {
+    flex: 1;
+    padding-top: 0.5rem;
+  }
+}
+
+.album-body {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+}
 </style>

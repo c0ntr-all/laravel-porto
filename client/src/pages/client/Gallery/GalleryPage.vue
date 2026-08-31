@@ -1,81 +1,70 @@
 <template>
-  <template v-if="albums">
-    <q-card class="content-container q-mb-md" flat>
-      <q-card-section class="content-container__section">
-        <div class="row q-gutter-md">
-          <q-card v-for="album in albums" :key="album.id" class="album-card col-2">
-            <q-img :src="album.image" :alt="album.name" :height="'100%'">
-              <div class="absolute-bottom text-h6">
-                <router-link :to="`/gallery/albums/${album.id}`" class="album-card__link">
-                  {{ album.name }}
-                </router-link>
-              </div>
-            </q-img>
-          </q-card>
-        </div>
-      </q-card-section>
-    </q-card>
-  </template>
+  <GalleryPageSkeleton v-if="galleryStore.isAlbumsLoading && !galleryStore.albums.length" />
+
   <template v-else>
-    <GalleryPageSkeleton/>
+    <div class="gallery-toolbar">
+      <div class="gallery-toolbar__count">
+        {{ albumsCountLabel }}
+      </div>
+    </div>
+
+    <div v-if="galleryStore.albums.length" class="gallery-grid">
+      <GalleryAlbumCard
+        v-for="album in galleryStore.albums"
+        :key="album.id"
+        :album="album"
+      />
+    </div>
+
+    <q-card v-else class="q-mb-md" flat>
+      <AppNoResultsPlug
+        title="No albums yet"
+        body="Albums will appear here once they are created."
+      />
+    </q-card>
   </template>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-import { api } from 'src/boot/axios'
-import { handleApiError, normalizeApiItemResponse } from 'src/utils/jsonapi'
-import { IAlbum } from 'src/components/client/Gallery/types'
-import { IIncludedItem } from 'src/components/types'
+import { computed, onMounted } from 'vue'
+import { useGalleryStore } from 'src/stores/modules/galleryStore'
+import GalleryAlbumCard from 'src/components/client/Gallery/GalleryAlbumCard.vue'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
+import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
-interface IResponseAlbum {
-  type: string
-  id: string
-  attributes: {
-    name: string
-    image: string
-    description: string | null
-    created_at: string
+const galleryStore = useGalleryStore()
+
+const albumsCountLabel = computed(() => {
+  const count = galleryStore.albums.length
+
+  if (count === 1) {
+    return '1 album'
   }
-}
 
-interface IGetAlbumsApiResponse {
-  data: IResponseAlbum[],
-  included: IIncludedItem[]
-}
-
-const albums = ref<IAlbum[]>()
-const loading = ref(true)
-
-const getAlbums = async (): Promise<void> => {
-  await api.get<IGetAlbumsApiResponse>('v1/gallery/albums')
-    .then(response => {
-      albums.value = normalizeApiItemResponse(response.data)
-    }).catch(error => {
-      handleApiError(error)
-    }).finally(() => {
-      loading.value = false
-    })
-}
+  return `${count} albums`
+})
 
 onMounted(() => {
-  getAlbums()
+  void galleryStore.getAlbums()
 })
 </script>
 
 <style lang="scss" scoped>
-.album-card {
-  width: 100%;
-  max-width: 250px;
+.gallery-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 
-  &__link {
-    text-decoration: none;
-    color: #fff;
-
-    &:hover {
-      color: #ccc;
-    }
+  &__count {
+    font-size: 14px;
+    color: #777a8f;
   }
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem 1.25rem;
 }
 </style>

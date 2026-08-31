@@ -5,4 +5,6 @@ export interface IImageSource {
   height: number
   original_path: string
   preview_thumb_path: string
+  list_thumb_path?: string
+  type?: string
 }

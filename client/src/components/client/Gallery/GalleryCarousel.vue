@@ -30,13 +30,13 @@
             :name="slide.id"
           >
             <AppVideo
-              v-if="slide.attachment_type === 'gallery_videos'"
+              v-if="isGalleryVideo(slide) && slide.id === currentSlideId"
               :src="slide.original_path"
               :autoplay="true"
             />
             <q-img
               v-else
-              :src="slide.preview_thumb_path"
+              :src="isGalleryVideo(slide) ? (slide.list_thumb_path || slide.preview_thumb_path) : slide.preview_thumb_path"
               :style="imageStyle"
               fit="contain"
             />
@@ -54,6 +54,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IImageSource } from 'src/types/carousel'
 import AppVideo from 'src/components/default/AppVideo.vue'
+import { isGalleryVideo } from 'src/utils/gallery'
 
 // --- Props ---
 const props = defineProps<{
@@ -99,7 +100,7 @@ const imageSizes = computed(() => {
   const maxH = viewport.value.height - FOOTER_HEIGHT - 40
 
   const img = currentSlide.value
-  const aspect = img.width / img.height
+  const aspect = img.width && img.height ? img.width / img.height : 16 / 9
   const maxAspect = maxW / maxH
 
   let width, height

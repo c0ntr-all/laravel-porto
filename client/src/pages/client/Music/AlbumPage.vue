@@ -33,6 +33,12 @@
               </template>
             </p>
             <p class="album-head__description-item">{{ albumYear(album?.date) }}</p>
+            <MusicAlbumMetaChips
+              v-if="album"
+              class="q-mb-sm"
+              :album-type="album.album_type"
+              :edition="album.edition"
+            />
             <div class="album-head__description-item">
               {{ album?.description }}
             </div>
@@ -74,6 +80,8 @@ import MusicAlbumVersionsList from 'src/components/client/Music/MusicAlbumVersio
 import MusicAlbumTracksList from 'src/components/client/Music/MusicAlbumTracksList.vue'
 import { ITrack } from 'src/components/client/Music/types'
 import { albumYear } from 'src/utils/albumDate'
+import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
+import { IAlbumType } from 'src/types'
 
 interface Artist {
   id: string
@@ -86,6 +94,8 @@ interface AlbumVersion {
   content: string | null
   date: string
   image: string
+  edition?: string | null
+  album_type?: IAlbumType | null
 }
 
 interface Tag {
@@ -100,6 +110,8 @@ interface Album {
   image: string
   description: string | null
   date: string
+  edition?: string | null
+  album_type?: IAlbumType | null
   relationships: {
     artists: {
       data: Artist[]
@@ -145,6 +157,8 @@ interface GetAlbumApiResponse {
       image: string
       description: string | null
       date: string
+      edition?: string | null
+      album_type?: IAlbumType | null
     }
     relationships: {
       artists: {

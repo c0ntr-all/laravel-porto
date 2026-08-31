@@ -1,8 +1,9 @@
-import { IAlbum, IAlbumVersion, IJsonApiResponse } from 'src/types'
+import { IAlbum, IAlbumType, IAlbumVersion, IJsonApiResponse } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeArtistsShort } from 'src/api/mappers/Music/artist.mapper'
 import { normalizeMusicTags } from 'src/api/mappers/Music/tag.mapper'
+import { normalizeAlbumType } from 'src/utils/albumMeta'
 
 export function normalizeAlbumVersion(raw: Record<string, unknown>): IAlbumVersion {
   return {
@@ -10,6 +11,8 @@ export function normalizeAlbumVersion(raw: Record<string, unknown>): IAlbumVersi
     parent_id: raw.parent_id == null ? null : String(raw.parent_id),
     name: String(raw.name ?? ''),
     edition: raw.edition == null ? null : String(raw.edition),
+    album_type_id: raw.album_type_id == null ? undefined : Number(raw.album_type_id),
+    album_type: normalizeAlbumType(raw.album_type),
     date: raw.date == null ? null : String(raw.date),
     image: String(raw.image ?? '')
   }
@@ -22,6 +25,7 @@ export function normalizeAlbum(raw: Record<string, unknown>): IAlbum {
     id: String(raw.id),
     parent_id: raw.parent_id == null ? null : String(raw.parent_id),
     album_type_id: raw.album_type_id == null ? null : Number(raw.album_type_id),
+    album_type: normalizeAlbumType(raw.album_type),
     name: String(raw.name ?? ''),
     edition: raw.edition == null ? null : String(raw.edition),
     date: raw.date == null ? null : String(raw.date),
@@ -52,4 +56,10 @@ export function mapAlbumResponse(response: IJsonApiResponse): IAlbum {
 
 export function mapAlbumsResponse(response: IJsonApiResponse): IAlbum[] {
   return mapResponse(response).map(normalizeAlbum)
+}
+
+export function mapAlbumTypesResponse(response: IJsonApiResponse): IAlbumType[] {
+  return mapResponse(response)
+    .map(item => normalizeAlbumType(item))
+    .filter((item): item is IAlbumType => Boolean(item))
 }

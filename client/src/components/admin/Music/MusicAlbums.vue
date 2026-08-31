@@ -56,14 +56,16 @@
             <q-item-section>
               <q-item-label class="text-subtitle1 text-weight-medium">
                 {{ album.name }}
-                <q-badge v-if="album.edition" class="q-ml-xs" color="primary" outline>
-                  {{ album.edition }}
-                </q-badge>
               </q-item-label>
               <q-item-label caption>
                 {{ artistNames(album) }}
                 <span v-if="albumYear(album.date)"> · {{ albumYear(album.date) }}</span>
               </q-item-label>
+              <MusicAlbumMetaChips
+                class="q-mt-xs"
+                :album-type="album.album_type"
+                :edition="album.edition"
+              />
               <div v-if="album.tags.length" class="q-gutter-xs q-mt-xs">
                 <q-chip
                   v-for="tag in album.tags.slice(0, 4)"
@@ -116,12 +118,12 @@
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>
-                    {{ version.name }}
-                    <q-badge v-if="version.edition" class="q-ml-xs" color="secondary" outline>
-                      {{ version.edition }}
-                    </q-badge>
-                  </q-item-label>
+                  <q-item-label>{{ version.name }}</q-item-label>
+                  <MusicAlbumMetaChips
+                    class="q-mt-xs"
+                    :album-type="version.album_type"
+                    :edition="version.edition"
+                  />
                   <q-item-label caption>{{ albumYear(version.date) }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
@@ -179,6 +181,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import MusicAlbumFormDialog from 'src/components/admin/Music/MusicAlbumFormDialog.vue'
+import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
 import { albumYear } from 'src/utils/albumDate'
 import { IAlbum, IAlbumVersion } from 'src/types'
 

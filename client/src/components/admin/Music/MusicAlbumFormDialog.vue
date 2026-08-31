@@ -5,7 +5,7 @@
         <div>
           <div class="text-h6">Edit album</div>
           <div class="text-caption text-grey-7">
-            {{ album.is_version ? 'This release is grouped as a version' : 'Main release' }}
+            {{ album.parent_id ? 'Grouped under another album' : 'Standalone release' }}
           </div>
         </div>
         <q-space />
@@ -32,19 +32,28 @@
           </div>
           <div class="col-12 col-sm-8 q-gutter-md">
             <q-input v-model="name" label="Name" outlined dense />
+            <q-select
+              v-model="albumTypeId"
+              :options="typeOptions"
+              label="Version"
+              option-value="id"
+              option-label="label"
+              emit-value
+              map-options
+              outlined
+              dense
+              :loading="admin.isAlbumTypesLoading"
+              hint="Album type: Studio, Live, EP, Demo…"
+            />
             <div class="row q-col-gutter-sm">
               <div class="col-6">
-                <q-select
+                <q-input
                   v-model="edition"
-                  :options="editionOptions"
-                  label="Edition / version"
-                  use-input
-                  new-value-mode="add-unique"
+                  label="Edition"
                   outlined
                   dense
                   clearable
-                  input-debounce="0"
-                  @filter="filterEdition"
+                  hint="Free text: Remastered, Deluxe, Anniversary…"
                 />
               </div>
               <div class="col-6">
@@ -102,7 +111,8 @@
             <q-item v-for="version in album.versions" :key="version.id">
               <q-item-section>
                 {{ version.name }}
-                <span v-if="version.edition" class="text-grey-7"> · {{ version.edition }}</span>
+                <span v-if="version.album_type" class="text-deep-purple q-ml-xs">{{ version.album_type.label }}</span>
+                <span v-if="version.edition" class="text-orange q-ml-xs"> · {{ version.edition }}</span>
               </q-item-section>
               <q-item-section side>{{ albumYear(version.date) }}</q-item-section>
             </q-item>
@@ -135,17 +145,6 @@ import MusicTagGroupSelect from 'src/components/admin/Music/MusicTagGroupSelect.
 import { albumYear } from 'src/utils/albumDate'
 import { IAlbum, IArtistShort } from 'src/types'
 
-const EDITIONS = [
-  'Original',
-  'Remastered',
-  'Rerecorded',
-  'Deluxe',
-  'Anniversary',
-  'Live',
-  'Instrumental',
-  'Demo'
-]
-
 const props = defineProps<{
   modelValue: boolean
   album: IAlbum
@@ -166,15 +165,17 @@ const show = computed({
 
 const name = ref(props.album.name)
 const description = ref(props.album.description ?? '')
-const edition = ref(props.album.edition)
+const edition = ref(props.album.edition ?? '')
+const albumTypeId = ref(props.album.album_type?.id ?? (props.album.album_type_id != null ? String(props.album.album_type_id) : null))
 const date = ref(props.album.date ?? '')
 const parentId = ref(props.album.parent_id)
 const artistIds = ref(props.album.artists.map(artist => artist.id))
 const tagIds = ref(props.album.tags.map(tag => tag.id))
 const imageFile = ref<File | null>(null)
-const editionOptions = ref([...EDITIONS])
 const artistOptions = ref<IArtistShort[]>([...props.album.artists])
 const extraParents = ref<IAlbum[]>([])
+
+const typeOptions = computed(() => admin.albumTypes)
 
 const coverPreview = computed(() => {
   if (imageFile.value) {
@@ -210,7 +211,8 @@ const parentSelectOptions = computed(() => {
 const hydrate = (album: IAlbum) => {
   name.value = album.name
   description.value = album.description ?? ''
-  edition.value = album.edition
+  edition.value = album.edition ?? ''
+  albumTypeId.value = album.album_type?.id ?? (album.album_type_id != null ? String(album.album_type_id) : null)
   date.value = album.date ?? ''
   parentId.value = album.parent_id
   artistIds.value = album.artists.map(artist => artist.id)
@@ -220,13 +222,6 @@ const hydrate = (album: IAlbum) => {
 }
 
 watch(() => props.album, hydrate)
-
-const filterEdition = (val: string, update: (fn: () => void) => void) => {
-  update(() => {
-    const needle = val.toLowerCase()
-    editionOptions.value = EDITIONS.filter(item => item.toLowerCase().includes(needle))
-  })
-}
 
 const filterArtists = async (val: string, update: (fn: () => void) => void) => {
   const found = await admin.searchArtistOptions(val)
@@ -250,7 +245,8 @@ const save = async () => {
   const album = await admin.updateAlbum(props.album.id, {
     name: name.value.trim(),
     description: description.value.trim() || null,
-    edition: edition.value,
+    edition: edition.value.trim() || null,
+    album_type_id: albumTypeId.value ? Number(albumTypeId.value) : null,
     date: date.value || null,
     parent_id: parentId.value ? Number(parentId.value) : null,
     artist_ids: artistIds.value.map(Number),
@@ -267,6 +263,7 @@ onMounted(() => {
   if (!tagStore.groups.length || !tagStore.tags.length) {
     void tagStore.loadAll()
   }
+  void admin.loadAlbumTypes()
 })
 </script>
 

@@ -1,10 +1,12 @@
 import { IArtistShort } from './artist'
 import { IMusicTag } from './tag'
+import { IAlbumType } from './album'
 
 export interface ITrackAlbum {
   id: string
   name: string
   edition?: string | null
+  album_type?: IAlbumType | null
   date?: string | null
   image?: string
 }

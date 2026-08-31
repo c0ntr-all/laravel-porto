@@ -3,6 +3,7 @@ import { mapResponse } from 'src/utils/jsonApiMapper'
 import { normalizeArtistShort } from 'src/api/mappers/Music/artist.mapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeMusicTags } from 'src/api/mappers/Music/tag.mapper'
+import { normalizeAlbumType } from 'src/utils/albumMeta'
 
 export function normalizeTrack(
   raw: Record<string, unknown>,
@@ -27,6 +28,7 @@ export function normalizeTrack(
           id: String(albumRaw.id),
           name: String(albumRaw.name ?? ''),
           edition: albumRaw.edition == null ? null : String(albumRaw.edition),
+          album_type: normalizeAlbumType(albumRaw.album_type),
           date: albumRaw.date == null ? null : String(albumRaw.date),
           image: albumRaw.image == null ? undefined : String(albumRaw.image)
         }

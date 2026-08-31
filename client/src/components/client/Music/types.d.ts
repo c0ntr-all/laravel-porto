@@ -34,11 +34,20 @@ export interface IAlbum {
   description: string
   image: string
   date: string
+  edition?: string | null
+  album_type?: {
+    id: string
+    name: string
+    slug: string
+    label: string
+  } | null
 }
 export interface AlbumVersion {
   id: string,
   name: string,
   image: string
+  edition?: string | null
+  album_type?: IAlbum['album_type']
 }
 export interface IArtist {
   id: string

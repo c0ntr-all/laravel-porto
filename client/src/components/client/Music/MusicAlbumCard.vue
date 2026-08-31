@@ -10,12 +10,18 @@
         </router-link>
       </div>
       <p class="album-card__year">{{ albumYear(album.date) }}</p>
+      <MusicAlbumMetaChips
+        :album-type="album.album_type"
+        :edition="album.edition"
+      />
     </q-card-section>
   </q-card>
 </template>
 
 <script lang="ts" setup>
 import { albumYear } from 'src/utils/albumDate'
+import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
+import { IAlbumType } from 'src/types'
 
 interface Album {
   id: string
@@ -23,6 +29,8 @@ interface Album {
   description?: string | null
   image: string
   date?: string | null
+  edition?: string | null
+  album_type?: IAlbumType | string | null
 }
 
 defineProps<{

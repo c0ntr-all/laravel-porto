@@ -4,7 +4,7 @@ import { artistApi } from 'src/api/requests/artistApi'
 import { albumApi } from 'src/api/requests/albumApi'
 import { trackApi } from 'src/api/requests/trackApi'
 import { mapArtistResponse, mapArtistsResponse } from 'src/api/mappers/Music/artist.mapper'
-import { mapAlbumResponse, mapAlbumsResponse } from 'src/api/mappers/Music/album.mapper'
+import { mapAlbumResponse, mapAlbumsResponse, mapAlbumTypesResponse } from 'src/api/mappers/Music/album.mapper'
 import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
 import {
   extractCursorFromResponse,
@@ -12,7 +12,7 @@ import {
   handleApiSuccess,
   hasMoreFromResponse
 } from 'src/utils/jsonapi'
-import { IAlbum, IAlbumWriteDto, IArtist, ITrack } from 'src/types'
+import { IAlbum, IAlbumType, IAlbumWriteDto, IArtist, ITrack } from 'src/types'
 
 function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
   const seen = new Set(current.map(item => item.id))
@@ -37,6 +37,8 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
   const isAlbumSaving = ref(false)
   const albumNameSearch = ref('')
   const albumArtistSearch = ref('')
+  const albumTypes = ref<IAlbumType[]>([])
+  const isAlbumTypesLoading = ref(false)
 
   const tracks = ref<ITrack[]>([])
   const tracksCursor = ref<string | null>(null)
@@ -296,6 +298,26 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     }
   }
 
+  async function loadAlbumTypes(): Promise<IAlbumType[]> {
+    if (albumTypes.value.length) {
+      return albumTypes.value
+    }
+
+    isAlbumTypesLoading.value = true
+
+    try {
+      const response = await albumApi.listAlbumTypes()
+      albumTypes.value = mapAlbumTypesResponse(response)
+
+      return albumTypes.value
+    } catch (error) {
+      handleApiError(error)
+      return []
+    } finally {
+      isAlbumTypesLoading.value = false
+    }
+  }
+
   async function searchArtistOptions(name: string): Promise<IArtist[]> {
     try {
       const response = await artistApi.getArtists({ name: name.trim() || undefined })
@@ -332,6 +354,8 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     isAlbumSaving,
     albumNameSearch,
     albumArtistSearch,
+    albumTypes,
+    isAlbumTypesLoading,
     tracks,
     tracksCursor,
     hasMoreTracks,
@@ -347,6 +371,7 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     updateAlbum,
     deleteAlbum,
     getTracks,
+    loadAlbumTypes,
     searchArtistOptions,
     searchAlbumOptions
   }

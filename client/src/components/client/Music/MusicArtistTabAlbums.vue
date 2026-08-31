@@ -39,6 +39,13 @@ interface IResponseAlbum {
     name: string
     image: string
     date: string
+    edition?: string | null
+    album_type?: {
+      id: string | number
+      name: string
+      slug: string
+      label: string
+    } | null
   }
   relationships: {
     artists: IRelation[]
@@ -68,7 +75,9 @@ const getAlbums = async (id: string): Promise<void> => {
           id: responseAlbum.id,
           name: responseAlbum.attributes.name,
           image: responseAlbum.attributes.image,
-          date: responseAlbum.attributes.date
+          date: responseAlbum.attributes.date,
+          edition: responseAlbum.attributes.edition ?? null,
+          album_type: responseAlbum.attributes.album_type ?? null
         } as IAlbum
       })
       albumsCount.value = response.data.meta.albums_count

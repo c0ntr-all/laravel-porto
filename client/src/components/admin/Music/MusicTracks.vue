@@ -79,6 +79,12 @@
               {{ track.artist || 'Unknown artist' }}
               <span v-if="track.album"> · {{ track.album.name }}</span>
             </q-item-label>
+            <MusicAlbumMetaChips
+              v-if="track.album"
+              class="q-mt-xs"
+              :album-type="track.album.album_type"
+              :edition="track.album.edition"
+            />
             <div v-if="track.tags?.length" class="q-gutter-xs q-mt-xs">
               <q-chip
                 v-for="tag in track.tags.slice(0, 4)"
@@ -115,6 +121,7 @@ import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { ITrack } from 'src/types'
+import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
 
 const admin = useMusicAdminStore()
 const musicPlayer = useMusicPlayer()

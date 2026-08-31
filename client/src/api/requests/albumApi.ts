@@ -18,6 +18,9 @@ function toFormData(payload: IAlbumWriteDto): FormData {
   if (payload.edition !== undefined) {
     formData.append('edition', payload.edition ?? '')
   }
+  if (payload.album_type_id !== undefined) {
+    formData.append('album_type_id', payload.album_type_id == null ? '' : String(payload.album_type_id))
+  }
   if (payload.parent_id !== undefined) {
     formData.append('parent_id', payload.parent_id == null ? '' : String(payload.parent_id))
   }
@@ -37,6 +40,12 @@ function toFormData(payload: IAlbumWriteDto): FormData {
 }
 
 export const albumApi = {
+  async listAlbumTypes(): Promise<IJsonApiResponse> {
+    const response = await api.get('v1/music/album-types')
+
+    return response.data
+  },
+
   async listAlbums(query?: IAlbumListQuery): Promise<IJsonApiResponse> {
     const filters = buildFilterForUrl({
       name: query?.name,

@@ -11,7 +11,7 @@ class UpdateRequest extends AdminRequest
         return [
             'name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string|nullable',
-            'tags' => 'sometimes|array',
+            'tags' => 'sometimes|nullable|array',
             'tags.*' => 'integer|exists:music_tags,id',
             'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];

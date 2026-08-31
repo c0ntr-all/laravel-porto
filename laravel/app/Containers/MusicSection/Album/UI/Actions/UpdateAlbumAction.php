@@ -58,8 +58,8 @@ class UpdateAlbumAction extends BaseAction
                 $this->syncArtistsForAlbumTask->run($album, $requestData['artist_ids']);
             }
 
-            if (!empty($requestData['tags'])) {
-                $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags']]));
+            if (array_key_exists('tags', $requestData)) {
+                $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]));
             }
 
             return $album->load(['artists', 'tags', 'versions', 'parent']);

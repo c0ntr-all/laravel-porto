@@ -5,37 +5,30 @@ namespace App\Containers\MusicSection\Upload\Tasks;
 use App\Containers\MusicSection\Album\Models\AlbumType;
 use App\Containers\MusicSection\Upload\Data\DTO\ParsedTrackDto;
 use App\Ship\Parents\Tasks\Task as ParentTask;
+use Illuminate\Support\Enumerable;
 use Illuminate\Support\Facades\Cache;
 
 class BuildLibraryTreeTask extends ParentTask
 {
-    private const array VERSION_KEYWORDS = [
-        'edition',
-        'remastered',
-        'japanese',
-        'reissue',
-        'limited',
-        'special',
-        'deluxe',
-        'expanded',
-        'anniversary',
-        'rerecorded',
-        'remix',
-        'remaster',
-        'bonus',
-    ];
+    public function __construct(
+        private readonly ParseAlbumTitleTask $parseAlbumTitleTask,
+    ) {
+    }
 
     /**
      * @param ParsedTrackDto[] $tracks
      */
     public function run(array $tracks, string $artistName, string $artistWindowsPath): array
     {
-        $albumTypes = Cache::get('album_types') ?? AlbumType::all();
+        $albumTypes = Cache::get('album_types');
+        if (!$albumTypes instanceof Enumerable || $albumTypes->isEmpty()) {
+            $albumTypes = AlbumType::all();
+        }
         $albums = [];
 
         foreach ($tracks as $track) {
             $track = $this->enrichAlbumMeta($track, $albumTypes);
-            $albumKey = $track->album . '_' . ($track->year ?? 'unknown') . '_' . $track->album_windows_path;
+            $albumKey = $track->album.'_'.($track->year ?? 'unknown').'_'.$track->album_windows_path;
 
             if (!isset($albums[$albumKey])) {
                 $albums[$albumKey] = [
@@ -44,6 +37,7 @@ class BuildLibraryTreeTask extends ParentTask
                     'path' => $track->album_windows_path,
                     'album_type_id' => $track->album_type_id,
                     'original_album' => $track->original_album,
+                    'edition' => $track->album_version,
                     'attributes' => $track->album_version,
                     'image' => $track->album_cover_linux_path,
                     'tracks' => [],
@@ -99,40 +93,13 @@ class BuildLibraryTreeTask extends ParentTask
 
     private function enrichAlbumMeta(ParsedTrackDto $track, mixed $albumTypes): ParsedTrackDto
     {
-        $track->album_type_id = 1;
-        $track->original_album = null;
-        $track->album_version = null;
+        $parsed = $this->parseAlbumTitleTask->run($track->album, $albumTypes);
 
-        if (!preg_match_all('/\((.*?)\)/', $track->album, $matches)) {
-            return $track;
-        }
-
-        foreach ($matches[1] as $attribute) {
-            $lowerAttr = strtolower($attribute);
-            $albumType = $albumTypes->firstWhere(fn ($type) => $type->slug === $lowerAttr);
-
-            if ($albumType) {
-                $track->album_type_id = (int) $albumType->id;
-                continue;
-            }
-
-            $track->original_album = trim(preg_replace('/\s+/', ' ', str_replace('(' . $attribute . ')', '', $track->album)) ?? '');
-            if ($this->isVersionString($lowerAttr)) {
-                $track->album_version = $attribute;
-            }
-        }
+        $track->album_type_id = $parsed['album_type_id'];
+        $track->album_version = $parsed['edition'];
+        $track->original_album = $parsed['original_album'];
+        $track->album = $parsed['name'];
 
         return $track;
-    }
-
-    private function isVersionString(string $string): bool
-    {
-        foreach (self::VERSION_KEYWORDS as $keyword) {
-            if (str_contains($string, $keyword)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

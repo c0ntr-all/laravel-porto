@@ -21,8 +21,8 @@ class ListAlbumsByNameTask extends Task
      * @param string $name
      * @return Album|null
      */
-    public function run(Artist $artist, string $name): ?Album
+    public function run(Artist $artist, string $name, ?int $albumTypeId = null): ?Album
     {
-        return $this->albumRepository->findRootByName($artist, $name);
+        return $this->albumRepository->findRootByName($artist, $name, $albumTypeId);
     }
 }

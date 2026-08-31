@@ -262,7 +262,11 @@ class PersistLibraryTask extends ParentTask
     ): Album {
         $parentId = null;
         if (!empty($albumData['original_album'])) {
-            $parentId = $this->listAlbumsByNameTask->run($primaryArtist, $albumData['original_album'])?->id;
+            $parentId = $this->listAlbumsByNameTask->run(
+                $primaryArtist,
+                $albumData['original_album'],
+                isset($albumData['album_type_id']) ? (int) $albumData['album_type_id'] : null,
+            )?->id;
         }
 
         $payload = [
@@ -271,7 +275,7 @@ class PersistLibraryTask extends ParentTask
             'path' => $albumData['path'],
             'album_type_id' => $albumData['album_type_id'],
             'parent_id' => $parentId,
-            'edition' => $albumData['attributes'],
+            'edition' => $albumData['edition'] ?? $albumData['attributes'] ?? null,
         ];
 
         $album = $this->findAlbumByPathTask->run($albumData['path']);
@@ -312,7 +316,25 @@ class PersistLibraryTask extends ParentTask
             $album->save();
         }
 
+        $this->attachOrphanVersions($primaryArtist, $album);
+
         return $album;
+    }
+
+    private function attachOrphanVersions(Artist $artist, Album $root): void
+    {
+        if ($root->parent_id !== null || filled($root->edition)) {
+            return;
+        }
+
+        $artist->albums()
+            ->where('id', '!=', $root->id)
+            ->whereNull('parent_id')
+            ->where('name', $root->name)
+            ->where('album_type_id', $root->album_type_id)
+            ->whereNotNull('edition')
+            ->where('edition', '!=', '')
+            ->update(['parent_id' => $root->id]);
     }
 
     private function persistTrack(

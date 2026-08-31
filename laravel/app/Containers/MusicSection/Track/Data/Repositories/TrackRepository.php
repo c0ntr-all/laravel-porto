@@ -8,6 +8,7 @@ use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\CursorPaginator;
 use Spatie\QueryBuilder\AllowedFilter;
 
@@ -21,7 +22,7 @@ class TrackRepository
                            ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'number'])
                            ->allowedIncludes(['tags', 'artists', 'album'])
-                           ->with(['tags', 'artists', 'rate'])
+                           ->with(['tags', 'artists', 'rate', 'album'])
                            ->orderByDesc('created_at')
                            ->orderByDesc('id')
                            ->cursorPaginate(self::DEFAULT_PER_PAGE);
@@ -119,6 +120,28 @@ class TrackRepository
             AllowedFilter::partial('name'),
             AllowedFilter::exact('album_id'),
             AllowedFilter::custom('search', new TrackSearchFilter()),
+            AllowedFilter::callback('artist', function (Builder $query, mixed $value): void {
+                $term = trim((string) $value);
+                if ($term === '') {
+                    return;
+                }
+
+                $pattern = '%'.addcslashes($term, '%_\\').'%';
+                $query->whereHas('artists', function (Builder $artists) use ($pattern): void {
+                    $artists->where('music_artists.name', 'like', $pattern);
+                });
+            }),
+            AllowedFilter::callback('album', function (Builder $query, mixed $value): void {
+                $term = trim((string) $value);
+                if ($term === '') {
+                    return;
+                }
+
+                $pattern = '%'.addcslashes($term, '%_\\').'%';
+                $query->whereHas('album', function (Builder $album) use ($pattern): void {
+                    $album->where('music_albums.name', 'like', $pattern);
+                });
+            }),
         ];
     }
 }

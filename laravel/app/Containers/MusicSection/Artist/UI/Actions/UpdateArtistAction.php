@@ -47,8 +47,8 @@ class UpdateArtistAction extends BaseAction
 
             $updatedArtist = $this->updateArtistTask->run($artist, $updateArtistDto);
 
-            if (!empty($requestData['tags'])) {
-                $syncTagsDto = SyncTagsDto::from($requestData);
+            if (array_key_exists('tags', $requestData)) {
+                $syncTagsDto = SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]);
                 $this->syncTagsTask->run($updatedArtist, $syncTagsDto);
             }
 

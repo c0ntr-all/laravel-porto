@@ -196,11 +196,12 @@ class PersistLibraryTaskTest extends TestCase
             'path' => 'F:\\Music\\Metallica',
             'albums' => [
                 [
-                    'name' => 'Master Of Puppets (Remastered)',
+                    'name' => 'Master Of Puppets',
                     'date' => '2017-01-01',
                     'path' => 'F:\\Music\\Metallica\\Master Of Puppets Remastered',
                     'album_type_id' => 1,
                     'original_album' => 'Master Of Puppets',
+                    'edition' => 'Remastered',
                     'attributes' => 'Remastered',
                     'image' => null,
                     'artists' => ['Metallica'],
@@ -240,14 +241,82 @@ class PersistLibraryTaskTest extends TestCase
 
         app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
 
-        $original = Album::query()->where('name', 'Master Of Puppets')->whereNull('parent_id')->first();
-        $remaster = Album::query()->where('name', 'Master Of Puppets (Remastered)')->first();
+        $original = Album::query()->where('path', 'F:\\Music\\Metallica\\Master Of Puppets')->first();
+        $remaster = Album::query()->where('path', 'F:\\Music\\Metallica\\Master Of Puppets Remastered')->first();
 
         $this->assertNotNull($original);
         $this->assertNotNull($remaster);
+        $this->assertSame('Master Of Puppets', $remaster->name);
         $this->assertSame($original->id, $remaster->parent_id);
         $this->assertSame('Remastered', $remaster->edition);
         $this->assertCount(1, $original->versions);
+    }
+
+    public function test_it_links_an_edition_imported_before_the_original_album(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $digipackUpload = $this->makeSession($user);
+        $originalUpload = $this->makeSession($user, 'F:\\Music\\Metallica-2');
+
+        app(PersistLibraryTask::class)->run($digipackUpload, [
+            'name' => 'Metallica',
+            'path' => 'F:\\Music\\Metallica',
+            'albums' => [[
+                'name' => 'Master Of Puppets',
+                'date' => '2017-01-01',
+                'path' => 'F:\\Music\\Metallica\\Master Of Puppets Limited Digipack',
+                'album_type_id' => 1,
+                'original_album' => 'Master Of Puppets',
+                'edition' => 'Limited Digipack Edition',
+                'image' => null,
+                'artists' => ['Metallica'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Battery',
+                        album: 'Master Of Puppets',
+                        artist: 'Metallica',
+                        windowsPath: 'F:\\Music\\Metallica\\Master Of Puppets Limited Digipack\\01. Battery.mp3',
+                        albumPath: 'F:\\Music\\Metallica\\Master Of Puppets Limited Digipack',
+                        number: 1,
+                    ),
+                ],
+            ]],
+        ], $user->id);
+
+        $orphan = Album::query()->where('edition', 'Limited Digipack Edition')->first();
+        $this->assertNotNull($orphan);
+        $this->assertNull($orphan->parent_id);
+
+        app(PersistLibraryTask::class)->run($originalUpload, [
+            'name' => 'Metallica',
+            'path' => 'F:\\Music\\Metallica',
+            'albums' => [[
+                'name' => 'Master Of Puppets',
+                'date' => '1986-03-03',
+                'path' => 'F:\\Music\\Metallica\\Master Of Puppets',
+                'album_type_id' => 1,
+                'original_album' => null,
+                'edition' => null,
+                'image' => null,
+                'artists' => ['Metallica'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Battery',
+                        album: 'Master Of Puppets',
+                        artist: 'Metallica',
+                        windowsPath: 'F:\\Music\\Metallica\\Master Of Puppets\\01. Battery.mp3',
+                        albumPath: 'F:\\Music\\Metallica\\Master Of Puppets',
+                        number: 1,
+                    ),
+                ],
+            ]],
+        ], $user->id);
+
+        $original = Album::query()->whereNull('edition')->where('name', 'Master Of Puppets')->first();
+        $this->assertNotNull($original);
+        $this->assertSame($original->id, $orphan->fresh()->parent_id);
     }
 
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload

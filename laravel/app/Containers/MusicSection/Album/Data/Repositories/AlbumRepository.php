@@ -4,9 +4,11 @@ namespace App\Containers\MusicSection\Album\Data\Repositories;
 
 use App\Containers\MusicSection\Album\Data\DTO\CreateAlbumDto;
 use App\Containers\MusicSection\Album\Data\DTO\UpdateAlbumDto;
+use App\Containers\MusicSection\Album\Data\Filters\AlbumNameFilter;
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
 use Spatie\LaravelData\Optional;
@@ -21,12 +23,8 @@ class AlbumRepository
      */
     public function getWithCursor(): CursorPaginator
     {
-        $query = QueryBuilder::for(Album::class)
-                           ->allowedFilters([
-                               AllowedFilter::partial('name'),
-                               AllowedFilter::exact('album_type_id'),
-                               AllowedFilter::exact('parent_id'),
-                           ])
+        $query = QueryBuilder::for(Album::class, request())
+                           ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'date'])
                            ->allowedIncludes(['tags', 'artists', 'versions', 'parent'])
                            ->with(['tags', 'artists']);
@@ -35,7 +33,10 @@ class AlbumRepository
             $query->whereNull('parent_id')->with('versions');
         }
 
-        return $query->orderByDesc('created_at')->cursorPaginate(100);
+        return $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->cursorPaginate(24);
     }
 
     /**
@@ -43,9 +44,9 @@ class AlbumRepository
      */
     public function listAlbumsWithoutVersions(Artist $artist): Collection
     {
-        return QueryBuilder::for($artist->albums())
+        return QueryBuilder::for($artist->albums(), request())
                            ->allowedFilters([
-                               AllowedFilter::partial('name'),
+                               AllowedFilter::custom('name', new AlbumNameFilter()),
                                AllowedFilter::exact('album_type_id'),
                            ])
                            ->allowedSorts(['name', 'date', 'created_at'])
@@ -54,12 +55,20 @@ class AlbumRepository
                            ->get();
     }
 
-    public function findRootByName(Artist $artist, string $name): ?Album
+    public function findRootByName(Artist $artist, string $name, ?int $albumTypeId = null): ?Album
     {
-        return $artist->albums()
+        $query = $artist->albums()
             ->whereNull('parent_id')
-            ->where('name', $name)
-            ->first();
+            ->where(function (Builder $query): void {
+                $query->whereNull('edition')->orWhere('edition', '');
+            })
+            ->where('name', $name);
+
+        if ($albumTypeId !== null) {
+            $query->where('album_type_id', $albumTypeId);
+        }
+
+        return $query->first();
     }
 
     public function findByPath(string $path): ?Album
@@ -131,5 +140,37 @@ class AlbumRepository
             'image' => $dto->image,
             'path' => $dto->path
         ]);
+    }
+
+    /**
+     * @return list<AllowedFilter>
+     */
+    private function allowedFilters(): array
+    {
+        return [
+            AllowedFilter::custom('name', new AlbumNameFilter()),
+            AllowedFilter::callback('artist', function (Builder $query, mixed $value): void {
+                $term = $this->like((string) $value);
+                if ($term === null) {
+                    return;
+                }
+
+                $query->whereHas('artists', function (Builder $artists) use ($term): void {
+                    $artists->where('music_artists.name', 'like', $term);
+                });
+            }),
+            AllowedFilter::exact('album_type_id'),
+            AllowedFilter::exact('parent_id'),
+        ];
+    }
+
+    private function like(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        return '%'.addcslashes($value, '%_\\').'%';
     }
 }

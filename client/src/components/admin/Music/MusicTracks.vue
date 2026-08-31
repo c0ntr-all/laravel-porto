@@ -1,174 +1,155 @@
 <template>
-  <template v-if="loading">
-    <q-markup-table>
-      <thead>
-      <tr>
-        <th class="text-left">
-          <q-skeleton type="text" width="15px"/>
-        </th>
-        <th class="text-right">
-        </th>
-        <th class="text-right">
-          <q-skeleton type="text" width="65px"/>
-        </th>
-        <th class="text-right">
-          <q-skeleton type="text" width="65px"/>
-        </th>
-        <th class="text-right">
-          <q-skeleton type="text" width="65px"/>
-        </th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="n in 30" :key="n">
-        <td class="text-left">
-          <q-skeleton type="text" width="15px"/>
-        </td>
-        <td class="text-right">
-          <q-skeleton type="text" width="100px"/>
-        </td>
-        <td class="text-right">
-          <q-skeleton type="text" width="200px"/>
-        </td>
-        <td class="text-left">
-          <q-skeleton type="text" width="200px"/>
-        </td>
-        <td class="text-right">
-          <q-skeleton type="text" width="100px"/>
-        </td>
-      </tr>
-      </tbody>
-    </q-markup-table>
-  </template>
-    <q-table
-      :rows="tracks"
-      :columns="columns"
-      row-key="id"
-      :flat="true"
-      class="tracks"
-      :pagination="{rowsPerPage: 0}"
-    >
-      <template v-slot:body="props">
-        <MusicTrackTableRow @play="initPlay" :row-props="props"/>
-      </template>
-    </q-table>
+  <div>
+    <div class="row items-end q-col-gutter-sm q-mb-md">
+      <div class="col-12 col-md">
+        <div class="text-h6">Tracks</div>
+        <div class="text-caption text-grey-7">{{ admin.tracks.length }} loaded</div>
+      </div>
+      <div class="col-12 col-sm-4 col-md-3">
+        <q-input
+          v-model="artistSearch"
+          label="Artist"
+          outlined
+          dense
+          debounce="400"
+          clearable
+          @update:model-value="onArtistSearch"
+        >
+          <template #prepend>
+            <q-icon name="person" />
+          </template>
+        </q-input>
+      </div>
+      <div class="col-12 col-sm-4 col-md-3">
+        <q-input
+          v-model="albumSearch"
+          label="Album"
+          outlined
+          dense
+          debounce="400"
+          clearable
+          @update:model-value="onAlbumSearch"
+        >
+          <template #prepend>
+            <q-icon name="album" />
+          </template>
+        </q-input>
+      </div>
+      <div class="col-12 col-sm-4 col-md-3">
+        <q-input
+          v-model="trackSearch"
+          label="Track"
+          outlined
+          dense
+          debounce="400"
+          clearable
+          @update:model-value="onTrackSearch"
+        >
+          <template #prepend>
+            <q-icon name="music_note" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <q-card flat bordered>
+      <q-inner-loading :showing="admin.isTracksLoading">
+        <q-spinner color="primary" size="2em" />
+      </q-inner-loading>
+
+      <q-list v-if="admin.tracks.length" separator>
+        <q-item
+          v-for="track in admin.tracks"
+          :key="track.id"
+          clickable
+          @click="playTrack(track)"
+        >
+          <q-item-section avatar>
+            <q-avatar size="48px" rounded>
+              <img v-if="track.image || track.album?.image" :src="track.image || track.album?.image" :alt="track.name">
+              <q-icon v-else name="music_note" />
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-weight-medium">
+              <span v-if="track.number" class="text-grey-6 q-mr-xs">{{ track.number }}.</span>
+              {{ track.name }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ track.artist || 'Unknown artist' }}
+              <span v-if="track.album"> · {{ track.album.name }}</span>
+            </q-item-label>
+            <div v-if="track.tags?.length" class="q-gutter-xs q-mt-xs">
+              <q-chip
+                v-for="tag in track.tags.slice(0, 4)"
+                :key="tag.id"
+                size="sm"
+                outline
+                dense
+              >
+                {{ tag.name }}
+              </q-chip>
+            </div>
+          </q-item-section>
+          <q-item-section side>
+            <div class="text-caption text-grey-7">{{ track.duration }}</div>
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <div v-else-if="!admin.isTracksLoading" class="q-pa-lg text-grey-6">
+        No tracks found
+      </div>
+
+      <div v-if="admin.hasMoreTracks" ref="sentinel" class="list-sentinel" />
+      <div v-if="admin.isTracksLoadingMore" class="flex justify-center q-py-md">
+        <q-spinner color="primary" />
+      </div>
+    </q-card>
+  </div>
 </template>
+
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
+import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
-import { api } from 'src/boot/axios'
-import MusicTrackTableRow from 'src/components/admin/Music/MusicTrackTableRow.vue'
-import { IRelationshipItem, ITagShort, ITrack } from 'src/components/admin/Music/types'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
+import { ITrack } from 'src/types'
 
-interface IResponseTrack {
-  id: string
-  type: string
-  attributes: {
-    number: number
-    name: string
-    image: string
-    duration: string
-    rate: number
-  }
-  relationships: {
-    tags: {
-      data: IRelationshipItem[]
-    }
-  }
-}
-
-interface IGetTracksResponse {
-  data: IResponseTrack[]
-  included?: any
-}
-
+const admin = useMusicAdminStore()
 const musicPlayer = useMusicPlayer()
-const columns = ref([{
-  name: 'number',
-  required: true,
-  label: '#',
-  align: 'left' as const,
-  field: (row: ITrack) => row.number,
-  sortable: true
-}, {
-  name: 'id',
-  required: true,
-  label: 'id',
-  align: 'center' as const,
-  field: (row: ITrack) => row.id,
-  sortable: true,
-  style: 'width: 70px'
-}, {
-  name: 'image',
-  required: true,
-  label: 'Image',
-  align: 'left' as const,
-  field: (row: ITrack) => row.image,
-  sortable: true,
-  style: 'width: 40px'
-}, {
-  name: 'name',
-  required: true,
-  label: 'Имя',
-  align: 'left' as const,
-  field: (row: ITrack) => row.name,
-  sortable: true
-}, {
-  name: 'tags',
-  required: true,
-  label: 'Tags',
-  align: 'left' as const,
-  field: (row: ITrack) => row.relationships.tags.data,
-  sortable: true
-}, {
-  name: 'duration',
-  required: true,
-  label: 'Duration',
-  align: 'right' as const,
-  field: (row: ITrack) => row.duration,
-  sortable: true,
-  style: 'width: 130px'
-}])
-const tracks = ref<ITrack[]>([])
-const loading = ref(true)
+const artistSearch = ref(admin.trackArtistSearch)
+const albumSearch = ref(admin.trackAlbumSearch)
+const trackSearch = ref(admin.trackNameSearch)
 
-const getTracks = async (): Promise<void> => {
-  await api.get<IGetTracksResponse>('v1/music/tracks?include=tags')
-    .then(response => {
-      tracks.value = response.data.data.map((responseTrack: IResponseTrack) => {
-        return {
-          id: responseTrack.id,
-          name: responseTrack.attributes.name,
-          number: responseTrack.attributes.number,
-          image: responseTrack.attributes.image,
-          artist: '',
-          duration: responseTrack.attributes.duration,
-          rate: responseTrack.attributes.rate,
-          relationships: {
-            tags: {
-              data: responseTrack.relationships.tags.data.length
-                ? getIncluded<ITagShort>('tags', responseTrack.relationships, response.data.included, false) as ITagShort[]
-                : []
-            }
-          }
-        }
-      })
-    }).catch(error => {
-      handleApiError(error)
-    }).finally(() => {
-      loading.value = false
-    })
+const onArtistSearch = (value: string | number | null) => {
+  void admin.getTracks({ artist: String(value ?? '') })
 }
 
-const initPlay = (track: ITrack) => {
-  musicPlayer.toggleTrack(track, tracks.value)
+const onAlbumSearch = (value: string | number | null) => {
+  void admin.getTracks({ album: String(value ?? '') })
 }
+
+const onTrackSearch = (value: string | number | null) => {
+  void admin.getTracks({ name: String(value ?? '') })
+}
+
+const playTrack = (track: ITrack) => {
+  musicPlayer.toggleTrack(track, admin.tracks)
+}
+
+const { sentinel } = useScrollSentinel(
+  () => { void admin.getTracks({ append: true }) },
+  () => admin.hasMoreTracks && !admin.isTracksLoading && !admin.isTracksLoadingMore
+)
 
 onMounted(() => {
-  getTracks()
+  void admin.getTracks()
 })
 </script>
-<style lang="scss" scoped>
 
+<style lang="scss" scoped>
+.list-sentinel {
+  height: 1px;
+}
 </style>

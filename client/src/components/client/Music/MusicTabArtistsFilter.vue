@@ -52,7 +52,7 @@
           :ticked="tickedByGroup[group.id] ?? []"
           default-expand-all
           dense
-          @update:ticked="ids => onGroupTicked(group.id, ids)"
+          @update:ticked="ids => onGroupTicked(group.id, [...ids].map(String))"
         />
         <div v-else class="text-caption text-grey-6 q-pa-sm">No tags</div>
       </q-expansion-item>

@@ -1,264 +1,151 @@
 <template>
-  <div class="text-h6 q-mb-md">Artists edit</div>
-  <div class="q-mb-md">
-    Total artists: <b>{{ total }}</b>
-  </div>
-  <div class="artists-search q-mb-md">
-    <q-input
-      v-model="search"
-      @keyup.enter="getArtists(search)"
-      label="Search"
-      maxlength="12"
-      dense
-      outlined
-      bottom-slots
-      counter
-    >
-      <template v-slot:append>
-        <q-icon v-if="search !== ''" name="close" @click="search = ''" class="cursor-pointer"/>
-      </template>
-      <template v-slot:after>
-        <q-icon name="search" @click="getArtists(search)" class="cursor-pointer"/>
-      </template>
-    </q-input>
-  </div>
-  <div class="artists-list">
-    <q-table
-      :rows="artists"
-      :columns="columns"
-      row-key="name"
-      :flat="true"
-      :pagination="{rowsPerPage: 0}"
-    >
-      <template v-slot:header="props">
-        <q-tr :props="props">
-          <q-th
-            v-for="col in props.cols"
-            :key="col.name"
-            :props="props"
-          >
-            {{ col.label }}
-          </q-th>
-          <q-th auto-width/>
-        </q-tr>
-      </template>
-      <template v-slot:body="props">
-        <q-tr :props="props" class="artist-row">
-          <q-td
-            v-for="col in props.cols"
-            :key="col.name"
-            :props="props"
-          >
-            <div v-if="col.name === 'image'" class="artist-row__image">
-              <img :src="col.value" :alt="col.value">
+  <div>
+    <div class="row items-center q-col-gutter-sm q-mb-md">
+      <div class="col">
+        <div class="text-h6">Artists</div>
+        <div class="text-caption text-grey-7">{{ admin.artists.length }} loaded</div>
+      </div>
+      <div class="col-12 col-sm-5 col-md-4">
+        <q-input
+          v-model="search"
+          label="Search artists"
+          outlined
+          dense
+          debounce="400"
+          clearable
+          @update:model-value="onSearch"
+        >
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <q-card flat bordered>
+      <q-inner-loading :showing="admin.isArtistsLoading">
+        <q-spinner color="primary" size="2em" />
+      </q-inner-loading>
+
+      <q-list v-if="admin.artists.length" separator>
+        <q-item
+          v-for="artist in admin.artists"
+          :key="artist.id"
+          clickable
+          class="artist-row"
+          @click="openEdit(artist)"
+        >
+          <q-item-section avatar>
+            <q-avatar size="56px" rounded>
+              <img v-if="artist.image" :src="artist.image" :alt="artist.name">
+              <q-icon v-else name="person" />
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-subtitle1 text-weight-medium">{{ artist.name }}</q-item-label>
+            <q-item-label caption>
+              {{ artist.description || 'No description' }}
+            </q-item-label>
+            <div v-if="artist.tags.length" class="q-gutter-xs q-mt-xs">
+              <q-chip
+                v-for="tag in artist.tags.slice(0, 6)"
+                :key="tag.id"
+                size="sm"
+                outline
+                color="primary"
+                dense
+              >
+                {{ tag.name }}
+              </q-chip>
+              <q-chip
+                v-if="artist.tags.length > 6"
+                size="sm"
+                dense
+              >
+                +{{ artist.tags.length - 6 }}
+              </q-chip>
             </div>
-            <div v-else-if="col.name === 'tags'" class="artist-row__tags">
-              <div class="artist-row__tag">
-                <span
-                  v-for="tag in col.value.filter((tag: ITagShort) => tag.is_base)"
-                  :key="tag.id"
-                >{{ tag.name }}</span>
-              </div>
-              <div class="artist-row__tag">
-                <span
-                  v-for="tag in col.value.filter((tag: ITagShort) => !tag.is_base)"
-                  :key="tag.id"
-                >{{ tag.name }}</span>
-              </div>
-            </div>
-            <span v-else>{{ col.value }}</span>
-          </q-td>
-          <q-td class="q-gutter-x-sm" auto-width>
-            <q-btn size="sm" @click="initArtistEdit(props.row)" label="Edit"/>
-          </q-td>
-        </q-tr>
-      </template>
-    </q-table>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn
+              icon="edit"
+              color="primary"
+              flat
+              round
+              dense
+              @click.stop="openEdit(artist)"
+            >
+              <q-tooltip>Edit artist</q-tooltip>
+            </q-btn>
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <div v-else-if="!admin.isArtistsLoading" class="q-pa-lg text-grey-6">
+        No artists found
+      </div>
+
+      <div
+        v-if="admin.hasMoreArtists"
+        ref="sentinel"
+        class="list-sentinel"
+      />
+      <div v-if="admin.isArtistsLoadingMore" class="flex justify-center q-py-md">
+        <q-spinner color="primary" />
+      </div>
+    </q-card>
 
     <MusicArtistsUpdateDialog
-      v-if="showUpdateDialog"
-      v-model="showUpdateDialog"
-      :artist="artistForEdit"
-      @updated="refreshArtists"
+      v-if="editing"
+      v-model="showDialog"
+      :artist="editing"
+      @saved="onSaved"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, provide, ref } from 'vue'
-import { getIncluded, handleApiError } from 'src/utils/jsonapi'
-import { api } from 'src/boot/axios'
+import { onMounted, ref } from 'vue'
+import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import MusicArtistsUpdateDialog from 'src/components/admin/Music/MusicArtistsUpdateDialog.vue'
-import { ITagShort, IArtist, IRelationshipItem, IIncludedItem } from 'src/components/admin/Music/types'
+import { IArtist } from 'src/types'
 
-interface IResponseArtist {
-  type: string
-  id: string
-  attributes: {
-    name: string
-    image: string
-    description: string | null
-    created_at: string
-  }
-  relationships: {
-    tags: {
-      data: IRelationshipItem
-    }
-  }
+const admin = useMusicAdminStore()
+const search = ref(admin.artistSearch)
+const showDialog = ref(false)
+const editing = ref<IArtist | null>(null)
+
+const onSearch = (value: string | number | null) => {
+  void admin.getArtists({ name: String(value ?? '') })
 }
 
-interface GetArtistApiResponse {
-  data: IResponseArtist[]
-  meta: {
-    artists_count: number
-  }
-  included: IIncludedItem[]
+const openEdit = (artist: IArtist) => {
+  editing.value = artist
+  showDialog.value = true
 }
 
-const columns = ref([{
-  name: 'id',
-  required: true,
-  label: 'ID',
-  align: 'left' as const,
-  field: (row: IArtist) => row.id,
-  sortable: true,
-  style: 'width: 40px'
-}, {
-  name: 'image',
-  required: true,
-  label: 'Image',
-  align: 'center' as const,
-  field: (row: IArtist) => row.image,
-  sortable: false,
-  style: 'width: 60px'
-}, {
-  name: 'name',
-  required: true,
-  label: 'Name',
-  align: 'left' as const,
-  field: (row: IArtist) => row.name,
-  sortable: true
-}, {
-  name: 'tags',
-  required: true,
-  label: 'Tags',
-  align: 'center' as const,
-  field: (row: IArtist) => row.relationships.tags.data,
-  sortable: false
-}, {
-  name: 'createdAt',
-  required: true,
-  label: 'Created at',
-  align: 'left' as const,
-  field: (row: IArtist) => row.created_at,
-  sortable: true
-}])
-const total = ref(0)
-const search = ref('')
-const artists = ref<IArtist[]>([])
-const showUpdateDialog = ref(false)
-const artistForEdit = ref<IArtist>({
-  id: '',
-  name: '',
-  image: '',
-  description: null,
-  created_at: '',
-  relationships: {
-    tags: {
-      data: []
-    }
-  }
-})
-
-const getArtists = async (searchText: string = '', page: number = 0) => {
-  let query = '?'
-  if (searchText) {
-    query += '&search=' + searchText
-  }
-  if (page) {
-    query += '&page=' + page
-  }
-  await api.get<GetArtistApiResponse>('v1/music/artists' + query)
-    .then(response => {
-      artists.value = response.data.data.map(responseArtist => {
-        return transformArtistFromResponse(responseArtist, response.data)
-      }) as IArtist[]
-      total.value = response.data.meta.artists_count
-    }).catch(error => {
-      handleApiError(error)
-    })
+const onSaved = (artist: IArtist) => {
+  editing.value = artist
+  showDialog.value = false
 }
 
-const transformArtistFromResponse = (responseArtist: IResponseArtist, responseData: any): IArtist => {
-  return {
-    id: responseArtist.id,
-    name: responseArtist.attributes.name,
-    image: responseArtist.attributes.image,
-    description: responseArtist.attributes.description,
-    created_at: responseArtist.attributes.created_at,
-    relationships: {
-      tags: getIncluded('tags', responseArtist.relationships, responseData.included) as {data: ITagShort[]}
-    }
-  }
-}
-
-const initArtistEdit = (artist: IArtist) => {
-  artistForEdit.value = artist
-  showUpdateDialog.value = true
-}
-
-const refreshArtists = (artist: IArtist) => {
-  for (const key in artists.value) {
-    if (artists.value[key].id === artist.id) {
-      artists.value[key] = artist
-    }
-  }
-}
-
-provide('transformArtistFromResponse', transformArtistFromResponse)
+const { sentinel } = useScrollSentinel(
+  () => { void admin.getArtists({ append: true }) },
+  () => admin.hasMoreArtists && !admin.isArtistsLoading && !admin.isArtistsLoadingMore
+)
 
 onMounted(() => {
-  getArtists()
+  void admin.getArtists()
 })
 </script>
 
 <style lang="scss" scoped>
-.artist {
-  &-edit {
-    &__image {
-      width: 250px;
-      height: 250px;
+.artist-row {
+  min-height: 84px;
+}
 
-      img {
-        width: 100%;
-        height: 100%;
-      }
-    }
-  }
-
-  &-row {
-    &__image {
-      width: 50px;
-      height: 50px;
-      overflow: hidden;
-
-      img {
-        width: 100%;
-        object-fit: cover;
-      }
-    }
-
-    &__tag {
-      & span:not(:last-child) {
-        &::after {
-          content: ', '
-        }
-      }
-    }
-  }
-
-  &-search {
-    max-width: 400px;
-  }
+.list-sentinel {
+  height: 1px;
 }
 </style>

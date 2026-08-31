@@ -5,10 +5,12 @@ import { buildFilterForUrl } from 'src/utils/jsonapi'
 export const trackApi = {
   async listTracks(query?: ITrackListQuery, signal?: AbortSignal): Promise<IJsonApiResponse> {
     const filters = buildFilterForUrl({
-      name: query?.name
+      name: query?.name,
+      artist: query?.artist,
+      album: query?.album
     })
     const response = await api.get(
-      filters ? `v1/music/tracks?include=artists&${filters}` : 'v1/music/tracks?include=artists',
+      filters ? `v1/music/tracks?include=artists,album,tags&${filters}` : 'v1/music/tracks?include=artists,album,tags',
       {
         params: query?.cursor ? { cursor: query.cursor } : undefined,
         signal

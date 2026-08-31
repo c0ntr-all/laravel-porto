@@ -32,7 +32,7 @@
                 <span v-if="album && index < album?.relationships?.artists?.data?.length - 1"> • </span>
               </template>
             </p>
-            <p class="album-head__description-item">{{ album?.date }}</p>
+            <p class="album-head__description-item">{{ albumYear(album?.date) }}</p>
             <div class="album-head__description-item">
               {{ album?.description }}
             </div>
@@ -73,6 +73,7 @@ import AlbumPageSkeleton from 'src/pages/client/Music/AlbumPageSkeleton.vue'
 import MusicAlbumVersionsList from 'src/components/client/Music/MusicAlbumVersionsList.vue'
 import MusicAlbumTracksList from 'src/components/client/Music/MusicAlbumTracksList.vue'
 import { ITrack } from 'src/components/client/Music/types'
+import { albumYear } from 'src/utils/albumDate'
 
 interface Artist {
   id: string

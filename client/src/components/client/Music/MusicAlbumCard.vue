@@ -9,24 +9,25 @@
           <p class="album-card__title" :title="album.name">{{ album.name }}</p>
         </router-link>
       </div>
-      <p class="album-card__year">{{ album.date }}</p>
+      <p class="album-card__year">{{ albumYear(album.date) }}</p>
     </q-card-section>
   </q-card>
 </template>
 
 <script lang="ts" setup>
+import { albumYear } from 'src/utils/albumDate'
+
 interface Album {
   id: string
   name: string
-  description: string
+  description?: string | null
   image: string
-  date: string
+  date?: string | null
 }
 
-const props = defineProps<{
-  album: Album,
+defineProps<{
+  album: Album
 }>()
-const album = props.album
 </script>
 
 <style lang="scss" scoped>

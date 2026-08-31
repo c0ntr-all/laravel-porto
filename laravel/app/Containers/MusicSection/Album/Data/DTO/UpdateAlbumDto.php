@@ -8,7 +8,7 @@ use Spatie\LaravelData\Optional;
 class UpdateAlbumDto extends Data
 {
     public int|Optional|null $parent_id;
-    public ?int $album_type_id = null;
+    public int|Optional|null $album_type_id;
     public ?string $name = null;
     public ?string $description = null;
     public mixed $attributes = null;

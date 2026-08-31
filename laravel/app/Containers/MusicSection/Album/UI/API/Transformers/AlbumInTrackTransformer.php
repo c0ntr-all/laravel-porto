@@ -11,6 +11,8 @@ class AlbumInTrackTransformer extends TransformerAbstract
     {
         return [
             'id' => $album->id,
+            'album_type_id' => $album->album_type_id,
+            'album_type' => AlbumTypeTransformer::payload($album->albumType),
             'name' => $album->name,
             'edition' => $album->edition,
             'date' => $album->date?->format('Y-m-d'),

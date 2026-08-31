@@ -6,6 +6,7 @@ use App\Containers\MusicSection\Album\Data\DTO\CreateAlbumDto;
 use App\Containers\MusicSection\Album\Data\DTO\UpdateAlbumDto;
 use App\Containers\MusicSection\Album\Data\Filters\AlbumNameFilter;
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Models\AlbumType;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,10 +28,10 @@ class AlbumRepository
                            ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'date'])
                            ->allowedIncludes(['tags', 'artists', 'versions', 'parent'])
-                           ->with(['tags', 'artists']);
+                           ->with(['tags', 'artists', 'albumType']);
 
         if (!request()->has('filter.parent_id')) {
-            $query->whereNull('parent_id')->with('versions');
+            $query->whereNull('parent_id')->with(['versions.albumType']);
         }
 
         return $query
@@ -50,7 +51,7 @@ class AlbumRepository
                                AllowedFilter::exact('album_type_id'),
                            ])
                            ->allowedSorts(['name', 'date', 'created_at'])
-                           ->with(['versions', 'artists', 'tags'])
+                           ->with(['versions.albumType', 'albumType', 'artists', 'tags'])
                            ->whereNull('parent_id')
                            ->get();
     }
@@ -69,6 +70,11 @@ class AlbumRepository
         }
 
         return $query->first();
+    }
+
+    public function listTypes(): Collection
+    {
+        return AlbumType::query()->orderBy('id')->get();
     }
 
     public function findByPath(string $path): ?Album

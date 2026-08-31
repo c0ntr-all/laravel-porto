@@ -13,6 +13,7 @@ class AlbumVersionResource extends JsonResource
             'parent_id' => $this->parent_id,
             'name' => $this->name,
             'edition' => $this->edition,
+            'album_type_id' => $this->album_type_id,
             'date' => $this->date?->format('Y-m-d'),
             'image' => $this->full_image,
         ];

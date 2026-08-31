@@ -12,7 +12,7 @@ class CreateRequest extends AdminRequest
             'name' => 'required|string|max:255',
             'description' => 'sometimes|string|nullable',
             'date' => 'sometimes|nullable|date_format:Y-m-d',
-            'album_type_id' => 'sometimes|integer|exists:music_album_types,id',
+            'album_type_id' => 'sometimes|nullable|integer|exists:music_album_types,id',
             'parent_id' => 'sometimes|nullable|integer|exists:music_albums,id',
             'path' => 'sometimes|string|nullable|max:255',
             'is_date_verified' => 'sometimes|boolean',

@@ -13,7 +13,15 @@ class GetAlbumAction extends BaseAction
 
     public function handle(Album $album): Album
     {
-        return $album->load(['tracks.artists', 'tracks.rate', 'tags', 'versions', 'parent', 'artists']);
+        return $album->load([
+            'tracks.artists',
+            'tracks.rate',
+            'tags',
+            'versions.albumType',
+            'parent.albumType',
+            'artists',
+            'albumType',
+        ]);
     }
 
     public function asController(Album $album, GetRequest $request): JsonResponse

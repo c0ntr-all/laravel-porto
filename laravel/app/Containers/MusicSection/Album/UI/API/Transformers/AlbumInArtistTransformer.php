@@ -23,6 +23,8 @@ class AlbumInArtistTransformer extends TransformerAbstract
         return [
             'id' => $album->id,
             'parent_id' => $album->parent_id,
+            'album_type_id' => $album->album_type_id,
+            'album_type' => AlbumTypeTransformer::payload($album->albumType),
             'name' => $album->name,
             'edition' => $album->edition,
             'date' => $album->date?->format('Y-m-d'),

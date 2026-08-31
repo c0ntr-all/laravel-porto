@@ -62,7 +62,7 @@ class UpdateAlbumAction extends BaseAction
                 $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]));
             }
 
-            return $album->load(['artists', 'tags', 'versions', 'parent']);
+            return $album->load(['artists', 'tags', 'versions.albumType', 'parent.albumType', 'albumType']);
         });
     }
 

@@ -22,7 +22,7 @@ class TrackRepository
                            ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'number'])
                            ->allowedIncludes(['tags', 'artists', 'album'])
-                           ->with(['tags', 'artists', 'rate', 'album'])
+                           ->with(['tags', 'artists', 'rate', 'album.albumType'])
                            ->orderByDesc('created_at')
                            ->orderByDesc('id')
                            ->cursorPaginate(self::DEFAULT_PER_PAGE);

@@ -10,18 +10,18 @@ use Illuminate\Support\Facades\Event;
 
 class ImageObserver
 {
-    public function created(Image $post): void
+    public function created(Image $image): void
     {
-        Event::dispatch(new CreatedEvent($post));
+        Event::dispatch(new CreatedEvent($image));
     }
 
-    public function updated(Image $post): void
+    public function updated(Image $image): void
     {
-        Event::dispatch(new UpdatedEvent($post));
+        Event::dispatch(new UpdatedEvent($image));
     }
 
-    public function deleted(Image $post): void
+    public function deleted(Image $image): void
     {
-        Event::dispatch(new DeletedEvent($post));
+        Event::dispatch(new DeletedEvent($image));
     }
 }

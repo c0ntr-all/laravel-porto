@@ -15,15 +15,15 @@ use Illuminate\Support\Carbon;
 /**
  * App\Containers\GallerySection\Image\Models
  *
- * @property int $id
+ * @property string $id
  * @property int $user_id
  * @property int $album_id
  * @property string $source
  * @property string $extension
- * @property string $external_url
+ * @property string|null $external_url
  * @property integer $width
  * @property integer $height
- * @property string $description
+ * @property string|null $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $base_path
@@ -31,22 +31,7 @@ use Illuminate\Support\Carbon;
  * @property-read string $preview_thumb_path
  * @method static Builder|Image newModelQuery()
  * @method static Builder|Image newQuery()
- * @method static Builder|Image onlyTrashed()
  * @method static Builder|Image query()
- * @method static Builder|Image whereArtistId($value)
- * @method static Builder|Image whereAttributes($value)
- * @method static Builder|Image whereContent($value)
- * @method static Builder|Image whereCreatedAt($value)
- * @method static Builder|Image whereDeletedAt($value)
- * @method static Builder|Image whereEdition($value)
- * @method static Builder|Image whereId($value)
- * @method static Builder|Image whereImage($value)
- * @method static Builder|Image whereName($value)
- * @method static Builder|Image wherePath($value)
- * @method static Builder|Image whereUpdatedAt($value)
- * @method static Builder|Image whereYear($value)
- * @method static Builder|Image withTrashed()
- * @method static Builder|Image withoutTrashed()
  */
 class Image extends ActivityLoggableModel
 {
@@ -72,51 +57,35 @@ class Image extends ActivityLoggableModel
         return $this->belongsTo(Album::class);
     }
 
-    /**
-     * List Thumbnail Path
-     *
-     * @return string
-     */
     public function getListThumbPathAttribute(): string
     {
-        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
-
-        return url('') .
-            '/storage/' .
-            str_replace($search, $replace, config('image.default.mask.list_thumb'));
+        return $this->publicStorageUrl($this->relativePath('list_thumb'));
     }
 
-    /**
-     * List Thumbnail Path
-     *
-     * @return string
-     */
     public function getPreviewThumbPathAttribute(): string
     {
-        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
-
-        return url('') .
-            '/storage/' .
-            str_replace($search, $replace, config('image.default.mask.preview_thumb'));
+        return $this->publicStorageUrl($this->relativePath('preview_thumb'));
     }
 
-    /**
-     * Base path
-     *
-     * @return string
-     */
     public function getBasePathAttribute(): string
     {
-        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [$this->user_id, $this->album_id, $this->id, $this->extension];
-
-        return match($this->source) {
-            FileSourceEnum::DEVICE->value => url('') .
-                '/storage/' .
-                str_replace($search, $replace, config('image.default.mask.base')),
-            FileSourceEnum::WEB->value => $this->external_url
+        return match ($this->source) {
+            FileSourceEnum::WEB->value => (string) $this->external_url,
+            FileSourceEnum::WINDOWS->value => url('') . '/api/v1/gallery/images/' . $this->id . '/file',
+            default => $this->publicStorageUrl($this->relativePath('base')),
         };
+    }
+
+    public function relativePath(string $maskKey): string
+    {
+        $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
+        $replace = [(string) $this->user_id, (string) $this->album_id, (string) $this->id, (string) $this->extension];
+
+        return str_replace($search, $replace, (string) config("image.default.mask.{$maskKey}"));
+    }
+
+    private function publicStorageUrl(string $relativePath): string
+    {
+        return url('') . '/storage/' . ltrim($relativePath, '/');
     }
 }

@@ -6,7 +6,7 @@ use App\Ship\Parents\DTO\Data;
 
 class SystemLogCreateDto extends Data
 {
-    public string $user_id;
+    public int|string|null $user_id = null;
     public string $event_type;
     public string $correlation_uuid;
     public string $main_type;

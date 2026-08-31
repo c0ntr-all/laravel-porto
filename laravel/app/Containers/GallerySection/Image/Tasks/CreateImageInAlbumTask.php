@@ -6,14 +6,13 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\Repositories\ImageRepository;
 use App\Containers\GallerySection\Image\Models\Image;
-use App\Ship\Parents\Tasks\Task;
+use App\Ship\Parents\Tasks\Task as ParentTask;
 
-class CreateImageInAlbumTask extends Task
+class CreateImageInAlbumTask extends ParentTask
 {
     public function __construct(
         private readonly ImageRepository $imageRepository
-    )
-    {
+    ) {
     }
 
     public function run(Album $album, CreateImageDto $createImageDto): Image

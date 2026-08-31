@@ -28,6 +28,7 @@ enum ContainerAliasEnum: string
     case LL_POST = 'll_posts';
     case LL_PRESET = 'll_presets';
     //GallerySection
+    case GALLERY_ALBUM = 'gallery_albums';
     case GALLERY_IMAGE = 'gallery_images';
     case GALLERY_VIDEO = 'gallery_videos';
 
@@ -47,6 +48,7 @@ enum ContainerAliasEnum: string
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
             self::LL_PRESET => 'Пресет',
+            self::GALLERY_ALBUM => 'Альбом',
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',
         };

@@ -124,4 +124,5 @@ return [
     ],
 
     'windows_images_root_folder' => env('WINDOWS_IMAGES_ROOT_FOLDER', 'F:\\Images\\'),
+    'windows_videos_root_folder' => env('WINDOWS_VIDEOS_ROOT_FOLDER', env('WINDOWS_IMAGES_ROOT_FOLDER', 'F:\\Videos\\')),
 ];

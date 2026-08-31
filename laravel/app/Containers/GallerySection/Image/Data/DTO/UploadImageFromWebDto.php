@@ -6,8 +6,9 @@ use App\Ship\Parents\DTO\Data;
 
 class UploadImageFromWebDto extends Data
 {
-    public string $user_id;
+    public int|string $user_id;
     public string $link;
+
     public function __construct()
     {
     }

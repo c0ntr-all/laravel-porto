@@ -10,18 +10,18 @@ use Illuminate\Support\Facades\Event;
 
 class VideoObserver
 {
-    public function created(Video $post): void
+    public function created(Video $video): void
     {
-        Event::dispatch(new CreatedEvent($post));
+        Event::dispatch(new CreatedEvent($video));
     }
 
-    public function updated(Video $post): void
+    public function updated(Video $video): void
     {
-        Event::dispatch(new UpdatedEvent($post));
+        Event::dispatch(new UpdatedEvent($video));
     }
 
-    public function deleted(Video $post): void
+    public function deleted(Video $video): void
     {
-        Event::dispatch(new DeletedEvent($post));
+        Event::dispatch(new DeletedEvent($video));
     }
 }

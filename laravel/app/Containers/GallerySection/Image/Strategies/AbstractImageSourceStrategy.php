@@ -18,7 +18,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     private ?string $extension = null;
 
     public function __construct(
-        private readonly string $path
+        protected readonly string $path
     )
     {
         if (!$this->extension) {

@@ -6,28 +6,25 @@ use App\Containers\GallerySection\Image\Contracts\ImageSourceContract;
 use App\Containers\GallerySection\Image\Enums\ImageThumbTypeEnum;
 use App\Containers\GallerySection\Image\Services\ImageAnalyzerService;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
-use App\Ship\Parents\Tasks\Task;
+use App\Ship\Parents\Tasks\Task as ParentTask;
 use InvalidArgumentException;
 
-class CreateImageThumbTask extends Task
+class CreateImageThumbTask extends ParentTask
 {
     private const int DEFAULT_QUALITY = 75;
 
     public function __construct(
         private readonly PathGenerationService $pathGenerationService,
         private readonly ImageAnalyzerService $imageAnalyzerService
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param ImageSourceContract $imageStrategy
-     * @param string $thumbType
-     * @param string $albumPath
-     * @return string
-     */
-    public function run(ImageSourceContract $imageStrategy, string $thumbType, string $albumPath): string
-    {
+    public function run(
+        ImageSourceContract $imageStrategy,
+        string $thumbType,
+        string $albumPath,
+        string $fileId
+    ): string {
         if (!ImageThumbTypeEnum::tryFrom($thumbType)) {
             throw new InvalidArgumentException("Invalid thumbnail type: {$thumbType}");
         }
@@ -41,9 +38,10 @@ class CreateImageThumbTask extends Task
             [$width, $height] = $thumbTypeEnum->getSize();
         }
 
+        $basename = $fileId . '.' . $imageStrategy->getExtension();
         $paths = $this->pathGenerationService->preparePathsForThumbnail(
             $albumPath,
-            $imageStrategy->getBasename(),
+            $basename,
             $thumbType,
         );
 

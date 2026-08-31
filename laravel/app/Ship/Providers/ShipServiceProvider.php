@@ -50,6 +50,7 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::TM_TASK->value => 'App\Containers\TaskManagerSection\Task\Models\Task',
             ContainerAliasEnum::LL_POST->value => 'App\Containers\LifelogSection\Post\Models\Post',
             ContainerAliasEnum::LL_PRESET->value => 'App\Containers\LifelogSection\Preset\Models\Preset',
+            ContainerAliasEnum::GALLERY_ALBUM->value => 'App\Containers\GallerySection\Album\Models\Album',
             ContainerAliasEnum::GALLERY_IMAGE->value => 'App\Containers\GallerySection\Image\Models\Image',
             ContainerAliasEnum::GALLERY_VIDEO->value => 'App\Containers\GallerySection\Video\Models\Video'
         ]);

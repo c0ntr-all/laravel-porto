@@ -39,6 +39,20 @@ return [
             'base' => 'userfiles/{user_id}/images/{album_id}/{file_id}.{ext}',
             'list_thumb' => 'userfiles/{user_id}/images/{album_id}/thumbnails/{file_id}_list_thumbnail.{ext}',
             'preview_thumb' => 'userfiles/{user_id}/images/{album_id}/thumbnails/{file_id}_preview_thumbnail.{ext}',
-        ]
-    ]
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Локальный диск Windows (F:\Images и аналоги)
+    |--------------------------------------------------------------------------
+    |
+    | Путь хранится как Windows-путь, а сервер резолвит его через смонтированный диск.
+    |
+    */
+    'windows' => [
+        'disk' => env('GALLERY_WINDOWS_DISK', 'windows_f'),
+        'drive' => env('GALLERY_WINDOWS_DRIVE', 'F'),
+        'root_folder' => env('WINDOWS_IMAGES_ROOT_FOLDER', 'F:\\Images\\'),
+    ],
 ];

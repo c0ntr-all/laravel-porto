@@ -2,17 +2,19 @@
 
 namespace App\Containers\GallerySection\Image\Strategies;
 
+use App\Ship\Helpers\WindowsPathHelper;
+
 class WindowsDiskImageSourceStrategy extends AbstractImageSourceStrategy
 {
-    public function getOriginalPath(): string
+    public function getFullPath(): string
     {
-        return $this->transformPath($this->getFullPath());
+        $disk = (string) config('image.windows.disk', 'windows_f');
+
+        return WindowsPathHelper::toLinux($this->path, $disk);
     }
 
-    protected function transformPath(string $path): string
+    public function getOriginalPath(): string
     {
-        $windowsImagesRootFolder = config('app.windows_images_root_folder');
-
-        return str_replace($windowsImagesRootFolder, '', $path);
+        return WindowsPathHelper::normalizeWindows($this->path);
     }
 }

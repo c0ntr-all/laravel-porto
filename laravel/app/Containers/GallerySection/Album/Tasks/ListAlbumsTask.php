@@ -3,19 +3,21 @@
 namespace App\Containers\GallerySection\Album\Tasks;
 
 use App\Containers\GallerySection\Album\Data\Repositories\AlbumRepository;
-use App\Ship\Parents\Tasks\Task;
+use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Database\Eloquent\Collection;
 
-class ListAlbumsTask extends Task
+class ListAlbumsTask extends ParentTask
 {
     public function __construct(
         private readonly AlbumRepository $albumRepository
-    )
-    {
+    ) {
     }
 
-    public function run(): Collection
+    /**
+     * @param list<string> $with
+     */
+    public function run(array $with = []): Collection
     {
-        return $this->albumRepository->getAll();
+        return $this->albumRepository->list($with);
     }
 }

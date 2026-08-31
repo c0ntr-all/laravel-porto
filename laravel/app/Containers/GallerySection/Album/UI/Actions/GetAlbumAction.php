@@ -3,26 +3,69 @@
 namespace App\Containers\GallerySection\Album\UI\Actions;
 
 use App\Containers\GallerySection\Album\Models\Album;
+use App\Containers\GallerySection\Album\Tasks\GetAlbumTask;
+use App\Containers\GallerySection\Album\UI\API\Requests\GetAlbumRequest;
 use App\Containers\GallerySection\Album\UI\API\Transformers\AlbumTransformer;
-use Illuminate\Http\JsonResponse;
 use App\Ship\Parents\Actions\BaseAction;
+use Illuminate\Http\JsonResponse;
 
 class GetAlbumAction extends BaseAction
 {
-
-    public function handle(Album $album): Album
-    {
-        return $album->load(['images']);
+    public function __construct(
+        private readonly GetAlbumTask $getAlbumTask
+    ) {
     }
 
-    public function asController(Album $album): JsonResponse
+    /**
+     * @param list<string> $with
+     */
+    public function handle(Album $album, array $with = []): Album
     {
-        $album = $this->handle($album);
+        return $this->getAlbumTask->run($album, $with);
+    }
 
-        return fractal($album, new AlbumTransformer())
-            ->parseIncludes(['images', 'user'])
+    public function asController(Album $album, GetAlbumRequest $request): JsonResponse
+    {
+        $with = ['images', 'videos', 'user'];
+
+        if ($request->filled('include')) {
+            $with = $this->relationsFromInclude((string) $request->query('include'));
+        }
+
+        $album = $this->handle($album, $with);
+
+        $fractal = fractal($album, new AlbumTransformer())
             ->withResourceName('albums')
-            ->addMeta(['count' => $album->images->count()])
-            ->respond(200, [], JSON_PRETTY_PRINT);
+            ->addMeta([
+                'count' => (int) ($album->images_count ?? 0),
+                'images_count' => (int) ($album->images_count ?? 0),
+                'videos_count' => (int) ($album->videos_count ?? 0),
+            ]);
+
+        if (!$request->filled('include')) {
+            $fractal->parseIncludes(['images', 'videos', 'user']);
+        }
+
+        return $fractal->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function relationsFromInclude(string $include): array
+    {
+        $with = [];
+
+        if (str_contains($include, 'images')) {
+            $with[] = 'images';
+        }
+        if (str_contains($include, 'videos')) {
+            $with[] = 'videos';
+        }
+        if (str_contains($include, 'user')) {
+            $with[] = 'user';
+        }
+
+        return $with;
     }
 }

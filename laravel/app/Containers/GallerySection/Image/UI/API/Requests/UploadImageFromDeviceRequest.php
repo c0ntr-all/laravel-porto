@@ -6,16 +6,10 @@ use App\Ship\Parents\Requests\AuthenticatedRequest;
 
 class UploadImageFromDeviceRequest extends AuthenticatedRequest
 {
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [
-            'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable'
+            'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp,bmp|max:15360',
         ];
     }
 }

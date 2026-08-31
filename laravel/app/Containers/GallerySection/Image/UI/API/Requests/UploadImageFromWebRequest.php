@@ -6,16 +6,10 @@ use App\Ship\Parents\Requests\AuthenticatedRequest;
 
 class UploadImageFromWebRequest extends AuthenticatedRequest
 {
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [
-            'link' => 'required|string',
+            'link' => 'required|url|max:2048',
         ];
     }
 }

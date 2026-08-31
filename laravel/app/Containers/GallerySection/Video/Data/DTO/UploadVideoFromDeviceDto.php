@@ -7,8 +7,9 @@ use Illuminate\Http\UploadedFile;
 
 class UploadVideoFromDeviceDto extends Data
 {
-    public string $user_id;
+    public int|string $user_id;
     public UploadedFile $file;
+
     public function __construct()
     {
     }

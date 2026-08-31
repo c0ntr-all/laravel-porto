@@ -6,8 +6,10 @@ use App\Ship\Parents\DTO\Data;
 
 class UploadImageFromWindowsDto extends Data
 {
-    public string $user_id;
+    public int|string $user_id;
+    /** @var list<string> */
     public array $paths;
+
     public function __construct()
     {
     }

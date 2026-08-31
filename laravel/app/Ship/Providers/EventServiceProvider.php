@@ -9,6 +9,8 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Taggable;
 use App\Containers\AppSection\Tag\Observers\TaggableObserver;
 use App\Containers\AppSection\Tag\Observers\TagObserver;
+use App\Containers\GallerySection\Album\Models\Album as GalleryAlbum;
+use App\Containers\GallerySection\Album\Observers\AlbumObserver as GalleryAlbumObserver;
 use App\Containers\GallerySection\Image\Models\Image as GalleryImage;
 use App\Containers\GallerySection\Image\Observers\ImageObserver as GalleryImageObserver;
 use App\Containers\GallerySection\Video\Models\Video as GalleryVideo;
@@ -48,6 +50,7 @@ class EventServiceProvider extends ServiceProvider
         Post::class => [PostObserver::class],
         Preset::class => [PresetObserver::class],
         Task::class => [TaskObserver::class],
+        GalleryAlbum::class => [GalleryAlbumObserver::class],
         GalleryImage::class => [GalleryImageObserver::class],
         GalleryVideo::class => [GalleryVideoObserver::class],
         Attachment::class => [AttachmentObserver::class],

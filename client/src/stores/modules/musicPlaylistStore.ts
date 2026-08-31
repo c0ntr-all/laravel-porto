@@ -5,8 +5,8 @@ import { playlistApi } from 'src/api/requests/playlistApi'
 import { trackApi } from 'src/api/requests/trackApi'
 import { mapPlaylistResponse, mapPlaylistsResponse } from 'src/api/mappers/Music/playlist.mapper'
 import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
-import { extractCursorFromLink, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { IPlaylist, ITrack } from 'src/types'
+import { extractCursorFromLink, extractCursorFromResponse, handleApiError, handleApiSuccess, hasMoreFromResponse } from 'src/utils/jsonapi'
+import { IPlaylist, IPlaylistCreateDto, ITrack } from 'src/types'
 
 export const TRACK_SEARCH_MIN_LENGTH = 3
 const SEARCH_DEBOUNCE_MS = 400
@@ -22,6 +22,14 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
   const isSearchingMore = ref(false)
   const addingTrackIds = ref<string[]>([])
 
+  const playlists = ref<IPlaylist[]>([])
+  const playlistsCursor = ref<string | null>(null)
+  const hasMorePlaylists = ref(false)
+  const isPlaylistsLoading = ref(false)
+  const isPlaylistsLoadingMore = ref(false)
+  const isPlaylistSaving = ref(false)
+  const playlistListName = ref('')
+
   const playlistTrackIds = computed(() => new Set(
     (playlist.value?.tracks ?? []).map(track => track.id)
   ))
@@ -29,6 +37,7 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
   let searchTimer: ReturnType<typeof setTimeout> | undefined
   let searchAbort: AbortController | null = null
   let searchRequestId = 0
+  let playlistListRequestId = 0
 
   function isInPlaylist(trackId: string): boolean {
     return playlistTrackIds.value.has(trackId)
@@ -183,7 +192,10 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
     let cursor: string | null = null
 
     do {
-      const response = await playlistApi.listPlaylists(cursor)
+      const response = await playlistApi.listPlaylists({
+        cursor,
+        include: 'tracks'
+      })
       const page = mapPlaylistsResponse(response)
 
       for (const item of page) {
@@ -192,7 +204,7 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
         }
       }
 
-      cursor = extractCursorFromLink(response.links?.next)
+      cursor = extractCursorFromResponse(response)
     } while (cursor)
 
     return ids
@@ -223,9 +235,87 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
     }
   }
 
+  async function getPlaylists(options?: { append?: boolean; name?: string }): Promise<void> {
+    const append = Boolean(options?.append)
+
+    if (options && 'name' in options) {
+      playlistListName.value = options.name?.trim() ?? ''
+    }
+
+    if (append) {
+      if (!playlistsCursor.value || isPlaylistsLoadingMore.value || isPlaylistsLoading.value) {
+        return
+      }
+      isPlaylistsLoadingMore.value = true
+    } else {
+      playlistListRequestId += 1
+      isPlaylistsLoading.value = true
+      isPlaylistsLoadingMore.value = false
+      playlists.value = []
+      playlistsCursor.value = null
+      hasMorePlaylists.value = false
+    }
+
+    const requestId = playlistListRequestId
+
+    try {
+      const response = await playlistApi.listPlaylists({
+        name: playlistListName.value || undefined,
+        cursor: append ? playlistsCursor.value : null
+      })
+
+      if (requestId !== playlistListRequestId) {
+        return
+      }
+
+      const mapped = mapPlaylistsResponse(response)
+      const seen = new Set(playlists.value.map(item => item.id))
+      playlists.value = append
+        ? [...playlists.value, ...mapped.filter(item => !seen.has(item.id))]
+        : mapped
+      playlistsCursor.value = extractCursorFromResponse(response)
+      hasMorePlaylists.value = hasMoreFromResponse(response)
+    } catch (error) {
+      if (requestId !== playlistListRequestId) {
+        return
+      }
+      handleApiError(error)
+    } finally {
+      if (requestId === playlistListRequestId) {
+        isPlaylistsLoading.value = false
+        isPlaylistsLoadingMore.value = false
+      }
+    }
+  }
+
+  async function createPlaylist(payload: IPlaylistCreateDto): Promise<IPlaylist | null> {
+    isPlaylistSaving.value = true
+
+    try {
+      const response = await playlistApi.createPlaylist(payload)
+      const created = mapPlaylistResponse(response)
+      playlists.value = [created, ...playlists.value.filter(item => item.id !== created.id)]
+      handleApiSuccess(response)
+
+      return created
+    } catch (error) {
+      handleApiError(error)
+      return null
+    } finally {
+      isPlaylistSaving.value = false
+    }
+  }
+
   return {
     playlist,
     isPlaylistLoading,
+    playlists,
+    playlistsCursor,
+    hasMorePlaylists,
+    isPlaylistsLoading,
+    isPlaylistsLoadingMore,
+    isPlaylistSaving,
+    playlistListName,
     searchQuery,
     searchResults,
     searchCursor,
@@ -241,6 +331,8 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
     loadMoreSearchResults,
     addTrackToPlaylist,
     removeTrackLocal,
-    resetSearch
+    resetSearch,
+    getPlaylists,
+    createPlaylist
   }
 })

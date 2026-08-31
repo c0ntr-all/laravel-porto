@@ -1,5 +1,5 @@
 <template>
-  <q-btn type="primary" :to="'/music'">Вернуться назад</q-btn>
+  <q-btn type="primary" :to="{ name: 'music-tags' }">Вернуться назад</q-btn>
   <div class="tag-head">
     <div class="tag-head__info">
       <div class="text-h5">{{ tag?.name }}</div>

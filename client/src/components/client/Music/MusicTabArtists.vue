@@ -1,26 +1,68 @@
 <template>
   <div class="row q-col-gutter-md q-mb-md">
-    <div class="col-lg-3 col-md-4">
-      <q-card flat>
+    <div class="col-12 col-md-4 col-lg-3">
+      <q-card class="artists-sidebar" flat>
         <q-card-section>
-          <div class="flex justify-between items-end">
-            <MusicTabArtistsFilter
-              @submitFilter="reloadArtists"
-              @resetFilter="reloadArtists"
-            />
-          </div>
+          <MusicTabArtistsFilter
+            :tags-match="catalog.artistListTagsMatch"
+            :tags-nested="catalog.artistListTagsNested"
+            :selected-tags="catalog.artistListTags"
+            @change="onFilterChange"
+          />
         </q-card-section>
       </q-card>
     </div>
-    <div class="col-lg-9 col-md-8">
-      <MusicTabArtistsSearch
-        @search="search"
-        @switchCardMode="switchCardMode"
-        @reset="resetSearch"
-      />
+    <div class="col-12 col-md-8 col-lg-9">
+      <q-card class="q-mb-md" flat>
+        <q-card-section>
+          <div class="row items-center q-col-gutter-sm">
+            <div class="col">
+              <q-input
+                v-model="searchText"
+                label="Search artists"
+                outlined
+                dense
+                debounce="400"
+                clearable
+                @update:model-value="onSearch"
+              >
+                <template #prepend>
+                  <q-icon name="search" />
+                </template>
+              </q-input>
+            </div>
+            <div class="col-auto">
+              <q-btn-toggle
+                v-model="cardMode"
+                unelevated
+                dense
+                no-caps
+                toggle-color="primary"
+                color="grey-2"
+                text-color="primary"
+                :options="[
+                  { value: 'card', slot: 'card' },
+                  { value: 'row', slot: 'row' }
+                ]"
+              >
+                <template #card>
+                  <q-icon name="grid_view" size="sm" />
+                </template>
+                <template #row>
+                  <q-icon name="view_agenda" size="sm" />
+                </template>
+              </q-btn-toggle>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
       <q-card flat>
         <q-card-section>
-          <MusicArtistsListSkeleton v-if="catalog.isArtistsLoading"/>
+          <MusicArtistsListSkeleton
+            v-if="catalog.isArtistsLoading"
+            :card-mode="cardMode"
+          />
           <template v-else-if="catalog.artists.length">
             <MusicArtistsList
               :artists="catalog.artists"
@@ -35,10 +77,14 @@
               v-if="catalog.isArtistsLoadingMore"
               class="flex justify-center q-my-md"
             >
-              <q-spinner color="primary" size="2em"/>
+              <q-spinner color="primary" size="2em" />
             </div>
           </template>
-          <AppNoResultsPlug v-else/>
+          <AppNoResultsPlug
+            v-else
+            title="No artists found"
+            body="Try another search or tag filter"
+          />
         </q-card-section>
       </q-card>
     </div>
@@ -46,81 +92,54 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useMusicCatalogStore } from 'src/stores/modules/musicCatalogStore'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import MusicArtistsList from 'src/components/client/Music/MusicArtistsList.vue'
 import MusicArtistsListSkeleton from 'src/components/client/Music/MusicArtistsListSkeleton.vue'
 import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFilter.vue'
-import MusicTabArtistsSearch from 'src/components/client/Music/MusicTabArtistsSearch.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const catalog = useMusicCatalogStore()
-const cardMode = ref<'card' | 'row'>('row')
-const sentinel = ref<HTMLElement | null>(null)
+const cardMode = ref<'card' | 'row'>('card')
+const searchText = ref(catalog.artistListName)
 
-let observer: IntersectionObserver | null = null
-
-const reloadArtists = () => {
-  return catalog.getArtists()
+const onSearch = (value: string | number | null) => {
+  void catalog.getArtists({ name: String(value ?? '') })
 }
 
-const search = (searchText: string) => {
-  return catalog.getArtists({ name: searchText })
-}
-
-const resetSearch = () => {
-  return catalog.getArtists({ name: '' })
-}
-
-const switchCardMode = (mode: 'card' | 'row') => {
-  cardMode.value = mode
-}
-
-const disconnectObserver = () => {
-  observer?.disconnect()
-  observer = null
-}
-
-const observeSentinel = () => {
-  disconnectObserver()
-
-  if (!sentinel.value) {
-    return
-  }
-
-  observer = new IntersectionObserver((entries) => {
-    if (!entries.some(entry => entry.isIntersecting)) {
-      return
-    }
-
-    if (!catalog.hasMoreArtists || catalog.isArtistsLoading || catalog.isArtistsLoadingMore) {
-      return
-    }
-
-    void catalog.getArtists({ append: true })
-  }, {
-    root: null,
-    rootMargin: '320px 0px',
-    threshold: 0
+const onFilterChange = (payload: {
+  tags: string[]
+  tagsMatch: 'and' | 'or'
+  tagsNested: boolean
+}) => {
+  void catalog.getArtists({
+    tags: payload.tags,
+    tagsMatch: payload.tagsMatch,
+    tagsNested: payload.tagsNested
   })
-
-  observer.observe(sentinel.value)
 }
 
-watch(sentinel, () => {
-  observeSentinel()
-}, { flush: 'post' })
+const { sentinel } = useScrollSentinel(
+  () => { void catalog.getArtists({ append: true }) },
+  () => catalog.hasMoreArtists && !catalog.isArtistsLoading && !catalog.isArtistsLoadingMore
+)
 
 onMounted(() => {
-  void catalog.getArtists()
-})
-
-onUnmounted(() => {
-  disconnectObserver()
+  if (!catalog.artists.length) {
+    void catalog.getArtists()
+  }
 })
 </script>
 
 <style lang="scss" scoped>
+.artists-sidebar {
+  @media (min-width: $breakpoint-md-min) {
+    position: sticky;
+    top: 16px;
+  }
+}
+
 .artists-list-sentinel {
   width: 100%;
   height: 1px;

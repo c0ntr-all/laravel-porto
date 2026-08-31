@@ -1,141 +1,100 @@
 <template>
-  <q-card class="q-mb-md" flat bordered>
+  <q-card class="q-mb-md" flat>
     <q-card-section>
-      <TracksFilter @submitFilter="getTracks"/>
+      <q-input
+        v-model="searchText"
+        label="Search tracks"
+        outlined
+        dense
+        debounce="400"
+        clearable
+        @update:model-value="onSearch"
+      >
+        <template #prepend>
+          <q-icon name="search" />
+        </template>
+      </q-input>
     </q-card-section>
   </q-card>
 
-  <MusicTabTracksSkeleton v-if="loading"/>
+  <MusicTracksListSkeleton v-if="catalog.isTracksLoading" />
 
-  <template v-else>
-    <q-table
-      :rows="tracks"
-      :columns="columns"
-      row-key="name"
-      :flat="true"
-      :rows-per-page-options="[0]"
-      :v-model:pagination="pagination"
-      class="tracks"
-    >
-      <template v-slot:body="props">
-        <track-card-row :props="props" @play="initPlay"/>
-      </template>
-    </q-table>
-  </template>
+  <q-card v-else class="q-mb-md" flat>
+    <q-card-section v-if="catalog.tracks.length" class="q-pa-lg">
+      <div class="tracks-list q-gutter-xs q-pr-lg">
+        <MusicTrackCard
+          v-for="track in catalog.tracks"
+          :key="track.id"
+          :track="track"
+          :actions="trackActions"
+          @play="playTrack(track)"
+        />
+      </div>
+
+      <div
+        v-if="catalog.hasMoreTracks"
+        ref="sentinel"
+        class="tracks-list-sentinel"
+      />
+      <div
+        v-if="catalog.isTracksLoadingMore"
+        class="flex justify-center q-my-md"
+      >
+        <q-spinner color="primary" size="2em" />
+      </div>
+    </q-card-section>
+
+    <AppNoResultsPlug
+      v-else
+      title="No tracks found"
+      body="Try another search"
+    />
+  </q-card>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
-import { useQuasar } from 'quasar'
+import { useMusicCatalogStore } from 'src/stores/modules/musicCatalogStore'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
-import { api } from 'src/boot/axios'
-import TracksFilter from 'src/components/client/Music/default/tracksTab/TracksFilter.vue'
-import TrackCardRow from 'src/components/client/Music/default/tracksTab/TrackCardRow.vue'
-import MusicTabTracksSkeleton from 'src/components/client/Music/MusicTabTracksSkeleton.vue'
-import { ITrack } from 'src/components/client/Music/types'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
+import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
+import MusicTracksListSkeleton from 'src/components/client/Music/MusicTracksListSkeleton.vue'
+import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import { ITrack } from 'src/types'
 
-interface Pagination {
-  perPage: number
-  hasPages: boolean
-  nextPageUrl: string
-  prevPageUrl: string
-}
-
-const props = withDefaults(defineProps<{ tracksUrl: string }>(), {
-  tracksUrl: 'music/tracks'
-})
-
-const $q = useQuasar()
+const catalog = useMusicCatalogStore()
 const musicPlayer = useMusicPlayer()
+const trackActions = ['addToPlaylist']
+const searchText = ref(catalog.trackListName)
 
-const columns = ref([
-  {
-    name: 'number',
-    required: true,
-    label: '#',
-    align: 'center' as const,
-    field: (row: ITrack) => row.number,
-    sortable: true,
-    style: 'width: 70px'
-  }, {
-    name: 'rate',
-    required: true,
-    label: '',
-    align: 'center' as const,
-    field: (row: ITrack) => row.rate,
-    sortable: true,
-    style: 'width: 120px'
-  }, {
-    name: 'name',
-    required: true,
-    label: 'Name',
-    align: 'left' as const,
-    field: (row: ITrack) => row.name,
-    sortable: true
-  }, {
-    name: 'artist',
-    required: true,
-    label: 'Artist',
-    align: 'left' as const,
-    field: (row: ITrack) => row.artist,
-    sortable: true
-  }, {
-    name: 'tags',
-    required: true,
-    label: 'Tags',
-    align: 'left' as const,
-    field: (row: ITrack) => row.relationships.tags.data,
-    sortable: true
-  }, {
-    name: 'duration',
-    required: true,
-    label: 'Duration',
-    align: 'right' as const,
-    field: (row: ITrack) => row.duration,
-    sortable: true,
-    style: 'width: 130px'
-  }
-])
-const tracks = ref<ITrack[]>([])
-const loading = ref(true)
-
-const pagination = ref<Pagination>({
-  perPage: 0,
-  hasPages: false,
-  nextPageUrl: '',
-  prevPageUrl: ''
-})
-
-const getTracks = async (filters?: Record<string, unknown>): Promise<void> => {
-  filters = filters || {}
-
-  const data = new FormData()
-  data.append('filters', JSON.stringify(filters))
-
-  await api.post(props.tracksUrl, {
-    filters,
-    with_tags: true
-  }).then(response => {
-    tracks.value = response.data.tracks
-    pagination.value = response.data.pagination
-
-    loading.value = false
-  }).catch((error: any) => {
-    $q.notify({
-      type: 'negative',
-      message: error.response.data.message || error
-    })
-  })
+const onSearch = (value: string | number | null) => {
+  void catalog.getTracks({ name: String(value ?? '') })
 }
 
-const initPlay = (track: ITrack) => {
-  musicPlayer.toggleTrack(track, tracks.value)
+const playTrack = (track: ITrack) => {
+  musicPlayer.toggleTrack(track, catalog.tracks)
 }
+
+const { sentinel } = useScrollSentinel(
+  () => { void catalog.getTracks({ append: true }) },
+  () => catalog.hasMoreTracks && !catalog.isTracksLoading && !catalog.isTracksLoadingMore
+)
 
 onMounted(() => {
-  getTracks()
+  if (!catalog.tracks.length) {
+    void catalog.getTracks()
+  }
 })
 </script>
-<style lang="scss" scoped>
 
+<style lang="scss" scoped>
+.tracks-list {
+  max-width: 700px;
+  border-right: 1px solid #ccc;
+}
+
+.tracks-list-sentinel {
+  width: 100%;
+  height: 1px;
+}
 </style>

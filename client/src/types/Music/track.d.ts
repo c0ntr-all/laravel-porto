@@ -12,3 +12,8 @@ export interface ITrack {
   artists?: IArtistShort[]
   tags?: IMusicTag[]
 }
+
+export interface ITrackListQuery {
+  name?: string
+  cursor?: string | null
+}

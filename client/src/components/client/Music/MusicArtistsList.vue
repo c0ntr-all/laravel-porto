@@ -1,10 +1,12 @@
 <template>
-  <div v-if="cardMode === 'card'" class="artists-list row items-start q-gutter-md q-mb-lg">
-    <MusicArtistCard
+  <div v-if="cardMode === 'card'" class="row q-col-gutter-md q-mb-lg">
+    <div
       v-for="artist in artists"
       :key="artist.id"
-      :artist="artist"
-    />
+      class="col-6 col-sm-4 col-lg-3"
+    >
+      <MusicArtistCard :artist="artist" />
+    </div>
   </div>
   <div v-else class="column q-gutter-md q-mb-lg">
     <MusicArtistCardRow

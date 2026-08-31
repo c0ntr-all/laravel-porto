@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { artistApi } from 'src/api/requests/artistApi'
+import { trackApi } from 'src/api/requests/trackApi'
 import { mapArtistResponse, mapArtistsResponse } from 'src/api/mappers/Music/artist.mapper'
 import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
 import {
@@ -11,7 +12,7 @@ import {
 } from 'src/utils/jsonapi'
 import { IArtist, ITrack } from 'src/types'
 
-function mergeById(current: IArtist[], incoming: IArtist[]): IArtist[] {
+function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
   const seen = new Set(current.map(item => item.id))
 
   return [...current, ...incoming.filter(item => !seen.has(item.id))]
@@ -31,8 +32,19 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const isArtistsLoading = ref(false)
   const isArtistsLoadingMore = ref(false)
   const artistListName = ref('')
+  const artistListTags = ref<string[]>([])
+  const artistListTagsMatch = ref<'and' | 'or'>('or')
+  const artistListTagsNested = ref(true)
+
+  const tracks = ref<ITrack[]>([])
+  const tracksCursor = ref<string | null>(null)
+  const hasMoreTracks = ref(false)
+  const isTracksLoading = ref(false)
+  const isTracksLoadingMore = ref(false)
+  const trackListName = ref('')
 
   let artistListRequestId = 0
+  let trackListRequestId = 0
 
   async function getArtist(id: string): Promise<IArtist | null> {
     if (artist.value?.id !== id) {
@@ -78,9 +90,9 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
         id,
         append ? artistTracksCursor.value : null
       )
-      const tracks = mapTracksResponse(response, options?.fallbackArtist ?? artist.value?.name ?? '')
+      const mapped = mapTracksResponse(response, options?.fallbackArtist ?? artist.value?.name ?? '')
 
-      artistTracks.value = append ? [...artistTracks.value, ...tracks] : tracks
+      artistTracks.value = append ? [...artistTracks.value, ...mapped] : mapped
       artistTracksCursor.value = extractCursorFromLink(response.links?.next)
     } catch (error) {
       handleApiError(error)
@@ -90,11 +102,29 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     }
   }
 
-  async function getArtists(options?: { append?: boolean; name?: string }): Promise<void> {
+  async function getArtists(options?: {
+    append?: boolean
+    name?: string
+    tags?: string[]
+    tagsMatch?: 'and' | 'or'
+    tagsNested?: boolean
+  }): Promise<void> {
     const append = Boolean(options?.append)
 
     if (options && 'name' in options) {
       artistListName.value = options.name?.trim() ?? ''
+    }
+
+    if (options && 'tags' in options) {
+      artistListTags.value = [...(options.tags ?? [])]
+    }
+
+    if (options?.tagsMatch) {
+      artistListTagsMatch.value = options.tagsMatch
+    }
+
+    if (options && 'tagsNested' in options) {
+      artistListTagsNested.value = Boolean(options.tagsNested)
     }
 
     if (append) {
@@ -116,6 +146,9 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     try {
       const response = await artistApi.getArtists({
         name: artistListName.value || undefined,
+        tags: artistListTags.value,
+        tags_match: artistListTagsMatch.value,
+        tags_nested: artistListTagsNested.value,
         cursor: append ? artistsCursor.value : null
       })
 
@@ -140,6 +173,56 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     }
   }
 
+  async function getTracks(options?: { append?: boolean; name?: string }): Promise<void> {
+    const append = Boolean(options?.append)
+
+    if (options && 'name' in options) {
+      trackListName.value = options.name?.trim() ?? ''
+    }
+
+    if (append) {
+      if (!tracksCursor.value || isTracksLoadingMore.value || isTracksLoading.value) {
+        return
+      }
+      isTracksLoadingMore.value = true
+    } else {
+      trackListRequestId += 1
+      isTracksLoading.value = true
+      isTracksLoadingMore.value = false
+      tracks.value = []
+      tracksCursor.value = null
+      hasMoreTracks.value = false
+    }
+
+    const requestId = trackListRequestId
+
+    try {
+      const response = await trackApi.listTracks({
+        name: trackListName.value || undefined,
+        cursor: append ? tracksCursor.value : null
+      })
+
+      if (requestId !== trackListRequestId) {
+        return
+      }
+
+      const mapped = mapTracksResponse(response)
+      tracks.value = append ? mergeById(tracks.value, mapped) : mapped
+      tracksCursor.value = extractCursorFromResponse(response)
+      hasMoreTracks.value = hasMoreFromResponse(response)
+    } catch (error) {
+      if (requestId !== trackListRequestId) {
+        return
+      }
+      handleApiError(error)
+    } finally {
+      if (requestId === trackListRequestId) {
+        isTracksLoading.value = false
+        isTracksLoadingMore.value = false
+      }
+    }
+  }
+
   return {
     artist,
     artistTracks,
@@ -153,8 +236,18 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     isArtistsLoading,
     isArtistsLoadingMore,
     artistListName,
+    artistListTags,
+    artistListTagsMatch,
+    artistListTagsNested,
+    tracks,
+    tracksCursor,
+    hasMoreTracks,
+    isTracksLoading,
+    isTracksLoadingMore,
+    trackListName,
     getArtist,
     getArtistTracks,
-    getArtists
+    getArtists,
+    getTracks
   }
 })

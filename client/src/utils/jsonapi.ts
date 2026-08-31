@@ -257,6 +257,9 @@ export function buildFilterForUrl(filters: Record<string, any>): string {
 
   for (const [key, value] of Object.entries(filters)) {
     if (Array.isArray(value)) {
+      if (value.length === 0) {
+        continue
+      }
       params.append(`filter[${key}]`, value.join(','))
     } else if (value !== undefined && value !== null && value !== '') {
       params.append(`filter[${key}]`, String(value))

@@ -1,159 +1,248 @@
 <template>
   <div class="music-filter">
-    <div class="text-h5 q-mb-sm">Filter</div>
-    <div class="music-filter__params q-mb-md">
-      <q-btn-toggle
-        v-model="type"
-        @click="setUnion"
-        class="border-grey"
-        no-caps
-        rounded
-        unelevated
-        toggle-color="primary"
-        color="white"
-        text-color="primary"
-        :options="[
-          {label: 'Strict search', value: 'strict'},
-          {label: 'Nested search', value: 'nested'}
-        ]"
-      />
-      <div class="flex items-center">
-        <span>ИЛИ</span>
-        <q-toggle
-          label="И"
-          v-model="union"
-          :disable="type !== 'strict'"
-          color="primary"
-          keep-color
-        />
-      </div>
-    </div>
-    <div class="flex q-mb-sm q-gutter-md">
-      <q-select
-        label="Select Styles"
-        v-model="secondaryTagsModel"
-        :options="secondaryTagsSelect"
-        input-debounce="0"
-        style="width: 100%"
-        use-input
-        use-chips
-        multiple
-        outlined
-        dense
-      />
-      <q-select
-        label="Select Genre"
-        v-model="commonTagsModel"
-        :options="commonTagsSelect"
-        input-debounce="0"
-        style="width: 100%"
-        use-input
-        use-chips
-        multiple
-        outlined
-        dense
-      />
-      <!--TODO: Вывести в компонент ACTIONS-->
-      <div class="flex justify-end q-gutter-md" style="width: 100%">
-        <q-btn class="q-mt-none q-ml-none" color="grey" label="Reset" @click="resetFilter" outline/>
-        <q-btn class="q-mt-none" color="primary" label="Filter" @click="submitFilter"/>
-      </div>
+    <div class="text-h6 q-mb-sm">Filters</div>
+
+    <q-btn-toggle
+      v-model="tagsMatch"
+      class="q-mb-sm full-width"
+      no-caps
+      unelevated
+      spread
+      toggle-color="primary"
+      color="grey-2"
+      text-color="primary"
+      :options="[
+        { label: 'Any tag', value: 'or' },
+        { label: 'All tags', value: 'and' }
+      ]"
+    />
+
+    <q-toggle
+      v-model="tagsNested"
+      class="q-mb-md"
+      label="Include nested tags"
+      color="primary"
+      dense
+    />
+
+    <div v-if="selectedCount" class="q-mb-sm text-caption text-grey-7">
+      {{ selectedCount }} selected
     </div>
 
-    <q-inner-loading :showing="loading">
-      <q-spinner-gears size="50px" color="primary"/>
+    <q-inner-loading :showing="tagStore.isGroupsLoading || tagStore.isTagsLoading">
+      <q-spinner size="2em" color="primary" />
     </q-inner-loading>
+
+    <q-list v-if="groupTrees.length" separator>
+      <q-expansion-item
+        v-for="group in groupTrees"
+        :key="group.id"
+        :label="group.name"
+        :caption="group.caption"
+        default-opened
+        dense
+        header-class="text-weight-medium"
+      >
+        <q-tree
+          v-if="group.nodes.length"
+          class="q-mb-sm"
+          :nodes="group.nodes"
+          node-key="id"
+          tick-strategy="strict"
+          :ticked="tickedByGroup[group.id] ?? []"
+          default-expand-all
+          dense
+          @update:ticked="ids => onGroupTicked(group.id, ids)"
+        />
+        <div v-else class="text-caption text-grey-6 q-pa-sm">No tags</div>
+      </q-expansion-item>
+    </q-list>
+
+    <div class="q-mt-md">
+      <q-btn
+        color="grey"
+        label="Reset"
+        outline
+        unelevated
+        no-caps
+        class="full-width"
+        :disable="!selectedCount && tagsMatch === 'or' && tagsNested"
+        @click="resetFilter"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { useQuasar } from 'quasar'
-import { api } from 'src/boot/axios'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useMusicTagStore } from 'src/stores/modules/musicTagStore'
+import { IMusicTag, IMusicTagGroup } from 'src/types'
 
-interface Tag {
+interface TagTreeNode {
+  id: string
   label: string
-  value: string
+  children?: TagTreeNode[]
 }
 
-interface TagsResponse {
-  items: {
-    common: Record<string, Tag>
-    secondary: Record<string, Tag>
-  }
+interface GroupTree {
+  id: string
+  name: string
+  caption: string
+  nodes: TagTreeNode[]
 }
 
 const emit = defineEmits<{
-  resetFilter : []
-  submitFilter: [payload: { filters: { music_tags: { tags: string[], type: string, union: boolean } } }]
+  change: [payload: { tags: string[]; tagsMatch: 'and' | 'or'; tagsNested: boolean }]
 }>()
 
-const $q = useQuasar()
+const props = withDefaults(defineProps<{
+  tagsMatch?: 'and' | 'or'
+  tagsNested?: boolean
+  selectedTags?: string[]
+}>(), {
+  tagsMatch: 'or',
+  tagsNested: true,
+  selectedTags: () => []
+})
 
-const type = ref<'strict' | 'nested'>('strict')
-const union = ref<boolean>(true)
-const commonTagsSelect = ref<Tag[]>([])
-const secondaryTagsSelect = ref<Tag[]>([])
-const commonTagsModel = ref<Tag[]>([])
-const secondaryTagsModel = ref<Tag[]>([])
-const loading = ref<boolean>(true)
+const tagStore = useMusicTagStore()
+const tagsMatch = ref<'and' | 'or'>(props.tagsMatch)
+const tagsNested = ref(props.tagsNested)
+const tickedByGroup = reactive<Record<string, string[]>>({})
 
-const setUnion = () => {
-  if (type.value === 'nested') {
-    union.value = false
-  }
-}
+const activeTags = (tags: IMusicTag[]): IMusicTag[] => tags.filter(tag => tag.is_active)
 
-const getTagsSelect = async (): Promise<void> => {
-  loading.value = true
-  await api.post<{ data: TagsResponse }>('music/tags/select').then(response => {
-    const { data } = response.data
+const toTreeNodes = (tags: IMusicTag[]): TagTreeNode[] => {
+  return activeTags(tags).map(tag => {
+    const children = tag.tags?.length ? toTreeNodes(tag.tags) : undefined
 
-    commonTagsSelect.value = Object.values(data.items.common)
-    secondaryTagsSelect.value = Object.values(data.items.secondary)
-  }).catch(error => {
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data.message || 'Error'
-    })
-  }).finally(() => {
-    loading.value = false
+    return {
+      id: tag.id,
+      label: tag.name,
+      ...(children?.length ? { children } : {})
+    }
   })
 }
 
-const resetFilter = () => {
-  commonTagsModel.value = []
-  secondaryTagsModel.value = []
-  type.value = 'strict'
-  union.value = true
+const visibleGroups = computed(() => (
+  tagStore.groups.filter(group => group.is_active)
+))
 
-  emit('resetFilter')
+const groupTrees = computed<GroupTree[]>(() => {
+  const groups: GroupTree[] = visibleGroups.value.map((group: IMusicTagGroup) => {
+    const nodes = toTreeNodes(tagStore.tagsByGroup(group.id))
+
+    return {
+      id: group.id,
+      name: group.name,
+      caption: `${countNodes(nodes)} tags`,
+      nodes
+    }
+  })
+
+  const ungrouped = toTreeNodes(tagStore.ungroupedTags)
+  if (ungrouped.length) {
+    groups.push({
+      id: 'ungrouped',
+      name: 'Other',
+      caption: `${countNodes(ungrouped)} tags`,
+      nodes: ungrouped
+    })
+  }
+
+  return groups
+})
+
+const selectedTagIds = computed(() => (
+  Object.values(tickedByGroup).flat().filter(Boolean)
+))
+
+const selectedCount = computed(() => selectedTagIds.value.length)
+
+function countNodes (nodes: TagTreeNode[]): number {
+  return nodes.reduce((sum, node) => sum + 1 + countNodes(node.children ?? []), 0)
 }
 
-const submitFilter = () => {
-  const tags = commonTagsModel.value.concat(secondaryTagsModel.value).map(tag => tag.value)
-
-  const filters = {
-    music_tags: {
-      tags,
-      type: type.value,
-      union: union.value
+function ensureGroupKeys (): void {
+  for (const group of groupTrees.value) {
+    if (!Array.isArray(tickedByGroup[group.id])) {
+      tickedByGroup[group.id] = []
     }
   }
-  emit('submitFilter', { filters })
 }
 
-onMounted(() => {
-  getTagsSelect()
+function applySelected (ids: string[]): void {
+  const allowed = new Set(ids)
+  ensureGroupKeys()
+  for (const group of groupTrees.value) {
+    const nodeIds = collectIds(group.nodes)
+    tickedByGroup[group.id] = nodeIds.filter(id => allowed.has(id))
+  }
+}
+
+function collectIds (nodes: TagTreeNode[]): string[] {
+  return nodes.flatMap(node => [node.id, ...collectIds(node.children ?? [])])
+}
+
+function emitChange (): void {
+  emit('change', {
+    tags: [...selectedTagIds.value],
+    tagsMatch: tagsMatch.value,
+    tagsNested: tagsNested.value
+  })
+}
+
+function scheduleEmit (): void {
+  if (emitTimer) {
+    clearTimeout(emitTimer)
+  }
+
+  emitTimer = setTimeout(() => {
+    emitChange()
+  }, 300)
+}
+
+function onGroupTicked (groupId: string, ids: string[]): void {
+  tickedByGroup[groupId] = [...ids]
+  scheduleEmit()
+}
+
+function resetFilter (): void {
+  Object.keys(tickedByGroup).forEach(key => {
+    tickedByGroup[key] = []
+  })
+  tagsMatch.value = 'or'
+  tagsNested.value = true
+  scheduleEmit()
+}
+
+let emitTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(groupTrees, () => {
+  ensureGroupKeys()
+}, { immediate: true })
+
+watch([tagsMatch, tagsNested], () => {
+  scheduleEmit()
+})
+
+onMounted(async () => {
+  if (!tagStore.groups.length || !tagStore.tags.length) {
+    await tagStore.loadAll()
+  }
+  applySelected(props.selectedTags)
+})
+
+onUnmounted(() => {
+  if (emitTimer) {
+    clearTimeout(emitTimer)
+  }
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .music-filter {
   position: relative;
-}
-
-.tags-toggle {
-  border: 1px solid #027be3;
+  min-height: 120px;
 }
 </style>

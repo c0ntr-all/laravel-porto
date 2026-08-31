@@ -68,7 +68,7 @@
             :index="item.path"
             :to="item.path"
             class="sidebar-menu__item"
-            exact
+            :exact="!item.children?.length"
             clickable
             v-ripple
           >
@@ -124,6 +124,7 @@ defineOptions({
 
 interface Route {
   path: string
+  children?: unknown[]
   meta?: {
     icon?: string
     title?: string

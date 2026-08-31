@@ -5,7 +5,7 @@
       <q-btn
         icon="arrow_back"
         color="primary"
-        :to="'/music'"
+        :to="{ name: 'music-artists' }"
       >
         <div class="q-ml-xs">Вернуться назад</div>
       </q-btn>

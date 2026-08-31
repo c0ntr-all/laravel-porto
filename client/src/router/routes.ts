@@ -44,10 +44,31 @@ const routes: RouteRecordRaw[] = [{
       menu: true
     },
     children: [{
-      path: '/music',
+      path: '',
       component: () => import('pages/client/Music/MusicPage.vue'),
       name: 'music',
-      props: true
+      redirect: { name: 'music-artists' },
+      children: [{
+        path: 'tracks',
+        name: 'music-tracks',
+        component: () => import('components/client/Music/MusicTabTracks.vue')
+      }, {
+        path: 'artists',
+        name: 'music-artists',
+        component: () => import('components/client/Music/MusicTabArtists.vue')
+      }, {
+        path: 'playlists',
+        name: 'music-playlists',
+        component: () => import('components/client/Music/MusicTabPlaylists.vue')
+      }, {
+        path: 'tags',
+        name: 'music-tags',
+        component: () => import('components/client/Music/MusicTabTags.vue')
+      }, {
+        path: 'history',
+        name: 'music-history',
+        component: () => import('components/client/Music/MusicTabHistory.vue')
+      }]
     }, {
       path: '/music/tags/:slug',
       component: () => import('pages/client/Music/TagPage.vue'),

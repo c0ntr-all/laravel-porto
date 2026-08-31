@@ -3,7 +3,7 @@
     <q-btn
       icon="arrow_back"
       color="primary"
-      :to="'/music'"
+      :to="{ name: 'music-playlists' }"
     >
       <div class="q-ml-xs">Back to the Music</div>
     </q-btn>

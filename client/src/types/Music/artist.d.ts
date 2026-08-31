@@ -17,4 +17,7 @@ export interface IArtist {
 export interface IArtistListQuery {
   name?: string
   cursor?: string | null
+  tags?: string[]
+  tags_match?: 'and' | 'or'
+  tags_nested?: boolean
 }

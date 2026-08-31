@@ -1,24 +1,12 @@
 <template>
-  <q-card class="playlist-card col-4">
-    <q-skeleton height="200px" square />
+  <q-card class="playlist-card" flat bordered>
+    <q-skeleton height="180px" square />
+    <q-card-section>
+      <q-skeleton type="text" width="80%" />
+      <q-skeleton type="text" width="55%" />
+    </q-card-section>
   </q-card>
 </template>
 
 <script lang="ts" setup>
 </script>
-
-<style lang="scss" scoped>
-.playlist-card {
-  width: 100%;
-  max-width: 250px;
-
-  &__link {
-    text-decoration: none;
-    color: #fff;
-
-    &:hover {
-      color: #ccc;
-    }
-  }
-}
-</style>

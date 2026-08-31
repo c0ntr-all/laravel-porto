@@ -26,6 +26,7 @@ class PlaylistRepository
                            ->allowedIncludes(['tracks'])
                            ->when($userId, fn($query) => $query->where('user_id', $userId))
                            ->orderByDesc('created_at')
+                           ->orderByDesc('id')
                            ->cursorPaginate(12);
     }
 

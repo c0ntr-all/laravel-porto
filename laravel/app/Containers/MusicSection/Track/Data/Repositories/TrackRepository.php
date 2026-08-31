@@ -13,6 +13,8 @@ use Spatie\QueryBuilder\AllowedFilter;
 
 class TrackRepository
 {
+    public const DEFAULT_PER_PAGE = 24;
+
     public function getWithCursor(): CursorPaginator
     {
         return QueryBuilder::for(Track::class)
@@ -21,7 +23,8 @@ class TrackRepository
                            ->allowedIncludes(['tags', 'artists', 'album'])
                            ->with(['tags', 'artists', 'rate'])
                            ->orderByDesc('created_at')
-                           ->cursorPaginate(100);
+                           ->orderByDesc('id')
+                           ->cursorPaginate(self::DEFAULT_PER_PAGE);
     }
 
     /**

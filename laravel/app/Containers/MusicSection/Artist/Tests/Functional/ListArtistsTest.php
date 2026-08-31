@@ -4,6 +4,8 @@ namespace App\Containers\MusicSection\Artist\Tests\Functional;
 
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Tag\Models\MusicTag;
+use App\Containers\MusicSection\Tag\Models\MusicTagGroup;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -106,12 +108,150 @@ class ListArtistsTest extends TestCase
         $this->assertFalse($response->json('meta.has_more'));
     }
 
+    public function test_filter_tags_or_matches_any_selected_tag(): void
+    {
+        $user = User::factory()->create();
+        [$metal, $dark] = $this->makeTags();
+        $metalArtist = $this->makeArtist($user, 'Metallica');
+        $darkArtist = $this->makeArtist($user, 'Type O Negative');
+        $this->makeArtist($user, 'Untagged');
+        $this->attachTag($metalArtist, $metal);
+        $this->attachTag($darkArtist, $dark);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/artists?'.http_build_query([
+                'filter' => [
+                    'tags' => $metal->id.','.$dark->id,
+                    'tags_match' => 'or',
+                ],
+                'per_page' => 10,
+            ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertEqualsCanonicalizing([$metalArtist->id, $darkArtist->id], $ids);
+    }
+
+    public function test_filter_tags_and_requires_every_selected_tag(): void
+    {
+        $user = User::factory()->create();
+        [$metal, $dark] = $this->makeTags();
+        $both = $this->makeArtist($user, 'Both');
+        $metalOnly = $this->makeArtist($user, 'Metal Only');
+        $this->attachTag($both, $metal);
+        $this->attachTag($both, $dark);
+        $this->attachTag($metalOnly, $metal);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/artists?'.http_build_query([
+                'filter' => [
+                    'tags' => $metal->id.','.$dark->id,
+                    'tags_match' => 'and',
+                ],
+                'per_page' => 10,
+            ]));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame($both->id, (int) $response->json('data.0.id'));
+    }
+
+    public function test_filter_tags_nested_includes_descendants(): void
+    {
+        $user = User::factory()->create();
+        [$metal, $doom] = $this->makeNestedTags();
+        $artist = $this->makeArtist($user, 'Warning');
+        $this->attachTag($artist, $doom);
+
+        $nested = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/artists?'.http_build_query([
+                'filter' => [
+                    'tags' => (string) $metal->id,
+                    'tags_nested' => '1',
+                ],
+                'per_page' => 10,
+            ]));
+
+        $nested->assertOk();
+        $this->assertCount(1, $nested->json('data'));
+        $this->assertSame($artist->id, (int) $nested->json('data.0.id'));
+
+        $strict = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/artists?'.http_build_query([
+                'filter' => [
+                    'tags' => (string) $metal->id,
+                    'tags_nested' => '0',
+                ],
+                'per_page' => 10,
+            ]));
+
+        $strict->assertOk();
+        $this->assertCount(0, $strict->json('data'));
+    }
+
     private function makeArtist(User $user, string $name): Artist
     {
         return Artist::query()->create([
             'user_id' => $user->id,
             'name' => $name,
             'path' => 'F:\\Music\\'.$name,
+        ]);
+    }
+
+    /**
+     * @return array{0: MusicTag, 1: MusicTag}
+     */
+    private function makeTags(): array
+    {
+        $group = MusicTagGroup::query()->create([
+            'name' => 'Genre',
+            'slug' => 'genre-'.uniqid(),
+            'is_system' => true,
+        ]);
+        $metal = MusicTag::query()->create([
+            'name' => 'Metal',
+            'group_id' => $group->id,
+            'is_active' => true,
+        ]);
+        $dark = MusicTag::query()->create([
+            'name' => 'Dark',
+            'group_id' => $group->id,
+            'is_active' => true,
+        ]);
+
+        return [$metal, $dark];
+    }
+
+    /**
+     * @return array{0: MusicTag, 1: MusicTag}
+     */
+    private function makeNestedTags(): array
+    {
+        $group = MusicTagGroup::query()->create([
+            'name' => 'Genre',
+            'slug' => 'genre-nested-'.uniqid(),
+            'is_system' => true,
+        ]);
+        $metal = MusicTag::query()->create([
+            'name' => 'Metal',
+            'group_id' => $group->id,
+            'is_active' => true,
+        ]);
+        $doom = MusicTag::query()->create([
+            'name' => 'Doom',
+            'group_id' => $group->id,
+            'parent_id' => $metal->id,
+            'is_active' => true,
+        ]);
+
+        return [$metal, $doom];
+    }
+
+    private function attachTag(Artist $artist, MusicTag $tag): void
+    {
+        $artist->tags()->attach($tag->id, [
+            'tracks_count' => 1,
+            'percentage' => 100,
         ]);
     }
 }

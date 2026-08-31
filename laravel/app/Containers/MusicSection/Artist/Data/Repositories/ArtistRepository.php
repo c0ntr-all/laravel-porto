@@ -2,10 +2,12 @@
 
 namespace App\Containers\MusicSection\Artist\Data\Repositories;
 
+use App\Containers\MusicSection\Tag\Data\Filters\ArtistTagsFilter;
 use App\Containers\MusicSection\Artist\Data\DTO\CreateArtistDto;
 use App\Containers\MusicSection\Artist\Data\DTO\UpdateArtistDto;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -20,10 +22,7 @@ class ArtistRepository
         $perPage = $this->normalizePerPage($perPage);
 
         return QueryBuilder::for(Artist::class)
-                           ->allowedFilters([
-                               AllowedFilter::partial('name'),
-                               AllowedFilter::exact('country_id'),
-                           ])
+                           ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at'])
                            ->allowedIncludes(['tags'])
                            ->with(['tags'])
@@ -36,10 +35,7 @@ class ArtistRepository
     public function getWithPaginate(): LengthAwarePaginator
     {
         return QueryBuilder::for(Artist::class)
-                           ->allowedFilters([
-                               AllowedFilter::partial('name'),
-                               AllowedFilter::exact('country_id'),
-                           ])
+                           ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at'])
                            ->with(['tags'])
                            ->orderByDesc('created_at')
@@ -120,5 +116,23 @@ class ArtistRepository
         }
 
         return min($perPage, self::MAX_PER_PAGE);
+    }
+
+    /**
+     * @return list<AllowedFilter>
+     */
+    private function allowedFilters(): array
+    {
+        return [
+            AllowedFilter::partial('name'),
+            AllowedFilter::exact('country_id'),
+            AllowedFilter::custom('tags', new ArtistTagsFilter()),
+            AllowedFilter::callback('tags_match', function (Builder $query): void {
+                unset($query);
+            }),
+            AllowedFilter::callback('tags_nested', function (Builder $query): void {
+                unset($query);
+            }),
+        ];
     }
 }

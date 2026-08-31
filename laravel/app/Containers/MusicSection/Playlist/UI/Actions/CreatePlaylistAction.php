@@ -33,6 +33,7 @@ class CreatePlaylistAction extends BaseAction
 
         return fractal($playlist, new PlaylistTransformer())
             ->withResourceName('playlists')
+            ->addMeta(['message' => 'Playlist created'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

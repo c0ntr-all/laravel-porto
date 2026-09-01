@@ -54,3 +54,15 @@ export interface IAlbumWriteDto {
   tags?: number[]
   image_file?: File | null
 }
+
+export interface IAlbumFormState {
+  name: string
+  description: string
+  edition: string
+  album_type_id: string | number | null
+  date: string
+  parent_id: string | number | null
+  artist_ids: Array<string | number>
+  tag_ids: Array<string | number>
+  image_file?: File | null
+}

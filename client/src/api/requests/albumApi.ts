@@ -27,10 +27,14 @@ function toFormData(payload: IAlbumWriteDto): FormData {
   payload.artist_ids?.forEach(id => {
     formData.append('artist_ids[]', String(id))
   })
-  if (payload.tags?.length) {
-    payload.tags.forEach(id => {
-      formData.append('tags[]', String(id))
-    })
+  if (payload.tags !== undefined) {
+    if (payload.tags.length === 0) {
+      formData.append('tags', '')
+    } else {
+      payload.tags.forEach(id => {
+        formData.append('tags[]', String(id))
+      })
+    }
   }
   if (payload.image_file) {
     formData.append('image_file', payload.image_file)

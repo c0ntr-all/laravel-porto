@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="show" persistent>
+  <q-dialog v-model="show">
     <q-card class="artist-dialog">
       <q-card-section class="row items-center">
         <div class="text-h6">Edit artist</div>

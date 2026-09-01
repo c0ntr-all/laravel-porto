@@ -224,8 +224,7 @@ const confirmDelete = (upload: IMusicUpload) => {
   $q.dialog({
     title: 'Delete upload session',
     message: 'This removes the session log only. Catalog artists, albums and tracks stay in the library.',
-    cancel: true,
-    persistent: true
+    cancel: true
   }).onOk(() => {
     void store.deleteUpload(upload.id)
   })

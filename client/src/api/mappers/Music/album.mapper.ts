@@ -1,4 +1,4 @@
-import { IAlbum, IAlbumType, IAlbumVersion, IJsonApiResponse } from 'src/types'
+import { IAlbum, IAlbumFormState, IAlbumType, IAlbumVersion, IAlbumWriteDto, IJsonApiResponse } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeArtistsShort } from 'src/api/mappers/Music/artist.mapper'
@@ -62,4 +62,85 @@ export function mapAlbumTypesResponse(response: IJsonApiResponse): IAlbumType[] 
   return mapResponse(response)
     .map(item => normalizeAlbumType(item))
     .filter((item): item is IAlbumType => Boolean(item))
+}
+
+function idsEqual (left: Array<string | number>, right: Array<string | number>): boolean {
+  if (left.length !== right.length) {
+    return false
+  }
+
+  const a = [...left].map(String).sort()
+  const b = [...right].map(String).sort()
+
+  return a.every((id, index) => id === b[index])
+}
+
+function toNullableId (value: string | number | null | undefined): number | null {
+  if (value == null || value === '') {
+    return null
+  }
+
+  const id = Number(value)
+
+  return Number.isFinite(id) ? id : null
+}
+
+function toNullableText (value: string): string | null {
+  const trimmed = value.trim()
+
+  return trimmed === '' ? null : trimmed
+}
+
+export function mapAlbumWritePatch (original: IAlbum, form: IAlbumFormState): IAlbumWriteDto {
+  const payload: IAlbumWriteDto = {}
+  const nextName = form.name.trim()
+
+  if (nextName !== original.name) {
+    payload.name = nextName
+  }
+
+  const nextDescription = toNullableText(form.description)
+  if (nextDescription !== (original.description ?? null)) {
+    payload.description = nextDescription
+  }
+
+  const nextEdition = toNullableText(form.edition)
+  if (nextEdition !== (original.edition ?? null)) {
+    payload.edition = nextEdition
+  }
+
+  const nextTypeId = toNullableId(form.album_type_id)
+  const currentTypeId = toNullableId(original.album_type?.id ?? original.album_type_id)
+  if (nextTypeId !== currentTypeId) {
+    payload.album_type_id = nextTypeId
+  }
+
+  const nextDate = form.date.trim() || null
+  if (nextDate !== (original.date ?? null)) {
+    payload.date = nextDate
+  }
+
+  const nextParentId = toNullableId(form.parent_id)
+  const currentParentId = toNullableId(original.parent_id)
+  if (nextParentId !== currentParentId) {
+    payload.parent_id = nextParentId
+  }
+
+  if (!idsEqual(form.artist_ids, original.artists.map(artist => artist.id))) {
+    payload.artist_ids = form.artist_ids.map(Number)
+  }
+
+  if (!idsEqual(form.tag_ids, original.tags.map(tag => tag.id))) {
+    payload.tags = form.tag_ids.map(Number)
+  }
+
+  if (form.image_file) {
+    payload.image_file = form.image_file
+  }
+
+  return payload
+}
+
+export function hasAlbumWritePatch (payload: IAlbumWriteDto): boolean {
+  return Object.keys(payload).length > 0
 }

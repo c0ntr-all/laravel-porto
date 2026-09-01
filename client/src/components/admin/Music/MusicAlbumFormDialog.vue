@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="show" persistent>
+  <q-dialog v-model="show">
     <q-card class="album-dialog">
       <q-card-section class="row items-center">
         <div>
@@ -127,7 +127,7 @@
           unelevated
           no-caps
           :loading="admin.isAlbumSaving"
-          :disable="!name.trim()"
+          :disable="!name.trim() || !isDirty"
           @click="save"
         >
           Save
@@ -143,7 +143,8 @@ import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
 import { useMusicTagStore } from 'src/stores/modules/musicTagStore'
 import MusicTagGroupSelect from 'src/components/admin/Music/MusicTagGroupSelect.vue'
 import { albumYear } from 'src/utils/albumDate'
-import { IAlbum, IArtistShort } from 'src/types'
+import { hasAlbumWritePatch, mapAlbumWritePatch } from 'src/api/mappers/Music/album.mapper'
+import { IAlbum, IAlbumFormState, IArtistShort } from 'src/types'
 
 const props = defineProps<{
   modelValue: boolean
@@ -223,6 +224,21 @@ const hydrate = (album: IAlbum) => {
 
 watch(() => props.album, hydrate)
 
+const formState = computed((): IAlbumFormState => ({
+  name: name.value,
+  description: description.value,
+  edition: edition.value,
+  album_type_id: albumTypeId.value,
+  date: date.value,
+  parent_id: parentId.value,
+  artist_ids: artistIds.value,
+  tag_ids: tagIds.value,
+  image_file: imageFile.value
+}))
+
+const patch = computed(() => mapAlbumWritePatch(props.album, formState.value))
+const isDirty = computed(() => hasAlbumWritePatch(patch.value))
+
 const filterArtists = async (val: string, update: (fn: () => void) => void) => {
   const found = await admin.searchArtistOptions(val)
   update(() => {
@@ -242,17 +258,14 @@ const filterParents = async (val: string, update: (fn: () => void) => void) => {
 }
 
 const save = async () => {
-  const album = await admin.updateAlbum(props.album.id, {
-    name: name.value.trim(),
-    description: description.value.trim() || null,
-    edition: edition.value.trim() || null,
-    album_type_id: albumTypeId.value ? Number(albumTypeId.value) : null,
-    date: date.value || null,
-    parent_id: parentId.value ? Number(parentId.value) : null,
-    artist_ids: artistIds.value.map(Number),
-    tags: tagIds.value.map(Number),
-    image_file: imageFile.value
-  })
+  const payload = patch.value
+
+  if (!hasAlbumWritePatch(payload)) {
+    emit('saved')
+    return
+  }
+
+  const album = await admin.updateAlbum(props.album.id, payload)
 
   if (album) {
     emit('saved')

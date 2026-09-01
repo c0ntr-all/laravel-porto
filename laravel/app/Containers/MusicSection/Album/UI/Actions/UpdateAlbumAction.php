@@ -37,7 +37,12 @@ class UpdateAlbumAction extends BaseAction
                 ? ($requestData['parent_id'] !== null ? (int) $requestData['parent_id'] : null)
                 : ($album->parent_id !== null ? (int) $album->parent_id : null);
 
-            $this->assertAlbumCanBeGroupedUnderTask->run($parentId, $artistIds, $album);
+            $shouldAssertGroup = array_key_exists('parent_id', $requestData)
+                || array_key_exists('artist_ids', $requestData);
+
+            if ($shouldAssertGroup) {
+                $this->assertAlbumCanBeGroupedUnderTask->run($parentId, $artistIds, $album);
+            }
 
             $dto = UpdateAlbumDto::from($requestData);
 

@@ -8,18 +8,28 @@ use Illuminate\Validation\Rule;
 
 class CreateRequest extends AuthenticatedRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $type = $this->input('commentable_type');
+        if (is_string($type) && $type !== '') {
+            $this->merge([
+                'commentable_type' => ContainerAliasEnum::toCanonicalMorphAlias($type),
+            ]);
+        }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
+        if ($this->exists('commentable_id')) {
+            $this->merge([
+                'commentable_id' => (string) $this->input('commentable_id'),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'commentable_id' => 'required|numeric',
+            'commentable_id' => 'required|string|max:36',
             'commentable_type' => ['required', Rule::in(ContainerAliasEnum::toArray())],
-            'content' => 'required|string|max:1000'
+            'content' => 'required|string|max:1000',
         ];
     }
 }

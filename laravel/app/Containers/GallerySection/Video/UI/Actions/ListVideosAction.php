@@ -29,6 +29,7 @@ class ListVideosAction extends BaseAction
 
         return fractal($videos, new VideoTransformer())
             ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
+            ->parseIncludes($request->query('include', ''))
             ->addMeta(['count' => $videos->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

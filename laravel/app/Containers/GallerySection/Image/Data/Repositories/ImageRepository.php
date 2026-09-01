@@ -16,6 +16,17 @@ class ImageRepository
         return $album->images()->orderByDesc('created_at')->get();
     }
 
+    public function findSavedCopy(int $userId, int|string $albumId, string $originId): ?Image
+    {
+        return Image::query()
+            ->where('user_id', $userId)
+            ->where('album_id', $albumId)
+            ->where(function ($query) use ($originId) {
+                $query->where('id', $originId)->orWhere('saved_from_id', $originId);
+            })
+            ->first();
+    }
+
     public function create(Album $album, CreateImageDto $dto): Image
     {
         $image = $album->images()->make($dto->toArray());

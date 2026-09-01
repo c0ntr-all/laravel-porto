@@ -7,7 +7,7 @@ use App\Ship\Parents\DTO\Data;
 class CommentCreateData extends Data
 {
     public int $user_id;
-    public int $commentable_id;
+    public int|string $commentable_id;
     public string $commentable_type;
     public string $content;
 

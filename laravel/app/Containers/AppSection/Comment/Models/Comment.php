@@ -52,7 +52,7 @@ class Comment extends Model
         'commentable_id' => 'string',
     ];
 
-    public function comment(): MorphTo
+    public function commentable(): MorphTo
     {
         return $this->morphTo();
     }

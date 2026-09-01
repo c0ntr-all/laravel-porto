@@ -31,8 +31,10 @@ class CreateCommentAction extends BaseAction
 
     public function asController(CreateRequest $request): JsonResponse
     {
-        $dto = CommentCreateData::from($request->toArray());
-        $dto->user_id = auth()->user()->id;
+        $dto = CommentCreateData::from([
+            ...$request->validated(),
+            'user_id' => (int) auth()->id(),
+        ]);
         $comment = $this->handle($dto);
 
         return fractal($comment, new CommentTransformer())

@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Image\Models;
 
+use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
@@ -37,7 +38,8 @@ use Illuminate\Support\Carbon;
 class Image extends ActivityLoggableModel
 {
     use HasUuids,
-        HasUser;
+        HasUser,
+        HasComments;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_IMAGE;
 
@@ -52,6 +54,7 @@ class Image extends ActivityLoggableModel
         'width',
         'height',
         'description',
+        'saved_from_id',
     ];
 
     public function album(): BelongsTo

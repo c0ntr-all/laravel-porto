@@ -29,6 +29,7 @@ class ListImagesAction extends BaseAction
 
         return fractal($images, new ImageTransformer())
             ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
+            ->parseIncludes($request->query('include', ''))
             ->addMeta(['count' => $images->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }

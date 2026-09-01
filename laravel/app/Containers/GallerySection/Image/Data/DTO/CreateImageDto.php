@@ -14,6 +14,7 @@ class CreateImageDto extends Data
     public string $extension;
     public ?string $external_url = null;
     public ?string $description = null;
+    public ?string $saved_from_id = null;
 
     public function __construct()
     {

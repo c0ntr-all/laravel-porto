@@ -22,6 +22,7 @@ class GetVideoAction extends BaseAction
 
         return fractal($video, new VideoTransformer())
             ->withResourceName(ContainerAliasEnum::GALLERY_VIDEO->value)
+            ->parseIncludes($request->query('include', ''))
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

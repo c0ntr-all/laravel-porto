@@ -22,6 +22,7 @@ class GetImageAction extends BaseAction
 
         return fractal($image, new ImageTransformer())
             ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
+            ->parseIncludes($request->query('include', ''))
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

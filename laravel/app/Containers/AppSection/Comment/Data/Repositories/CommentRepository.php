@@ -4,6 +4,7 @@ namespace App\Containers\AppSection\Comment\Data\Repositories;
 
 use App\Containers\AppSection\Comment\Data\DTO\CommentCreateData;
 use App\Containers\AppSection\Comment\Models\Comment;
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Exceptions\RepositoryException;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,32 +19,43 @@ class CommentRepository
         return QueryBuilder::for(Comment::class)
             ->allowedSorts('created_at')
             ->allowedFilters([
-                // Явно указываем, что это фильтр точного совпадения
                 AllowedFilter::exact('commentable_id'),
-                AllowedFilter::exact('commentable_type'),
+                AllowedFilter::callback('commentable_type', function ($query, $value): void {
+                    $query->where(
+                        'commentable_type',
+                        ContainerAliasEnum::toCanonicalMorphAlias((string) $value),
+                    );
+                }),
             ])
             ->with(['user'])
             ->get();
     }
+
     /**
      * @throws RepositoryException
      */
-    public function create(CommentCreateData $dto)
+    public function create(CommentCreateData $dto): Comment
     {
-        /** @var Model $class */
-        $class = Relation::getMorphedModel($dto->commentable_type);
+        $type = ContainerAliasEnum::toCanonicalMorphAlias($dto->commentable_type);
+
+        /** @var class-string<Model>|null $class */
+        $class = Relation::getMorphedModel($type);
         if (!$class) {
             throw new RepositoryException('Class not found');
         }
 
-        $model = $class::find($dto->commentable_id);
+        $model = $class::query()->find($dto->commentable_id);
         if (!$model) {
             throw new RepositoryException('Model not found');
         }
 
+        if (!method_exists($model, 'comments')) {
+            throw new RepositoryException('Model does not support comments');
+        }
+
         return $model->comments()->create([
             'user_id' => $dto->user_id,
-            'content' => $dto->content
+            'content' => $dto->content,
         ]);
     }
 }

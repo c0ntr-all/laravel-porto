@@ -27,6 +27,9 @@ enum ContainerAliasEnum: string
     //LifelogSection
     case LL_POST = 'll_posts';
     case LL_PRESET = 'll_presets';
+    //DashboardSection
+    case DASHBOARD = 'dashboards';
+    case DASHBOARD_WIDGET = 'dashboard_widgets';
     //GallerySection
     case GALLERY_ALBUM = 'gallery_albums';
     case GALLERY_IMAGE = 'gallery_images';
@@ -48,6 +51,8 @@ enum ContainerAliasEnum: string
             self::TM_TASK => 'Задача',
             self::LL_POST => 'Пост',
             self::LL_PRESET => 'Пресет',
+            self::DASHBOARD => 'Дашборд',
+            self::DASHBOARD_WIDGET => 'Виджет дашборда',
             self::GALLERY_ALBUM => 'Альбом',
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',

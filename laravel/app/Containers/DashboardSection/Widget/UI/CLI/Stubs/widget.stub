@@ -1,0 +1,65 @@
+<?php declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use App\Containers\DashboardSection\Widget\Abstracts\AbstractWidget;
+use App\Containers\DashboardSection\Widget\Data\ValueObjects\WidgetContext;
+use App\Containers\DashboardSection\Widget\Data\ValueObjects\WidgetPayload;
+use App\Containers\DashboardSection\Widget\Enums\WidgetSizeEnum;
+use App\Containers\DashboardSection\Widget\Enums\WidgetViewEnum;
+
+/**
+ * Custom dashboard widget.
+ *
+ * Required:
+ * - type()  unique key, e.g. "lifelog.mood-stats"
+ * - name()  human-readable title
+ * - resolve()  payload for the frontend
+ *
+ * Optional overrides: description, icon, category, view, sizes, configSchema.
+ * The class is auto-discovered from this Widgets/ directory.
+ */
+class {{ class }} extends AbstractWidget
+{
+    public function type(): string
+    {
+        return '{{ widgetType }}';
+    }
+
+    public function name(): string
+    {
+        return '{{ widgetName }}';
+    }
+
+    public function description(): string
+    {
+        return '{{ widgetDescription }}';
+    }
+
+    public function icon(): string
+    {
+        return 'widgets';
+    }
+
+    public function view(): WidgetViewEnum
+    {
+        return WidgetViewEnum::LIST;
+    }
+
+    public function defaultSize(): WidgetSizeEnum
+    {
+        return WidgetSizeEnum::HALF;
+    }
+
+    public function configSchema(): array
+    {
+        return $this->limitSchema(5, 20);
+    }
+
+    public function resolve(WidgetContext $context): WidgetPayload
+    {
+        return $this->listPayload($context, [
+            // ['id' => '1', 'title' => 'Item', 'subtitle' => null, 'href' => '/'],
+        ]);
+    }
+}

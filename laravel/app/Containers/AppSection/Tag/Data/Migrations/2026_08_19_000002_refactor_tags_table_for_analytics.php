@@ -107,15 +107,15 @@ return new class extends Migration
 
     private function dropLegacyUniqueIndexes(): void
     {
-        Schema::table('tags', function (Blueprint $table) {
-            try {
+        $indexes = collect(Schema::getIndexes('tags'))->pluck('name');
+
+        Schema::table('tags', function (Blueprint $table) use ($indexes) {
+            if ($indexes->contains('tags_name_unique')) {
                 $table->dropUnique(['name']);
-            } catch (\Throwable) {
             }
 
-            try {
+            if ($indexes->contains('tags_slug_unique')) {
                 $table->dropUnique(['slug']);
-            } catch (\Throwable) {
             }
         });
     }

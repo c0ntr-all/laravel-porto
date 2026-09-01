@@ -107,6 +107,7 @@ class LocalizationServiceProvider extends ServiceProvider
         logger()->info("=== Localization Debug Info ===");
         logger()->info("Loaded namespaces:", array_keys($loadedNamespaces));
 
+        $originalLocale = app()->getLocale();
         $localesToCheck = ['en', 'ru', 'uk'];
 
         foreach ($localesToCheck as $locale) {
@@ -137,5 +138,7 @@ class LocalizationServiceProvider extends ServiceProvider
         }
 
         logger()->info("All loaded translation files:", $allFiles);
+
+        app()->setLocale($originalLocale);
     }
 }

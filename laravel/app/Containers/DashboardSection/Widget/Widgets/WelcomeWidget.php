@@ -62,7 +62,7 @@ class WelcomeWidget extends AbstractWidget
             data: [
                 'greeting' => $greeting,
                 'name' => $context->user->name,
-                'date' => now()->translatedFormat('l, d F Y'),
+                'date' => now()->locale('ru')->translatedFormat('l, d F Y'),
             ],
         );
     }

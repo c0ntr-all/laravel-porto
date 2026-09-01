@@ -1,15 +1,16 @@
 <template>
   <q-img
-    :src="image.list_thumb_path"
+    :src="thumbSrc"
     class="media-item"
+    fit="cover"
   >
-    <template v-slot:default>
+    <template #default>
       <q-chip class="media-item__time" text-color="white" dense>{{ shortDuration }}</q-chip>
       <q-img class="media-item__img" src="~assets/icons/video-square.svg" fit="contain" />
     </template>
-    <template v-slot:error>
-      <div class="absolute-full flex flex-center bg-negative text-white">
-        Error
+    <template #error>
+      <div class="absolute-full flex flex-center bg-grey-4 text-grey-8">
+        <q-icon name="videocam_off" size="24px" />
       </div>
     </template>
   </q-img>
@@ -18,11 +19,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { IGalleryImage } from 'src/types/gallery'
+import { getAttachmentThumbSrc } from 'src/utils/gallery'
 
 const props = defineProps<{
   image: IGalleryImage
 }>()
 
+const thumbSrc = computed(() => getAttachmentThumbSrc(props.image))
 const shortDuration = computed(() => props.image.duration?.slice(3, 9) ?? '')
 </script>
 

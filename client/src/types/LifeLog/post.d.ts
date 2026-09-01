@@ -32,7 +32,3 @@ type IPostUpdateModel = IPostModel & {
   attachments: IPostWithAttachmentWithState[]
 }
 
-interface ITagsFilterData {
-  tags: ITag[],
-  tags_mode: 'or' | 'and'
-}

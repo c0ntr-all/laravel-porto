@@ -1,74 +1,105 @@
 <template>
-  <div class="row lifelog-container">
-    <div class="lifelog-post-form-wrap q-mb-md">
-      <q-btn
-        color="primary"
-        label="Создать пост"
-        icon="add"
-        @click="openCreatePostModal"
-      />
-      <AppModal
-        v-model="isCreatePostModalOpen"
-        width="700px"
-        scrollable
-      >
-        <template #header>
-          Создать пост
-        </template>
-        <template #body>
-          <PostFormCreate
-            v-if="isCreatePostModalOpen"
-            @success="onPostCreated"
+  <div class="lifelog-page">
+    <LifeLogToolbar
+      :view-mode="viewMode"
+      :show-timeline="showTimeline"
+      @create-post="openCreatePostModal"
+      @update:view-mode="setViewMode"
+      @update:show-timeline="showTimeline = $event"
+    />
+
+    <div class="lifelog-page__grid">
+      <aside class="lifelog-page__sidebar">
+        <LifeLogFilterPanel
+          v-model="filter"
+          :all-tags="allTags"
+          :presets="presets"
+          @submit="onFilterSubmit"
+          @reset="onFilterReset"
+        />
+
+        <q-expansion-item
+          v-if="showTimeline"
+          icon="account_tree"
+          label="Граф диапазонов"
+          default-opened
+          class="lifelog-page__timeline q-mt-md"
+        >
+          <LifeLogTimelineGraph
+            :posts="filteredPosts"
+            :presets="presets"
           />
-        </template>
-      </AppModal>
+        </q-expansion-item>
+
+        <LifeLogPresetsSection class="q-mt-md" />
+      </aside>
+
+      <main class="lifelog-page__content">
+        <LifeLogPostsList
+          :posts="filteredPosts"
+          :view-mode="viewMode"
+          :is-loading="isLoading"
+          :is-post-expanded="isPostExpanded"
+          :toggle-post-expanded="togglePostExpanded"
+        />
+      </main>
     </div>
-    <div class="lifelog-filter-wrap q-mb-md">
-      <LifeLogPostsFilter
-        @submit="onFilterSubmit"
-        @reset="onFilterReset"
-      />
-    </div>
-    <div class="lifelog-presets-wrap q-mb-md">
-      <LifeLogPresetsSection />
-    </div>
-    <div class="lifelog-posts-wrap q-mb-md q-gutter-sm">
-      <div v-if="postStore.isLoading">loading...</div>
-      <template v-else>
-        <template v-if="postsCount">
-          <LifeLogCard
-            v-for="post in posts"
-            :key="post.id"
-            :post="post"
-          />
-        </template>
-        <AppNoResultsPlug
-          v-else
-          title="There are no posts yet."
-          body="Try to create!"
+
+    <AppModal
+      v-model="isCreatePostModalOpen"
+      width="700px"
+      scrollable
+    >
+      <template #header>
+        Создать пост
+      </template>
+      <template #body>
+        <PostFormCreate
+          v-if="isCreatePostModalOpen"
+          @success="onPostCreated"
         />
       </template>
-    </div>
+    </AppModal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { isEmpty } from 'radash'
-import { usePostStore } from 'src/stores/modules/postStore'
-import { ITag } from 'src/types/tag'
-import { ITagsFilterData } from 'src/types'
-import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
-import LifeLogPostsFilter from 'src/components/client/LifeLog/LifeLogPostsFilter.vue'
-import LifeLogCard from 'src/components/client/LifeLog/LifeLogCard.vue'
-// import LifeLogRowCard from 'src/components/client/LifeLog/LifeLogRowCard.vue'
-import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
-import AppModal from 'src/components/default/AppModal.vue'
+import { usePresetStore } from 'src/stores/modules/presetStore'
+import { useLifeLogFilters } from 'src/composables/client/Lifelog/useLifeLogFilters'
+import { useLifeLogView } from 'src/composables/client/Lifelog/useLifeLogView'
+import LifeLogToolbar from 'src/components/client/LifeLog/layout/LifeLogToolbar.vue'
+import LifeLogFilterPanel from 'src/components/client/LifeLog/layout/LifeLogFilterPanel.vue'
+import LifeLogTimelineGraph from 'src/components/client/LifeLog/timeline/LifeLogTimelineGraph.vue'
+import LifeLogPostsList from 'src/components/client/LifeLog/posts/LifeLogPostsList.vue'
 import LifeLogPresetsSection from 'src/components/client/LifeLog/LifeLogPresetsSection.vue'
+import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
+import AppModal from 'src/components/default/AppModal.vue'
+import { ILifeLogFilter } from 'src/types'
 
-const postStore = usePostStore()
-const { posts, postsCount } = storeToRefs(postStore)
+const presetStore = usePresetStore()
+const { presets } = storeToRefs(presetStore)
+
+const {
+  filter,
+  allTags,
+  filteredPosts,
+  isLoading,
+  loadTags,
+  loadPresets,
+  loadPosts,
+  applyFilter,
+  resetFilter
+} = useLifeLogFilters()
+
+const {
+  viewMode,
+  showTimeline,
+  setViewMode,
+  isPostExpanded,
+  togglePostExpanded
+} = useLifeLogView()
 
 const isCreatePostModalOpen = ref(false)
 
@@ -76,54 +107,61 @@ const openCreatePostModal = () => {
   isCreatePostModalOpen.value = true
 }
 
-const onPostCreated = () => {
+const onPostCreated = async () => {
   isCreatePostModalOpen.value = false
+  await loadPosts()
 }
 
-const onFilterSubmit = (tagsFilterData: ITagsFilterData) => {
-  reloadPosts(tagsFilterData)
-}
-const onFilterReset = () => {
-  reloadPosts()
+const onFilterSubmit = async (nextFilter: ILifeLogFilter) => {
+  await applyFilter(nextFilter)
 }
 
-const reloadPosts = (tagsFilterData: ITagsFilterData | object = {}) => {
-  let filterData = {}
-
-  // Type guard для проверки наличия свойства tags
-  const hasTags = (data: any): data is ITagsFilterData => {
-    return 'tags' in data && Array.isArray(data.tags)
-  }
-
-  if (!isEmpty(tagsFilterData) && hasTags(tagsFilterData)) {
-    filterData = {
-      ...tagsFilterData,
-      tags: tagsFilterData.tags.map((tag: ITag) => tag.id)
-    }
-  }
-  postStore.getPosts(filterData)
+const onFilterReset = async () => {
+  await resetFilter()
 }
 
-onMounted(() => {
-  postStore.getPosts()
+onMounted(async () => {
+  await Promise.all([
+    loadTags(),
+    loadPresets(),
+    loadPosts()
+  ])
 })
 </script>
 
 <style lang="scss" scoped>
-.lifelog-container {
-  max-width: 700px;
+.lifelog-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 8px 24px;
 
-  .lifelog-post-form-wrap {
-    width: 100%;
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
   }
-  .lifelog-presets-wrap {
-    width: 100%;
+
+  &__sidebar {
+    position: sticky;
+    top: 12px;
   }
-  .lifelog-posts-wrap {
-    width: 100%;
+
+  &__timeline {
+    border: 1px solid #e4e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
   }
-  .lifelog-filter-wrap {
-    width: 100%;
+
+  @media (max-width: 960px) {
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__sidebar {
+      position: static;
+    }
   }
 }
 </style>

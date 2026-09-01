@@ -37,6 +37,6 @@ class WebImageSourceStrategy extends AbstractImageSourceStrategy
             }
         }
 
-        return clone $this->image;
+        return $this->image;
     }
 }

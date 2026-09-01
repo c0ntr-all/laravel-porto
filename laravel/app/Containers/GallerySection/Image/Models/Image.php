@@ -4,6 +4,7 @@ namespace App\Containers\GallerySection\Image\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
+use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Models\ActivityLoggableModel;
@@ -80,7 +81,13 @@ class Image extends ActivityLoggableModel
     public function relativePath(string $maskKey): string
     {
         $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [(string) $this->user_id, (string) $this->album_id, (string) $this->id, (string) $this->extension];
+        $replace = [
+            (string) $this->user_id,
+            (string) $this->album_id,
+            (string) $this->id,
+            ImageMimeEnum::canonicalize((string) $this->extension)
+                ?? strtolower((string) $this->extension),
+        ];
 
         return str_replace($search, $replace, (string) config("image.default.mask.{$maskKey}"));
     }

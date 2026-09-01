@@ -83,6 +83,33 @@ class ImageSourcesTest extends TestCase
         );
     }
 
+    public function test_device_upload_normalizes_uppercase_extension(): void
+    {
+        $file = $this->makeUploadedPng('IMG_4143.PNG');
+
+        $response = $this->actingAs($this->user, 'api')
+            ->post("/api/v1/gallery/albums/{$this->album->id}/images/upload", [
+                'file' => $file,
+            ]);
+
+        $response->assertOk();
+
+        $imageId = $response->json('data.id');
+        $disk = Storage::disk((string) config('image.disk', 'public'));
+        $folder = "userfiles/{$this->user->id}/images/{$this->album->id}";
+
+        $this->assertDatabaseHas('gallery_images', [
+            'id' => $imageId,
+            'extension' => 'png',
+        ]);
+        $this->assertTrue($disk->exists("{$folder}/{$imageId}.png"));
+        $this->assertTrue($disk->exists("{$folder}/thumbnails/{$imageId}_list_thumbnail.png"));
+        $this->assertStringEndsWith(
+            "{$imageId}_list_thumbnail.png",
+            $response->json('data.attributes.list_thumb_path'),
+        );
+    }
+
     public function test_user_can_upload_image_from_web(): void
     {
         $png = $this->pngBinary();
@@ -159,6 +186,28 @@ class ImageSourcesTest extends TestCase
         $fileResponse->assertOk();
         $this->assertSame('image/png', $fileResponse->headers->get('Content-Type'));
         $this->assertSame(file_get_contents($absolute), $fileResponse->streamedContent());
+    }
+
+    public function test_user_can_register_windows_image_from_folder_with_spaces(): void
+    {
+        $relative = 'Images' . DIRECTORY_SEPARATOR . 'Cyberpunk 2077' . DIRECTORY_SEPARATOR . 'photomode.png';
+        $absolute = $this->libraryRoot . DIRECTORY_SEPARATOR . $relative;
+        mkdir(dirname($absolute), 0777, true);
+        $this->writePng($absolute);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson("/api/v1/gallery/albums/{$this->album->id}/images/upload-windows", [
+                'paths' => ['F:\\Images\\Cyberpunk 2077\\photomode.png'],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.attributes.source', FileSourceEnum::WINDOWS->value);
+
+        $this->assertDatabaseHas('gallery_images', [
+            'id' => $response->json('data.0.id'),
+            'external_url' => 'F:\\Images\\Cyberpunk 2077\\photomode.png',
+            'source' => FileSourceEnum::WINDOWS->value,
+        ]);
     }
 
     public function test_user_can_list_update_and_delete_image(): void

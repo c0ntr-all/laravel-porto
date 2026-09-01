@@ -31,8 +31,8 @@ class CreateImageThumbTask extends ParentTask
 
         $thumbTypeEnum = ImageThumbTypeEnum::from($thumbType);
 
-        $image = $imageStrategy->getImage();
-        if ($this->imageAnalyzerService->isVertical($image)) {
+        $source = $imageStrategy->getImage();
+        if ($this->imageAnalyzerService->isVertical($source)) {
             [$height, $width] = $thumbTypeEnum->getSize();
         } else {
             [$width, $height] = $thumbTypeEnum->getSize();
@@ -47,9 +47,13 @@ class CreateImageThumbTask extends ParentTask
 
         $this->pathGenerationService->prepareFolder($paths['thumbs_folder_path']);
 
-        $imageStrategy->getImage()
-                      ->scale($width, $height)
-                      ->save($paths['thumb_full_path'], self::DEFAULT_QUALITY);
+        $thumb = clone $source;
+        try {
+            $thumb->scale($width, $height)
+                 ->save($paths['thumb_full_path'], self::DEFAULT_QUALITY);
+        } finally {
+            unset($thumb);
+        }
 
         return $paths['thumb_path'];
     }

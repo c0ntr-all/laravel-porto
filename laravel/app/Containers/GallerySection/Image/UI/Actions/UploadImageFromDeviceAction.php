@@ -6,6 +6,7 @@ use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
+use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
 use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
 use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
@@ -61,7 +62,8 @@ class UploadImageFromDeviceAction extends UseCaseAction
             $createImageDto = CreateImageDto::from([
                 'id' => $uuid,
                 'user_id' => $uploadImagesDto->user_id,
-                'extension' => $file->getClientOriginalExtension(),
+                'extension' => ImageMimeEnum::canonicalize($file->getClientOriginalExtension())
+                    ?? strtolower($file->getClientOriginalExtension()),
                 'width' => $imageStrategy->getImage()->width(),
                 'height' => $imageStrategy->getImage()->height(),
                 'source' => self::SOURCE_TYPE,

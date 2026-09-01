@@ -47,7 +47,7 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
             }
         }
 
-        return clone $this->image;
+        return $this->image;
     }
 
     /**
@@ -125,10 +125,6 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
     {
         $ext = strtolower(trim($extension));
 
-        if ($ext === '' || !in_array($ext, ImageMimeEnum::toArray(), true)) {
-            return null;
-        }
-
-        return $ext;
+        return ImageMimeEnum::canonicalize($ext);
     }
 }

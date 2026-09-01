@@ -32,11 +32,25 @@ enum ImageMimeEnum: string
         $normalized = strtolower(trim(explode(';', $mime, 2)[0]));
 
         return match ($normalized) {
-            'image/jpeg', 'image/jpg' => self::JPEG->value,
+            'image/jpeg', 'image/jpg' => self::JPG->value,
             'image/webp' => self::WEBP->value,
             'image/png' => self::PNG->value,
             'image/gif' => self::GIF->value,
             'image/bmp' => self::BMP->value,
+            default => null,
+        };
+    }
+
+    public static function canonicalize(string $extension): ?string
+    {
+        $ext = strtolower(trim($extension));
+
+        return match ($ext) {
+            'jpg', 'jpeg', 'jfif' => self::JPG->value,
+            'png' => self::PNG->value,
+            'gif' => self::GIF->value,
+            'webp' => self::WEBP->value,
+            'bmp' => self::BMP->value,
             default => null,
         };
     }

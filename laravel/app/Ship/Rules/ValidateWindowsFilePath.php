@@ -49,7 +49,7 @@ class ValidateWindowsFilePath implements ValidationRule
         try {
             WindowsPathHelper::assertReadableFile($normalized, $this->disk, $this->rootFolder);
         } catch (InvalidArgumentException) {
-            $fail("The " . basename(str_replace('\\', '/', $normalized)) . " doesn't exists!");
+            $fail("The " . basename(str_replace('\\', '/', $normalized)) . " doesn't exist at {$normalized}");
         }
     }
 }

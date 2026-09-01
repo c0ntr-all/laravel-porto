@@ -4,9 +4,10 @@ namespace App\Ship\Helpers;
 
 use App\Ship\Traits\Makeable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\File;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Laravel\Facades\Image;
 
 class ImageUpload
 {
@@ -57,12 +58,12 @@ class ImageUpload
     }
 
     /**
-     * Saves the image obtained from the form to Storage
+     * Saves the image obtained from the form to Storage without decoding it.
      *
-     * @param $image
+     * @param UploadedFile|File|resource|string $image
      * @return string
      */
-    public function upload($image): string
+    public function upload(mixed $image): string
     {
         $disk = Storage::disk($this->diskName);
         $pathToReturn = $this->folder . '/' . $this->filename;
@@ -72,7 +73,23 @@ class ImageUpload
         }
 
         try {
-            Image::read($image)->save($disk->path($pathToReturn));
+            if ($image instanceof UploadedFile || $image instanceof File) {
+                $stored = $disk->putFileAs($this->folder, $image, $this->filename);
+                if ($stored === false) {
+                    throw new \RuntimeException('Unable to store uploaded file.');
+                }
+
+                return $pathToReturn;
+            }
+
+            $contents = is_resource($image) ? stream_get_contents($image) : $image;
+            if (!is_string($contents) || $contents === '') {
+                throw new \RuntimeException('Unable to save image: empty contents.');
+            }
+
+            if (!$disk->put($pathToReturn, $contents)) {
+                throw new \RuntimeException('Unable to write image to disk.');
+            }
         } catch (\Throwable $e) {
             throw new \RuntimeException(
                 'Unable to save image: ' . $disk->path($pathToReturn) . '. Because: ' . $e->getMessage(),

@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Image\Tasks;
 
+use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
 use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Ship\Helpers\ImageUpload;
 use App\Ship\Parents\Tasks\Task;
@@ -22,7 +23,8 @@ class SaveUploadedImageTask extends Task
      */
     public function run(UploadedFile $file, string $basePath): string
     {
-        $extension = $file->getClientOriginalExtension();
+        $extension = ImageMimeEnum::canonicalize($file->getClientOriginalExtension())
+            ?? strtolower($file->getClientOriginalExtension());
         $filename = basename($basePath) . '.' . $extension;
         $folder = dirname($basePath);
 

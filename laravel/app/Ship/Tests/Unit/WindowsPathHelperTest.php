@@ -32,6 +32,12 @@ class WindowsPathHelperTest extends TestCase
             str_replace('\\', '/', $linux),
         );
 
+        $linuxWithSpace = WindowsPathHelper::toLinux('F:\\Images\\Cyberpunk 2077\\photo.png', 'windows_f');
+        $this->assertSame(
+            rtrim(str_replace('\\', '/', $root), '/') . '/Images/Cyberpunk 2077/photo.png',
+            str_replace('\\', '/', $linuxWithSpace),
+        );
+
         rmdir($root);
     }
 
@@ -41,7 +47,7 @@ class WindowsPathHelperTest extends TestCase
             WindowsPathHelper::isUnderRoot('F:\\Other\\photo.jpg', 'F:\\Images\\'),
         );
         $this->assertTrue(
-            WindowsPathHelper::isUnderRoot('F:\\Images\\folder\\photo.jpg', 'F:\\Images\\'),
+            WindowsPathHelper::isUnderRoot('F:\\Images\\Cyberpunk 2077\\photo.png', 'F:\\Images\\'),
         );
     }
 

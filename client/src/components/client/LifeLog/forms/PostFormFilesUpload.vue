@@ -1,86 +1,91 @@
 <template>
-  <q-file
-    v-model="attachmentModel"
-    label="Pick files"
-    outlined
-    use-chips
-    multiple
-    clearable
-    dense
-  />
+  <div class="post-form-files-upload">
+    <q-file
+      v-model="attachmentModel"
+      label="Выберите файлы"
+      outlined
+      use-chips
+      multiple
+      clearable
+      dense
+      :accept="POST_FILE_ACCEPT"
+      @update:model-value="handleFilesSelected"
+    >
+      <template #prepend>
+        <q-icon name="attach_file" />
+      </template>
+    </q-file>
 
-  <div class="row q-gutter-x-xs" style="border-left: 2px solid black">
-    <template v-if="attachmentModel?.length">
-      <div
-        class="col-md-2 post-form__files-item"
+    <div class="text-caption text-grey-7 q-mt-xs">
+      Фото, видео, PDF, Office, архивы
+    </div>
+
+    <q-banner
+      v-if="unsupportedFiles.length"
+      class="bg-orange-1 text-orange-10 q-mt-sm"
+      rounded
+      dense
+    >
+      Неподдерживаемые файлы: {{ unsupportedNames }}
+    </q-banner>
+
+    <div v-if="attachmentModel?.length" class="post-form-files-upload__grid q-mt-sm">
+      <PostFormAttachmentPreview
         v-for="file in attachmentModel"
-        :key="file.name"
-      >
-        <div class="post-form__file">
-          <img :src="getImagePreview(file)" alt="">
-        </div>
-      </div>
-    </template>
-    <template v-else>
-      <div style="color: #ccc">
-        There are no selected files
-      </div>
-    </template>
+        :key="`${file.name}-${file.size}-${file.lastModified}`"
+        :file="file"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, watch } from 'vue'
+import { computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { POST_FILE_ACCEPT } from 'src/constants/LifeLog/attachment'
+import { getUnsupportedFiles, groupFileTypes } from 'src/services/post.service'
+import PostFormAttachmentPreview from 'src/components/client/LifeLog/forms/PostFormAttachmentPreview.vue'
 
 const attachmentModel = defineModel<File[]>()
+const $q = useQuasar()
 
-// Локальное хранилище ObjectURL, чтобы потом освободить
-const objectUrls: string[] = []
-
-/**
- * Создаёт превью для File и сохраняет URL для последующей очистки
- */
-const getImagePreview = (file: File): string => {
-  const url = URL.createObjectURL(file)
-  objectUrls.push(url)
-  return url
-}
-
-/**
- * Удаляет файл из files
- */
-// const removeImage = (index: number): void => {
-//   console.log(index)
-//   return
-//   const removed = attachmentModel.splice(index, 1)
-//   // Удаляем preview, если он был создан
-//   if (removed[0]) {
-//     objectUrls.forEach(url => URL.revokeObjectURL(url))
-//   }
-// }
-
-/**
- * Следим за изменениями списка изображений, чтобы очищать старые превью
- */
-watch(
-  () => attachmentModel,
-  () => {
-    objectUrls.forEach(URL.revokeObjectURL)
-    objectUrls.length = 0
-  }
+const unsupportedFiles = computed(() =>
+  getUnsupportedFiles(attachmentModel.value ?? [])
 )
 
-onUnmounted(() => {
-  objectUrls.forEach(URL.revokeObjectURL)
-})
+const unsupportedNames = computed(() =>
+  unsupportedFiles.value.map(file => file.name).join(', ')
+)
+
+function handleFilesSelected(files: File[] | null) {
+  if (!files?.length) {
+    attachmentModel.value = []
+    return
+  }
+
+  const groups = groupFileTypes(files)
+
+  attachmentModel.value = [
+    ...groups.images,
+    ...groups.videos,
+    ...groups.documents
+  ]
+
+  if (groups.other.length) {
+    $q.notify({
+      type: 'warning',
+      message: `Некоторые файлы не поддерживаются: ${groups.other.map(file => file.name).join(', ')}`
+    })
+  }
+}
 </script>
 
 <style lang="scss" scoped>
-.post-form {
-  &__file {
-    img {
-      width: 100px;
-    }
+.post-form-files-upload {
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 8px;
   }
 }
 </style>

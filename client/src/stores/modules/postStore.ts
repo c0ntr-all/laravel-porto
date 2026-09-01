@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
+import { normalizePost, normalizePosts } from 'src/api/mappers/post.response.mapper'
 import {
   createPostWithAttachments,
   updatePostWithAttachments
@@ -25,7 +26,7 @@ export const usePostStore = defineStore('post', () => {
     error.value = null
     try {
       const response = await postApi.getPosts(filters)
-      posts.value = mapResponse(response) as IPost[]
+      posts.value = normalizePosts(mapResponse(response) as IPost[])
       postsCount.value = response.meta?.count || 0
     } catch (err: any) {
       error.value = err.message ?? 'Ошибка загрузки'
@@ -38,7 +39,7 @@ export const usePostStore = defineStore('post', () => {
     try {
       const { post, response } = await createPostWithAttachments(postModel, attachmentModel)
 
-      posts.value.unshift(post)
+      posts.value.unshift(normalizePost(post))
       postsCount.value += 1
       handleApiSuccess(response)
 
@@ -68,7 +69,7 @@ export const usePostStore = defineStore('post', () => {
 
       const index = posts.value.findIndex(p => p.id === post.id)
       if (index !== -1) {
-        posts.value.splice(index, 1, post)
+        posts.value.splice(index, 1, normalizePost(post))
       }
 
       handleApiSuccess(response)

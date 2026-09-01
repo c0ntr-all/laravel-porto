@@ -23,31 +23,19 @@
       <TransitionGroup
         name="fade-scale"
         tag="div"
-        class="row q-gutter-x-xs"
-        style="border-left: 2px solid black"
+        class="post-form-existing-files"
       >
-        <div
-          class="lifelog-post-form__files-item"
+        <PostFormAttachmentPreview
           v-for="file in model.attachments"
           :key="file.id"
-        >
-          <div class="lifelog-post-form__file" :class="{'lifelog-post-form__file--deleted': file.is_deleted}">
-            <div class="lifelog-post-form__file-remove" :class="file.is_deleted ? 'text-red' : 'text-grey'">
-              <q-icon
-                size="sm"
-                name="cancel"
-                role="button"
-                class="file-remove"
-                :class="{'file-remove--restore': file.is_deleted}"
-                @click="handleSwitchRemoveFile(file)"
-              />
-            </div>
-            <img :src="file.list_thumb_path" alt="">
-          </div>
-        </div>
+          :attachment="file"
+          :deleted="file.is_deleted"
+          removable
+          @toggle-remove="handleSwitchRemoveFile(file)"
+        />
       </TransitionGroup>
-      <div v-if="model.attachments.length === 0" style="color: #ccc">
-        There are no attached files
+      <div v-if="model.attachments.length === 0" class="text-grey-6">
+        Вложений нет
       </div>
     </div>
 
@@ -112,12 +100,12 @@ import { getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
-import { IPost, IPostUpdateModel } from 'src/types'
-import { IGalleryImageWithState } from 'src/types/gallery'
+import { IPost, IPostAttachmentWithState, IPostUpdateModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
+import PostFormAttachmentPreview from 'src/components/client/LifeLog/forms/PostFormAttachmentPreview.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 
 interface IInputRef {
@@ -183,8 +171,12 @@ const handleAddTag = (tagName: string) => {
   }
 }
 
-const handleSwitchRemoveFile = (file: IGalleryImageWithState) => {
-  const index = model.value.attachments.findIndex(x => x.id === file.id)
+const handleSwitchRemoveFile = (file: IPostAttachmentWithState) => {
+  const index = model.value.attachments.findIndex(item => item.id === file.id)
+  if (index === -1) {
+    return
+  }
+
   model.value.attachments[index].is_deleted = !file.is_deleted
 }
 
@@ -222,8 +214,7 @@ const mapPostToModel = (post: IPost) => {
 
   model.value = preparedPost
   if (model.value.attachments.length) {
-    // Подготовка состояния файлов на случай удаления
-    model.value.attachments = toRaw(model.value.attachments.map((item: IGalleryImageWithState) => {
+    model.value.attachments = toRaw(model.value.attachments.map((item: IPostAttachmentWithState) => {
       item.is_deleted = false
       return toRaw(item)
     }))
@@ -281,42 +272,15 @@ onUnmounted(() => {
     width: 240px;
   }
 
-  &__file {
-    position: relative;
-
-    &-remove {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      border-radius: 50%;
-      background: #fff;
-      padding: 1px;
-      z-index: 2;
-    }
-    img {
-      width: 100px;
-      height: auto;
-    }
-    &--deleted {
-      img {
-        filter: brightness(45%);
-        transition: filter 0.3s ease;
-      }
-    }
-  }
-
   &-actions {
     background-color: #fbfbfb;
   }
 }
-.file-remove {
-  cursor: pointer;
-  z-index: 1;
-  outline: 0 !important;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  padding: 0;
+
+.post-form-existing-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
 }
 .fade-scale-enter-active,
 .fade-scale-leave-active {

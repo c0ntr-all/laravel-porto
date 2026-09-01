@@ -1,6 +1,28 @@
 import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
-import { IGalleryImage, IGalleryImageWithState } from 'src/types/gallery'
+import { IPostDocumentAttachment } from 'src/types/document'
+
+export interface IPostGalleryAttachment {
+  id: string
+  type: string
+  attachment_type: 'gallery_images' | 'gallery_videos' | string
+  attachment_id: string
+  attachment_created_at?: string
+  description: string | null
+  source: string
+  width: number
+  height: number
+  original_path: string
+  list_thumb_path: string
+  preview_thumb_path: string
+  duration?: string
+}
+
+export type IPostAttachment = IPostGalleryAttachment | IPostDocumentAttachment
+
+export interface IPostAttachmentWithState extends IPostAttachment {
+  is_deleted?: boolean
+}
 
 export interface IPost {
   type: string
@@ -12,23 +34,18 @@ export interface IPost {
   created_at: string | null
   user: IUser
   tags: ITag[]
-  attachments: IGalleryImage[] // TODO: Пока только Image. При добавлении других типов, это будет изменено
-}
-
-type IPostWithAttachmentWithState = IGalleryImageWithState & {
-  attachments?: IGalleryImageWithState[]
+  attachments: IPostAttachment[]
 }
 
 export interface IPostModel {
-  title?: string,
-  content: string,
-  tags: ITag[],
-  newTags: INewTag[],
-  datetime: string,
-  isNullTime: boolean,
+  title?: string
+  content: string
+  tags: ITag[]
+  newTags: INewTag[]
+  datetime: string
+  isNullTime: boolean
 }
 
-type IPostUpdateModel = IPostModel & {
-  attachments: IPostWithAttachmentWithState[]
+export interface IPostUpdateModel extends IPostModel {
+  attachments: IPostAttachmentWithState[]
 }
-

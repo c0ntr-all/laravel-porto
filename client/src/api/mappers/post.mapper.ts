@@ -1,7 +1,8 @@
-import { IPost, IPostModel, IPostUpdateModel, IPostWithAttachmentWithState } from 'src/types'
+import { IPost, IPostModel, IPostUpdateModel, IPostAttachmentWithState } from 'src/types'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
+import { getPostAttachmentDeleteId } from 'src/utils/attachment'
 
 export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
   const data: IPostCreateDto = {
@@ -34,11 +35,13 @@ export function mapPostFormToUpdateDto(edited: IPostUpdateModel, original: IPost
     dto.time = edited.isNullTime ? null : edited.datetime?.split(' ')[1]
   }
 
-  const existingAttachments: IPostWithAttachmentWithState[] = edited.attachments.filter(
+  const existingAttachments: IPostAttachmentWithState[] = edited.attachments.filter(
     file => file.is_deleted === true
   )
   if (existingAttachments.length) {
-    dto.deleted_attachments_ids = existingAttachments.map((file: IPostWithAttachmentWithState) => file.id)
+    dto.deleted_attachments_ids = existingAttachments.map(file =>
+      getPostAttachmentDeleteId(file)
+    )
   }
 
   // Tags will be synched in back

@@ -20,6 +20,16 @@
     >
       {{ counts.videos }}
     </q-chip>
+    <q-chip
+      v-if="counts.documents"
+      dense
+      size="sm"
+      icon="description"
+      color="grey-3"
+      text-color="grey-9"
+    >
+      {{ counts.documents }}
+    </q-chip>
   </div>
 </template>
 

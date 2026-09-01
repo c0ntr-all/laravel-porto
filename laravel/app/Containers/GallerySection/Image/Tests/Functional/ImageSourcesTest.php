@@ -101,6 +101,34 @@ class ImageSourcesTest extends TestCase
             ->assertJsonPath('data.attributes.original_path', 'https://cdn.example.com/photo.png');
     }
 
+    public function test_user_can_upload_image_from_web_url_with_query_string(): void
+    {
+        $png = $this->pngBinary();
+        $url = 'https://sun9-50.vkuserphoto.ru/s/v1/ig2/photo.jpg?quality=95&as=32x19,48x28&from=bu&cs=825x0';
+
+        Http::fake([
+            $url => Http::response($png, 200, ['Content-Type' => 'image/jpeg']),
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson("/api/v1/gallery/albums/{$this->album->id}/images/upload-web", [
+                'link' => $url,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.type', 'gallery_images')
+            ->assertJsonPath('data.attributes.source', FileSourceEnum::WEB->value)
+            ->assertJsonPath('data.attributes.original_path', $url);
+
+        $this->assertDatabaseHas('gallery_images', [
+            'id' => $response->json('data.id'),
+            'album_id' => $this->album->id,
+            'extension' => 'jpg',
+            'external_url' => $url,
+            'source' => FileSourceEnum::WEB->value,
+        ]);
+    }
+
     public function test_user_can_register_windows_image_and_stream_it(): void
     {
         $relative = 'Images' . DIRECTORY_SEPARATOR . 'windows-photo.png';

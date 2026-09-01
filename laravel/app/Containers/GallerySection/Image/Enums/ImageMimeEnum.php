@@ -27,14 +27,17 @@ enum ImageMimeEnum: string
         };
     }
 
-    public static function getExtensionByMime(string $mime): string
+    public static function getExtensionByMime(string $mime): ?string
     {
-        return match ($mime) {
-            'image/jpeg', 'default' => self::JPEG->value,
+        $normalized = strtolower(trim(explode(';', $mime, 2)[0]));
+
+        return match ($normalized) {
+            'image/jpeg', 'image/jpg' => self::JPEG->value,
             'image/webp' => self::WEBP->value,
             'image/png' => self::PNG->value,
             'image/gif' => self::GIF->value,
-            'image/bmp' => self::BMP->value
+            'image/bmp' => self::BMP->value,
+            default => null,
         };
     }
 }

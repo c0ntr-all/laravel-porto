@@ -9,7 +9,7 @@ class UploadVideoFromWebRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'link' => 'required|url|max:2048',
+            'link' => 'required|url|max:8192',
         ];
     }
 }

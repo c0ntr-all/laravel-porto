@@ -54,7 +54,7 @@ class UploadImageFromDeviceAction extends UseCaseAction
 
             try {
                 $this->createAllImageThumbsTask->run($imageStrategy, $albumPath, $uuid);
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 Log::warning("Unable to create thumbnails({$uuid}): " . $exception->getMessage());
             }
 

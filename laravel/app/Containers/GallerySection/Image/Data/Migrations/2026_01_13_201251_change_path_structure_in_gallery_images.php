@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('gallery_images', function (Blueprint $table) {
             $table->string('extension', 4)->nullable()->after('source');
-            $table->string('external_url')->nullable()->after('extension');
+            $table->text('external_url')->nullable()->after('extension');
         });
         DB::table('gallery_images')->get()->each(function ($image) {
             $path = $image->original_path;

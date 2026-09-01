@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('duration', 10)->nullable();
             $table->string('extension', 4)->nullable();
             $table->string('original_name')->nullable();
-            $table->string('external_url')->nullable();
+            $table->text('external_url')->nullable();
             $table->integer('width');
             $table->integer('height');
             $table->longText('description')

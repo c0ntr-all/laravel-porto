@@ -19,21 +19,12 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
 
     public function __construct(
         protected readonly string $path
-    )
-    {
-        if (!$this->extension) {
-            $info = pathinfo($this->path);
-            $filename = $info['filename'];
-            $extension = $info['extension'];
+    ) {
+        $pathOnly = $this->pathWithoutQuery($this->path);
+        $info = pathinfo($pathOnly);
 
-            $this->filename = $filename;
-
-            $mimes = ImageMimeEnum::toArray();
-
-            if (in_array($extension, $mimes)) {
-                $this->extension = $extension;
-            }
-        }
+        $this->filename = ($info['filename'] ?? '') !== '' ? $info['filename'] : null;
+        $this->extension = $this->normalizedExtension((string) ($info['extension'] ?? ''));
     }
 
     public function getFullPath(): string {
@@ -88,23 +79,56 @@ abstract class AbstractImageSourceStrategy implements ImageSourceContract
 
     public function getExtension(): string
     {
-        if (!$this->extension) {
-            // 1️⃣ Попробуем взять из пути
-            $ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
-            if ($ext && in_array($ext, ImageMimeEnum::toArray())) {
-                $this->extension = $ext;
-                return $this->extension;
-            }
-
-            // 2️⃣ Попробуем взять через mime от Intervention
-            $mime = $this->getImage()->mime();
-            $this->extension = ImageMimeEnum::getExtensionByMime($mime);
-
-            if (!$this->extension) {
-                throw new \RuntimeException('Unable to determine extension of the image.');
-            }
+        if ($this->extension) {
+            return $this->extension;
         }
 
-        return $this->extension;
+        $fromPath = $this->normalizedExtension(
+            (string) pathinfo($this->pathWithoutQuery($this->path), PATHINFO_EXTENSION)
+        );
+        if ($fromPath !== null) {
+            $this->extension = $fromPath;
+
+            return $this->extension;
+        }
+
+        $origin = $this->getImage()->origin();
+        $fromOrigin = $this->normalizedExtension((string) $origin->fileExtension());
+        if ($fromOrigin !== null) {
+            $this->extension = $fromOrigin;
+
+            return $this->extension;
+        }
+
+        $fromMime = ImageMimeEnum::getExtensionByMime($origin->mediaType());
+        if ($fromMime !== null) {
+            $this->extension = $fromMime;
+
+            return $this->extension;
+        }
+
+        throw new \RuntimeException('Unable to determine extension of the image.');
+    }
+
+    private function pathWithoutQuery(string $path): string
+    {
+        if (!str_contains($path, '://') && !str_starts_with($path, '//')) {
+            return $path;
+        }
+
+        $urlPath = parse_url($path, PHP_URL_PATH);
+
+        return is_string($urlPath) && $urlPath !== '' ? $urlPath : $path;
+    }
+
+    private function normalizedExtension(string $extension): ?string
+    {
+        $ext = strtolower(trim($extension));
+
+        if ($ext === '' || !in_array($ext, ImageMimeEnum::toArray(), true)) {
+            return null;
+        }
+
+        return $ext;
     }
 }

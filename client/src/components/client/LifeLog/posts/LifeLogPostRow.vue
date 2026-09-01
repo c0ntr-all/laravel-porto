@@ -5,14 +5,11 @@
       class="ll-post-row__button row items-center no-wrap"
       @click="emit('toggle-expand')"
     >
-      <q-avatar
+      <AppUserAvatar
         size="28px"
-        color="primary"
-        text-color="white"
         class="ll-post-row__avatar"
-      >
-        {{ userInitial }}
-      </q-avatar>
+        :user="post.user"
+      />
 
       <div class="col ll-post-row__main q-pl-sm">
         <div class="row items-center no-wrap">
@@ -47,9 +44,9 @@ import { computed } from 'vue'
 import { IPost } from 'src/types'
 import { humanDatetime } from 'src/utils/datetime'
 import { formatPostDateTime } from 'src/utils/LifeLog/post'
-import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
 import LifeLogPostAttachmentsBadge from 'src/components/client/LifeLog/posts/LifeLogPostAttachmentsBadge.vue'
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
+import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 const props = defineProps<{
   post: IPost
@@ -59,8 +56,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'toggle-expand': []
 }>()
-
-const { userInitial } = useLifeLogPostActions(props.post)
 
 const formattedDate = computed(() => humanDatetime(formatPostDateTime(props.post)))
 </script>

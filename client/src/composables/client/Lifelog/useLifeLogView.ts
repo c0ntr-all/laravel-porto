@@ -1,17 +1,23 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { LifeLogViewModeEnum } from 'src/enums/LifeLog/LifeLogViewModeEnum'
-import { LifeLogViewMode } from 'src/types'
+import { LifeLogViewMode } from 'src/types/LifeLog/filter'
+import { useSettingsStore } from 'src/stores/modules/settingsStore'
 
 export function useLifeLogView() {
-  const viewMode = ref<LifeLogViewMode>(LifeLogViewModeEnum.Expanded)
+  const settingsStore = useSettingsStore()
+  const viewMode = computed(() => settingsStore.settings.lifelog.defaultViewMode)
+  const showTimeline = computed(() => settingsStore.settings.lifelog.showTimeline)
   const expandedPostIds = ref<Set<string>>(new Set())
-  const showTimeline = ref(true)
 
   function setViewMode(mode: LifeLogViewMode) {
-    viewMode.value = mode
+    settingsStore.updateLifelog({ defaultViewMode: mode })
     if (mode === LifeLogViewModeEnum.Expanded) {
       expandedPostIds.value = new Set()
     }
+  }
+
+  function setShowTimeline(value: boolean) {
+    settingsStore.updateLifelog({ showTimeline: value })
   }
 
   function isPostExpanded(postId: string): boolean {
@@ -44,6 +50,7 @@ export function useLifeLogView() {
     expandedPostIds,
     showTimeline,
     setViewMode,
+    setShowTimeline,
     isPostExpanded,
     expandPost,
     collapsePost,

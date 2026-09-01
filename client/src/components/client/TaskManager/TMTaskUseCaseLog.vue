@@ -2,17 +2,16 @@
   <q-card class="task-history-item" dense>
     <q-card-section class="flex justify-between" style="width: 100%">
       <div class="task-history-item__content">
-        <q-avatar
+        <AppUserAvatar
+          v-if="user"
           class="task-history-item__avatar"
-          color="primary"
-          text-color="white"
+          :user="user"
           size="sm"
         >
-          {{ userAvatar }}
           <q-tooltip>
             {{ user.email }}
           </q-tooltip>
-        </q-avatar>
+        </AppUserAvatar>
         <span>{{ user.name }}</span>
         <span>{{ log.event_label }} задачу</span>
       </div>
@@ -27,6 +26,7 @@
 import { computed } from 'vue'
 import { IUseCaseLog } from 'src/types'
 import { useTaskStore } from 'src/stores/modules/taskStore'
+import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 const taskStore = useTaskStore()
 
@@ -35,7 +35,6 @@ const props = defineProps<{
 }>()
 
 const user = computed(() => taskStore.users.byId[props.log.userId])
-const userAvatar = computed(() => user.value.name.substring(0, 1))
 </script>
 
 <style lang="scss" scoped>

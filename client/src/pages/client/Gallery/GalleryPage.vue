@@ -9,7 +9,11 @@
       <GalleryCreateAlbumButton />
     </div>
 
-    <div v-if="galleryStore.albums.length" class="gallery-grid">
+    <div
+      v-if="galleryStore.albums.length"
+      class="gallery-grid"
+      :style="{ '--gallery-card-min': `${galleryCardMin}px` }"
+    >
       <GalleryAlbumCard
         v-for="album in galleryStore.albums"
         :key="album.id"
@@ -28,13 +32,16 @@
 
 <script lang="ts" setup>
 import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
+import { useSettingsStore } from 'src/stores/modules/settingsStore'
 import GalleryAlbumCard from 'src/components/client/Gallery/GalleryAlbumCard.vue'
 import GalleryCreateAlbumButton from 'src/components/client/Gallery/GalleryCreateAlbumButton.vue'
 import GalleryPageSkeleton from 'src/pages/client/Gallery/GalleryPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const galleryStore = useGalleryStore()
+const { galleryCardMin } = storeToRefs(useSettingsStore())
 
 const albumsCountLabel = computed(() => {
   const count = galleryStore.albums.length
@@ -67,7 +74,7 @@ onMounted(() => {
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--gallery-card-min, 220px), 1fr));
   gap: 1.5rem 1.25rem;
 }
 </style>

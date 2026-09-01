@@ -1,16 +1,14 @@
 <template>
   <div class="ll-card-wrap">
-    <q-avatar
+    <AppUserAvatar
       class="ll-card-wrap__avatar"
-      color="primary"
-      text-color="white"
+      :user="post.user"
       size="md"
     >
-      {{ userAvatar }}
       <q-tooltip>
         {{ post.user.email }}
       </q-tooltip>
-    </q-avatar>
+    </AppUserAvatar>
     <q-card class="ll-card bg-grey-2" flat bordered dense>
       <q-card-section class="q-pa-xs">
         <div class="row items-center no-wrap">
@@ -31,13 +29,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from 'vue'
+import { ref, toRefs } from 'vue'
 import { IPost } from 'src/types/LifeLog/post'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
+import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 interface Action {
   fn: () => void
@@ -54,8 +53,6 @@ const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
 const showCarousel = ref<boolean>(false)
 const currentSlideId = ref<string>('')
-
-const userAvatar = computed(() => post.value.user.name.substring(0, 1))
 
 const availableActions: Action[] = [{
   fn: () => {

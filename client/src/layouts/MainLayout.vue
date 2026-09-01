@@ -20,42 +20,7 @@
 
         <q-btn class="q-ml-md" icon="notifications" color="primary" flat dense />
 
-        <q-btn class="q-ml-md" round flat>
-          <q-avatar size="35px">
-            <q-img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-          </q-avatar>
-
-          <q-menu class="user-menu" style="width: 190px">
-            <div class="row no-wrap">
-              <q-list style="width: 100%">
-                <q-item class="column items-center">
-                  <q-item-section class="user-menu__name">Hard code user</q-item-section>
-                  <q-item-section class="user-menu__role" style="margin: 0">
-                    <small class="text-grey-6">Admin</small>
-                  </q-item-section>
-                </q-item>
-
-                <q-separator />
-
-                <q-item :to="'/profile'" clickable>
-                  <q-item-section side><q-icon name="person" /></q-item-section>
-                  <q-item-section>Profile</q-item-section>
-                </q-item>
-                <q-item :to="'/settings'" clickable>
-                  <q-item-section side><q-icon name="settings" /></q-item-section>
-                  <q-item-section>Settings</q-item-section>
-                </q-item>
-
-                <q-separator />
-
-                <q-item @click="logout" clickable>
-                  <q-item-section side><q-icon name="logout" /></q-item-section>
-                  <q-item-section>Logout</q-item-section>
-                </q-item>
-              </q-list>
-            </div>
-          </q-menu>
-        </q-btn>
+        <AppUserMenu />
       </q-toolbar>
     </q-header>
 
@@ -113,10 +78,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/userStore'
 import AppMusicPlayer from 'src/components/default/AppMusicPlayer.vue'
+import AppUserMenu from 'src/components/default/AppUserMenu.vue'
 
 defineOptions({
   name: 'MainLayout'
@@ -135,7 +101,7 @@ interface Route {
 
 const $router = useRouter()
 const $route: Route = useRoute()
-const user = useUserStore()
+const userStore = useUserStore()
 const leftDrawerOpen = ref<boolean>(false)
 
 const defaultTitleText = 'No title for route'
@@ -157,16 +123,15 @@ const adminItems = computed((): Route[] => {
   return []
 })
 
-const logout = (): void => {
-  user.logout().then(() => {
-    // Process logout
-    $router.push('/login')
-  })
-}
-
 const toggleLeftDrawer = (): void => {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
+
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    void userStore.fetchCurrentUser().catch(() => undefined)
+  }
+})
 </script>
 <style lang="scss" scoped>
 .q-page {

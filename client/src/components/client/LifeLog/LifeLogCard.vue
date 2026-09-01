@@ -6,16 +6,14 @@
       'll-card-wrap--end-preset': isPostEndPreset
     }
   ">
-    <q-avatar
+    <AppUserAvatar
       class="ll-card-wrap__avatar"
-      color="primary"
-      text-color="white"
+      :user="post.user"
     >
-      {{ userAvatar }}
       <q-tooltip>
         {{ post.user.email }}
       </q-tooltip>
-    </q-avatar>
+    </AppUserAvatar>
     <q-card class="ll-card bg-grey-2" flat bordered>
       <q-card-section class="q-pa-sm">
         <div class="row items-center no-wrap">
@@ -114,6 +112,7 @@ import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue
 import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
 import useLifelogPresets from 'src/composables/client/Lifelog/useLifelogPreset'
+import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 interface Action {
   fn: () => void
@@ -133,8 +132,6 @@ const showEditPostModal = ref<boolean>(false)
 const showDeletePostModal = ref<boolean>(false)
 const showCarousel = ref<boolean>(false)
 const currentSlideId = ref<string>('')
-
-const userAvatar = computed(() => post.value.user.name.substring(0, 1))
 
 const availableActions: Action[] = [{
   fn: () => {

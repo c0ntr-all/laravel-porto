@@ -58,11 +58,11 @@ import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPag
 import TMTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 import TMTasksListView from 'src/components/client/TaskManager/TMTasksListView.vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
+import { useSettingsStore } from 'src/stores/modules/settingsStore'
 import { TasksViewModeEnum } from 'src/enums/TaskManager/TasksViewModeEnum'
 
-const VIEW_MODE_KEY = 'taskManager.tasksViewMode'
-
 const taskStore = useTaskStore()
+const settingsStore = useSettingsStore()
 
 const showAddForm = ref<boolean>(false)
 const loading = ref<boolean>(true)
@@ -70,7 +70,12 @@ const listAddTextarea = ref<HTMLElement | null>(null)
 const model = ref<{ newListName: string }>({
   newListName: ''
 })
-const viewMode = ref<TasksViewModeEnum>(getStoredViewMode())
+const viewMode = computed({
+  get: () => settingsStore.settings.taskManager.defaultViewMode,
+  set: (mode: TasksViewModeEnum) => {
+    settingsStore.updateTaskManager({ defaultViewMode: mode })
+  }
+})
 
 const viewModeOptions = [
   { label: 'Блоки', value: TasksViewModeEnum.BLOCKS, icon: 'view_column' },
@@ -125,16 +130,7 @@ const clearModel = () => {
   model.value.newListName = ''
 }
 
-function getStoredViewMode(): TasksViewModeEnum {
-  const stored = localStorage.getItem(VIEW_MODE_KEY)
-  return stored === TasksViewModeEnum.LIST
-    ? TasksViewModeEnum.LIST
-    : TasksViewModeEnum.BLOCKS
-}
-
 watch(viewMode, (mode) => {
-  localStorage.setItem(VIEW_MODE_KEY, mode)
-
   if (mode === TasksViewModeEnum.LIST) {
     closeAddForm()
   }

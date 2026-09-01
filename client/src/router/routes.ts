@@ -145,6 +145,42 @@ const routes: RouteRecordRaw[] = [{
     },
     name: 'musicmanage',
     alias: '/admin/music'
+  }, {
+    path: '/profile',
+    component: () => import('pages/client/ProfilePage.vue'),
+    meta: {
+      title: 'Профиль'
+    },
+    name: 'profile'
+  }, {
+    path: '/settings',
+    component: () => import('pages/client/SettingsPage.vue'),
+    meta: {
+      title: 'Настройки'
+    },
+    name: 'settings',
+    redirect: { name: 'settings-dashboard' },
+    children: [{
+      path: 'dashboard',
+      name: 'settings-dashboard',
+      component: () => import('components/client/Settings/SettingsDashboardPanel.vue')
+    }, {
+      path: 'lifelog',
+      name: 'settings-lifelog',
+      component: () => import('components/client/Settings/SettingsLifelogPanel.vue')
+    }, {
+      path: 'task-manager',
+      name: 'settings-task-manager',
+      component: () => import('components/client/Settings/SettingsTaskManagerPanel.vue')
+    }, {
+      path: 'music',
+      name: 'settings-music',
+      component: () => import('components/client/Settings/SettingsMusicPanel.vue')
+    }, {
+      path: 'gallery',
+      name: 'settings-gallery',
+      component: () => import('components/client/Settings/SettingsGalleryPanel.vue')
+    }]
   }]
 }, {
   path: '/login',

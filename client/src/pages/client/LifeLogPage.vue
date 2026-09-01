@@ -5,7 +5,7 @@
       :show-timeline="showTimeline"
       @create-post="openCreatePostModal"
       @update:view-mode="setViewMode"
-      @update:show-timeline="showTimeline = $event"
+      @update:show-timeline="setShowTimeline"
     />
 
     <div class="lifelog-page__grid">
@@ -97,6 +97,7 @@ const {
   viewMode,
   showTimeline,
   setViewMode,
+  setShowTimeline,
   isPostExpanded,
   togglePostExpanded
 } = useLifeLogView()

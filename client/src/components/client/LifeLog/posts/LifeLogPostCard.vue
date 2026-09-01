@@ -7,15 +7,13 @@
     }"
   >
     <header class="ll-post-card__header row items-start no-wrap">
-      <q-avatar
+      <AppUserAvatar
         class="ll-post-card__avatar"
-        color="primary"
-        text-color="white"
+        :user="post.user"
         size="40px"
       >
-        {{ userInitial }}
         <q-tooltip>{{ post.user.email }}</q-tooltip>
-      </q-avatar>
+      </AppUserAvatar>
 
       <div class="col q-pl-sm">
         <div class="row items-start no-wrap">
@@ -78,6 +76,7 @@ import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLog
 import LifeLogPostAttachments from 'src/components/client/LifeLog/posts/LifeLogPostAttachments.vue'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
+import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 const props = defineProps<{
   post: IPost
@@ -87,7 +86,6 @@ const {
   showEditPostModal,
   isPostStartPreset,
   isPostEndPreset,
-  userInitial,
   actions
 } = useLifeLogPostActions(props.post)
 </script>

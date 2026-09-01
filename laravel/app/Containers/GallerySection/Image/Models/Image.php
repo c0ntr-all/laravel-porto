@@ -42,6 +42,7 @@ class Image extends ActivityLoggableModel
 
     protected $table = 'gallery_images';
     protected $fillable = [
+        'id',
         'user_id',
         'album_id',
         'source',

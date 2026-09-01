@@ -22,7 +22,7 @@ class ResolveImageFilePathTask extends ParentTask
 
     private function devicePath(Image $image): string
     {
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk((string) config('image.disk', 'public'));
         $relative = $image->relativePath('base');
         $absolute = $disk->path($relative);
 

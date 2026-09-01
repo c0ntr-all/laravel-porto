@@ -15,7 +15,7 @@ class VideoSourceFactory
         return new LaravelDiskVideoSourceStrategy(
             $relativePath,
             $originalName,
-            $disk ?? (string) config('filesystems.default'),
+            $disk ?? (string) config('video.disk', 'public'),
         );
     }
 

@@ -18,7 +18,15 @@ class VideoRepository
 
     public function create(CreateVideoDto $dto): Video
     {
-        return Video::create($dto->toArray());
+        $video = new Video($dto->toArray());
+
+        if ($dto->id !== null && $dto->id !== '') {
+            $video->id = $dto->id;
+        }
+
+        $video->save();
+
+        return $video;
     }
 
     public function update(Video $video, UpdateVideoDto $dto): Video

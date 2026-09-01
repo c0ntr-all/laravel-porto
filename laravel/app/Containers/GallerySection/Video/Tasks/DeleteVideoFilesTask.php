@@ -11,7 +11,7 @@ class DeleteVideoFilesTask extends ParentTask
 {
     public function run(Video $video): void
     {
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk((string) config('video.disk', 'public'));
         $paths = [
             $video->relativePath('list_thumb'),
         ];

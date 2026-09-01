@@ -8,6 +8,11 @@ use JetBrains\PhpStorm\ArrayShape;
 
 class PathGenerationService
 {
+    public function diskName(): string
+    {
+        return (string) config('video.disk', 'public');
+    }
+
     public function getAlbumFolderPath(string $userId, string $albumId): string
     {
         return "userfiles/{$userId}/videos/{$albumId}";
@@ -28,7 +33,7 @@ class PathGenerationService
     {
         $thumbName = "{$fileId}_list_thumbnail.jpg";
         $thumbsFolderPath = "{$albumPath}/thumbnails";
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk($this->diskName());
 
         return [
             'thumb_path' => "{$thumbsFolderPath}/{$thumbName}",
@@ -39,7 +44,7 @@ class PathGenerationService
 
     public function prepareFolder(string $folder): void
     {
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk($this->diskName());
         $absolutePath = $disk->path($folder);
 
         if (!File::exists($absolutePath)) {

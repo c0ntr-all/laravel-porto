@@ -22,7 +22,7 @@ class ResolveVideoFilePathTask extends ParentTask
 
     private function devicePath(Video $video): string
     {
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk((string) config('video.disk', 'public'));
         $absolute = $disk->path($video->relativePath('base'));
 
         if (!is_file($absolute)) {

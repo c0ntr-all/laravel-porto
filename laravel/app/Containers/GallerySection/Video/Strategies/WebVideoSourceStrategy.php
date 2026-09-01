@@ -17,7 +17,7 @@ class WebVideoSourceStrategy implements VideoSourceContract
 
     public function getDisk(): string
     {
-        return (string) config('filesystems.default');
+        return (string) config('video.disk', 'public');
     }
 
     public function getRelativePath(): string

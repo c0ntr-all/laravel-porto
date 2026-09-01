@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 
 return [
+    'disk' => env('GALLERY_DISK', 'public'),
+
     'default' => [
         /*
         |--------------------------------------------------------------------------

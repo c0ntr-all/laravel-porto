@@ -20,7 +20,7 @@ class SaveUploadedVideoTask extends ParentTask
         $folder = $this->pathGenerationService->getAlbumFolderPath($userId, $albumId);
         $this->pathGenerationService->prepareFolder($folder);
 
-        return Storage::disk((string) config('filesystems.default'))
+        return Storage::disk((string) config('video.disk', 'public'))
                       ->putFileAs($folder, $file, $fileId . '.' . $extension);
     }
 }

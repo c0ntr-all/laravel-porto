@@ -68,11 +68,19 @@ class ImageSourcesTest extends TestCase
             'source' => FileSourceEnum::DEVICE->value,
         ]);
 
+        $imageId = $response->json('data.id');
+
         $this->assertDatabaseHas('activity_use_case_logs', [
             'loggable_type' => ContainerAliasEnum::GALLERY_IMAGE->value,
-            'loggable_id' => $response->json('data.id'),
+            'loggable_id' => $imageId,
             'event_type' => EventTypesEnum::CREATED->value,
         ]);
+
+        $relativePath = "userfiles/{$this->user->id}/images/{$this->album->id}/{$imageId}.png";
+        $this->assertTrue(
+            Storage::disk((string) config('image.disk', 'public'))->exists($relativePath),
+            "Uploaded image must be stored under the same UUID as the database row: {$relativePath}"
+        );
     }
 
     public function test_user_can_upload_image_from_web(): void

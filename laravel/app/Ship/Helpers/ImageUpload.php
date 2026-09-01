@@ -7,7 +7,6 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
-use phpDocumentor\Reflection\Exception;
 
 class ImageUpload
 {
@@ -62,22 +61,24 @@ class ImageUpload
      *
      * @param $image
      * @return string
-     * @throws Exception
      */
     public function upload($image): string
     {
+        $disk = Storage::disk($this->diskName);
         $pathToReturn = $this->folder . '/' . $this->filename;
 
-        $pathToSave = Storage::path($pathToReturn);
-
-        if (!Storage::exists($this->folder)) {
-            Storage::makeDirectory($this->folder);
+        if (!$disk->exists($this->folder)) {
+            $disk->makeDirectory($this->folder);
         }
 
         try {
-            Image::read($image)->save($pathToSave);
-        } catch (Exception $e) {
-            throw new Exception('Unable to save image: ' . $pathToSave . '. Because: ' . $e->getMEssage());
+            Image::read($image)->save($disk->path($pathToReturn));
+        } catch (\Throwable $e) {
+            throw new \RuntimeException(
+                'Unable to save image: ' . $disk->path($pathToReturn) . '. Because: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
 
         return $pathToReturn;

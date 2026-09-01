@@ -22,7 +22,7 @@ class CreateVideoListThumbTask extends ParentTask
         try {
             $media->getFrameFromSeconds(1)
                   ->export()
-                  ->toDisk((string) config('filesystems.default'))
+                  ->toDisk((string) config('video.disk', 'public'))
                   ->save($thumbPath);
         } catch (\Throwable $exception) {
             Log::warning("Unable to create video thumbnail({$fileId}): " . $exception->getMessage());

@@ -18,7 +18,15 @@ class ImageRepository
 
     public function create(Album $album, CreateImageDto $dto): Image
     {
-        return $album->images()->create($dto->toArray());
+        $image = $album->images()->make($dto->toArray());
+
+        if ($dto->id !== null && $dto->id !== '') {
+            $image->id = $dto->id;
+        }
+
+        $image->save();
+
+        return $image;
     }
 
     public function update(Image $image, UpdateImageDto $dto): Image

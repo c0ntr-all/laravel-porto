@@ -43,6 +43,7 @@ class Video extends ActivityLoggableModel
 
     protected $table = 'gallery_videos';
     protected $fillable = [
+        'id',
         'user_id',
         'album_id',
         'source',

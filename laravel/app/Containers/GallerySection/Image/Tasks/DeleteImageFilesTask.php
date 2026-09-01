@@ -11,7 +11,7 @@ class DeleteImageFilesTask extends ParentTask
 {
     public function run(Image $image): void
     {
-        $disk = Storage::disk((string) config('filesystems.default'));
+        $disk = Storage::disk((string) config('image.disk', 'public'));
         $paths = [
             $image->relativePath('list_thumb'),
             $image->relativePath('preview_thumb'),

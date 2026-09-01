@@ -6,7 +6,6 @@ use App\Containers\GallerySection\Image\Services\PathGenerationService;
 use App\Ship\Helpers\ImageUpload;
 use App\Ship\Parents\Tasks\Task;
 use Illuminate\Http\UploadedFile;
-use phpDocumentor\Reflection\Exception;
 
 class SaveUploadedImageTask extends Task
 {
@@ -18,9 +17,8 @@ class SaveUploadedImageTask extends Task
 
     /**
      * @param UploadedFile $file
-     * @param string $basePath - Абсолютный путь до файла (без расширения)
+     * @param string $basePath Relative path without extension
      * @return string
-     * @throws Exception
      */
     public function run(UploadedFile $file, string $basePath): string
     {
@@ -31,7 +29,7 @@ class SaveUploadedImageTask extends Task
         $this->pathGenerationService->prepareFolder($folder);
 
         return ImageUpload::make()
-                          ->setDiskName('public')
+                          ->setDiskName((string) config('image.disk', 'public'))
                           ->setFolder($folder)
                           ->setFilename($filename)
                           ->upload($file);

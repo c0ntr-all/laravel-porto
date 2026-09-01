@@ -3,6 +3,7 @@
 namespace App\Containers\AppSection\User\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Containers\AppSection\User\Models\Traits\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,6 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $avatar
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -24,7 +26,8 @@ class User extends Authenticatable
     use HasFactory,
         Notifiable,
         HasApiTokens,
-        HasRoles;
+        HasRoles,
+        HasAvatar;
 
     /**
      * The attributes that are mass assignable.
@@ -35,6 +38,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**

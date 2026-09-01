@@ -41,13 +41,6 @@
           :task="task"
           @opened="openTask"
         />
-        <q-dialog v-model="isDialogOpen" @hide="closeTask">
-          <TMTask
-            v-if="selectedTaskId !== null"
-            :task-id="selectedTaskId"
-            @closed="closeTask"
-          />
-        </q-dialog>
       </template>
     </q-card-section>
     <q-card-section class="list__footer">
@@ -93,11 +86,12 @@ import { ref, computed, nextTick } from 'vue'
 import { Dialog } from 'quasar'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { handleApiError } from 'src/utils/jsonapi'
-import { ITask, ITaskList } from 'src/types/TaskManager/task'
-import TMTask from 'src/components/client/TaskManager/TMTask.vue'
+import { ITaskList } from 'src/types/TaskManager/task'
 import TMTaskListItem from 'src/components/client/TaskManager/TMTaskListItem.vue'
+import { useTaskDialogRoute } from 'src/composables/client/TaskManager/useTaskDialogRoute'
 
 const taskStore = useTaskStore()
+const { openTask } = useTaskDialogRoute()
 
 const props = defineProps<{
   list: ITaskList
@@ -111,21 +105,10 @@ const model = ref<{ taskTitle: string, taskContent: string }>({
   taskTitle: '',
   taskContent: ''
 })
-const selectedTaskId = ref<string | null>(null)
-const isDialogOpen = ref(false)
 
 const tasks = computed(() => {
   return props.list.tasksIds?.map(id => taskStore.tasks.byId[id])
 })
-
-const openTask = (task: ITask) => {
-  selectedTaskId.value = task.id
-  isDialogOpen.value = true
-}
-
-const closeTask = () => {
-  isDialogOpen.value = false
-}
 
 const openAddForm = () => {
   showAddForm.value = true

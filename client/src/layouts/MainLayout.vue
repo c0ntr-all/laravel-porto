@@ -33,7 +33,7 @@
             :index="item.path"
             :to="item.path"
             class="sidebar-menu__item"
-            :exact="!item.children?.length"
+            :exact="item.meta?.exact !== false && !item.children?.length"
             clickable
             v-ripple
           >
@@ -96,6 +96,7 @@ interface Route {
     title?: string
     menu?: boolean
     is_admin?: boolean
+    exact?: boolean
   }
 }
 

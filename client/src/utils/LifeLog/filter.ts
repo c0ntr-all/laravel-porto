@@ -10,3 +10,10 @@ export function createEmptyLifeLogFilter(): ILifeLogFilter {
     activePresetId: null
   }
 }
+
+export function cloneLifeLogFilter(filter: ILifeLogFilter): ILifeLogFilter {
+  return {
+    ...filter,
+    tags: [...filter.tags]
+  }
+}

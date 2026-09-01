@@ -1,5 +1,5 @@
 <template>
-  <TMTaskSkeleton v-if="!task.isHydrated" />
+  <TMTaskSkeleton v-if="!task?.isHydrated" />
   <q-card v-else class="task">
     <q-card-section class="task__header">
       <TMTaskTitle
@@ -127,20 +127,21 @@ const emit = defineEmits<{
   (e: 'closed'): void
 }>()
 
-const task = computed<ITask>(() => taskStore.tasks.byId[props.taskId])
+const task = computed<ITask | undefined>(() => taskStore.tasks.byId[props.taskId])
 
-const content = ref<string>(task.value.content || '') // null to string cast
-const title = ref<string>(task.value.title || '')
+const content = ref<string>('')
+const title = ref<string>('')
 const footerTabs = ref('comments')
 
 const checklists = computed<IChecklist[]>(() =>
-  task.value.checklistsIds!.map(id => taskStore.checklists?.byId[id])
+  task.value?.checklistsIds?.map(id => taskStore.checklists?.byId[id]) || []
 )
 const progresses = computed<IProgress[] | undefined>(() =>
-  task.value.progressIds?.map(id => taskStore.progress.byId[id])
+  task.value?.progressIds?.map(id => taskStore.progress.byId[id])
 )
 const reminder = computed<IReminderItem | null>(() => {
-  return Object.values(taskStore.reminder.byId).filter(reminder => reminder.task_id === task.value.id)[0] || null
+  if (!task.value) return null
+  return Object.values(taskStore.reminder.byId).filter(reminder => reminder.task_id === task.value?.id)[0] || null
 })
 
 const isProgressAvailable = computed(() => progresses?.value?.filter(item => item.is_final).length === 0)
@@ -153,12 +154,22 @@ const activeChecklistFormId = ref<string | null>(null)
 provide('activeFormId', activeChecklistFormId)
 
 async function loadTask() {
-  if (!task.value.isHydrated) {
+  if (!task.value?.isHydrated) {
     await taskStore.getTask(props.taskId)
   }
+
+  if (!task.value) {
+    emit('closed')
+    return
+  }
+
+  title.value = task.value.title || ''
+  content.value = task.value.content || ''
 }
 
 async function handleUpdateTitle(newTitle: string) {
+  if (!task.value) return
+
   await taskStore.updateTask(task.value.id, {
     title: newTitle
   }).then(() => {
@@ -169,6 +180,8 @@ async function handleUpdateTitle(newTitle: string) {
 }
 
 async function handleUpdateContent(newContent: string) {
+  if (!task.value) return
+
   await taskStore.updateTask(task.value.id, {
     content: newContent
   }).then(() => {

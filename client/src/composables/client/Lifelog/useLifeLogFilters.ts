@@ -7,12 +7,21 @@ import {
   ILifeLogFilter,
   IPreset
 } from 'src/types'
-import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
+import {
+  cloneLifeLogFilter,
+  createEmptyLifeLogFilter
+} from 'src/utils/LifeLog/filter'
 import {
   applyClientSidePostFilter,
   mapLifeLogFilterToApiFilter,
   mapPresetToLifeLogFilter
 } from 'src/utils/LifeLog/filter.mapper'
+import { hasActiveLifeLogFilter } from 'src/utils/LifeLog/filter.url'
+import { useLifeLogFilterRoute } from 'src/composables/client/Lifelog/useLifeLogFilterRoute'
+
+interface ApplyFilterOptions {
+  syncRoute?: boolean
+}
 
 export function useLifeLogFilters() {
   const postStore = usePostStore()
@@ -48,14 +57,27 @@ export function useLifeLogFilters() {
     await postStore.getPosts(mapLifeLogFilterToApiFilter(filter.value))
   }
 
-  async function applyFilter(nextFilter: ILifeLogFilter) {
-    filter.value = { ...nextFilter }
+  async function applyFilter(
+    nextFilter: ILifeLogFilter,
+    options: ApplyFilterOptions = {}
+  ) {
+    const { syncRoute = true } = options
+
+    filter.value = cloneLifeLogFilter(nextFilter)
+    await loadPosts()
+
+    if (syncRoute) {
+      await filterRoute.syncToRoute(filter.value)
+    }
+  }
+
+  async function applyFilterFromRoute(nextFilter: ILifeLogFilter) {
+    filter.value = cloneLifeLogFilter(nextFilter)
     await loadPosts()
   }
 
   async function resetFilter() {
-    filter.value = createEmptyLifeLogFilter()
-    await loadPosts()
+    await applyFilter(createEmptyLifeLogFilter())
   }
 
   async function applyPreset(preset: IPreset) {
@@ -64,10 +86,32 @@ export function useLifeLogFilters() {
   }
 
   async function clearPreset() {
-    filter.value = {
+    await applyFilter({
       ...filter.value,
       activePresetId: null
+    })
+  }
+
+  const filterRoute = useLifeLogFilterRoute({
+    allTags,
+    presets,
+    getFilter: () => filter.value,
+    onFilterFromRoute: applyFilterFromRoute
+  })
+
+  async function initialize() {
+    await Promise.all([
+      loadTags(),
+      loadPresets()
+    ])
+
+    const fromRoute = filterRoute.parseFromRoute()
+
+    if (fromRoute && hasActiveLifeLogFilter(fromRoute)) {
+      await applyFilter(fromRoute, { syncRoute: false })
+      return
     }
+
     await loadPosts()
   }
 
@@ -77,6 +121,7 @@ export function useLifeLogFilters() {
     filteredPosts,
     activePreset,
     isLoading,
+    initialize,
     loadTags,
     loadPresets,
     loadPosts,

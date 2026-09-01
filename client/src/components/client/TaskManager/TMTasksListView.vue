@@ -25,24 +25,16 @@
         />
       </div>
     </section>
-
-    <q-dialog v-model="isDialogOpen" @hide="closeTask">
-      <TMTask
-        v-if="selectedTaskId !== null"
-        :task-id="selectedTaskId"
-        @closed="closeTask"
-      />
-    </q-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { ITask } from 'src/types/TaskManager/task'
 import { useTaskStore } from 'src/stores/modules/taskStore'
-import TMTask from 'src/components/client/TaskManager/TMTask.vue'
 import TMTaskRow from 'src/components/client/TaskManager/TMTaskRow.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import { useTaskDialogRoute } from 'src/composables/client/TaskManager/useTaskDialogRoute'
 
 interface ITaskGroup {
   key: string
@@ -51,8 +43,7 @@ interface ITaskGroup {
 }
 
 const taskStore = useTaskStore()
-const selectedTaskId = ref<string | null>(null)
-const isDialogOpen = ref(false)
+const { openTask } = useTaskDialogRoute()
 
 const sortedTasks = computed(() =>
   taskStore.tasks.allIds
@@ -82,15 +73,6 @@ const groups = computed<ITaskGroup[]>(() => {
 
   return result
 })
-
-const openTask = (task: ITask) => {
-  selectedTaskId.value = task.id
-  isDialogOpen.value = true
-}
-
-const closeTask = () => {
-  isDialogOpen.value = false
-}
 
 function parseTaskDate(value?: string): Date | null {
   if (!value) return null

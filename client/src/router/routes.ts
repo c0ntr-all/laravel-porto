@@ -31,10 +31,19 @@ const routes: RouteRecordRaw[] = [{
     meta: {
       title: 'Task Manager',
       icon: 'list',
-      menu: true
+      menu: true,
+      exact: false
     },
     name: 'task-manager',
     alias: '/task-manager'
+  }, {
+    path: '/task-manager/tasks/:taskId',
+    component: () => import('pages/client/TaskManager/TaskManagerPage.vue'),
+    meta: {
+      title: 'Task Manager',
+      icon: 'list'
+    },
+    name: 'task-manager-task'
   }, {
     path: '/music',
     component: () => import('layouts/PageLayout.vue'),

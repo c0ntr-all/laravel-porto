@@ -86,9 +86,7 @@ const {
   allTags,
   filteredPosts,
   isLoading,
-  loadTags,
-  loadPresets,
-  loadPosts,
+  initialize,
   applyFilter,
   resetFilter
 } = useLifeLogFilters()
@@ -110,7 +108,7 @@ const openCreatePostModal = () => {
 
 const onPostCreated = async () => {
   isCreatePostModalOpen.value = false
-  await loadPosts()
+  await applyFilter(filter.value, { syncRoute: false })
 }
 
 const onFilterSubmit = async (nextFilter: ILifeLogFilter) => {
@@ -121,12 +119,8 @@ const onFilterReset = async () => {
   await resetFilter()
 }
 
-onMounted(async () => {
-  await Promise.all([
-    loadTags(),
-    loadPresets(),
-    loadPosts()
-  ])
+onMounted(() => {
+  void initialize()
 })
 </script>
 

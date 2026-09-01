@@ -3,6 +3,7 @@
 namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 
 use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
+use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\TaskManagerSection\Task\Data\DTO\TaskCreateData;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\Tasks\CreateTaskTask;
@@ -24,6 +25,7 @@ class CreateTaskAction extends UseCaseAction
     public function __construct(
         private readonly CreateTaskTask $createTaskTask,
         private readonly ApplyTaskTemplateTask $applyTaskTemplateTask,
+        private readonly CreateAttachmentsTask $createAttachmentsTask,
         private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
@@ -39,7 +41,15 @@ class CreateTaskAction extends UseCaseAction
                 $createdTask = $this->applyTaskTemplateTask->run($createdTask, $template);
             }
 
-            // После успешного коммита формируем user_log
+            if (!empty($dto->attachments)) {
+                $this->createAttachmentsTask->run(
+                    $createdTask,
+                    $dto->user_id,
+                    ContainerAliasEnum::TM_TASK->value,
+                    $dto->attachments
+                );
+            }
+
             DB::afterCommit(function () use ($createdTask) {
                 $this->createActivityUseCaseTask->run($createdTask, $this->eventTypesEnum->value);
             });
@@ -73,10 +83,11 @@ class CreateTaskAction extends UseCaseAction
 
         $fractal = fractal($task, new TaskTransformer())
             ->withResourceName('tasks')
+            ->parseIncludes(['attachments'])
             ->addMeta(['message' => 'New task successfully created!']);
 
         if ($template !== null) {
-            $fractal->parseIncludes(['checklists.checklistItems']);
+            $fractal->parseIncludes(['checklists.checklistItems', 'attachments']);
         }
 
         return $fractal->respond(201, [], JSON_PRETTY_PRINT);

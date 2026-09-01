@@ -2,8 +2,10 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\API\Requests;
 
+use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class UpdateRequest extends AuthenticatedRequest
 {
@@ -16,6 +18,14 @@ class UpdateRequest extends AuthenticatedRequest
             'is_finished' => 'sometimes|boolean',
             'finished_at' => 'sometimes|nullable|date_format:Y-m-d H:i:s',
             'is_declined' => 'sometimes|boolean',
+            'deleted_attachments_ids' => 'sometimes|array',
+            'deleted_attachments_ids.*' => 'sometimes|string|uuid',
+            'attachments' => 'sometimes|array',
+            'attachments.*.type' => [
+                'required',
+                Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
+            ],
+            'attachments.*.id' => 'required|uuid',
         ];
     }
 

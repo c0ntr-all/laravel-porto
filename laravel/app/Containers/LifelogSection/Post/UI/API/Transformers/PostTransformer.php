@@ -50,6 +50,10 @@ class PostTransformer extends TransformerAbstract
 
     public function includeAttachments(Post $post): Collection
     {
-        return $this->collection($post->attachments, new AttachmentTransformer(), 'attachments');
+        $attachments = $post->relationLoaded('attachments')
+            ? $post->attachments
+            : $post->attachments()->with('fileable')->get();
+
+        return $this->collection($attachments, new AttachmentTransformer(), 'attachments');
     }
 }

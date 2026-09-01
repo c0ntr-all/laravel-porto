@@ -25,12 +25,12 @@ class UpdateRequest extends AuthenticatedRequest
             'tags.*' => 'sometimes|string',
             'new_tags' => 'sometimes|array',
             'new_tags.*' => 'sometimes|string|unique:App\Containers\AppSection\Tag\Models\Tag,name',
-            'deleted_attachment_ids' => 'sometimes|array',
-            'deleted_attachments_ids.*' => 'sometimes|string',
+            'deleted_attachments_ids' => 'sometimes|array',
+            'deleted_attachments_ids.*' => 'sometimes|string|uuid',
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',
-                Rule::in(ContainerAliasEnum::galleryFileableTypes()),
+                Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
             'attachments.*.id' => 'required|uuid',
         ];

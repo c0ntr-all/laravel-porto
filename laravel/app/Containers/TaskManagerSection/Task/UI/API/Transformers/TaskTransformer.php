@@ -2,6 +2,7 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\API\Transformers;
 
+use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
@@ -20,6 +21,7 @@ class TaskTransformer extends TransformerAbstract
         'checklists',
         'progress',
         'reminder',
+        'attachments',
     ];
 
     public function transform(Task $task): array
@@ -100,5 +102,15 @@ class TaskTransformer extends TransformerAbstract
         }
 
         return $this->item($reminder, new ReminderTransformer(), 'reminders');
+    }
+
+    public function includeAttachments(Task $task): Collection
+    {
+        $attachments = $task->relationLoaded('attachments')
+            ? $task->attachments
+            : $task->attachments()->with('fileable')->get();
+
+        return $this->collection($attachments, new AttachmentTransformer(), 'attachments')
+            ->setMeta(['count' => $attachments->count()]);
     }
 }

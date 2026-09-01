@@ -9,7 +9,7 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
-use App\Containers\LifelogSection\Post\Tasks\CreatePostAttachmentsTask;
+use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
@@ -29,7 +29,7 @@ class CreatePostAction extends UseCaseAction
         private readonly ListTagsByNamesTask       $listTagsByNamesTask,
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
-        private readonly CreatePostAttachmentsTask $syncPostAttachmentsTask,
+        private readonly CreateAttachmentsTask $createAttachmentsTask,
         private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
@@ -74,7 +74,12 @@ class CreatePostAction extends UseCaseAction
             }
 
             if (!empty($postCreateDto->attachments)) {
-                $this->syncPostAttachmentsTask->run($post, $postCreateDto->user_id, $postCreateDto->attachments);
+                $this->createAttachmentsTask->run(
+                    $post,
+                    $postCreateDto->user_id,
+                    ContainerAliasEnum::LL_POST->value,
+                    $postCreateDto->attachments
+                );
             }
 
             return $post;

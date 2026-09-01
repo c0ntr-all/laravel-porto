@@ -5,12 +5,10 @@ namespace App\Containers\AppSection\Attachment\UI\Actions;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentCreateDto;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsCreateDto;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentTask;
+use App\Containers\AppSection\Attachment\Tasks\ResolveFileableFromUploadTask;
+use App\Containers\AppSection\Attachment\Tasks\ValidateAttachableOwnershipTask;
 use App\Containers\AppSection\Attachment\UI\API\Requests\UploadRequest;
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
-use App\Containers\GallerySection\Album\Enums\SystemAlbumsEnum;
-use App\Containers\GallerySection\Album\Tasks\GetSystemAlbumTask;
-use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
-use App\Containers\GallerySection\Image\UI\Actions\UploadImageFromDeviceAction;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
@@ -18,39 +16,38 @@ use Illuminate\Support\Collection;
 
 class UploadAttachmentAction extends BaseAction
 {
-
     public function __construct(
         private readonly CreateAttachmentTask $createAttachmentTask,
-        private readonly GetSystemAlbumTask $getSystemAlbumTask,
-        private readonly UploadImageFromDeviceAction $uploadImageFromDeviceAction
-    )
-    {
+        private readonly ResolveFileableFromUploadTask $resolveFileableFromUploadTask,
+        private readonly ValidateAttachableOwnershipTask $validateAttachableOwnershipTask,
+    ) {
     }
 
     public function handle(AttachmentsCreateDto $attachmentsCreateDto): Collection
     {
-        $uploadsGalleryAlbum = $this->getSystemAlbumTask->run(SystemAlbumsEnum::UPLOAD->value);
+        $userId = (int) $attachmentsCreateDto->user_id;
+        $attachableType = ContainerAliasEnum::toCanonicalMorphAlias($attachmentsCreateDto->attachable_type);
+
+        $this->validateAttachableOwnershipTask->run(
+            $attachableType,
+            $attachmentsCreateDto->attachable_id,
+            $userId
+        );
+
         $attachments = [];
 
         foreach ($attachmentsCreateDto->files as $file) {
-            //TODO: убрать т.к. этот контейнер не должен знать про DTO других контейнеров
-            $uploadImageDto = UploadImageFromDeviceDto::from([
-                'user_id' => $attachmentsCreateDto->user_id,
-                'file' => $file
-            ]);
+            $fileableReference = $this->resolveFileableFromUploadTask->run($file, $userId);
 
-            //Внешний вызов Action -> Action
-            $image = $this->uploadImageFromDeviceAction->handle($uploadsGalleryAlbum, $uploadImageDto);
+            $attachment = $this->createAttachmentTask->run(AttachmentCreateDto::from([
+                'user_id' => (string) $userId,
+                'attachable_type' => $attachableType,
+                'attachable_id' => (string) $attachmentsCreateDto->attachable_id,
+                'fileable_type' => $fileableReference->fileable_type,
+                'fileable_id' => $fileableReference->fileable_id,
+            ]));
 
-            $attachmentCreateDto = AttachmentCreateDto::from([
-                ...$attachmentsCreateDto->toArray(),
-                'fileable_type' => ContainerAliasEnum::GALLERY_IMAGE->value,
-                'fileable_id' => $image->id,
-            ]);
-
-            $attachment = $this->createAttachmentTask->run($attachmentCreateDto);
-
-            $attachments[] = $attachment;
+            $attachments[] = $attachment->load('fileable');
         }
 
         return collect($attachments);
@@ -61,8 +58,8 @@ class UploadAttachmentAction extends BaseAction
         $requestData = $request->validated();
 
         $attachmentDto = AttachmentsCreateDto::from([
-            'user_id' => auth()->user()->id,
-            ...$requestData
+            'user_id' => (string) auth()->id(),
+            ...$requestData,
         ]);
 
         $attachments = $this->handle($attachmentDto);

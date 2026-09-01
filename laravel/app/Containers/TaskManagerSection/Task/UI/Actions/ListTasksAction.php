@@ -66,6 +66,9 @@ class ListTasksAction extends BaseAction
         if (str_contains($include, 'comments')) {
             $with[] = 'comments.user';
         }
+        if (str_contains($include, 'attachments')) {
+            $with[] = 'attachments.fileable';
+        }
 
         return $with;
     }

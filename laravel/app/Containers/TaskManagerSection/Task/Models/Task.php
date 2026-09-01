@@ -2,6 +2,7 @@
 
 namespace App\Containers\TaskManagerSection\Task\Models;
 
+use App\Containers\AppSection\Attachment\Models\Traits\HasAttachments;
 use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
@@ -32,6 +33,7 @@ class Task extends ActivityLoggableModel
 {
     use HasUser,
         HasComments,
+        HasAttachments,
         SoftDeletes;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_TASK;

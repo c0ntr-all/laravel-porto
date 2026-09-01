@@ -10,6 +10,7 @@ class TaskCreateData extends Data
     public ?int $task_list_id = null;
     public string $title;
     public ?string $content = null;
+    public ?array $attachments = [];
 
     public function __construct(
     ) {

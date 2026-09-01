@@ -9,7 +9,7 @@ trait HasAttachments
 {
     protected static function bootHasAttachments(): void
     {
-        static::deleting(fn($item) => $item->attachments()->detach());
+        static::deleting(fn ($item) => $item->attachments()->delete());
     }
 
     public function attachments(): MorphMany

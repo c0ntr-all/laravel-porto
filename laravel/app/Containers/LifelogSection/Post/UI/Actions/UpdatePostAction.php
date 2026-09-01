@@ -12,7 +12,7 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
-use App\Containers\LifelogSection\Post\Tasks\CreatePostAttachmentsTask;
+use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
@@ -35,7 +35,7 @@ class UpdatePostAction extends UseCaseAction
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
         private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
-        private readonly CreatePostAttachmentsTask $syncPostAttachmentsTask
+        private readonly CreateAttachmentsTask $createAttachmentsTask
     )
     {
         parent::__construct();
@@ -85,9 +85,10 @@ class UpdatePostAction extends UseCaseAction
             }
 
             if (!empty($postUpdateContextDto->attachments)) {
-                $this->syncPostAttachmentsTask->run(
+                $this->createAttachmentsTask->run(
                     $post,
                     $postUpdateContextDto->user_id,
+                    ContainerAliasEnum::LL_POST->value,
                     $postUpdateContextDto->attachments
                 );
             }

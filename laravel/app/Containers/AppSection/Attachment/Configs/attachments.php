@@ -1,42 +1,24 @@
 <?php declare(strict_types=1);
 
+use App\Containers\AppSection\Document\Enums\DocumentMimeEnum;
+use App\Ship\Enums\ContainerAliasEnum;
+
 return [
     'default' => [
-        /*
-        |--------------------------------------------------------------------------
-        | Допустимые MIME-типы
-        |--------------------------------------------------------------------------
-        |
-        | Список MIME-типов, которые разрешено загружать в контейнере Attachment.
-        | Это могут быть изображения, документы, видео, аудио и т.д.
-        |
-        */
-        'allowed_mimes' => [
-            'image/jpeg',
-            'image/png',
-            'image/gif',
-            'application/pdf',
-            'video/mp4',
-        ],
-
-        /*
-        |--------------------------------------------------------------------------
-        | Максимальный размер файла
-        |--------------------------------------------------------------------------
-        |
-        | Размер указывается в килобайтах (10240 = 10 МБ)
-        |
-        */
-        'max_file_size' => 15360,
-
-        /*
-        |--------------------------------------------------------------------------
-        | Папка хранения файлов
-        |--------------------------------------------------------------------------
-        |
-        | Путь относительно storage/app/public
-        |
-        */
-        'storage_path' => 'attachments'
-    ]
+        'allowed_mimes' => array_merge(
+            [
+                'image/jpeg',
+                'image/png',
+                'image/gif',
+                'image/webp',
+                'video/mp4',
+                'video/quicktime',
+                'video/x-msvideo',
+                'video/x-matroska',
+                'video/3gpp',
+            ],
+            DocumentMimeEnum::values(),
+        ),
+        'max_file_size' => 51200,
+    ],
 ];

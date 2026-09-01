@@ -14,4 +14,9 @@ class AttachmentRepository
     {
         return Attachment::create($data);
     }
+
+    public function firstOrCreate(array $attributes, array $values = []): Attachment
+    {
+        return Attachment::query()->firstOrCreate($attributes, $values);
+    }
 }

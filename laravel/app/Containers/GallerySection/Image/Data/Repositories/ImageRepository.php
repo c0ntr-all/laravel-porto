@@ -27,6 +27,14 @@ class ImageRepository
             ->first();
     }
 
+    public function findForUser(string $id, int $userId): ?Image
+    {
+        return Image::query()
+            ->whereKey($id)
+            ->where('user_id', $userId)
+            ->first();
+    }
+
     public function create(Album $album, CreateImageDto $dto): Image
     {
         $image = $album->images()->make($dto->toArray());

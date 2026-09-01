@@ -17,6 +17,7 @@ class GetTaskAction extends BaseAction
             'reminder',
             'checklists.checklistItems',
             'progress',
+            'attachments.fileable',
         ]);
     }
 
@@ -33,6 +34,7 @@ class GetTaskAction extends BaseAction
                 'checklists.checklistItems',
                 'progress',
                 'reminder',
+                'attachments',
             ]);
         }
 

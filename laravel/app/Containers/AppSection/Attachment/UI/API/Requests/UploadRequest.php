@@ -8,11 +8,6 @@ use Illuminate\Validation\Rule;
 
 class UploadRequest extends AuthenticatedRequest
 {
-    const array ALLOWED_CONTAINERS = [
-        ContainerAliasEnum::LL_POST->value,
-        ContainerAliasEnum::TM_TASK->value,
-    ];
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -21,15 +16,16 @@ class UploadRequest extends AuthenticatedRequest
     public function rules(): array
     {
         $attachableType = request()->input('attachable_type');
+        $allowedContainers = ContainerAliasEnum::attachmentAttachableTypes();
 
-        if (!in_array($attachableType, static::ALLOWED_CONTAINERS)) {
+        if (!in_array($attachableType, $allowedContainers, true)) {
             abort(422, 'Disallowed attachable type!');
         }
 
         $allowedMimes = config('attachments.' . strtolower($attachableType) . '.allowed_mimes')
             ?? config('attachments.default.allowed_mimes');
 
-        $maxSize = config('attachments.' . strtolower($attachableType) . 'max_file_size')
+        $maxSize = config('attachments.' . strtolower($attachableType) . '.max_file_size')
             ?? config('attachments.default.max_file_size');
 
         return [
@@ -40,7 +36,7 @@ class UploadRequest extends AuthenticatedRequest
                 'max:' . $maxSize,
                 'mimetypes:' . implode(',', $allowedMimes),
             ],
-            'attachable_type' => ['required', Rule::in(static::ALLOWED_CONTAINERS)],
+            'attachable_type' => ['required', Rule::in($allowedContainers)],
             'attachable_id' => 'required|string',
             'correlation_uuid' => 'sometimes|uuid'
         ];

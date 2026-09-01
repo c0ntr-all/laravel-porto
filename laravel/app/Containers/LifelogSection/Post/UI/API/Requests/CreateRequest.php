@@ -28,7 +28,7 @@ class CreateRequest extends AuthenticatedRequest
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',
-                Rule::in(ContainerAliasEnum::galleryFileableTypes()),
+                Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
             'attachments.*.id' => 'required|uuid',
         ];

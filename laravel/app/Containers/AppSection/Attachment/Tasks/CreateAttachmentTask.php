@@ -21,6 +21,14 @@ class CreateAttachmentTask extends ParentTask
      */
     public function run(AttachmentCreateDto $dto): Attachment
     {
-        return $this->attachmentRepository->create($dto->toArray());
+        return $this->attachmentRepository->firstOrCreate(
+            [
+                'attachable_type' => $dto->attachable_type,
+                'attachable_id' => $dto->attachable_id,
+                'fileable_type' => $dto->fileable_type,
+                'fileable_id' => $dto->fileable_id,
+            ],
+            $dto->toArray()
+        );
     }
 }

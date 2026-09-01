@@ -27,6 +27,14 @@ class VideoRepository
             ->first();
     }
 
+    public function findForUser(string $id, int $userId): ?Video
+    {
+        return Video::query()
+            ->whereKey($id)
+            ->where('user_id', $userId)
+            ->first();
+    }
+
     public function create(CreateVideoDto $dto): Video
     {
         $video = new Video($dto->toArray());

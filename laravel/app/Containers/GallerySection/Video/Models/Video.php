@@ -2,6 +2,7 @@
 
 namespace App\Containers\GallerySection\Video\Models;
 
+use App\Containers\AppSection\Attachment\Models\Traits\HasFileableAttachments;
 use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\GallerySection\Album\Models\Album;
@@ -39,7 +40,8 @@ class Video extends ActivityLoggableModel
 {
     use HasUuids,
         HasUser,
-        HasComments;
+        HasComments,
+        HasFileableAttachments;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_VIDEO;
 

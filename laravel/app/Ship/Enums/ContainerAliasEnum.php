@@ -14,6 +14,7 @@ enum ContainerAliasEnum: string
     case USER = 'users';
     case TAG = 'tags';
     case ATTACHMENT = 'attachments';
+    case APP_DOCUMENT = 'app_documents';
     case COMMENTS = 'comments';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
@@ -41,6 +42,7 @@ enum ContainerAliasEnum: string
             self::USER => 'Пользователь',
             self::TAG => 'Тег',
             self::ATTACHMENT => 'Вложение',
+            self::APP_DOCUMENT => 'Документ',
             self::COMMENTS => 'Комментарий',
             self::MUSIC_ARTIST => 'Исполнитель',
             self::MUSIC_ALBUM => 'Альбом',
@@ -69,13 +71,34 @@ enum ContainerAliasEnum: string
     /**
      * @return list<string>
      */
-    public static function galleryFileableTypes(): array
+    public static function attachmentFileableTypes(): array
     {
         return [
             self::GALLERY_IMAGE->value,
             self::GALLERY_VIDEO->value,
+            self::APP_DOCUMENT->value,
             'images',
             'videos',
+        ];
+    }
+
+    /**
+     * @deprecated Use attachmentFileableTypes()
+     * @return list<string>
+     */
+    public static function galleryFileableTypes(): array
+    {
+        return self::attachmentFileableTypes();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function attachmentAttachableTypes(): array
+    {
+        return [
+            self::LL_POST->value,
+            self::TM_TASK->value,
         ];
     }
 

@@ -37,6 +37,14 @@ export function isGalleryVideo(item: { type?: string; attachment_type?: string }
   return item.attachment_type === 'gallery_videos' || item.type === 'video'
 }
 
+export function galleryCommentableType(item: { type?: string; attachment_type?: string }): 'gallery_images' | 'gallery_videos' {
+  return isGalleryVideo(item) ? 'gallery_videos' : 'gallery_images'
+}
+
+export function getMediaOriginId(item: { id: string | number; saved_from_id?: string | null }): string {
+  return String(item.saved_from_id || item.id)
+}
+
 export function isVideoFile(file: File): boolean {
   if (file.type.startsWith('video/')) {
     return true
@@ -157,6 +165,10 @@ export function resolveMediaUrl(path?: string | null): string {
   }
 
   return `${siteOrigin}/${trimmed}`
+}
+
+export function getMediaOriginalUrl(item: { original?: string; original_path?: string }): string {
+  return resolveMediaUrl(item.original || item.original_path)
 }
 
 export function getAttachmentThumbSrc(attachment: {

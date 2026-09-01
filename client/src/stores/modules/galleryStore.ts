@@ -11,6 +11,8 @@ import {
 import { GalleryMediaKind, IGalleryAlbum, IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
 import {
   galleryUploadUrl,
+  getMediaOriginId,
+  isGalleryVideo,
   isVideoFile,
   resolveMediaKind,
   toAlbumCoverValue
@@ -40,9 +42,33 @@ export const useGalleryStore = defineStore('gallery', () => {
   const isAlbumLoading = ref(false)
   const isUploading = ref(false)
   const isSaving = ref(false)
+  const isSavingMedia = ref(false)
+  const saveAlbum = ref<IGalleryAlbum | null>(null)
+  const extraSavedOriginIds = ref<Set<string>>(new Set())
   const error = ref<string | null>(null)
 
   const media = computed(() => album.value?.media ?? [])
+
+  const savedOriginIds = computed(() => {
+    const ids = new Set(extraSavedOriginIds.value)
+    const items = saveAlbum.value?.media ?? []
+
+    for (const item of items) {
+      ids.add(item.id)
+
+      if (item.saved_from_id) {
+        ids.add(item.saved_from_id)
+      }
+    }
+
+    return ids
+  })
+
+  function rememberSavedOrigin(id: string): void {
+    const next = new Set(extraSavedOriginIds.value)
+    next.add(id)
+    extraSavedOriginIds.value = next
+  }
 
   function mergeAlbum(current: IGalleryAlbum, incoming: IGalleryAlbum): IGalleryAlbum {
     return {
@@ -86,6 +112,116 @@ export const useGalleryStore = defineStore('gallery', () => {
     }
 
     upsertAlbum(album.value)
+  }
+
+  function isMediaSaved(item: {
+    id: string | number
+    album_id?: string | null
+    saved_from_id?: string | null
+  }): boolean {
+    if (album.value?.system_code === 'save') {
+      return true
+    }
+
+    if (item.saved_from_id) {
+      return true
+    }
+
+    if (saveAlbum.value && item.album_id && item.album_id === saveAlbum.value.id) {
+      return true
+    }
+
+    return savedOriginIds.value.has(getMediaOriginId(item))
+  }
+
+  async function ensureSaveAlbum(): Promise<IGalleryAlbum | null> {
+    if (album.value?.system_code === 'save') {
+      saveAlbum.value = album.value
+      return saveAlbum.value
+    }
+
+    if (saveAlbum.value) {
+      return saveAlbum.value
+    }
+
+    if (!albums.value.length) {
+      await getAlbums()
+    }
+
+    const listed = albums.value.find(item => item.system_code === 'save')
+
+    if (!listed) {
+      return null
+    }
+
+    try {
+      const response = await galleryApi.getAlbum(listed.id)
+      saveAlbum.value = mapGalleryAlbumResponse(response)
+
+      return saveAlbum.value
+    } catch (err) {
+      handleApiError(err)
+      return null
+    }
+  }
+
+  async function saveMediaToSaveAlbum(item: IGalleryMediaItem): Promise<boolean> {
+    if (isMediaSaved(item)) {
+      return true
+    }
+
+    isSavingMedia.value = true
+
+    try {
+      const response = isGalleryVideo(item)
+        ? await galleryApi.saveVideo(item.id)
+        : await galleryApi.saveImage(item.id)
+      const mapped = mapGalleryMediaUploadResponse(response)
+      const copy = mapped[0]
+
+      rememberSavedOrigin(getMediaOriginId(item))
+
+      if (copy) {
+        rememberSavedOrigin(copy.id)
+
+        if (copy.saved_from_id) {
+          rememberSavedOrigin(copy.saved_from_id)
+        }
+      }
+
+      if (copy && saveAlbum.value) {
+        const appended = uniqueMedia(saveAlbum.value.media, [copy])
+
+        if (appended.length) {
+          saveAlbum.value = {
+            ...saveAlbum.value,
+            media: [...saveAlbum.value.media, ...appended],
+            media_count: saveAlbum.value.media_count + appended.length
+          }
+        }
+      } else if (copy) {
+        saveAlbum.value = {
+          id: copy.album_id || 'save',
+          name: 'Save',
+          image: '',
+          description: null,
+          created_at: '',
+          system_code: 'save',
+          is_system: true,
+          media: [copy],
+          media_count: 1
+        }
+      }
+
+      handleApiSuccess(response)
+
+      return true
+    } catch (err) {
+      handleApiError(err)
+      return false
+    } finally {
+      isSavingMedia.value = false
+    }
   }
 
   async function getAlbums(): Promise<void> {
@@ -355,11 +491,13 @@ export const useGalleryStore = defineStore('gallery', () => {
   return {
     albums,
     album,
+    saveAlbum,
     media,
     isAlbumsLoading,
     isAlbumLoading,
     isUploading,
     isSaving,
+    isSavingMedia,
     error,
     getAlbums,
     getAlbum,
@@ -368,6 +506,9 @@ export const useGalleryStore = defineStore('gallery', () => {
     updateAlbum,
     updateCoverFromMedia,
     updateCoverFromFile,
+    ensureSaveAlbum,
+    isMediaSaved,
+    saveMediaToSaveAlbum,
     uploadFiles,
     uploadDeviceFiles,
     uploadFromWeb,

@@ -47,12 +47,31 @@ export interface IGalleryMediaItem {
   name: string
   description: string | null
   original_path: string
+  original: string
   list_thumb_path: string
   preview_thumb_path: string
   attachment_type: string
   width: number
   height: number
   duration: string | null
+  album_id: string | null
+  saved_from_id: string | null
+}
+
+export interface IGalleryCommentAuthor {
+  id: string
+  name: string
+  email?: string
+  avatar?: string | null
+}
+
+export interface IGalleryComment {
+  id: string
+  content: string
+  commentable_id: string
+  commentable_type: string
+  created_at: string
+  user: IGalleryCommentAuthor | null
 }
 
 export interface IGalleryAlbum {

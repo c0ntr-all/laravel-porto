@@ -40,6 +40,22 @@ export const galleryApi = {
     return response.data
   },
 
+  async saveImage(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
+    const response = await api.post(`v1/gallery/images/${id}/save`, {}, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async saveVideo(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
+    const response = await api.post(`v1/gallery/videos/${id}/save`, {}, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
   async upload(
     url: string,
     file: File,

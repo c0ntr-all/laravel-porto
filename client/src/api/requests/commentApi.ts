@@ -1,5 +1,5 @@
 import { api } from 'src/boot/axios'
-import { ICommentCreatePayload, ICommentGetResponse, IFilter } from 'src/types'
+import { ICommentCreatePayload, ICommentGetResponse, IFilter, IJsonApiResponse } from 'src/types'
 import { buildFilterForUrl } from 'src/utils/jsonapi'
 
 export const commentApi = {
@@ -14,7 +14,7 @@ export const commentApi = {
 
     return response.data
   },
-  async createComment(payload: ICommentCreatePayload) {
+  async createComment(payload: ICommentCreatePayload): Promise<IJsonApiResponse> {
     const response = await api.post('v1/comments', payload)
 
     return response.data

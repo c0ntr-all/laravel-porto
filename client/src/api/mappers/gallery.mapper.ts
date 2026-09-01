@@ -83,13 +83,18 @@ export function normalizeGalleryMedia(raw: Record<string, unknown>): IGalleryMed
     type: kind,
     name: String(raw.name ?? raw.original_name ?? ''),
     description: raw.description == null ? null : String(raw.description),
-    original_path: String(raw.original_path ?? ''),
+    original_path: String(raw.original ?? raw.original_path ?? ''),
+    original: String(raw.original ?? raw.original_path ?? ''),
     list_thumb_path: String(raw.list_thumb_path ?? ''),
     preview_thumb_path: String(raw.preview_thumb_path ?? raw.list_thumb_path ?? ''),
     attachment_type: attachmentType || (kind === 'video' ? 'gallery_videos' : 'gallery_images'),
     width: Number(raw.width ?? 0),
     height: Number(raw.height ?? 0),
-    duration: raw.duration == null ? null : String(raw.duration)
+    duration: raw.duration == null ? null : String(raw.duration),
+    album_id: raw.album_id == null ? null : String(raw.album_id),
+    saved_from_id: raw.saved_from_id == null || raw.saved_from_id === ''
+      ? null
+      : String(raw.saved_from_id)
   }
 }
 

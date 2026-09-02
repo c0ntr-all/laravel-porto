@@ -19,7 +19,7 @@ import {
 
 export const taskApi = {
   async getTaskLists(): Promise<ITaskListsGetResponse> {
-    const response = await api.get('v1/task-manager/task-lists?include=tasks')
+    const response = await api.get('v1/task-manager/task-lists?include=tasks.reminder')
 
     return response.data
   },

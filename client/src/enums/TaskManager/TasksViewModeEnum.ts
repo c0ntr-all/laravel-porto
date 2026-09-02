@@ -1,4 +1,5 @@
 export enum TasksViewModeEnum {
   BLOCKS = 'blocks',
-  LIST = 'list'
+  LIST = 'list',
+  REMINDERS = 'reminders'
 }

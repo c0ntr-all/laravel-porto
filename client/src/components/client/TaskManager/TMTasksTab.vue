@@ -47,6 +47,7 @@
       />
     </div>
 
+    <TMRemindersView v-else-if="viewMode === TasksViewModeEnum.REMINDERS" />
     <TMTasksListView v-else />
   </template>
 </template>
@@ -57,6 +58,7 @@ import { handleApiError } from 'src/utils/jsonapi'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import TMTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 import TMTasksListView from 'src/components/client/TaskManager/TMTasksListView.vue'
+import TMRemindersView from 'src/components/client/TaskManager/TMRemindersView.vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { useSettingsStore } from 'src/stores/modules/settingsStore'
 import { TasksViewModeEnum } from 'src/enums/TaskManager/TasksViewModeEnum'
@@ -79,7 +81,8 @@ const viewMode = computed({
 
 const viewModeOptions = [
   { label: 'Блоки', value: TasksViewModeEnum.BLOCKS, icon: 'view_column' },
-  { label: 'Список', value: TasksViewModeEnum.LIST, icon: 'view_list' }
+  { label: 'Список', value: TasksViewModeEnum.LIST, icon: 'view_list' },
+  { label: 'Напоминания', value: TasksViewModeEnum.REMINDERS, icon: 'notifications' }
 ]
 
 const listsWithTasks = computed(() =>
@@ -89,11 +92,22 @@ const listsWithTasks = computed(() =>
 const listsCount = computed(() => listsWithTasks.value.length)
 const tasksCount = computed(() => taskStore.tasks.allIds.length)
 
-const countLabel = computed(() =>
-  viewMode.value === TasksViewModeEnum.BLOCKS
-    ? `Всего списков: ${listsCount.value}`
-    : `Всего задач: ${tasksCount.value}`
+const remindersCount = computed(() =>
+  taskStore.reminder.allIds.filter((id) => {
+    const reminder = taskStore.reminder.byId[id]
+    return Boolean(reminder && taskStore.tasks.byId[reminder.task_id])
+  }).length
 )
+
+const countLabel = computed(() => {
+  if (viewMode.value === TasksViewModeEnum.BLOCKS) {
+    return `Всего списков: ${listsCount.value}`
+  }
+  if (viewMode.value === TasksViewModeEnum.REMINDERS) {
+    return `Всего напоминаний: ${remindersCount.value}`
+  }
+  return `Всего задач: ${tasksCount.value}`
+})
 
 const openAddForm = () => {
   showAddForm.value = true
@@ -131,7 +145,7 @@ const clearModel = () => {
 }
 
 watch(viewMode, (mode) => {
-  if (mode === TasksViewModeEnum.LIST) {
+  if (mode !== TasksViewModeEnum.BLOCKS) {
     closeAddForm()
   }
 })

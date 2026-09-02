@@ -3,7 +3,7 @@
     <div class="settings-panel__intro">
       <div class="settings-panel__title">Task Manager</div>
       <p class="settings-panel__text">
-        Настройки отображения задач: доска списков или общий список.
+        Настройки отображения задач: доска списков, общий список или напоминания по темам.
       </p>
     </div>
 
@@ -34,6 +34,7 @@ const { updateTaskManager } = settingsStore
 
 const viewModeOptions = [
   { label: 'Блоки', value: TasksViewModeEnum.BLOCKS, icon: 'view_column' },
-  { label: 'Список', value: TasksViewModeEnum.LIST, icon: 'view_list' }
+  { label: 'Список', value: TasksViewModeEnum.LIST, icon: 'view_list' },
+  { label: 'Напоминания', value: TasksViewModeEnum.REMINDERS, icon: 'notifications' }
 ]
 </script>

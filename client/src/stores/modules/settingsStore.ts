@@ -46,6 +46,12 @@ function isGalleryGridSize(value: unknown): value is GalleryGridSize {
   return value === 's' || value === 'm' || value === 'l'
 }
 
+function isTasksViewMode(value: unknown): value is TasksViewModeEnum {
+  return value === TasksViewModeEnum.BLOCKS ||
+    value === TasksViewModeEnum.LIST ||
+    value === TasksViewModeEnum.REMINDERS
+}
+
 function readLegacyTaskViewMode(): TasksViewModeEnum | null {
   if (typeof window === 'undefined') {
     return null
@@ -73,9 +79,9 @@ function mergeSettings(raw: Partial<IAppSettings> | null): IAppSettings {
     taskManager: {
       ...defaults.taskManager,
       ...(raw?.taskManager ?? {}),
-      defaultViewMode: raw?.taskManager?.defaultViewMode ??
-        legacyTaskView ??
-        defaults.taskManager.defaultViewMode
+      defaultViewMode: isTasksViewMode(raw?.taskManager?.defaultViewMode)
+        ? raw.taskManager.defaultViewMode
+        : legacyTaskView ?? defaults.taskManager.defaultViewMode
     },
     gallery: {
       ...defaults.gallery,

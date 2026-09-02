@@ -63,17 +63,23 @@ export const useTaskStore = defineStore('task', () => {
     return key in collections
   }
 
+  function collectionKeyForType(type: string): keyof Collections | null {
+    if (type === 'reminders') return 'reminder'
+    const camelType = camel(type)
+    return isValidCollectionKey(camelType) ? camelType : null
+  }
+
   async function getTaskLists(): Promise<void> {
     const responseData = await taskApi.getTaskLists()
 
     const entities = normalizeEntityCollection(responseData.data, responseData.included)
 
     for (const type in entities) {
-      const camelType = camel(type)
+      const collectionKey = collectionKeyForType(type)
 
-      if (isValidCollectionKey(camelType)) {
+      if (collectionKey) {
         for (const id in entities[type]) {
-          upsertEntity(collections[camelType], entities[type][id])
+          upsertEntity(collections[collectionKey], entities[type][id])
         }
       }
     }

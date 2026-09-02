@@ -150,4 +150,130 @@ class ListTracksTest extends TestCase
 
         return $track;
     }
+
+    public function test_filter_tags_or_matches_any_selected_tag(): void
+    {
+        $user = User::factory()->create();
+        [$metal, $dark] = $this->makeTags();
+        $metalTrack = $this->createTrackWithArtist($user, 'Metallica', 'Enter Sandman');
+        $darkTrack = $this->createTrackWithArtist($user, 'Type O Negative', 'Black No. 1');
+        $this->createTrackWithArtist($user, 'Untagged', 'Plain');
+        $metalTrack->tags()->attach($metal->id);
+        $darkTrack->tags()->attach($dark->id);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/tracks?'.http_build_query([
+                'filter' => [
+                    'tags' => $metal->id.','.$dark->id,
+                    'tags_match' => 'or',
+                ],
+            ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertEqualsCanonicalizing([$metalTrack->id, $darkTrack->id], $ids);
+    }
+
+    public function test_filter_rate_returns_tracks_with_selected_ratings(): void
+    {
+        $user = User::factory()->create();
+        $loved = $this->createTrackWithArtist($user, 'Metallica', 'One');
+        $ok = $this->createTrackWithArtist($user, 'Megadeth', 'Trust');
+        $this->createTrackWithArtist($user, 'Slayer', 'Raining Blood');
+        $this->rateTrack($user, $loved, 4);
+        $this->rateTrack($user, $ok, 2);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/tracks?'.http_build_query([
+                'filter' => ['rate' => '4,2'],
+            ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertEqualsCanonicalizing([$loved->id, $ok->id], $ids);
+    }
+
+    public function test_sort_by_rate_desc_puts_highest_rated_first(): void
+    {
+        $user = User::factory()->create();
+        $low = $this->createTrackWithArtist($user, 'A', 'Low');
+        $high = $this->createTrackWithArtist($user, 'B', 'High');
+        $this->rateTrack($user, $low, 1);
+        $this->rateTrack($user, $high, 4);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/tracks?sort=-rate');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertSame((int) $high->id, $ids[0]);
+        $this->assertSame((int) $low->id, $ids[1]);
+    }
+
+    public function test_sort_by_rate_keeps_unrated_tracks_last(): void
+    {
+        $user = User::factory()->create();
+        $unrated = $this->createTrackWithArtist($user, 'C', 'Unrated');
+        $high = $this->createTrackWithArtist($user, 'B', 'High');
+        $low = $this->createTrackWithArtist($user, 'A', 'Low');
+        $this->rateTrack($user, $high, 4);
+        $this->rateTrack($user, $low, 1);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/tracks?sort=-rate');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertSame([(int) $high->id, (int) $low->id, (int) $unrated->id], $ids);
+    }
+
+    public function test_sort_by_rate_asc_keeps_unrated_tracks_last(): void
+    {
+        $user = User::factory()->create();
+        $unrated = $this->createTrackWithArtist($user, 'C', 'Unrated');
+        $high = $this->createTrackWithArtist($user, 'B', 'High');
+        $low = $this->createTrackWithArtist($user, 'A', 'Low');
+        $this->rateTrack($user, $high, 4);
+        $this->rateTrack($user, $low, 1);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/tracks?sort=rate');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertSame([(int) $low->id, (int) $high->id, (int) $unrated->id], $ids);
+    }
+
+    /**
+     * @return array{0: \App\Containers\MusicSection\Tag\Models\MusicTag, 1: \App\Containers\MusicSection\Tag\Models\MusicTag}
+     */
+    private function makeTags(): array
+    {
+        $group = \App\Containers\MusicSection\Tag\Models\MusicTagGroup::query()->create([
+            'name' => 'Genre',
+            'slug' => 'genre-'.uniqid(),
+            'is_system' => true,
+        ]);
+        $metal = \App\Containers\MusicSection\Tag\Models\MusicTag::query()->create([
+            'name' => 'Metal',
+            'group_id' => $group->id,
+            'is_active' => true,
+        ]);
+        $dark = \App\Containers\MusicSection\Tag\Models\MusicTag::query()->create([
+            'name' => 'Dark',
+            'group_id' => $group->id,
+            'is_active' => true,
+        ]);
+
+        return [$metal, $dark];
+    }
+
+    private function rateTrack(User $user, Track $track, int $rate): void
+    {
+        \App\Containers\MusicSection\Track\Models\Rate::query()->create([
+            'user_id' => $user->id,
+            'track_id' => $track->id,
+            'rate' => $rate,
+        ]);
+    }
 }

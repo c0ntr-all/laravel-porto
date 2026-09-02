@@ -3,14 +3,18 @@
 namespace App\Containers\MusicSection\Track\Data\Repositories;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Tag\Data\Filters\ArtistTagsFilter;
+use App\Containers\MusicSection\Track\Data\Filters\TrackRateFilter;
 use App\Containers\MusicSection\Track\Data\Filters\TrackSearchFilter;
 use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
+use App\Containers\MusicSection\Track\Data\Sorts\TrackRateSort;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\CursorPaginator;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 
 class TrackRepository
 {
@@ -20,11 +24,11 @@ class TrackRepository
     {
         return QueryBuilder::for(Track::class)
                            ->allowedFilters($this->allowedFilters())
-                           ->allowedSorts(['name', 'created_at', 'number'])
+                           ->allowedSorts($this->allowedSorts())
                            ->allowedIncludes(['tags', 'artists', 'album'])
                            ->with(['tags', 'artists', 'rate', 'album.albumType'])
-                           ->orderByDesc('created_at')
-                           ->orderByDesc('id')
+                           ->defaultSort('-created_at')
+                           ->orderByDesc('music_tracks.id')
                            ->cursorPaginate(self::DEFAULT_PER_PAGE);
     }
 
@@ -38,7 +42,7 @@ class TrackRepository
     {
         return QueryBuilder::for(Track::whereIn('album_id', $albumIds))
                            ->allowedFilters($this->allowedFilters())
-                           ->allowedSorts(['name', 'created_at', 'number'])
+                           ->allowedSorts($this->allowedSorts())
                            ->with(['tags', 'artists', 'rate'])
                            ->cursorPaginate(50);
     }
@@ -142,6 +146,27 @@ class TrackRepository
                     $album->where('music_albums.name', 'like', $pattern);
                 });
             }),
+            AllowedFilter::custom('tags', new ArtistTagsFilter()),
+            AllowedFilter::callback('tags_match', function (Builder $query): void {
+                unset($query);
+            }),
+            AllowedFilter::callback('tags_nested', function (Builder $query): void {
+                unset($query);
+            }),
+            AllowedFilter::custom('rate', new TrackRateFilter()),
+        ];
+    }
+
+    /**
+     * @return list<string|AllowedSort>
+     */
+    private function allowedSorts(): array
+    {
+        return [
+            AllowedSort::field('name', 'music_tracks.name'),
+            AllowedSort::field('created_at', 'music_tracks.created_at'),
+            AllowedSort::field('number', 'music_tracks.number'),
+            AllowedSort::custom('rate', new TrackRateSort()),
         ];
     }
 }

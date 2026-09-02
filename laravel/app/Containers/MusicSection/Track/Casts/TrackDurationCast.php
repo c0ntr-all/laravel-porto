@@ -17,6 +17,10 @@ class TrackDurationCast implements CastsAttributes
      */
     public function get($model, string $key, $value, array $attributes)
     {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
         $parts = explode(':', $value);
 
         $time = $parts[0] === '00' ? '' : ltrim($parts[0], '0') . ':';

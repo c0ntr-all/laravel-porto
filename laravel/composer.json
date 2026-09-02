@@ -11,6 +11,7 @@
         "james-heinrich/getid3": "^1.9",
         "laravel/framework": "^11.9",
         "laravel/passport": "^12.2",
+        "laravel/reverb": "^1.0",
         "laravel/tinker": "^2.9",
         "lorisleiva/laravel-actions": "^2.8",
         "pbmedia/laravel-ffmpeg": "^8.7",

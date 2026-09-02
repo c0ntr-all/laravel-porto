@@ -3,12 +3,28 @@
 namespace App\Ship\Tests\Unit;
 
 use App\Ship\Middleware\AuthenticateBearerFromQuery;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AuthenticateBearerFromQueryTest extends TestCase
 {
+    public function test_query_token_middleware_runs_before_authenticate_on_play_route(): void
+    {
+        $request = Request::create('/api/v1/music/tracks/1/play', 'GET');
+        $route = Route::getRoutes()->match($request);
+        $middleware = app('router')->gatherRouteMiddleware($route);
+
+        $queryIndex = $this->middlewareIndex($middleware, AuthenticateBearerFromQuery::class);
+        $authIndex = $this->middlewareIndex($middleware, Authenticate::class);
+
+        $this->assertNotNull($queryIndex);
+        $this->assertNotNull($authIndex);
+        $this->assertLessThan($authIndex, $queryIndex);
+    }
+
     public function test_it_copies_access_token_query_into_authorization_header(): void
     {
         $request = Request::create('/v1/music/tracks/1/play', 'GET', [
@@ -36,5 +52,21 @@ class AuthenticateBearerFromQueryTest extends TestCase
 
             return new Response('ok');
         });
+    }
+
+    /**
+     * @param  array<int, string>  $middleware
+     */
+    private function middlewareIndex(array $middleware, string $class): ?int
+    {
+        foreach ($middleware as $index => $entry) {
+            $name = explode(':', $entry)[0];
+
+            if ($name === $class) {
+                return $index;
+            }
+        }
+
+        return null;
     }
 }

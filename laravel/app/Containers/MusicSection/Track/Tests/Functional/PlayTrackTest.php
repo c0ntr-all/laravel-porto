@@ -7,6 +7,9 @@ use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Track\Models\Track;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Passport\Client;
+use Laravel\Passport\PersonalAccessClient;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 class PlayTrackTest extends TestCase
@@ -44,6 +47,18 @@ class PlayTrackTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_guest_play_request_with_audio_accept_returns_unauthorized_json(): void
+    {
+        $track = $this->createTrackWithFile();
+
+        $this->withHeaders([
+            'Accept' => 'audio/webm,audio/ogg,audio/wav,audio/*;q=0.9,*/*;q=0.5',
+        ])
+            ->get("/api/v1/music/tracks/{$track->id}/play")
+            ->assertUnauthorized()
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
+
     public function test_authenticated_user_can_stream_full_track(): void
     {
         $user = User::factory()->create();
@@ -56,7 +71,7 @@ class PlayTrackTest extends TestCase
         $response->assertOk();
         $this->assertSame('audio/mpeg', $response->headers->get('Content-Type'));
         $this->assertSame('bytes', $response->headers->get('Accept-Ranges'));
-        $this->assertSame($payload, $response->streamedContent());
+        $this->assertSame($payload, $this->responseBody($response));
     }
 
     public function test_range_request_returns_partial_content(): void
@@ -72,7 +87,7 @@ class PlayTrackTest extends TestCase
         $response->assertStatus(206);
         $this->assertSame('bytes', $response->headers->get('Accept-Ranges'));
         $this->assertSame('bytes 2-5/10', $response->headers->get('Content-Range'));
-        $this->assertSame('2345', $response->streamedContent());
+        $this->assertSame('2345', $this->responseBody($response));
     }
 
     public function test_head_request_returns_accept_ranges_without_body(): void
@@ -86,7 +101,7 @@ class PlayTrackTest extends TestCase
         $response->assertOk();
         $this->assertSame('bytes', $response->headers->get('Accept-Ranges'));
         $this->assertSame('audio/mpeg', $response->headers->get('Content-Type'));
-        $this->assertSame('', $response->streamedContent());
+        $this->assertSame('', $this->responseBody($response));
     }
 
     public function test_missing_file_returns_not_found(): void
@@ -129,6 +144,23 @@ class PlayTrackTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_query_access_token_can_stream_track_without_authorization_header(): void
+    {
+        $this->seedPersonalAccessClient();
+
+        $user = User::factory()->create();
+        $token = $user->createToken('play')->accessToken;
+        $payload = 'query-token-bytes';
+        $track = $this->createTrackWithFile($payload);
+
+        $response = $this->withHeaders([
+            'Accept' => 'audio/mpeg,*/*;q=0.8',
+        ])->get("/api/v1/music/tracks/{$track->id}/play?access_token={$token}");
+
+        $response->assertOk();
+        $this->assertSame($payload, $this->responseBody($response));
+    }
+
     private function createTrackWithFile(string $contents = 'audio-bytes'): Track
     {
         $relative = 'Artist' . DIRECTORY_SEPARATOR . 'Album' . DIRECTORY_SEPARATOR . 'track.mp3';
@@ -152,6 +184,39 @@ class PlayTrackTest extends TestCase
             'name' => 'Test Album',
             'path' => 'F:\\Artist\\Album',
             'album_type_id' => 1,
+        ]);
+    }
+
+    private function responseBody($response): string
+    {
+        $base = $response->baseResponse;
+        if ($base instanceof BinaryFileResponse) {
+            ob_start();
+            $base->sendContent();
+
+            return (string) ob_get_clean();
+        }
+
+        return $response->streamedContent();
+    }
+
+    private function seedPersonalAccessClient(): void
+    {
+        $clientId = (string) config('passport.personal_access_client.id');
+        $clientSecret = (string) config('passport.personal_access_client.secret');
+
+        Client::query()->create([
+            'id' => $clientId,
+            'name' => 'Testing Personal Access Client',
+            'secret' => $clientSecret,
+            'redirect' => 'http://localhost',
+            'personal_access_client' => true,
+            'password_client' => false,
+            'revoked' => false,
+        ]);
+
+        PersonalAccessClient::query()->create([
+            'client_id' => $clientId,
         ]);
     }
 

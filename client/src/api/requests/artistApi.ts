@@ -61,7 +61,10 @@ export const artistApi = {
 
   async getArtistTracks(id: string, cursor?: string | null): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/music/artists/${id}/tracks`, {
-      params: cursor ? { cursor } : undefined
+      params: {
+        include: 'artists,album,tags',
+        ...(cursor ? { cursor } : {})
+      }
     })
 
     return response.data

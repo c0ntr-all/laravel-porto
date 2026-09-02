@@ -19,7 +19,7 @@
             {{ player.currentTrack?.name || 'No track selected' }}
           </div>
           <div class="music-player-expanded__artist">
-            {{ player.currentTrack?.artist || 'Unknown artist' }}
+            {{ player.currentArtist || 'Unknown artist' }}
           </div>
         </div>
       </div>
@@ -65,6 +65,7 @@
         <AppSlider
           v-model="progress"
           :disable="!player.hasTrack || player.duration <= 0"
+          :buffered="player.bufferedPercents"
           only-drop
         />
         <div class="music-player-expanded__time">{{ player.timeTotal }}</div>
@@ -79,9 +80,7 @@
             round
             :color="player.shuffleEnabled ? 'primary' : 'grey-7'"
             @click="player.toggleShuffle()"
-          >
-            <q-tooltip>Shuffle</q-tooltip>
-          </q-btn>
+          />
           <q-btn
             :icon="player.repeatMode === 'one' ? 'repeat_one' : 'repeat'"
             flat
@@ -89,9 +88,7 @@
             round
             :color="player.repeatMode !== 'off' ? 'primary' : 'grey-7'"
             @click="player.cycleRepeat()"
-          >
-            <q-tooltip>{{ repeatLabel }}</q-tooltip>
-          </q-btn>
+          />
         </div>
 
         <div class="music-player-expanded__volume">
@@ -114,19 +111,33 @@
 
     <q-separator />
 
-    <q-scroll-area class="music-player-expanded__playlist">
-      <div v-if="player.playlist.length" class="q-pa-md q-gutter-xs">
-        <MusicTrackCard
-          v-for="track in player.playlist"
-          :key="track.id"
-          :track="track"
-          @play="player.toggleTrack(track)"
-        />
-      </div>
-      <div v-else class="text-grey-6 q-pa-lg text-center">
+    <div class="music-player-expanded__playlist-head">
+      Current playlist
+      <span v-if="player.playlist.length" class="music-player-expanded__playlist-count">
+        {{ player.playlist.length }}
+      </span>
+    </div>
+
+    <div class="music-player-expanded__playlist">
+      <button
+        v-for="(track, index) in player.playlist"
+        :key="track.id"
+        type="button"
+        class="music-player-expanded__track"
+        :class="{ 'music-player-expanded__track--current': player.isCurrentTrack(track.id) }"
+        @click="player.toggleTrack(track)"
+      >
+        <span class="music-player-expanded__track-index">{{ index + 1 }}</span>
+        <span class="music-player-expanded__track-body">
+          <span class="music-player-expanded__track-name">{{ track.name }}</span>
+          <span class="music-player-expanded__track-artist">{{ trackArtist(track) }}</span>
+        </span>
+        <span class="music-player-expanded__track-time">{{ track.duration }}</span>
+      </button>
+      <div v-if="!player.playlist.length" class="music-player-expanded__empty">
         Playlist is empty
       </div>
-    </q-scroll-area>
+    </div>
   </div>
 </template>
 
@@ -134,7 +145,8 @@
 import { computed } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import AppSlider from 'src/components/default/AppSlider.vue'
-import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
+import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
+import { ITrack } from 'src/types'
 
 const player = useMusicPlayer()
 
@@ -160,37 +172,26 @@ const volumeIcon = computed(() => {
   return 'volume_up'
 })
 
-const repeatLabel = computed(() => {
-  if (player.repeatMode === 'one') {
-    return 'Repeat one'
-  }
-
-  if (player.repeatMode === 'all') {
-    return 'Repeat all'
-  }
-
-  return 'Repeat off'
-})
+const trackArtist = (track: ITrack): string => {
+  return formatTrackArtist(track) || 'Unknown artist'
+}
 </script>
 
 <style lang="scss" scoped>
 .music-player-expanded {
   display: flex;
   flex-direction: column;
-  width: 660px;
-  min-height: 500px;
+  width: 560px;
+  max-width: 90vw;
   max-height: min(72vh, 720px);
 
   &__controls {
-    position: sticky;
-    top: 0;
-    z-index: 1;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: 8px;
     padding: 12px 16px 10px;
     background: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   }
 
   &__now-playing {
@@ -269,9 +270,106 @@ const repeatLabel = computed(() => {
     margin-left: 8px;
   }
 
+  &__playlist-head {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+    padding: 10px 16px 8px;
+    color: #4a5563;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__playlist-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: rgba(25, 118, 210, 0.12);
+    color: #1976d2;
+    font-size: 11px;
+  }
+
   &__playlist {
+    flex: 1 1 auto;
+    min-height: 180px;
+    overflow: auto;
+    padding: 0 8px 8px;
+  }
+
+  &__empty {
+    padding: 24px 16px;
+    color: #818c99;
+    text-align: center;
+  }
+
+  &__track {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &--current {
+      background: rgba(174, 183, 194, 0.12);
+    }
+
+    &--current .music-player-expanded__track-name {
+      color: #1976d2;
+      font-weight: 700;
+    }
+  }
+
+  &__track-index {
+    flex-shrink: 0;
+    width: 24px;
+    color: #818c99;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  &__track-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
     flex: 1;
-    height: 340px;
+    margin: 0 8px;
+  }
+
+  &__track-name,
+  &__track-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__track-name {
+    font-size: 13px;
+    line-height: 16px;
+  }
+
+  &__track-artist {
+    color: #818c99;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  &__track-time {
+    flex-shrink: 0;
+    color: #818c99;
+    font-size: 12px;
   }
 }
 </style>

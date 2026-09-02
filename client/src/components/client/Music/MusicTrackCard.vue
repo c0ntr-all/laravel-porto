@@ -35,7 +35,7 @@
       </div>
       <div class="music-track__title">
         <div class="music-track__name">{{ track.name }}</div>
-        <div class="music-track__artist">{{ track.artist }}</div>
+        <div class="music-track__artist">{{ trackArtist }}</div>
       </div>
     </div>
     <div class="music-track__right">
@@ -171,6 +171,7 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
 import { ITrack } from 'src/types'
+import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
 
 interface PlaylistTrack {
   id: string
@@ -239,6 +240,7 @@ const props = defineProps<{
 const musicPlayer = useMusicPlayer()
 const isCurrent = computed(() => musicPlayer.isCurrentTrack(props.track.id))
 const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
+const trackArtist = computed(() => formatTrackArtist(props.track) || 'Unknown artist')
 
 const availableActions: Action[] = [{
   name: 'addToPlaylist',

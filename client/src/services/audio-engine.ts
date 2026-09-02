@@ -1,6 +1,7 @@
 export type AudioEngineEventMap = {
   timeupdate: { currentTime: number; duration: number }
   durationchange: { duration: number }
+  progress: { buffered: AudioBufferedRange[]; duration: number }
   ended: undefined
   play: undefined
   pause: undefined
@@ -8,6 +9,11 @@ export type AudioEngineEventMap = {
   playing: undefined
   error: { message: string }
   volumechange: { volume: number; muted: boolean }
+}
+
+export type AudioBufferedRange = {
+  start: number
+  end: number
 }
 
 type AudioEngineHandler<K extends keyof AudioEngineEventMap> = (
@@ -18,12 +24,31 @@ function safeDuration(audio: HTMLAudioElement): number {
   return Number.isFinite(audio.duration) ? audio.duration : 0
 }
 
+function readBuffered(audio: HTMLAudioElement): AudioBufferedRange[] {
+  const ranges: AudioBufferedRange[] = []
+
+  try {
+    for (let index = 0; index < audio.buffered.length; index++) {
+      ranges.push({
+        start: audio.buffered.start(index),
+        end: audio.buffered.end(index)
+      })
+    }
+  } catch {
+    return ranges
+  }
+
+  return ranges
+}
+
 export class AudioEngine {
   private audio: HTMLAudioElement | null = null
   private loadToken = 0
+  private pendingSeek: number | null = null
   private listeners: { [K in keyof AudioEngineEventMap]: Set<AudioEngineHandler<K>> } = {
     timeupdate: new Set(),
     durationchange: new Set(),
+    progress: new Set(),
     ended: new Set(),
     play: new Set(),
     pause: new Set(),
@@ -42,11 +67,15 @@ export class AudioEngine {
   }
 
   get currentTime(): number {
-    return this.audio?.currentTime ?? 0
+    return this.pendingSeek ?? this.audio?.currentTime ?? 0
   }
 
   get duration(): number {
     return this.audio ? safeDuration(this.audio) : 0
+  }
+
+  get buffered(): AudioBufferedRange[] {
+    return this.audio ? readBuffered(this.audio) : []
   }
 
   get volume(): number {
@@ -68,10 +97,12 @@ export class AudioEngine {
   load(src: string): void {
     const audio = this.ensureAudio()
     this.loadToken += 1
+    this.pendingSeek = null
     audio.pause()
     audio.src = src
     audio.currentTime = 0
     audio.load()
+    this.emitProgress(audio)
   }
 
   async play(): Promise<void> {
@@ -98,25 +129,28 @@ export class AudioEngine {
       return
     }
 
+    this.pendingSeek = null
     this.audio.pause()
     this.audio.currentTime = 0
   }
 
   seek(time: number): void {
-    if (!this.audio || !Number.isFinite(time)) {
+    if (!Number.isFinite(time)) {
       return
     }
 
-    const duration = safeDuration(this.audio)
+    const audio = this.ensureAudio()
+    const duration = safeDuration(audio)
     const nextTime = duration > 0
       ? Math.min(Math.max(time, 0), duration)
       : Math.max(time, 0)
 
-    this.audio.currentTime = nextTime
+    this.pendingSeek = nextTime
     this.emit('timeupdate', {
-      currentTime: this.audio.currentTime,
+      currentTime: nextTime,
       duration
     })
+    this.applyPendingSeek(audio)
   }
 
   seekBy(delta: number): void {
@@ -133,6 +167,44 @@ export class AudioEngine {
     audio.muted = muted
   }
 
+  private applyPendingSeek(audio: HTMLAudioElement): boolean {
+    if (this.pendingSeek === null) {
+      return true
+    }
+
+    if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+      return false
+    }
+
+    const duration = safeDuration(audio)
+    const nextTime = duration > 0
+      ? Math.min(Math.max(this.pendingSeek, 0), duration)
+      : this.pendingSeek
+
+    try {
+      audio.currentTime = nextTime
+    } catch {
+      return false
+    }
+
+    return true
+  }
+
+  private emitProgress(audio: HTMLAudioElement): void {
+    this.emit('progress', {
+      buffered: readBuffered(audio),
+      duration: safeDuration(audio)
+    })
+  }
+
+  private shouldIgnoreTimeUpdate(currentTime: number): boolean {
+    if (this.pendingSeek === null) {
+      return false
+    }
+
+    return Math.abs(currentTime - this.pendingSeek) > 0.35
+  }
+
   private ensureAudio(): HTMLAudioElement {
     if (this.audio) {
       return this.audio
@@ -141,15 +213,47 @@ export class AudioEngine {
     const audio = new Audio()
     audio.preload = 'auto'
     audio.addEventListener('timeupdate', () => {
+      if (this.shouldIgnoreTimeUpdate(audio.currentTime)) {
+        this.applyPendingSeek(audio)
+        return
+      }
+
+      if (this.pendingSeek !== null && Math.abs(audio.currentTime - this.pendingSeek) <= 0.35) {
+        this.pendingSeek = null
+      }
+
       this.emit('timeupdate', {
         currentTime: audio.currentTime,
         duration: safeDuration(audio)
       })
+      this.emitProgress(audio)
     })
     audio.addEventListener('durationchange', () => {
+      this.applyPendingSeek(audio)
       this.emit('durationchange', { duration: safeDuration(audio) })
     })
-    audio.addEventListener('ended', () => this.emit('ended', undefined))
+    audio.addEventListener('loadedmetadata', () => {
+      this.applyPendingSeek(audio)
+      this.emit('durationchange', { duration: safeDuration(audio) })
+      this.emitProgress(audio)
+    })
+    audio.addEventListener('progress', () => this.emitProgress(audio))
+    audio.addEventListener('canplay', () => {
+      this.applyPendingSeek(audio)
+      this.emitProgress(audio)
+    })
+    audio.addEventListener('seeked', () => {
+      this.pendingSeek = null
+      this.emit('timeupdate', {
+        currentTime: audio.currentTime,
+        duration: safeDuration(audio)
+      })
+      this.emitProgress(audio)
+    })
+    audio.addEventListener('ended', () => {
+      this.pendingSeek = null
+      this.emit('ended', undefined)
+    })
     audio.addEventListener('play', () => this.emit('play', undefined))
     audio.addEventListener('pause', () => this.emit('pause', undefined))
     audio.addEventListener('waiting', () => this.emit('waiting', undefined))

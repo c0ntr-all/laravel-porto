@@ -1,16 +1,65 @@
-import { IJsonApiResponse, ITrack } from 'src/types'
+import { IArtistShort, IJsonApiResponse, ITrack } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { normalizeArtistShort } from 'src/api/mappers/Music/artist.mapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeMusicTags } from 'src/api/mappers/Music/tag.mapper'
 import { normalizeAlbumType } from 'src/utils/albumMeta'
 
+type TrackArtistSource = {
+  artist?: string | null
+  artists?: IArtistShort[] | { data?: IArtistShort[] } | null
+  relationships?: {
+    artists?: {
+      data?: Array<{ id?: string; name?: string }>
+    }
+  }
+}
+
+function artistListFromUnknown(value: unknown): IArtistShort[] {
+  if (!value) {
+    return []
+  }
+
+  if (Array.isArray(value)) {
+    return asRecords(value).map(normalizeArtistShort)
+  }
+
+  const wrapped = asRecord(value)
+  if (wrapped?.data) {
+    return asRecords(wrapped.data).map(normalizeArtistShort)
+  }
+
+  return asRecords(value).map(normalizeArtistShort)
+}
+
+export function formatTrackArtist(track: TrackArtistSource, fallback = ''): string {
+  const named = typeof track.artist === 'string' ? track.artist.trim() : ''
+  if (named) {
+    return named
+  }
+
+  const fromArtists = artistListFromUnknown(track.artists)
+    .map(artist => artist.name)
+    .filter(Boolean)
+  if (fromArtists.length) {
+    return fromArtists.join(' • ')
+  }
+
+  const fromRelationships = (track.relationships?.artists?.data ?? [])
+    .map(artist => artist.name)
+    .filter((name): name is string => Boolean(name))
+  if (fromRelationships.length) {
+    return fromRelationships.join(' • ')
+  }
+
+  return fallback
+}
+
 export function normalizeTrack(
   raw: Record<string, unknown>,
   fallbackArtist = ''
 ): ITrack {
-  const artists = asRecords(raw.artists).map(normalizeArtistShort)
-  const artistNames = artists.map(artist => artist.name).filter(Boolean)
+  const artists = artistListFromUnknown(raw.artists)
   const albumRaw = asRecord(raw.album)
 
   return {
@@ -22,7 +71,7 @@ export function normalizeTrack(
     number: raw.number == null ? undefined : Number(raw.number),
     artists,
     tags: normalizeMusicTags(raw.tags),
-    artist: artistNames.join(' • ') || fallbackArtist,
+    artist: formatTrackArtist({ ...raw, artists }, fallbackArtist),
     album: albumRaw
       ? {
           id: String(albumRaw.id),

@@ -2,8 +2,9 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
 import { handleApiError } from 'src/utils/jsonapi'
-import { audioEngine } from 'src/services/audio-engine'
+import { audioEngine, type AudioBufferedRange } from 'src/services/audio-engine'
 import { formatPlaybackTime, parseDuration } from 'src/utils/playbackTime'
+import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
 import { ITrack } from 'src/types'
 
 export type RepeatMode = 'off' | 'all' | 'one'
@@ -39,8 +40,19 @@ function getTrackAudioSrc(track: ITrack): string {
   return `${url}?access_token=${encodeURIComponent(token)}`
 }
 
+function enrichTrack(track: ITrack): ITrack {
+  const artist = formatTrackArtist(track)
+  const artists = Array.isArray(track.artists) ? [...track.artists] : track.artists
+
+  return {
+    ...track,
+    artists,
+    artist
+  }
+}
+
 function cloneTracks(tracks: ITrack[]): ITrack[] {
-  return tracks.map(track => ({ ...track }))
+  return tracks.map(track => enrichTrack(track))
 }
 
 function isSameTrackList(left: ITrack[], right: ITrack[]): boolean {
@@ -134,6 +146,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
   const shuffleEnabled = ref(preferences.shuffle)
   const repeatMode = ref<RepeatMode>(preferences.repeat)
   const isScrobbled = ref(false)
+  const bufferedRanges = ref<AudioBufferedRange[]>([])
 
   let initialized = false
   let scrobbleInFlight = false
@@ -154,7 +167,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       return 'No track selected'
     }
 
-    const artist = currentTrack.value.artist || 'Unknown artist'
+    const artist = formatTrackArtist(currentTrack.value) || 'Unknown artist'
     return `${artist} - ${currentTrack.value.name}`
   })
   const hasPrevious = computed(() => (
@@ -167,6 +180,19 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     )
   ))
   const volumePercent = computed(() => Math.round(volume.value * 100))
+  const currentArtist = computed(() => (
+    currentTrack.value ? (formatTrackArtist(currentTrack.value) || 'Unknown artist') : ''
+  ))
+  const bufferedPercents = computed(() => {
+    if (duration.value <= 0) {
+      return []
+    }
+
+    return bufferedRanges.value.map(range => ({
+      start: (range.start / duration.value) * 100,
+      end: (range.end / duration.value) * 100
+    }))
+  })
 
   function isIgnorablePlaybackError(error: unknown): boolean {
     return error instanceof DOMException && (
@@ -221,7 +247,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
 
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.value.name,
-      artist: currentTrack.value.artist || 'Unknown artist',
+      artist: formatTrackArtist(currentTrack.value) || 'Unknown artist',
       artwork: currentTrack.value.image
         ? [{ src: currentTrack.value.image, sizes: '512x512', type: 'image/jpeg' }]
         : []
@@ -306,9 +332,10 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
 
   async function loadAndPlay(track: ITrack): Promise<void> {
     init()
-    currentTrack.value = track
+    currentTrack.value = enrichTrack(track)
     resetScrobbleState()
     resetProgress(track)
+    bufferedRanges.value = []
     status.value = 'loading'
     syncIndex(track.id)
     updateMediaSession()
@@ -361,6 +388,12 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       maybeScrobble()
     })
     audioEngine.on('durationchange', payload => {
+      if (payload.duration > 0) {
+        duration.value = payload.duration
+      }
+    })
+    audioEngine.on('progress', payload => {
+      bufferedRanges.value = payload.buffered
       if (payload.duration > 0) {
         duration.value = payload.duration
       }
@@ -658,6 +691,8 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     timePassed,
     timeTotal,
     trackTitle,
+    currentArtist,
+    bufferedPercents,
     hasPrevious,
     hasNext,
     volumePercent,

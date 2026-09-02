@@ -70,7 +70,7 @@ export const albumApi = {
 
   async getAlbum(id: string): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/music/albums/${id}`, {
-      params: { include: 'artists,tags,versions,parent,tracks' }
+      params: { include: 'artists,tags,versions,parent,tracks,tracks.artists' }
     })
 
     return response.data

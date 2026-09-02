@@ -73,7 +73,7 @@
           <q-item-section>
             <q-item-label class="text-weight-medium">
               <span v-if="track.number" class="text-grey-6 q-mr-xs">{{ track.number }}.</span>
-              {{ track.name }}
+              <MusicTrackName :name="track.name" :credits="track.credits" />
             </q-item-label>
             <q-item-label caption>
               {{ track.artist || 'Unknown artist' }}
@@ -122,6 +122,7 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { ITrack } from 'src/types'
 import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
+import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 const admin = useMusicAdminStore()
 const musicPlayer = useMusicPlayer()

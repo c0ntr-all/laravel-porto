@@ -22,6 +22,7 @@ class TrackInPlaylistTransformer extends TransformerAbstract
         return [
             'id' => $track->id,
             'name' => $track->name,
+            'credits' => $track->credits,
             'image' => $track->full_image,
         ];
     }

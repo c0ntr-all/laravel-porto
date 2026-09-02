@@ -55,6 +55,15 @@ export function formatTrackArtist(track: TrackArtistSource, fallback = ''): stri
   return fallback
 }
 
+function normalizeCredits(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const credits = value.trim()
+  return credits === '' ? null : credits
+}
+
 export function normalizeTrack(
   raw: Record<string, unknown>,
   fallbackArtist = ''
@@ -65,6 +74,7 @@ export function normalizeTrack(
   return {
     id: String(raw.id),
     name: String(raw.name ?? ''),
+    credits: normalizeCredits(raw.credits),
     image: String(raw.image ?? ''),
     duration: String(raw.duration ?? ''),
     rate: Number(raw.rate ?? 0),

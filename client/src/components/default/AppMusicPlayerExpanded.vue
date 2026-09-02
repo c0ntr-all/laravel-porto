@@ -16,7 +16,13 @@
 
         <div class="music-player-expanded__meta">
           <div class="music-player-expanded__name">
-            {{ player.currentTrack?.name || 'No track selected' }}
+            <template v-if="player.currentTrack">
+              <MusicTrackName
+                :name="player.currentTrack.name"
+                :credits="player.currentTrack.credits"
+              />
+            </template>
+            <template v-else>No track selected</template>
           </div>
           <div class="music-player-expanded__artist">
             {{ player.currentArtist || 'Unknown artist' }}
@@ -129,7 +135,9 @@
       >
         <span class="music-player-expanded__track-index">{{ index + 1 }}</span>
         <span class="music-player-expanded__track-body">
-          <span class="music-player-expanded__track-name">{{ track.name }}</span>
+          <span class="music-player-expanded__track-name">
+            <MusicTrackName :name="track.name" :credits="track.credits" />
+          </span>
           <span class="music-player-expanded__track-artist">{{ trackArtist(track) }}</span>
         </span>
         <span class="music-player-expanded__track-time">{{ track.duration }}</span>
@@ -147,6 +155,7 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import AppSlider from 'src/components/default/AppSlider.vue'
 import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
 import { ITrack } from 'src/types'
+import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 const player = useMusicPlayer()
 

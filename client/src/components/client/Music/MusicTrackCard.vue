@@ -34,7 +34,9 @@
         />
       </div>
       <div class="music-track__title">
-        <div class="music-track__name">{{ track.name }}</div>
+        <div class="music-track__name">
+          <MusicTrackName :name="track.name" :credits="track.credits" />
+        </div>
         <div class="music-track__artist">{{ trackArtist }}</div>
       </div>
     </div>
@@ -175,6 +177,7 @@ import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi
 import { api } from 'src/boot/axios'
 import { ITrack } from 'src/types'
 import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
+import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 interface PlaylistTrack {
   id: string

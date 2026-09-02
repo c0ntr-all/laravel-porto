@@ -17,6 +17,7 @@ export interface ITagShort {
 export interface ITrack {
   id: string
   name: string
+  credits?: string | null
   number: number
   artist: string
   image: string

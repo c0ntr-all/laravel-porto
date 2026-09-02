@@ -14,6 +14,7 @@ export interface ITrackAlbum {
 export interface ITrack {
   id: string
   name: string
+  credits?: string | null
   image: string
   duration: string
   rate: number

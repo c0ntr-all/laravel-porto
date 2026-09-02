@@ -34,7 +34,11 @@
     <div class="music-player__title text-primary">
       <template v-if="player.currentTrack">
         <span class="text-bold">{{ player.currentArtist }}</span>
-        <span> - {{ player.currentTrack.name }}</span>
+        <span> - </span>
+        <MusicTrackName
+          :name="player.currentTrack.name"
+          :credits="player.currentTrack.credits"
+        />
       </template>
       <span v-else>No track selected</span>
     </div>
@@ -66,6 +70,7 @@
 <script lang="ts" setup>
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import AppMusicPlayerExpanded from 'src/components/default/AppMusicPlayerExpanded.vue'
+import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 const player = useMusicPlayer()
 </script>

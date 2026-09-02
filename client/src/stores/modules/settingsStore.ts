@@ -30,8 +30,7 @@ function defaultSettings(): IAppSettings {
       compactWidgets: false
     },
     lifelog: {
-      defaultViewMode: LifeLogViewModeEnum.Expanded,
-      showTimeline: true
+      defaultViewMode: LifeLogViewModeEnum.Expanded
     },
     taskManager: {
       defaultViewMode: TasksViewModeEnum.BLOCKS

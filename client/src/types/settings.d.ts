@@ -13,7 +13,6 @@ export interface IDashboardSettings {
 
 export interface ILifelogSettings {
   defaultViewMode: LifeLogViewMode
-  showTimeline: boolean
 }
 
 export interface ITaskManagerSettings {

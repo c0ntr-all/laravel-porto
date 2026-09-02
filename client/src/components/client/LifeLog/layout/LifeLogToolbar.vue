@@ -10,29 +10,16 @@
       />
     </div>
 
-    <div class="row items-center q-gutter-sm">
-      <q-btn-toggle
-        :model-value="viewMode"
-        no-caps
-        unelevated
-        toggle-color="primary"
-        color="grey-3"
-        text-color="grey-8"
-        :options="viewModeOptions"
-        @update:model-value="emit('update:viewMode', $event)"
-      />
-
-      <q-btn
-        flat
-        round
-        dense
-        :color="showTimeline ? 'primary' : 'grey-6'"
-        icon="account_tree"
-        @click="emit('update:showTimeline', !showTimeline)"
-      >
-        <q-tooltip>Граф диапазонов</q-tooltip>
-      </q-btn>
-    </div>
+    <q-btn-toggle
+      :model-value="viewMode"
+      no-caps
+      unelevated
+      toggle-color="primary"
+      color="grey-3"
+      text-color="grey-8"
+      :options="viewModeOptions"
+      @update:model-value="emit('update:viewMode', $event)"
+    />
   </div>
 </template>
 
@@ -42,13 +29,11 @@ import { LifeLogViewModeEnum } from 'src/enums/LifeLog/LifeLogViewModeEnum'
 
 defineProps<{
   viewMode: LifeLogViewMode
-  showTimeline: boolean
 }>()
 
 const emit = defineEmits<{
   'create-post': []
   'update:viewMode': [value: LifeLogViewMode]
-  'update:showTimeline': [value: boolean]
 }>()
 
 const viewModeOptions = [

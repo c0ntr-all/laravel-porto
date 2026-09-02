@@ -1,30 +1,38 @@
 <template>
   <q-card flat bordered class="lifelog-presets-section">
-    <q-card-section class="row items-center justify-between q-pb-sm">
-      <div>
-        <div class="text-subtitle1">Presets</div>
-        <div class="text-caption text-grey-7">
-          {{ presetsCount }} {{ presetsCountLabel }}
+    <q-expansion-item
+      v-model="expanded"
+      icon="bookmark"
+      label="Presets"
+      :caption="`${presetsCount} ${presetsCountLabel}`"
+      header-class="lifelog-presets-section__header"
+      default-opened
+    >
+      <q-card-section class="q-pt-none">
+        <LifeLogPresetFilterChips
+          class="q-mb-md"
+          :presets="presets"
+          :active-preset-id="activePresetId"
+          @apply="emit('apply-preset', $event)"
+        />
+
+        <div class="row items-center justify-end q-mb-sm">
+          <q-btn
+            color="primary"
+            icon="add"
+            label="Создать preset"
+            no-caps
+            dense
+            @click="openCreateModal"
+          />
         </div>
-      </div>
-      <q-btn
-        color="primary"
-        icon="add"
-        label="Создать preset"
-        no-caps
-        dense
-        @click="openCreateModal"
-      />
-    </q-card-section>
 
-    <q-separator />
-
-    <q-card-section class="q-pt-sm">
-      <LifelogPresetsList
-        @edit="openEditModal"
-        @delete="confirmDelete"
-      />
-    </q-card-section>
+        <LifelogPresetsList
+          @edit="openEditModal"
+          @delete="confirmDelete"
+        />
+      </q-card-section>
+    </q-expansion-item>
 
     <AppModal
       v-model="isModalOpen"
@@ -53,14 +61,25 @@ import { useQuasar } from 'quasar'
 import AppModal from 'src/components/default/AppModal.vue'
 import LifelogPresetsList from 'src/components/client/LifeLog/LifelogPresetsList.vue'
 import LifeLogPresetForm from 'src/components/client/LifeLog/LifeLogPresetForm.vue'
+import LifeLogPresetFilterChips from 'src/components/client/LifeLog/LifeLogPresetFilterChips.vue'
 import { usePresetStore } from 'src/stores/modules/presetStore'
 import { handleApiError } from 'src/utils/jsonapi'
 import { IPreset } from 'src/types'
+
+defineProps<{
+  presets: IPreset[]
+  activePresetId: string | null
+}>()
+
+const emit = defineEmits<{
+  'apply-preset': [preset: IPreset]
+}>()
 
 const $q = useQuasar()
 const presetStore = usePresetStore()
 const { presetsCount } = storeToRefs(presetStore)
 
+const expanded = ref(true)
 const isModalOpen = ref(false)
 const editingPresetId = ref<string | null>(null)
 const formKey = ref(0)
@@ -131,5 +150,10 @@ const confirmDelete = (preset: IPreset) => {
 .lifelog-presets-section {
   width: 100%;
   background: #fff;
+
+  :deep(.lifelog-presets-section__header) {
+    min-height: 48px;
+    font-weight: 600;
+  }
 }
 </style>

@@ -6,7 +6,6 @@ import { useSettingsStore } from 'src/stores/modules/settingsStore'
 export function useLifeLogView() {
   const settingsStore = useSettingsStore()
   const viewMode = computed(() => settingsStore.settings.lifelog.defaultViewMode)
-  const showTimeline = computed(() => settingsStore.settings.lifelog.showTimeline)
   const expandedPostIds = ref<Set<string>>(new Set())
 
   function setViewMode(mode: LifeLogViewMode) {
@@ -14,10 +13,6 @@ export function useLifeLogView() {
     if (mode === LifeLogViewModeEnum.Expanded) {
       expandedPostIds.value = new Set()
     }
-  }
-
-  function setShowTimeline(value: boolean) {
-    settingsStore.updateLifelog({ showTimeline: value })
   }
 
   function isPostExpanded(postId: string): boolean {
@@ -48,9 +43,7 @@ export function useLifeLogView() {
   return {
     viewMode,
     expandedPostIds,
-    showTimeline,
     setViewMode,
-    setShowTimeline,
     isPostExpanded,
     expandPost,
     collapsePost,

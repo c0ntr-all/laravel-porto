@@ -1,107 +1,112 @@
 <template>
   <q-card flat bordered class="ll-filter-panel">
-    <q-card-section class="q-pb-sm">
-      <div class="text-subtitle2 q-mb-sm">Фильтры</div>
-
-      <q-input
-        v-model="draft.search"
-        dense
-        outlined
-        clearable
-        label="Поиск по тексту"
-        debounce="300"
-      >
-        <template #prepend>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-
-      <div class="row q-col-gutter-sm q-mt-sm">
-        <div class="col-12 col-sm-6">
-          <AppDatetimeField
-            v-if="!draft.ignore_time"
-            v-model="dateFromModel"
-          />
-          <AppDateField
-            v-else
-            v-model="dateFromModel"
-          />
-          <div class="text-caption text-grey-7 q-mt-xs">Дата с</div>
-        </div>
-        <div class="col-12 col-sm-6">
-          <AppDatetimeField
-            v-if="!draft.ignore_time"
-            v-model="dateToModel"
-          />
-          <AppDateField
-            v-else
-            v-model="dateToModel"
-          />
-          <div class="text-caption text-grey-7 q-mt-xs">Дата по</div>
-        </div>
-      </div>
-
-      <q-checkbox
-        v-model="draft.ignore_time"
-        class="q-mt-sm"
-        label="не учитывать время"
-        @update:model-value="handleIgnoreTimeChange"
-      />
-    </q-card-section>
-
-    <q-separator />
-
-    <q-card-section class="q-py-sm">
-      <div class="text-caption text-grey-7 q-mb-xs">Presets</div>
-      <div class="row q-gutter-xs">
-        <q-chip
-          v-for="preset in presets"
-          :key="preset.id"
-          clickable
+    <q-expansion-item
+      v-model="expanded.search"
+      icon="search"
+      label="Поиск"
+      header-class="ll-filter-panel__header"
+      default-opened
+    >
+      <q-card-section class="q-pt-none">
+        <q-input
+          v-model="draft.search"
           dense
-          :outline="draft.activePresetId !== preset.id"
-          :color="draft.activePresetId === preset.id ? undefined : 'grey-3'"
-          :style="presetChipStyle(preset)"
-          @click="applyPreset(preset)"
+          outlined
+          clearable
+          label="Поиск по тексту"
+          debounce="300"
         >
-          {{ preset.title }}
-        </q-chip>
-        <span v-if="!presets.length" class="text-caption text-grey-6">
-          Нет presets
-        </span>
-      </div>
-    </q-card-section>
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </q-card-section>
+    </q-expansion-item>
 
     <q-separator />
 
-    <q-card-section class="q-py-sm">
-      <div class="text-caption text-grey-7 q-mb-xs">Выбранные теги</div>
-      <div class="row q-gutter-xs q-mb-sm">
-        <LifeLogTag
-          v-for="tag in selectedTags"
-          :key="tag.id"
-          :tag="tag"
-          removable
-          @removed="removeTag"
-        />
-        <span v-if="!selectedTags.length" class="text-caption text-grey-6">
-          Теги не выбраны
-        </span>
-      </div>
+    <q-expansion-item
+      v-model="expanded.dates"
+      icon="event"
+      label="Даты"
+      header-class="ll-filter-panel__header"
+      default-opened
+    >
+      <q-card-section class="q-pt-none">
+        <div class="row q-col-gutter-sm">
+          <div class="col-12 col-sm-6">
+            <AppDatetimeField
+              v-if="!draft.ignore_time"
+              v-model="dateFromModel"
+            />
+            <AppDateField
+              v-else
+              v-model="dateFromModel"
+            />
+            <div class="text-caption text-grey-7 q-mt-xs">Дата с</div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <AppDatetimeField
+              v-if="!draft.ignore_time"
+              v-model="dateToModel"
+            />
+            <AppDateField
+              v-else
+              v-model="dateToModel"
+            />
+            <div class="text-caption text-grey-7 q-mt-xs">Дата по</div>
+          </div>
+        </div>
 
-      <div class="text-caption text-grey-7 q-mb-xs">Доступные теги</div>
-      <div class="row q-gutter-xs">
-        <LifeLogTag
-          v-for="tag in availableTags"
-          :key="tag.id"
-          :tag="tag"
-          clickable
-          @selected="selectTag"
+        <q-checkbox
+          v-model="draft.ignore_time"
+          class="q-mt-sm"
+          label="не учитывать время"
+          @update:model-value="handleIgnoreTimeChange"
         />
-      </div>
-    </q-card-section>
+      </q-card-section>
+    </q-expansion-item>
 
-    <q-card-section class="row items-center justify-between q-pt-none">
+    <q-separator />
+
+    <q-expansion-item
+      v-model="expanded.tags"
+      icon="label"
+      label="Теги"
+      header-class="ll-filter-panel__header"
+      default-opened
+    >
+      <q-card-section class="q-pt-none">
+        <div class="text-caption text-grey-7 q-mb-xs">Выбранные теги</div>
+        <div class="row q-gutter-xs q-mb-sm">
+          <LifeLogTag
+            v-for="tag in selectedTags"
+            :key="tag.id"
+            :tag="tag"
+            removable
+            @removed="removeTag"
+          />
+          <span v-if="!selectedTags.length" class="text-caption text-grey-6">
+            Теги не выбраны
+          </span>
+        </div>
+
+        <div class="text-caption text-grey-7 q-mb-xs">Доступные теги</div>
+        <div class="row q-gutter-xs">
+          <LifeLogTag
+            v-for="tag in availableTags"
+            :key="tag.id"
+            :tag="tag"
+            clickable
+            @selected="selectTag"
+          />
+        </div>
+      </q-card-section>
+    </q-expansion-item>
+
+    <q-separator />
+
+    <q-card-section class="row items-center justify-between q-pt-sm">
       <q-select
         v-model="draft.tags_mode"
         :options="tagsModes"
@@ -131,12 +136,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { unique } from 'radash'
-import { ILifeLogFilter, IPreset } from 'src/types'
+import { ILifeLogFilter } from 'src/types'
 import { ITag } from 'src/types/tag'
 import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
-import { mapPresetToLifeLogFilter } from 'src/utils/LifeLog/filter.mapper'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
@@ -145,7 +149,6 @@ import { toDateOnly } from 'src/utils/LifeLog/post'
 const props = defineProps<{
   modelValue: ILifeLogFilter
   allTags: ITag[]
-  presets: IPreset[]
 }>()
 
 const emit = defineEmits<{
@@ -156,6 +159,11 @@ const emit = defineEmits<{
 
 const tagsModes = ['or', 'and']
 const draft = ref<ILifeLogFilter>(createEmptyLifeLogFilter())
+const expanded = reactive({
+  search: true,
+  dates: true,
+  tags: true
+})
 
 watch(
   () => props.modelValue,
@@ -198,11 +206,6 @@ function removeTag(tag: ITag) {
   draft.value.tags = draft.value.tags.filter(item => item.id !== tag.id)
 }
 
-function applyPreset(preset: IPreset) {
-  draft.value = mapPresetToLifeLogFilter(preset, props.allTags)
-  submit()
-}
-
 function handleIgnoreTimeChange(ignoreTime: boolean) {
   if (!ignoreTime) {
     return
@@ -214,17 +217,6 @@ function handleIgnoreTimeChange(ignoreTime: boolean) {
 
   if (draft.value.date_to) {
     draft.value.date_to = toDateOnly(draft.value.date_to)
-  }
-}
-
-function presetChipStyle(preset: IPreset) {
-  if (draft.value.activePresetId !== preset.id) {
-    return {}
-  }
-
-  return {
-    backgroundColor: preset.color || '#90a4ae',
-    color: '#fff'
   }
 }
 
@@ -243,5 +235,10 @@ function reset() {
 <style scoped lang="scss">
 .ll-filter-panel {
   background: #fff;
+
+  :deep(.ll-filter-panel__header) {
+    min-height: 44px;
+    font-weight: 600;
+  }
 }
 </style>

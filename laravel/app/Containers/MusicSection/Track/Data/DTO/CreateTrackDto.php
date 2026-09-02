@@ -8,8 +8,10 @@ class CreateTrackDto extends Data
 {
     public ?int $user_id = null;
     public ?string $cd = null;
+    public ?int $disc_id = null;
     public ?int $number = null;
     public string $name;
+    public ?string $credits = null;
     public ?string $path = null;
     public ?string $image = null;
     public ?string $duration = null;

@@ -15,7 +15,8 @@ class ParsedTrackDto extends Data
     public ?string $year = null;
     public ?string $date = null;
     public int $track_number = 0;
-    public int $disc_number = 1;
+    public ?int $disc_number = null;
+    public ?string $credits = null;
     public ?string $duration = null;
     public ?int $bitrate = null;
     public ?string $album_cover_linux_path = null;

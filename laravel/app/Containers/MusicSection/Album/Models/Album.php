@@ -105,6 +105,15 @@ class Album extends Model
     }
 
     /**
+     * Physical discs/CDs of this release.
+     */
+    public function discs(): HasMany
+    {
+        return $this->hasMany(AlbumDisc::class, 'album_id')
+                    ->orderBy('number');
+    }
+
+    /**
      * Direct versions of this album. Nesting is limited to one level.
      */
     public function versions(): HasMany
@@ -121,7 +130,9 @@ class Album extends Model
 
     public function tracks(): HasMany
     {
-        return $this->hasMany(Track::class, 'album_id', 'id');
+        return $this->hasMany(Track::class, 'album_id', 'id')
+                    ->orderByRaw('CAST(COALESCE(cd, "1") AS UNSIGNED)')
+                    ->orderBy('number');
     }
 
     public function aggregatedTags(): HasMany

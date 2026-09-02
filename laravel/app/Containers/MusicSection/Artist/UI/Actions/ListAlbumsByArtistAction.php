@@ -30,7 +30,7 @@ class ListAlbumsByArtistAction extends BaseAction
         return fractal($albums, new AlbumInArtistTransformer())
             ->withResourceName('albums')
             ->addMeta(['albums_count' => $albums->count()])
-            ->parseIncludes(['artists', 'tags', 'versions'])
+            ->parseIncludes(['artists', 'tags', 'versions', 'discs'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

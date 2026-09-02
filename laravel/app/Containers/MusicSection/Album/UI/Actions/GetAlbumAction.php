@@ -16,6 +16,7 @@ class GetAlbumAction extends BaseAction
         return $album->load([
             'tracks.artists',
             'tracks.rate',
+            'discs' => fn ($query) => $query->withCount('tracks'),
             'tags',
             'versions.albumType',
             'parent.albumType',
@@ -30,7 +31,7 @@ class GetAlbumAction extends BaseAction
 
         return fractal($album, new AlbumTransformer())
             ->withResourceName('albums')
-            ->parseIncludes(['artists', 'tracks', 'tracks.artists', 'tags', 'versions', 'parent'])
+            ->parseIncludes(['artists', 'tracks', 'tracks.artists', 'tags', 'versions', 'parent', 'discs'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -61,7 +61,9 @@ class TrackRepository
     {
         return $album->tracks()->create([
             'name' => $dto->name,
+            'credits' => $dto->credits,
             'cd' => $dto->cd,
+            'disc_id' => $dto->disc_id,
             'number' => $dto->number,
             'path' => $dto->path,
             'image' => $dto->image,
@@ -83,6 +85,8 @@ class TrackRepository
             'name' => $dto->name,
         ], [
             'cd' => $dto->cd,
+            'disc_id' => $dto->disc_id,
+            'credits' => $dto->credits,
             'number' => $dto->number,
             'path' => $dto->path,
             'image' => $dto->image,
@@ -123,6 +127,8 @@ class TrackRepository
         return [
             AllowedFilter::partial('name'),
             AllowedFilter::exact('album_id'),
+            AllowedFilter::exact('cd'),
+            AllowedFilter::exact('disc_id'),
             AllowedFilter::custom('search', new TrackSearchFilter()),
             AllowedFilter::callback('artist', function (Builder $query, mixed $value): void {
                 $term = trim((string) $value);

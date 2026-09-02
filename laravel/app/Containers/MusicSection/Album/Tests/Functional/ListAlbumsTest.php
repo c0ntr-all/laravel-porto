@@ -56,6 +56,26 @@ class ListAlbumsTest extends TestCase
         $this->assertSame($original->id, (int) $response->json('data.0.id'));
     }
 
+    public function test_filter_has_multiple_discs_returns_only_multi_disc_releases(): void
+    {
+        $user = User::factory()->create();
+        $artist = $this->makeArtist($user);
+        $multi = $this->makeAlbum($artist, 'Use Your Illusion', 'F:\\Music\\GNR\\Illusion');
+        $single = $this->makeAlbum($artist, 'Appetite For Destruction', 'F:\\Music\\GNR\\Appetite');
+
+        $multi->discs()->create(['number' => 1, 'name' => 'CD 1']);
+        $multi->discs()->create(['number' => 2, 'name' => 'CD 2']);
+        $single->discs()->create(['number' => 1, 'name' => 'CD 1']);
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/albums?filter[has_multiple_discs]=1');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame($multi->id, (int) $response->json('data.0.id'));
+        $this->assertSame(2, (int) $response->json('data.0.attributes.discs_count'));
+    }
+
     private function makeArtist(User $user): Artist
     {
         return Artist::query()->create([

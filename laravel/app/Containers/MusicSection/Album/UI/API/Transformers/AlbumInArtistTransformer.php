@@ -11,7 +11,7 @@ use League\Fractal\TransformerAbstract;
 class AlbumInArtistTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'artists', 'tags', 'versions',
+        'artists', 'tags', 'versions', 'discs',
     ];
 
     protected array $defaultIncludes = [
@@ -30,6 +30,7 @@ class AlbumInArtistTransformer extends TransformerAbstract
             'date' => $album->date?->format('Y-m-d'),
             'image' => $album->full_image,
             'versions_count' => $album->versions_count ?? $album->versions->count(),
+            'discs_count' => $album->discs_count ?? $album->discs->count(),
         ];
     }
 
@@ -47,5 +48,11 @@ class AlbumInArtistTransformer extends TransformerAbstract
     {
         return $this->collection($album->versions, new VersionTransformer(), 'versions')
                     ->setMeta(['count' => $album->versions->count()]);
+    }
+
+    public function includeDiscs(Album $album): Collection
+    {
+        return $this->collection($album->discs, new AlbumDiscTransformer(), 'discs')
+                    ->setMeta(['count' => $album->discs->count()]);
     }
 }

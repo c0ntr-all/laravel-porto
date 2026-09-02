@@ -7,9 +7,11 @@ use App\Containers\MusicSection\Album\Data\DTO\UpdateAlbumDto;
 use App\Containers\MusicSection\Album\Models\Album;
 use App\Containers\MusicSection\Album\Tasks\CreateAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\FindAlbumByPathTask;
+use App\Containers\MusicSection\Album\Tasks\FindCanonicalAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\ListAlbumsByNameTask;
 use App\Containers\MusicSection\Album\Tasks\SyncArtistsForAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\UpdateAlbumTask;
+use App\Containers\MusicSection\Album\Tasks\UpdateOrCreateAlbumDiscTask;
 use App\Containers\MusicSection\Album\Tasks\UploadAlbumCoverTask;
 use App\Containers\MusicSection\Artist\Data\DTO\CreateArtistDto;
 use App\Containers\MusicSection\Artist\Data\DTO\UpdateArtistDto;
@@ -49,9 +51,11 @@ class PersistLibraryTask extends ParentTask
         private readonly UpdateArtistTask $updateArtistTask,
         private readonly UploadArtistCoverTask $uploadArtistCoverTask,
         private readonly FindAlbumByPathTask $findAlbumByPathTask,
+        private readonly FindCanonicalAlbumTask $findCanonicalAlbumTask,
         private readonly ListAlbumsByNameTask $listAlbumsByNameTask,
         private readonly CreateAlbumTask $createAlbumTask,
         private readonly UpdateAlbumTask $updateAlbumTask,
+        private readonly UpdateOrCreateAlbumDiscTask $updateOrCreateAlbumDiscTask,
         private readonly UploadAlbumCoverTask $uploadAlbumCoverTask,
         private readonly SyncArtistsForAlbumTask $syncArtistsForAlbumTask,
         private readonly SyncAlbumsForArtistTask $syncAlbumsForArtistTask,
@@ -108,6 +112,7 @@ class PersistLibraryTask extends ParentTask
                 $primaryArtist = $albumArtists[0];
                 $album = $this->persistAlbum($primaryArtist, $albumArtists, $albumData, $userId, $counters);
                 $albumIds[] = $album->id;
+                $discMap = $this->syncAlbumDiscs($album, $albumData['tracks']);
 
                 foreach ($albumData['tracks'] as $trackDto) {
                     $processed++;
@@ -120,7 +125,7 @@ class PersistLibraryTask extends ParentTask
                         $artistCache,
                         $counters,
                     );
-                    $this->persistTrack($upload, $trackArtist, $album, $trackDto, $tags, $counters);
+                    $this->persistTrack($upload, $trackArtist, $album, $trackDto, $tags, $discMap, $counters);
                     event(new UploadProgressed($upload, 'persisting', $processed, $total, $trackDto->title));
                 }
             }
@@ -279,6 +284,20 @@ class PersistLibraryTask extends ParentTask
         ];
 
         $album = $this->findAlbumByPathTask->run($albumData['path']);
+        $foundByPath = $album !== null;
+
+        if (!$album) {
+            $album = $this->findCanonicalAlbumTask->run(
+                $primaryArtist,
+                $payload['name'],
+                (int) $payload['album_type_id'],
+                $payload['edition'],
+            );
+        }
+
+        if ($album && !$foundByPath) {
+            $payload['path'] = $album->path;
+        }
 
         if (!$album) {
             $album = $this->createAlbumTask->run(CreateAlbumDto::from([
@@ -337,20 +356,46 @@ class PersistLibraryTask extends ParentTask
             ->update(['parent_id' => $root->id]);
     }
 
+    /**
+     * @param ParsedTrackDto[] $tracks
+     * @return array<int, \App\Containers\MusicSection\Album\Models\AlbumDisc>
+     */
+    private function syncAlbumDiscs(Album $album, array $tracks): array
+    {
+        $numbers = [];
+        foreach ($tracks as $track) {
+            $numbers[] = max(1, (int) ($track->disc_number ?: 1));
+        }
+        $numbers = array_values(array_unique($numbers));
+        if ($numbers === []) {
+            $numbers = [1];
+        }
+
+        $map = [];
+        foreach ($numbers as $number) {
+            $map[$number] = $this->updateOrCreateAlbumDiscTask->run($album, $number);
+        }
+
+        return $map;
+    }
+
     private function persistTrack(
         MusicUpload $upload,
         Artist $artist,
         Album $album,
         ParsedTrackDto $trackDto,
         array $tags,
+        array $discMap,
         array &$counters,
     ): void {
         try {
             $existing = $this->findTrackByPathTask->run($trackDto->windows_path);
-            $cd = (string) $trackDto->disc_number;
+            $discNumber = max(1, (int) ($trackDto->disc_number ?: 1));
+            $cd = (string) $discNumber;
+            $discId = $discMap[$discNumber]->id ?? null;
             $snapshot = $this->snapshot($trackDto);
 
-            if ($existing && $this->trackUnchanged($existing, $album, $trackDto, $cd)) {
+            if ($existing && $this->trackUnchanged($existing, $album, $trackDto, $cd, $discId)) {
                 $this->syncArtistsForTrackTask->run($existing, [$artist->id]);
                 $this->musicUploadRepository->addTrackLog(
                     $upload,
@@ -371,7 +416,9 @@ class PersistLibraryTask extends ParentTask
             if ($existing) {
                 $track = $this->updateTrackTask->run($existing, UpdateTrackDto::from([
                     'album_id' => $album->id,
+                    'disc_id' => $discId,
                     'name' => $trackDto->title,
+                    'credits' => $trackDto->credits,
                     'number' => $trackDto->track_number ?: null,
                     'cd' => $cd,
                     'path' => $trackDto->windows_path,
@@ -384,7 +431,9 @@ class PersistLibraryTask extends ParentTask
             } else {
                 $track = $this->createTrackTask->run($album, CreateTrackDto::from([
                     'user_id' => $upload->user_id,
+                    'disc_id' => $discId,
                     'name' => $trackDto->title,
+                    'credits' => $trackDto->credits,
                     'number' => $trackDto->track_number ?: null,
                     'cd' => $cd,
                     'path' => $trackDto->windows_path,
@@ -440,12 +489,14 @@ class PersistLibraryTask extends ParentTask
             || $album->edition !== $payload['edition'];
     }
 
-    private function trackUnchanged(Track $track, Album $album, ParsedTrackDto $dto, string $cd): bool
+    private function trackUnchanged(Track $track, Album $album, ParsedTrackDto $dto, string $cd, ?int $discId): bool
     {
         return (int) $track->album_id === (int) $album->id
             && $track->name === $dto->title
+            && (string) ($track->credits ?? '') === (string) ($dto->credits ?? '')
             && (int) $track->number === (int) $dto->track_number
             && (string) $track->cd === $cd
+            && (int) ($track->disc_id ?? 0) === (int) ($discId ?? 0)
             && $track->getRawOriginal('duration') === $dto->duration
             && (int) $track->bitrate === (int) $dto->bitrate
             && $track->path === $dto->windows_path;
@@ -471,6 +522,7 @@ class PersistLibraryTask extends ParentTask
             'year' => $dto->year,
             'track_number' => $dto->track_number,
             'disc_number' => $dto->disc_number,
+            'credits' => $dto->credits,
             'duration' => $dto->duration,
             'bitrate' => $dto->bitrate,
             'path' => $dto->windows_path,

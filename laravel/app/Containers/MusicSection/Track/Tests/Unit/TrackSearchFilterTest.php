@@ -14,6 +14,18 @@ class TrackSearchFilterTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_plain_text_also_searches_track_credits(): void
+    {
+        [$user, $album] = $this->makeCatalog();
+        $artist = $this->makeArtist($user, 'Kendrick Lamar', 'F:\\Music\\Kendrick');
+        $track = $this->makeTrack($album, 'HUMBLE.', $artist, 'feat. Jay Rock');
+        $this->makeTrack($album, 'DNA.', $artist);
+
+        $ids = $this->searchIds('Jay Rock');
+
+        $this->assertEquals([$track->id], $ids);
+    }
+
     public function test_plain_text_searches_track_names_across_artists(): void
     {
         [$metallicaOne, $u2One] = $this->seedOneTracks();
@@ -117,11 +129,12 @@ class TrackSearchFilterTest extends TestCase
         ]);
     }
 
-    private function makeTrack(Album $album, string $name, Artist $artist): Track
+    private function makeTrack(Album $album, string $name, Artist $artist, ?string $credits = null): Track
     {
         $track = Track::create([
             'album_id' => $album->id,
             'name' => $name,
+            'credits' => $credits,
             'number' => 1,
         ]);
         $track->artists()->attach($artist->id);

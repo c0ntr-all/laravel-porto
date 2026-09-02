@@ -7,8 +7,10 @@ use App\Ship\Parents\DTO\Data;
 class UpdateTrackDto extends Data
 {
     public ?int $album_id = null;
+    public ?int $disc_id = null;
     public ?int $number = null;
     public ?string $name = null;
+    public ?string $credits = null;
     public ?string $cd = null;
     public ?string $path = null;
     public ?string $image = null;

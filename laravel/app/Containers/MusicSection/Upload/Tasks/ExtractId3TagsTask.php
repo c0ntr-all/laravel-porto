@@ -43,7 +43,7 @@ class ExtractId3TagsTask extends ParentTask
             'year' => $year,
             'date' => $year ? $year . '-01-01' : null,
             'track_number' => $this->extractNumber($this->first($comments['track_number'] ?? $comments['track'] ?? [])),
-            'disc_number' => max(1, $this->extractNumber($this->first($comments['partofaset'] ?? $comments['discnumber'] ?? $comments['disc_number'] ?? []) ?: '1')),
+            'disc_number' => $this->extractDiscNumber($comments),
             'duration' => $this->formatDuration($info['playtime_seconds'] ?? $info['playtime_string'] ?? null),
             'bitrate' => $this->formatBitrate($info['audio']['bitrate'] ?? null),
             'album_cover_linux_path' => $this->findAlbumCoverTask->run($albumLinuxPath),
@@ -67,6 +67,18 @@ class ExtractId3TagsTask extends ParentTask
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function extractDiscNumber(array $comments): ?int
+    {
+        $raw = $this->first($comments['partofaset'] ?? $comments['discnumber'] ?? $comments['disc_number'] ?? []);
+        if ($raw === null) {
+            return null;
+        }
+
+        $number = $this->extractNumber($raw);
+
+        return $number > 0 ? $number : null;
     }
 
     private function extractNumber(?string $value): int

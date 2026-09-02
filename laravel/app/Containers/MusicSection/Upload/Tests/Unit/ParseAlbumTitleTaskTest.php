@@ -27,13 +27,28 @@ class ParseAlbumTitleTaskTest extends TestCase
         $this->assertSame(6, $parsed['album_type_id']);
     }
 
-    public function test_it_keeps_feat_and_disc_markers_in_the_title(): void
+    public function test_it_keeps_feat_credits_but_strips_disc_markers(): void
     {
         $parsed = $this->parse('Collab (feat. Guest) (CD1)');
 
-        $this->assertSame('Collab (feat. Guest) (CD1)', $parsed['name']);
+        $this->assertSame('Collab (feat. Guest)', $parsed['name']);
         $this->assertNull($parsed['edition']);
-        $this->assertNull($parsed['original_album']);
+        $this->assertSame(1, $parsed['disc_number']);
+    }
+
+    public function test_it_strips_trailing_and_bracketed_disc_markers(): void
+    {
+        $trailing = $this->parse('Use Your Illusion CD2');
+        $this->assertSame('Use Your Illusion', $trailing['name']);
+        $this->assertSame(2, $trailing['disc_number']);
+
+        $bracketed = $this->parse('Use Your Illusion [Disc 2]');
+        $this->assertSame('Use Your Illusion', $bracketed['name']);
+        $this->assertSame(2, $bracketed['disc_number']);
+
+        $ofTotal = $this->parse('Use Your Illusion (CD 1 of 2)');
+        $this->assertSame('Use Your Illusion', $ofTotal['name']);
+        $this->assertSame(1, $ofTotal['disc_number']);
     }
 
     public function test_it_keeps_a_bare_year_in_the_title(): void

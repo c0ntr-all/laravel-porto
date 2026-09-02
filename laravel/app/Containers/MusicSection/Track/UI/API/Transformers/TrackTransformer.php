@@ -2,6 +2,7 @@
 
 namespace App\Containers\MusicSection\Track\UI\API\Transformers;
 
+use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumDiscTransformer;
 use App\Containers\MusicSection\Album\UI\API\Transformers\AlbumInTrackTransformer;
 use App\Containers\MusicSection\Artist\UI\API\Transformers\ArtistInAlbumTransformer;
 use App\Containers\MusicSection\Tag\UI\API\Transformers\TagTransformer;
@@ -14,7 +15,7 @@ use League\Fractal\TransformerAbstract;
 class TrackTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
-        'tags', 'artists', 'album',
+        'tags', 'artists', 'album', 'disc',
     ];
 
     public function transform(Track $track): array
@@ -22,7 +23,10 @@ class TrackTransformer extends TransformerAbstract
         return [
             'id' => $track->id,
             'name' => $track->name,
+            'credits' => $track->credits,
             'number' => $track->number,
+            'cd' => $track->cd,
+            'disc_id' => $track->disc_id,
             'image' => $track->full_image,
             'duration' => $track->duration,
             'rate' => $track->rate->first()?->rate ?? 0,
@@ -46,5 +50,14 @@ class TrackTransformer extends TransformerAbstract
         }
 
         return $this->item($track->album, new AlbumInTrackTransformer(), 'albums');
+    }
+
+    public function includeDisc(Track $track): Item|NullResource
+    {
+        if (!$track->disc) {
+            return $this->null();
+        }
+
+        return $this->item($track->disc, new AlbumDiscTransformer(), 'discs');
     }
 }

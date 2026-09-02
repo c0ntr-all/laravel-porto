@@ -319,6 +319,136 @@ class PersistLibraryTaskTest extends TestCase
         $this->assertSame($original->id, $orphan->fresh()->parent_id);
     }
 
+    public function test_it_creates_discs_and_stores_track_credits(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $upload = $this->makeSession($user);
+        $tree = [
+            'name' => 'Guns N\' Roses',
+            'path' => 'F:\\Music\\GNR',
+            'albums' => [[
+                'name' => 'Use Your Illusion',
+                'date' => '1991-01-01',
+                'path' => 'F:\\Music\\GNR\\Illusion',
+                'album_type_id' => 1,
+                'original_album' => null,
+                'edition' => null,
+                'image' => null,
+                'artists' => ['Guns N\' Roses'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Right Next Door To Hell',
+                        album: 'Use Your Illusion',
+                        artist: 'Guns N\' Roses',
+                        windowsPath: 'F:\\Music\\GNR\\Illusion\\CD1\\01.mp3',
+                        albumPath: 'F:\\Music\\GNR\\Illusion',
+                        number: 1,
+                        discNumber: 1,
+                        credits: 'feat. Axl',
+                    ),
+                    $this->makeTrackDto(
+                        title: 'Civil War',
+                        album: 'Use Your Illusion',
+                        artist: 'Guns N\' Roses',
+                        windowsPath: 'F:\\Music\\GNR\\Illusion\\CD2\\01.mp3',
+                        albumPath: 'F:\\Music\\GNR\\Illusion',
+                        number: 1,
+                        discNumber: 2,
+                        credits: 'prod. Bob',
+                    ),
+                ],
+            ]],
+        ];
+
+        app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+
+        $album = Album::query()->where('name', 'Use Your Illusion')->first();
+        $this->assertNotNull($album);
+        $this->assertSame(2, $album->discs()->count());
+        $this->assertDatabaseHas('music_tracks', [
+            'name' => 'Right Next Door To Hell',
+            'credits' => 'feat. Axl',
+            'cd' => '1',
+        ]);
+        $this->assertDatabaseHas('music_tracks', [
+            'name' => 'Civil War',
+            'credits' => 'prod. Bob',
+            'cd' => '2',
+        ]);
+        $this->assertNotNull(
+            \App\Containers\MusicSection\Track\Models\Track::query()->where('name', 'Civil War')->first()?->disc_id,
+        );
+    }
+
+    public function test_it_attaches_a_second_disc_folder_to_the_same_album(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $first = $this->makeSession($user, 'F:\\Music\\GNR');
+
+        app(PersistLibraryTask::class)->run($first, [
+            'name' => 'Guns N\' Roses',
+            'path' => 'F:\\Music\\GNR',
+            'albums' => [[
+                'name' => 'Use Your Illusion',
+                'date' => '1991-01-01',
+                'path' => 'F:\\Music\\GNR\\Illusion (CD1)',
+                'album_type_id' => 1,
+                'original_album' => null,
+                'edition' => null,
+                'image' => null,
+                'artists' => ['Guns N\' Roses'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Right Next Door To Hell',
+                        album: 'Use Your Illusion',
+                        artist: 'Guns N\' Roses',
+                        windowsPath: 'F:\\Music\\GNR\\Illusion (CD1)\\01.mp3',
+                        albumPath: 'F:\\Music\\GNR\\Illusion (CD1)',
+                        number: 1,
+                        discNumber: 1,
+                    ),
+                ],
+            ]],
+        ], $user->id);
+
+        $second = $this->makeSession($user, 'F:\\Music\\GNR');
+        $counters = app(PersistLibraryTask::class)->run($second, [
+            'name' => 'Guns N\' Roses',
+            'path' => 'F:\\Music\\GNR',
+            'albums' => [[
+                'name' => 'Use Your Illusion',
+                'date' => '1991-01-01',
+                'path' => 'F:\\Music\\GNR\\Illusion (CD2)',
+                'album_type_id' => 1,
+                'original_album' => null,
+                'edition' => null,
+                'image' => null,
+                'artists' => ['Guns N\' Roses'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Civil War',
+                        album: 'Use Your Illusion',
+                        artist: 'Guns N\' Roses',
+                        windowsPath: 'F:\\Music\\GNR\\Illusion (CD2)\\01.mp3',
+                        albumPath: 'F:\\Music\\GNR\\Illusion (CD2)',
+                        number: 1,
+                        discNumber: 2,
+                    ),
+                ],
+            ]],
+        ], $user->id);
+
+        $this->assertSame(0, $counters['albums_created']);
+        $this->assertSame(1, Album::query()->where('name', 'Use Your Illusion')->count());
+        $album = Album::query()->where('name', 'Use Your Illusion')->first();
+        $this->assertSame(2, $album->discs()->count());
+        $this->assertSame(2, $album->tracks()->count());
+    }
+
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload
     {
         return MusicUpload::create([
@@ -363,6 +493,8 @@ class PersistLibraryTaskTest extends TestCase
         string $windowsPath,
         string $albumPath,
         int $number,
+        int $discNumber = 1,
+        ?string $credits = null,
     ): ParsedTrackDto {
         return ParsedTrackDto::from([
             'linux_path' => '/tmp/' . basename(str_replace('\\', '/', $windowsPath)),
@@ -374,7 +506,8 @@ class PersistLibraryTaskTest extends TestCase
             'year' => '1991',
             'date' => '1991-08-12',
             'track_number' => $number,
-            'disc_number' => 1,
+            'disc_number' => $discNumber,
+            'credits' => $credits,
             'duration' => '00:05:31',
             'bitrate' => 320,
             'album_cover_linux_path' => null,

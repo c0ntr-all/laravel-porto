@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Track\UI\Actions;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Tasks\UpdateOrCreateAlbumDiscTask;
 use App\Containers\MusicSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\MusicSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
@@ -21,6 +22,7 @@ class CreateTrackAction extends BaseAction
 {
     public function __construct(
         private readonly CreateTrackTask $createTrackTask,
+        private readonly UpdateOrCreateAlbumDiscTask $updateOrCreateAlbumDiscTask,
         private readonly SyncArtistsForTrackTask $syncArtistsForTrackTask,
         private readonly SyncTagsTask $syncTagsTask,
         private readonly UploadTrackCoverTask $uploadTrackCoverTask
@@ -32,11 +34,21 @@ class CreateTrackAction extends BaseAction
     {
         return DB::transaction(function () use ($requestData) {
             $album = Album::query()->findOrFail($requestData['album_id']);
+            $cd = $requestData['cd'] ?? null;
+            $discId = $requestData['disc_id'] ?? null;
+
+            if ($discId === null && $cd !== null && $cd !== '') {
+                $disc = $this->updateOrCreateAlbumDiscTask->run($album, (int) $cd ?: 1);
+                $discId = $disc->id;
+                $cd = (string) $disc->number;
+            }
 
             $dto = CreateTrackDto::from([
                 'user_id' => auth()->id(),
                 'name' => $requestData['name'],
-                'cd' => $requestData['cd'] ?? null,
+                'credits' => $requestData['credits'] ?? null,
+                'cd' => $cd,
+                'disc_id' => $discId,
                 'number' => $requestData['number'] ?? null,
                 'path' => $requestData['path'] ?? (Str::slug($requestData['name']) ?: null),
                 'duration' => $requestData['duration'] ?? null,

@@ -12,6 +12,7 @@ class BuildLibraryTreeTask extends ParentTask
 {
     public function __construct(
         private readonly ParseAlbumTitleTask $parseAlbumTitleTask,
+        private readonly ParseTrackTitleTask $parseTrackTitleTask,
     ) {
     }
 
@@ -27,7 +28,7 @@ class BuildLibraryTreeTask extends ParentTask
         $albums = [];
 
         foreach ($tracks as $track) {
-            $track = $this->enrichAlbumMeta($track, $albumTypes);
+            $track = $this->enrichTrackMeta($track, $albumTypes);
             $albumKey = $track->album.'_'.($track->year ?? 'unknown').'_'.$track->album_windows_path;
 
             if (!isset($albums[$albumKey])) {
@@ -47,10 +48,12 @@ class BuildLibraryTreeTask extends ParentTask
             $albums[$albumKey]['tracks'][] = $track;
         }
 
+        $albums = $this->mergeDiscFolders(array_values($albums));
         $splitTypeId = $this->splitAlbumTypeId($albumTypes);
 
         foreach ($albums as &$album) {
             $album['artists'] = $this->uniqueArtistNames($album['tracks']);
+            $album['discs'] = $this->summarizeDiscs($album['tracks']);
 
             if (count($album['artists']) > 1 && $splitTypeId !== null) {
                 $album['album_type_id'] = $splitTypeId;
@@ -61,7 +64,7 @@ class BuildLibraryTreeTask extends ParentTask
         return [
             'name' => $artistName,
             'path' => $artistWindowsPath,
-            'albums' => array_values($albums),
+            'albums' => $albums,
         ];
     }
 
@@ -84,6 +87,80 @@ class BuildLibraryTreeTask extends ParentTask
         return array_values($names);
     }
 
+    /**
+     * @param ParsedTrackDto[] $tracks
+     * @return list<array{number: int, name: string, tracks_count: int}>
+     */
+    private function summarizeDiscs(array $tracks): array
+    {
+        $counts = [];
+
+        foreach ($tracks as $track) {
+            $number = max(1, (int) $track->disc_number);
+            $counts[$number] = ($counts[$number] ?? 0) + 1;
+        }
+
+        ksort($counts);
+
+        $discs = [];
+        foreach ($counts as $number => $tracksCount) {
+            $discs[] = [
+                'number' => $number,
+                'name' => 'CD '.$number,
+                'tracks_count' => $tracksCount,
+            ];
+        }
+
+        return $discs;
+    }
+
+    /**
+     * Folders like "Album (CD1)" / "Album (CD2)" become one album after the title is cleaned.
+     *
+     * @param list<array<string, mixed>> $albums
+     * @return list<array<string, mixed>>
+     */
+    private function mergeDiscFolders(array $albums): array
+    {
+        $buckets = [];
+        foreach ($albums as $album) {
+            $nameKey = implode("\0", [
+                $album['name'],
+                $album['date'] ?? '',
+                $album['edition'] ?? '',
+                (string) $album['album_type_id'],
+            ]);
+            $buckets[$nameKey][] = $album;
+        }
+
+        $merged = [];
+        foreach ($buckets as $group) {
+            $discNumbers = [];
+            foreach ($group as $album) {
+                foreach ($album['tracks'] as $track) {
+                    $discNumbers[] = max(1, (int) $track->disc_number);
+                }
+            }
+
+            $shouldMerge = count($group) > 1
+                && $discNumbers !== []
+                && (max($discNumbers) > 1 || count(array_unique($discNumbers)) > 1);
+
+            if (!$shouldMerge) {
+                array_push($merged, ...$group);
+                continue;
+            }
+
+            $first = $group[0];
+            for ($index = 1, $count = count($group); $index < $count; $index++) {
+                $first['tracks'] = array_merge($first['tracks'], $group[$index]['tracks']);
+            }
+            $merged[] = $first;
+        }
+
+        return $merged;
+    }
+
     private function splitAlbumTypeId(mixed $albumTypes): ?int
     {
         $split = $albumTypes->first(fn ($type) => strtolower((string) $type->slug) === 'split');
@@ -91,14 +168,25 @@ class BuildLibraryTreeTask extends ParentTask
         return $split ? (int) $split->id : null;
     }
 
-    private function enrichAlbumMeta(ParsedTrackDto $track, mixed $albumTypes): ParsedTrackDto
+    private function enrichTrackMeta(ParsedTrackDto $track, mixed $albumTypes): ParsedTrackDto
     {
-        $parsed = $this->parseAlbumTitleTask->run($track->album, $albumTypes);
+        $albumParsed = $this->parseAlbumTitleTask->run($track->album, $albumTypes);
+        $titleParsed = $this->parseTrackTitleTask->run($track->title);
 
-        $track->album_type_id = $parsed['album_type_id'];
-        $track->album_version = $parsed['edition'];
-        $track->original_album = $parsed['original_album'];
-        $track->album = $parsed['name'];
+        $track->album_type_id = $albumParsed['album_type_id'];
+        $track->album_version = $albumParsed['edition'];
+        $track->original_album = $albumParsed['original_album'];
+        $track->album = $albumParsed['name'];
+        $track->title = $titleParsed['name'];
+        $track->credits = $titleParsed['credits'];
+
+        if ($track->disc_number === null || $track->disc_number < 1) {
+            $track->disc_number = $albumParsed['disc_number'] ?? 1;
+        } elseif ($track->disc_number === 1 && $albumParsed['disc_number'] !== null && $albumParsed['disc_number'] !== 1) {
+            $track->disc_number = $albumParsed['disc_number'];
+        }
+
+        $track->disc_number = max(1, (int) $track->disc_number);
 
         return $track;
     }

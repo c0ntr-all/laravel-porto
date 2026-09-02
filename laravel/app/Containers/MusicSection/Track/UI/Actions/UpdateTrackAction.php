@@ -2,6 +2,8 @@
 
 namespace App\Containers\MusicSection\Track\UI\Actions;
 
+use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Tasks\UpdateOrCreateAlbumDiscTask;
 use App\Containers\MusicSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\MusicSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
@@ -19,6 +21,7 @@ class UpdateTrackAction extends BaseAction
 {
     public function __construct(
         private readonly UpdateTrackTask $updateTrackTask,
+        private readonly UpdateOrCreateAlbumDiscTask $updateOrCreateAlbumDiscTask,
         private readonly SyncArtistsForTrackTask $syncArtistsForTrackTask,
         private readonly SyncTagsTask $syncTagsTask,
         private readonly UploadTrackCoverTask $uploadTrackCoverTask
@@ -30,6 +33,7 @@ class UpdateTrackAction extends BaseAction
     {
         return DB::transaction(function () use ($track, $requestData) {
             $dto = UpdateTrackDto::from($requestData);
+            $this->syncDiscFromCd($track, $dto, $requestData);
 
             if (!empty($requestData['image_file'])) {
                 $dto->image = $this->uploadTrackCoverTask->run($requestData['image_file'], $track->id);
@@ -58,5 +62,23 @@ class UpdateTrackAction extends BaseAction
             ->withResourceName('tracks')
             ->addMeta(['message' => 'Track updated successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    private function syncDiscFromCd(Track $track, UpdateTrackDto $dto, array $requestData): void
+    {
+        if (array_key_exists('disc_id', $requestData) || !array_key_exists('cd', $requestData)) {
+            return;
+        }
+
+        $cd = $requestData['cd'];
+        if ($cd === null || $cd === '') {
+            return;
+        }
+
+        $albumId = $requestData['album_id'] ?? $track->album_id;
+        $album = Album::query()->findOrFail($albumId);
+        $disc = $this->updateOrCreateAlbumDiscTask->run($album, (int) $cd ?: 1);
+        $dto->disc_id = $disc->id;
+        $dto->cd = (string) $disc->number;
     }
 }

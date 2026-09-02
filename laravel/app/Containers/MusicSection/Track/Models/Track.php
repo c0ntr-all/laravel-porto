@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Track\Models;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Models\AlbumDisc;
 use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\History\Models\History;
 use App\Containers\MusicSection\Playlist\Models\Playlist;
@@ -77,8 +78,10 @@ class Track extends Model
 
     protected $fillable = [
         'album_id',
+        'disc_id',
         'number',
         'name',
+        'credits',
         'cd',
         'path',
         'image',
@@ -100,6 +103,11 @@ class Track extends Model
     public function album(): BelongsTo
     {
         return $this->belongsTo(Album::class, 'album_id', 'id');
+    }
+
+    public function disc(): BelongsTo
+    {
+        return $this->belongsTo(AlbumDisc::class, 'disc_id');
     }
 
     public function playlists(): belongsToMany

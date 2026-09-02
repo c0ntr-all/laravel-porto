@@ -27,8 +27,9 @@ class AlbumRepository
         $query = QueryBuilder::for(Album::class, request())
                            ->allowedFilters($this->allowedFilters())
                            ->allowedSorts(['name', 'created_at', 'date'])
-                           ->allowedIncludes(['tags', 'artists', 'versions', 'parent'])
-                           ->with(['tags', 'artists', 'albumType']);
+                           ->allowedIncludes(['tags', 'artists', 'versions', 'parent', 'discs'])
+                           ->with(['tags', 'artists', 'albumType', 'discs' => fn ($query) => $query->withCount('tracks')])
+                           ->withCount('discs');
 
         if (!request()->has('filter.parent_id')) {
             $query->whereNull('parent_id')->with(['versions.albumType']);
@@ -49,9 +50,11 @@ class AlbumRepository
                            ->allowedFilters([
                                AllowedFilter::custom('name', new AlbumNameFilter()),
                                AllowedFilter::exact('album_type_id'),
+                               $this->hasMultipleDiscsFilter(),
                            ])
                            ->allowedSorts(['name', 'date', 'created_at'])
-                           ->with(['versions.albumType', 'albumType', 'artists', 'tags'])
+                           ->with(['versions.albumType', 'albumType', 'artists', 'tags', 'discs' => fn ($query) => $query->withCount('tracks')])
+                           ->withCount('discs')
                            ->whereNull('parent_id')
                            ->get();
     }
@@ -80,6 +83,23 @@ class AlbumRepository
     public function findByPath(string $path): ?Album
     {
         return Album::query()->where('path', $path)->first();
+    }
+
+    public function findCanonical(Artist $artist, string $name, int $albumTypeId, ?string $edition = null): ?Album
+    {
+        $query = $artist->albums()
+            ->where('name', $name)
+            ->where('album_type_id', $albumTypeId);
+
+        if ($edition === null || $edition === '') {
+            $query->where(function (Builder $query): void {
+                $query->whereNull('edition')->orWhere('edition', '');
+            });
+        } else {
+            $query->where('edition', $edition);
+        }
+
+        return $query->first();
     }
 
     public function create(CreateAlbumDto $dto): Album
@@ -167,7 +187,24 @@ class AlbumRepository
             }),
             AllowedFilter::exact('album_type_id'),
             AllowedFilter::exact('parent_id'),
+            $this->hasMultipleDiscsFilter(),
         ];
+    }
+
+    private function hasMultipleDiscsFilter(): AllowedFilter
+    {
+        return AllowedFilter::callback('has_multiple_discs', function (Builder $query, mixed $value): void {
+            $enabled = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($enabled === true) {
+                $query->has('discs', '>=', 2);
+
+                return;
+            }
+
+            if ($enabled === false) {
+                $query->has('discs', '<', 2);
+            }
+        });
     }
 
     private function like(string $value): ?string

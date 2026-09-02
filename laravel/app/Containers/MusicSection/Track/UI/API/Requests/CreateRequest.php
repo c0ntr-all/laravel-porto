@@ -13,6 +13,8 @@ class CreateRequest extends AdminRequest
             'name' => 'required|string|max:255',
             'number' => 'sometimes|nullable|integer|min:1',
             'cd' => 'sometimes|nullable|string|max:10',
+            'disc_id' => 'sometimes|nullable|integer|exists:music_album_discs,id',
+            'credits' => 'sometimes|nullable|string',
             'duration' => 'sometimes|nullable|string|max:20',
             'bitrate' => 'sometimes|nullable|integer',
             'link' => 'sometimes|nullable|string|max:255',

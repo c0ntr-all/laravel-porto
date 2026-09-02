@@ -67,7 +67,13 @@ class TrackSearchFilter implements FilterInterface
 
     private function constrainTrackName(Builder $query, string $term): void
     {
-        $query->where($query->getModel()->getTable() . '.name', 'like', $this->like($term));
+        $table = $query->getModel()->getTable();
+        $pattern = $this->like($term);
+
+        $query->where(function (Builder $inner) use ($table, $pattern): void {
+            $inner->where($table.'.name', 'like', $pattern)
+                ->orWhere($table.'.credits', 'like', $pattern);
+        });
     }
 
     private function constrainArtistName(Builder $query, string $term): void

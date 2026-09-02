@@ -2,6 +2,8 @@
 
 namespace App\Containers\MusicSection\Upload\Tasks;
 
+use App\Containers\MusicSection\Album\Models\AlbumType;
+use App\Containers\MusicSection\Upload\Support\DiscMarkerParser;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -9,9 +11,14 @@ use Illuminate\Support\Str;
 class ParseAlbumTitleTask extends ParentTask
 {
     /**
-     * Parentheticals that are disc/track markers or credits, not editions.
+     * Parentheticals that are credits or a year, not editions or discs.
      */
-    private const string NOISE_PATTERN = '/^(?:cd|disc|disk|dvd|sacd|part|vol|volume)\s*\.?\s*\d*$|^(?:feat|ft|featuring)\b|^\d{4}$/i';
+    private const string NOISE_PATTERN = '/^(?:feat|ft|featuring)\b|^\d{4}$/i';
+
+    public function __construct(
+        private readonly DiscMarkerParser $discMarkerParser,
+    ) {
+    }
 
     /**
      * @param Collection<int, object>|iterable<int, object> $albumTypes
@@ -19,7 +26,8 @@ class ParseAlbumTitleTask extends ParentTask
      *     name: string,
      *     edition: string|null,
      *     original_album: string|null,
-     *     album_type_id: int
+     *     album_type_id: int,
+     *     disc_number: int|null
      * }
      */
     public function run(string $albumTitle, iterable $albumTypes): array
@@ -28,37 +36,44 @@ class ParseAlbumTitleTask extends ParentTask
         $name = trim($albumTitle);
         $editionParts = [];
         $albumTypeId = 1;
+        $discNumber = null;
 
-        if ($name === '' || !preg_match_all('/\(([^)]+)\)/', $name, $matches)) {
-            return [
-                'name' => $name,
-                'edition' => null,
-                'original_album' => null,
-                'album_type_id' => $albumTypeId,
-            ];
+        if ($name !== '' && preg_match_all('/\(([^)]+)\)|\[([^\[\]]+)\]/', $name, $matches, PREG_SET_ORDER) > 0) {
+            foreach ($matches as $match) {
+                $attribute = trim(($match[1] ?? '') !== '' ? $match[1] : ($match[2] ?? ''));
+                if ($attribute === '') {
+                    continue;
+                }
+
+                $lower = mb_strtolower($attribute);
+                $matchedType = $this->matchAlbumType($albumTypes, $lower);
+
+                if ($matchedType !== null) {
+                    $albumTypeId = (int) $matchedType->id;
+                    $name = str_replace($match[0], '', $name);
+                    continue;
+                }
+
+                $fromDisc = $this->discMarkerParser->matchInner($attribute);
+                if ($fromDisc !== null) {
+                    $discNumber = $fromDisc;
+                    $name = str_replace($match[0], '', $name);
+                    continue;
+                }
+
+                if ($this->isNoise($lower)) {
+                    continue;
+                }
+
+                $editionParts[] = $attribute;
+                $name = str_replace($match[0], '', $name);
+            }
         }
 
-        foreach ($matches[1] as $attribute) {
-            $trimmed = trim($attribute);
-            if ($trimmed === '') {
-                continue;
-            }
-
-            $lower = mb_strtolower($trimmed);
-            $matchedType = $this->matchAlbumType($albumTypes, $lower);
-
-            if ($matchedType !== null) {
-                $albumTypeId = (int) $matchedType->id;
-                $name = $this->stripParenthetical($name, $attribute);
-                continue;
-            }
-
-            if ($this->isNoise($lower)) {
-                continue;
-            }
-
-            $editionParts[] = $trimmed;
-            $name = $this->stripParenthetical($name, $attribute);
+        $trailing = $this->discMarkerParser->stripTrailing($name);
+        $name = $trailing['name'];
+        if ($trailing['disc_number'] !== null) {
+            $discNumber = $trailing['disc_number'];
         }
 
         $cleaned = trim(preg_replace('/\s+/', ' ', $name) ?? '');
@@ -73,6 +88,7 @@ class ParseAlbumTitleTask extends ParentTask
             'edition' => $edition,
             'original_album' => $edition !== null ? $cleaned : null,
             'album_type_id' => $albumTypeId,
+            'disc_number' => $discNumber,
         ];
     }
 
@@ -90,10 +106,5 @@ class ParseAlbumTitleTask extends ParentTask
     private function isNoise(string $lower): bool
     {
         return (bool) preg_match(self::NOISE_PATTERN, $lower);
-    }
-
-    private function stripParenthetical(string $title, string $attribute): string
-    {
-        return str_replace('('.$attribute.')', '', $title);
     }
 }

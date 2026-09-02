@@ -166,4 +166,56 @@ class BuildLibraryTreeTaskTest extends TestCase
         $this->assertNull($tree['albums'][0]['edition']);
         $this->assertNull($tree['albums'][0]['original_album']);
     }
+
+    public function test_it_merges_cd_folders_into_one_album_and_strips_credits_from_titles(): void
+    {
+        $tracks = [
+            ParsedTrackDto::from([
+                'linux_path' => '/tmp/cd1/01.mp3',
+                'windows_path' => 'F:\\Music\\GNR\\Illusion (CD1)\\01.mp3',
+                'title' => 'Right Next Door To Hell (feat. Axl)',
+                'album' => 'Use Your Illusion (CD1)',
+                'artist' => 'Guns N\' Roses',
+                'year' => '1991',
+                'date' => '1991-01-01',
+                'album_windows_path' => 'F:\\Music\\GNR\\Illusion (CD1)',
+                'disc_number' => 1,
+            ]),
+            ParsedTrackDto::from([
+                'linux_path' => '/tmp/cd2/01.mp3',
+                'windows_path' => 'F:\\Music\\GNR\\Illusion (CD2)\\01.mp3',
+                'title' => 'Civil War [prod. Bob]',
+                'album' => 'Use Your Illusion (CD2)',
+                'artist' => 'Guns N\' Roses',
+                'year' => '1991',
+                'date' => '1991-01-01',
+                'album_windows_path' => 'F:\\Music\\GNR\\Illusion (CD2)',
+                'disc_number' => 2,
+            ]),
+        ];
+
+        $tree = app(BuildLibraryTreeTask::class)->run(
+            $tracks,
+            'Guns N\' Roses',
+            'F:\\Music\\GNR',
+        );
+
+        $this->assertCount(1, $tree['albums']);
+        $album = $tree['albums'][0];
+        $this->assertSame('Use Your Illusion', $album['name']);
+        $this->assertCount(2, $album['tracks']);
+        $this->assertSame(
+            [
+                ['number' => 1, 'name' => 'CD 1', 'tracks_count' => 1],
+                ['number' => 2, 'name' => 'CD 2', 'tracks_count' => 1],
+            ],
+            $album['discs'],
+        );
+        $this->assertSame('Right Next Door To Hell', $album['tracks'][0]->title);
+        $this->assertSame('feat. Axl', $album['tracks'][0]->credits);
+        $this->assertSame('Civil War', $album['tracks'][1]->title);
+        $this->assertSame('prod. Bob', $album['tracks'][1]->credits);
+        $this->assertSame(1, $album['tracks'][0]->disc_number);
+        $this->assertSame(2, $album['tracks'][1]->disc_number);
+    }
 }

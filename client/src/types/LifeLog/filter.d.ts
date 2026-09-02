@@ -11,5 +11,6 @@ export interface ILifeLogFilter extends ITagsFilterData {
   search: string
   date_from: string | null
   date_to: string | null
+  ignore_time: boolean
   activePresetId: string | null
 }

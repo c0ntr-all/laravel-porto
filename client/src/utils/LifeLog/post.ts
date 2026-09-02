@@ -7,6 +7,10 @@ export function parsePostDate(post: IPost): Date {
   return new Date(`${post.date}T${time}`)
 }
 
+export function toDateOnly(value: string): string {
+  return value.slice(0, 10)
+}
+
 export function formatPostDateTime(post: IPost): string {
   if (post.time) {
     return `${post.date} ${post.time}`

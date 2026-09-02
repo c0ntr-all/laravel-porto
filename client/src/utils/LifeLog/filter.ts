@@ -7,6 +7,7 @@ export function createEmptyLifeLogFilter(): ILifeLogFilter {
     search: '',
     date_from: null,
     date_to: null,
+    ignore_time: false,
     activePresetId: null
   }
 }

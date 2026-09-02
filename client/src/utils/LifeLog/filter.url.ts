@@ -98,6 +98,11 @@ export function parseLifeLogFilterFromQuery(
     filter.date_to = dateTo || null
   }
 
+  const ignoreTime = getQueryValue(query, LIFELOG_FILTER_QUERY_KEYS.ignoreTime)
+  if (ignoreTime !== null) {
+    filter.ignore_time = ignoreTime === '1' || ignoreTime === 'true'
+  }
+
   if (presetId) {
     filter.activePresetId = presetId
   }
@@ -127,6 +132,10 @@ export function serializeLifeLogFilterToQuery(
 
   if (filter.date_to) {
     query[buildLifeLogFilterQueryKey(LIFELOG_FILTER_QUERY_KEYS.dateTo)] = filter.date_to
+  }
+
+  if (filter.ignore_time) {
+    query[buildLifeLogFilterQueryKey(LIFELOG_FILTER_QUERY_KEYS.ignoreTime)] = '1'
   }
 
   if (filter.activePresetId) {
@@ -187,6 +196,7 @@ export function areLifeLogFiltersEqual(
     left.search === right.search &&
     left.date_from === right.date_from &&
     left.date_to === right.date_to &&
+    left.ignore_time === right.ignore_time &&
     left.activePresetId === right.activePresetId
   )
 }

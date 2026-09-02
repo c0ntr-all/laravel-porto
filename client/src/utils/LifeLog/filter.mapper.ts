@@ -1,7 +1,7 @@
 import { IFilter, ILifeLogFilter, IPost, IPreset } from 'src/types'
 import { ITag } from 'src/types/tag'
 import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
-import { parsePostDate } from 'src/utils/LifeLog/post'
+import { parsePostDate, toDateOnly } from 'src/utils/LifeLog/post'
 
 export function mapLifeLogFilterToApiFilter(filter: ILifeLogFilter): IFilter {
   const apiFilter: IFilter = {}
@@ -28,14 +28,60 @@ export function mapPresetToLifeLogFilter(
   preset: IPreset,
   allTags: ITag[]
 ): ILifeLogFilter {
+  const dateFrom = preset.date_from ?? preset.rules?.date_from ?? null
+  const dateTo = preset.date_to ?? preset.rules?.date_to ?? null
+  const ignoreTime = Boolean(
+    preset.rules?.ignore_time ??
+    (dateFrom && dateFrom.length <= 10 && dateTo && dateTo.length <= 10)
+  )
+
   return {
     ...createEmptyLifeLogFilter(),
     tags: resolvePresetTags(preset, allTags),
     tags_mode: 'and',
-    date_from: preset.date_from ?? preset.rules?.date_from ?? null,
-    date_to: preset.date_to ?? preset.rules?.date_to ?? null,
+    date_from: dateFrom,
+    date_to: dateTo,
+    ignore_time: ignoreTime,
     activePresetId: preset.id
   }
+}
+
+function isPostWithinDateFilter(post: IPost, filter: ILifeLogFilter): boolean {
+  if (!filter.date_from && !filter.date_to) {
+    return true
+  }
+
+  if (filter.ignore_time) {
+    const postDate = post.date
+
+    if (filter.date_from && postDate < toDateOnly(filter.date_from)) {
+      return false
+    }
+
+    if (filter.date_to && postDate > toDateOnly(filter.date_to)) {
+      return false
+    }
+
+    return true
+  }
+
+  const postDate = parsePostDate(post)
+
+  if (filter.date_from) {
+    const from = new Date(filter.date_from.replace(' ', 'T'))
+    if (postDate < from) {
+      return false
+    }
+  }
+
+  if (filter.date_to) {
+    const to = new Date(filter.date_to.replace(' ', 'T'))
+    if (postDate > to) {
+      return false
+    }
+  }
+
+  return true
 }
 
 export function applyClientSidePostFilter(posts: IPost[], filter: ILifeLogFilter): IPost[] {
@@ -56,24 +102,6 @@ export function applyClientSidePostFilter(posts: IPost[], filter: ILifeLogFilter
       }
     }
 
-    if (filter.date_from || filter.date_to) {
-      const postDate = parsePostDate(post)
-
-      if (filter.date_from) {
-        const from = new Date(filter.date_from)
-        if (postDate < from) {
-          return false
-        }
-      }
-
-      if (filter.date_to) {
-        const to = new Date(filter.date_to)
-        if (postDate > to) {
-          return false
-        }
-      }
-    }
-
-    return true
+    return isPostWithinDateFilter(post, filter)
   })
 }

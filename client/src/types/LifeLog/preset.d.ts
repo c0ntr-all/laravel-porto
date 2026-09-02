@@ -4,6 +4,8 @@ export interface IPresetRules {
   tags?: string[]
   date_from?: string | null
   date_to?: string | null
+  ignore_time?: boolean
+  text?: string | null
 }
 
 export interface IPreset {

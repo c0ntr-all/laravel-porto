@@ -18,14 +18,35 @@
 
       <div class="row q-col-gutter-sm q-mt-sm">
         <div class="col-12 col-sm-6">
-          <AppDatetimeField v-model="dateFromModel" />
+          <AppDatetimeField
+            v-if="!draft.ignore_time"
+            v-model="dateFromModel"
+          />
+          <AppDateField
+            v-else
+            v-model="dateFromModel"
+          />
           <div class="text-caption text-grey-7 q-mt-xs">Дата с</div>
         </div>
         <div class="col-12 col-sm-6">
-          <AppDatetimeField v-model="dateToModel" />
+          <AppDatetimeField
+            v-if="!draft.ignore_time"
+            v-model="dateToModel"
+          />
+          <AppDateField
+            v-else
+            v-model="dateToModel"
+          />
           <div class="text-caption text-grey-7 q-mt-xs">Дата по</div>
         </div>
       </div>
+
+      <q-checkbox
+        v-model="draft.ignore_time"
+        class="q-mt-sm"
+        label="не учитывать время"
+        @update:model-value="handleIgnoreTimeChange"
+      />
     </q-card-section>
 
     <q-separator />
@@ -118,6 +139,8 @@ import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
 import { mapPresetToLifeLogFilter } from 'src/utils/LifeLog/filter.mapper'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
+import AppDateField from 'src/components/default/AppDateField.vue'
+import { toDateOnly } from 'src/utils/LifeLog/post'
 
 const props = defineProps<{
   modelValue: ILifeLogFilter
@@ -178,6 +201,20 @@ function removeTag(tag: ITag) {
 function applyPreset(preset: IPreset) {
   draft.value = mapPresetToLifeLogFilter(preset, props.allTags)
   submit()
+}
+
+function handleIgnoreTimeChange(ignoreTime: boolean) {
+  if (!ignoreTime) {
+    return
+  }
+
+  if (draft.value.date_from) {
+    draft.value.date_from = toDateOnly(draft.value.date_from)
+  }
+
+  if (draft.value.date_to) {
+    draft.value.date_to = toDateOnly(draft.value.date_to)
+  }
 }
 
 function presetChipStyle(preset: IPreset) {

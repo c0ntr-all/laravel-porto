@@ -6,6 +6,7 @@ export const LIFELOG_FILTER_QUERY_KEYS = {
   search: 'search',
   dateFrom: 'date_from',
   dateTo: 'date_to',
+  ignoreTime: 'ignore_time',
   preset: 'preset'
 } as const
 

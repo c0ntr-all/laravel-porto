@@ -53,6 +53,25 @@ export function mapAttachmentsUploadResponse(response: IJsonApiResponse): IPostA
   return mapResponse(response).map(item => normalizePostAttachment(item))
 }
 
+export function mapTaskAttachment(raw: Record<string, unknown>): IPostAttachment {
+  const mapped = normalizePostAttachment({
+    ...raw,
+    attachment_id: raw.attachment_id ?? raw.id,
+    id: raw.attachment_id ?? raw.id
+  })
+
+  return {
+    ...mapped,
+    id: String(mapped.attachment_id || mapped.id)
+  }
+}
+
+export function mapTaskAttachments(items: unknown[] = []): IPostAttachment[] {
+  return items
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+    .map(item => mapTaskAttachment(item))
+}
+
 export function mapPostAttachmentsResponse(items: Record<string, unknown>[]): IPostAttachment[] {
   return items.map(item => normalizePostAttachment(item))
 }

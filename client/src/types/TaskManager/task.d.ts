@@ -200,13 +200,16 @@ export interface ITask extends ITaskFields {
   progressIds?: string[],
   reminderIds?: string[],
   commentsIds: string[]
+  attachmentsIds?: string[]
 }
 export interface ITaskCreatePayload {
   title: string
   content?: string
   task_list_id: string
 }
-export interface ITaskUpdatePayload extends Partial<ITaskFields> {}
+export interface ITaskUpdatePayload extends Partial<ITaskFields> {
+  deleted_attachments_ids?: string[]
+}
 export interface ITaskResource extends IJsonApiResource {
   attributes: ITaskFields
 }

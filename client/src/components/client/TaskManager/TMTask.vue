@@ -22,6 +22,13 @@
           />
         </q-card-section>
 
+        <q-card-section>
+          <TMTaskAttachments
+            ref="taskAttachmentsRef"
+            :task-id="task.id"
+          />
+        </q-card-section>
+
         <q-card-section v-if="reminder">
           <TMReminder
             :reminder="reminder"
@@ -93,6 +100,14 @@
             :task-id="task.id"
             :is-reminder-available="isReminderAvailable"
           />
+          <q-btn
+            icon="attach_file"
+            label="Вложение"
+            color="secondary"
+            dense
+            unelevated
+            @click="taskAttachmentsRef?.openFilePicker()"
+          />
         </q-card-section>
       </div>
     </div>
@@ -113,6 +128,7 @@ import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAdd
 import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
 import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
 import TMTaskSkeleton from 'src/components/client/TaskManager/TMTaskSkeleton.vue'
+import TMTaskAttachments from 'src/components/client/TaskManager/TMTaskAttachments.vue'
 import { IChecklist, IProgress, IReminderItem, ITask } from 'src/types/TaskManager/task'
 
 interface ITaskPartsRef {
@@ -149,6 +165,7 @@ const isReminderAvailable = computed(() => !reminder.value)
 
 const taskTitleRef = ref<ITaskPartsRef | null>(null)
 const taskContentRef = ref<ITaskPartsRef | null>(null)
+const taskAttachmentsRef = ref<{ openFilePicker: () => void } | null>(null)
 const activeChecklistFormId = ref<string | null>(null)
 
 provide('activeFormId', activeChecklistFormId)

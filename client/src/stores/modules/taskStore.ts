@@ -8,7 +8,7 @@ import {
   ITaskUpdatePayload, IChecklistItemCreatePayload, IChecklistCreatePayload,
   IChecklistUpdatePayload, IChecklistItemUpdatePayload, IProgressCreatePayload, IReminderCreatePayload,
   IReminderUpdatePayload, IReminderItem, IReminderOccurrence,
-  IUseCaseLog, IComment, ICommentCreatePayload, IFilter
+  IUseCaseLog, IComment, ICommentCreatePayload, IFilter, IPostAttachment
 } from 'src/types'
 import { IUser } from 'src/types/user'
 import { StoreEntity } from 'src/types/store'
@@ -18,6 +18,10 @@ import {
 import { taskApi } from 'src/api/requests/taskApi'
 import { commentApi } from 'src/api/requests/commentApi'
 import { useCaseLogApi } from 'src/api/requests/useCaseLogApi'
+import { attachmentApi } from 'src/api/requests/attachmentApi'
+import { mapTaskAttachments } from 'src/api/mappers/attachment.mapper'
+import { TM_TASK_ATTACHABLE_TYPE } from 'src/constants/TaskManager/attachment'
+import { mapResponse } from 'src/utils/jsonApiMapper'
 
 export const useTaskStore = defineStore('task', () => {
   const taskLists = reactive<StoreEntity<ITaskList>>({ byId: {}, allIds: [] })
@@ -30,6 +34,7 @@ export const useTaskStore = defineStore('task', () => {
   const comments = reactive<StoreEntity<IComment>>({ byId: {}, allIds: [] })
   const useCaseLogs = reactive<StoreEntity<IUseCaseLog>>({ byId: {}, allIds: [] })
   const users = reactive<StoreEntity<IUser>>({ byId: {}, allIds: [] })
+  const attachments = reactive<StoreEntity<IPostAttachment>>({ byId: {}, allIds: [] })
 
   type Collections = {
     taskLists: StoreEntity<ITaskList>
@@ -42,6 +47,7 @@ export const useTaskStore = defineStore('task', () => {
     comments: StoreEntity<IComment>
     useCaseLogs: StoreEntity<IUseCaseLog>
     users: StoreEntity<IUser>
+    attachments: StoreEntity<IPostAttachment>
   }
 
   // Словарь для доступа по имени
@@ -55,7 +61,8 @@ export const useTaskStore = defineStore('task', () => {
     reminderOccurrences,
     comments,
     useCaseLogs,
-    users
+    users,
+    attachments
   }
 
   // Type guard для проверки существования ключа в collections
@@ -67,6 +74,43 @@ export const useTaskStore = defineStore('task', () => {
     if (type === 'reminders') return 'reminder'
     const camelType = camel(type)
     return isValidCollectionKey(camelType) ? camelType : null
+  }
+
+  function relatedItems(related: Record<string, unknown>, key: string): unknown[] {
+    const value = related[key]
+    if (!value) return []
+    if (Array.isArray(value)) return value
+    return Object.values(value as Record<string, unknown>)
+  }
+
+  function upsertMappedAttachments(items: unknown[]): IPostAttachment[] {
+    const mapped = mapTaskAttachments(items)
+    for (const item of mapped) {
+      upsertEntity(attachments, item)
+    }
+    return mapped
+  }
+
+  function addAttachmentIdsToTask(task: ITask, ids: string[]) {
+    if (!task.attachmentsIds) {
+      task.attachmentsIds = []
+    }
+
+    for (const id of ids) {
+      if (!task.attachmentsIds.includes(id)) {
+        task.attachmentsIds.push(id)
+      }
+    }
+  }
+
+  function removeAttachmentFromTask(taskId: string, attachmentId: string) {
+    const task = tasks.byId[taskId]
+    if (task?.attachmentsIds) {
+      task.attachmentsIds = task.attachmentsIds.filter(id => id !== attachmentId)
+    }
+
+    delete attachments.byId[attachmentId]
+    attachments.allIds = attachments.allIds.filter(id => id !== attachmentId)
   }
 
   async function getTaskLists(): Promise<void> {
@@ -205,6 +249,10 @@ export const useTaskStore = defineStore('task', () => {
               upsertEntity(users, related[type][id] as unknown as IUser)
             }
             break
+          case 'attachments': {
+            upsertMappedAttachments(relatedItems(related as Record<string, unknown>, type))
+            break
+          }
         }
       }
 
@@ -226,6 +274,7 @@ export const useTaskStore = defineStore('task', () => {
       entity.progressIds = []
       entity.reminderIds = []
       entity.commentsIds = []
+      entity.attachmentsIds = []
       entity.isHydrated = true
 
       upsertEntity(tasks, entity)
@@ -240,21 +289,30 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  async function updateTask(id: string, payload: ITaskUpdatePayload): Promise<void> {
+  async function updateTask(id: string, payload: ITaskUpdatePayload): Promise<boolean> {
     try {
       const responseData = await taskApi.updateTask(id, payload)
-      const { entity } = normalizeEntity<ITask>(responseData.data, responseData.included)
+      const { entity, related } = normalizeEntity<ITask>(responseData.data, responseData.included)
 
       entity.isHydrated = true
 
+      if (related.attachments) {
+        upsertMappedAttachments(relatedItems(related as Record<string, unknown>, 'attachments'))
+      }
+
       const task = tasks.byId[entity.id]
       const updated = updateObject(task, entity)
+      if (entity.attachmentsIds) {
+        updated.attachmentsIds = entity.attachmentsIds
+      }
 
       upsertEntity(tasks, updated)
 
       handleApiSuccess(responseData)
+      return true
     } catch (error: unknown) {
       handleApiError(error)
+      return false
     }
   }
 
@@ -272,6 +330,12 @@ export const useTaskStore = defineStore('task', () => {
 
       delete tasks.byId[taskId]
       tasks.allIds = tasks.allIds.filter(id => id !== taskId)
+
+      const attachmentIds = task.attachmentsIds || []
+      for (const attachmentId of attachmentIds) {
+        delete attachments.byId[attachmentId]
+      }
+      attachments.allIds = attachments.allIds.filter(id => !attachmentIds.includes(id))
 
       handleApiSuccess(responseData)
     } catch (error) {
@@ -693,6 +757,43 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  async function uploadTaskAttachments(
+    taskId: string,
+    files: File[],
+    onProgress?: (percent: number) => void
+  ): Promise<IPostAttachment[]> {
+    try {
+      const responseData = await attachmentApi.upload(
+        TM_TASK_ATTACHABLE_TYPE,
+        taskId,
+        files,
+        undefined,
+        { onProgress }
+      )
+
+      const stored = upsertMappedAttachments(mapResponse(responseData))
+      const task = tasks.byId[taskId]
+      if (task) {
+        addAttachmentIdsToTask(task, stored.map(item => item.id))
+      }
+
+      handleApiSuccess(responseData)
+      return stored
+    } catch (error: unknown) {
+      handleApiError(error)
+      return []
+    }
+  }
+
+  async function deleteTaskAttachment(taskId: string, attachmentId: string): Promise<void> {
+    const updated = await updateTask(taskId, {
+      deleted_attachments_ids: [attachmentId]
+    })
+    if (updated) {
+      removeAttachmentFromTask(taskId, attachmentId)
+    }
+  }
+
   return {
     taskLists,
     tasks,
@@ -704,6 +805,7 @@ export const useTaskStore = defineStore('task', () => {
     comments,
     useCaseLogs,
     users,
+    attachments,
     getTaskLists,
     createTaskList,
     updateTaskList,
@@ -727,6 +829,8 @@ export const useTaskStore = defineStore('task', () => {
     completeReminder,
     getComments,
     createComment,
-    getUseCaseLogs
+    getUseCaseLogs,
+    uploadTaskAttachments,
+    deleteTaskAttachment
   }
 })

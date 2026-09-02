@@ -29,4 +29,9 @@ export interface ITrackListQuery {
   artist?: string
   album?: string
   cursor?: string | null
+  tags?: string[]
+  tags_match?: 'and' | 'or'
+  tags_nested?: boolean
+  rate?: number[]
+  sort?: string
 }

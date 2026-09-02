@@ -2,6 +2,8 @@
   <div class="music-filter">
     <div class="text-h6 q-mb-sm">Filters</div>
 
+    <slot name="before-tags" />
+
     <q-btn-toggle
       v-model="tagsMatch"
       class="q-mb-sm full-width"
@@ -66,7 +68,7 @@
         unelevated
         no-caps
         class="full-width"
-        :disable="!selectedCount && tagsMatch === 'or' && tagsNested"
+        :disable="!selectedCount && tagsMatch === 'or' && tagsNested && !extraDirty"
         @click="resetFilter"
       />
     </div>
@@ -93,16 +95,19 @@ interface GroupTree {
 
 const emit = defineEmits<{
   change: [payload: { tags: string[]; tagsMatch: 'and' | 'or'; tagsNested: boolean }]
+  reset: []
 }>()
 
 const props = withDefaults(defineProps<{
   tagsMatch?: 'and' | 'or'
   tagsNested?: boolean
   selectedTags?: string[]
+  extraDirty?: boolean
 }>(), {
   tagsMatch: 'or',
   tagsNested: true,
-  selectedTags: () => []
+  selectedTags: () => [],
+  extraDirty: false
 })
 
 const tagStore = useMusicTagStore()
@@ -213,6 +218,7 @@ function resetFilter (): void {
   })
   tagsMatch.value = 'or'
   tagsNested.value = true
+  emit('reset')
   scheduleEmit()
 }
 

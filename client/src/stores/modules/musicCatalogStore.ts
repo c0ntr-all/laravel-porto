@@ -12,6 +12,8 @@ import {
 } from 'src/utils/jsonapi'
 import { IArtist, ITrack } from 'src/types'
 
+export type TrackSortField = 'created_at' | 'name' | 'rate'
+
 function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
   const seen = new Set(current.map(item => item.id))
 
@@ -42,6 +44,12 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const isTracksLoading = ref(false)
   const isTracksLoadingMore = ref(false)
   const trackListName = ref('')
+  const trackListTags = ref<string[]>([])
+  const trackListTagsMatch = ref<'and' | 'or'>('or')
+  const trackListTagsNested = ref(true)
+  const trackListRates = ref<number[]>([])
+  const trackListSortField = ref<TrackSortField>('created_at')
+  const trackListSortDesc = ref(true)
 
   let artistListRequestId = 0
   let trackListRequestId = 0
@@ -173,11 +181,44 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     }
   }
 
-  async function getTracks(options?: { append?: boolean; name?: string }): Promise<void> {
+  async function getTracks(options?: {
+    append?: boolean
+    name?: string
+    tags?: string[]
+    tagsMatch?: 'and' | 'or'
+    tagsNested?: boolean
+    rates?: number[]
+    sortField?: TrackSortField
+    sortDesc?: boolean
+  }): Promise<void> {
     const append = Boolean(options?.append)
 
     if (options && 'name' in options) {
       trackListName.value = options.name?.trim() ?? ''
+    }
+
+    if (options && 'tags' in options) {
+      trackListTags.value = [...(options.tags ?? [])]
+    }
+
+    if (options?.tagsMatch) {
+      trackListTagsMatch.value = options.tagsMatch
+    }
+
+    if (options && 'tagsNested' in options) {
+      trackListTagsNested.value = Boolean(options.tagsNested)
+    }
+
+    if (options && 'rates' in options) {
+      trackListRates.value = [...(options.rates ?? [])]
+    }
+
+    if (options?.sortField) {
+      trackListSortField.value = options.sortField
+    }
+
+    if (options && 'sortDesc' in options) {
+      trackListSortDesc.value = Boolean(options.sortDesc)
     }
 
     if (append) {
@@ -199,6 +240,11 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     try {
       const response = await trackApi.listTracks({
         name: trackListName.value || undefined,
+        tags: trackListTags.value,
+        tags_match: trackListTagsMatch.value,
+        tags_nested: trackListTagsNested.value,
+        rate: trackListRates.value,
+        sort: `${trackListSortDesc.value ? '-' : ''}${trackListSortField.value}`,
         cursor: append ? tracksCursor.value : null
       })
 
@@ -245,6 +291,12 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     isTracksLoading,
     isTracksLoadingMore,
     trackListName,
+    trackListTags,
+    trackListTagsMatch,
+    trackListTagsNested,
+    trackListRates,
+    trackListSortField,
+    trackListSortDesc,
     getArtist,
     getArtistTracks,
     getArtists,

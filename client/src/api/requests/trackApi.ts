@@ -7,12 +7,21 @@ export const trackApi = {
     const filters = buildFilterForUrl({
       name: query?.name,
       artist: query?.artist,
-      album: query?.album
+      album: query?.album,
+      tags: query?.tags,
+      tags_match: query?.tags?.length ? query.tags_match : undefined,
+      tags_nested: query?.tags?.length
+        ? (query.tags_nested ? '1' : '0')
+        : undefined,
+      rate: query?.rate
     })
     const response = await api.get(
       filters ? `v1/music/tracks?include=artists,album,tags&${filters}` : 'v1/music/tracks?include=artists,album,tags',
       {
-        params: query?.cursor ? { cursor: query.cursor } : undefined,
+        params: {
+          ...(query?.cursor ? { cursor: query.cursor } : {}),
+          ...(query?.sort ? { sort: query.sort } : {})
+        },
         signal
       }
     )

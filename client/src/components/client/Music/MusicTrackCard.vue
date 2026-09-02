@@ -75,14 +75,15 @@
           </q-tooltip>
         </q-btn>
         <div v-if="filteredActions.length" class="music-track__more">
-          <q-btn color="grey-7" icon="more_horiz" round flat>
+          <q-btn color="grey-7" icon="more_horiz" round flat @click.stop>
             <q-menu cover auto-close>
               <q-list>
                 <q-item
                   v-for="action in filteredActions"
                   :key="action.name"
-                  @click="handleFunction(action.name)"
+                  v-bind="action.to ? { to: action.to } : {}"
                   clickable
+                  @click="onActionClick(action)"
                 >
                   <q-item-section>
                     <div class="flex items-center">
@@ -167,6 +168,8 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import type { RouteLocationRaw } from 'vue-router'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
@@ -194,6 +197,7 @@ interface Action {
   name: string
   label: string
   icon: string
+  to?: RouteLocationRaw
 }
 
 interface ApiResponseTrack {
@@ -238,9 +242,12 @@ const props = defineProps<{
   adding?: boolean
 }>()
 const musicPlayer = useMusicPlayer()
+const route = useRoute()
 const isCurrent = computed(() => musicPlayer.isCurrentTrack(props.track.id))
 const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
 const trackArtist = computed(() => formatTrackArtist(props.track) || 'Unknown artist')
+const albumId = computed(() => props.track.album?.id)
+const canGoToAlbum = computed(() => Boolean(albumId.value) && route.name !== 'album')
 
 const availableActions: Action[] = [{
   name: 'addToPlaylist',
@@ -269,9 +276,20 @@ const canAddToThisPlaylist = computed(() => (
 ))
 
 const filteredActions = computed(() => {
-  return availableActions.filter(item => (
+  const actions = availableActions.filter(item => (
     props.actions?.includes(item.name) && item.name !== 'addToThisPlaylist'
   ))
+
+  if (canGoToAlbum.value && albumId.value) {
+    actions.push({
+      name: 'goToAlbum',
+      label: 'Перейти в альбом',
+      icon: 'album',
+      to: { name: 'album', params: { id: albumId.value } }
+    })
+  }
+
+  return actions
 })
 
 const rateTrack = async (value: number): Promise<void> => {
@@ -316,6 +334,14 @@ const initPlaylistDialog = async (): Promise<void> => {
     }).finally(() => {
       playlistsLoading.value = false
     })
+}
+
+const onActionClick = (action: Action) => {
+  if (action.to) {
+    return
+  }
+
+  handleFunction(action.name)
 }
 
 const handleFunction = (actionName: string) => {

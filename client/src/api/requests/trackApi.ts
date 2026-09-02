@@ -35,7 +35,7 @@ export const trackApi = {
     signal?: AbortSignal
   ): Promise<IJsonApiResponse> {
     const filters = buildFilterForUrl({ search })
-    const response = await api.get(`v1/music/tracks?include=artists&${filters}`, {
+    const response = await api.get(`v1/music/tracks?include=artists,album&${filters}`, {
       params: cursor ? { cursor } : undefined,
       signal
     })

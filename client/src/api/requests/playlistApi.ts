@@ -5,7 +5,7 @@ import { buildFilterForUrl } from 'src/utils/jsonapi'
 export const playlistApi = {
   async getPlaylist(id: string): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/music/playlists/${id}`, {
-      params: { include: 'tracks,tracks.artists' }
+      params: { include: 'tracks,tracks.artists,tracks.album' }
     })
 
     return response.data

@@ -28,7 +28,7 @@ class ListHistoryAction extends BaseAction
 
         return fractal($history, new HistoryTransformer())
             ->withResourceName('history')
-            ->parseIncludes(['track', 'track.artists'])
+            ->parseIncludes(['track', 'track.artists', 'track.album'])
             ->withCursor($this->cursorFromPaginator($history))
             ->addMeta($this->cursorMeta($history))
             ->respond(200, [], JSON_PRETTY_PRINT);

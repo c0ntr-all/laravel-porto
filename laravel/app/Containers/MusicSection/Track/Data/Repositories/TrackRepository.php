@@ -43,7 +43,7 @@ class TrackRepository
         return QueryBuilder::for(Track::whereIn('album_id', $albumIds))
                            ->allowedFilters($this->allowedFilters())
                            ->allowedSorts($this->allowedSorts())
-                           ->with(['tags', 'artists', 'rate'])
+                           ->with(['tags', 'artists', 'rate', 'album.albumType'])
                            ->cursorPaginate(50);
     }
 

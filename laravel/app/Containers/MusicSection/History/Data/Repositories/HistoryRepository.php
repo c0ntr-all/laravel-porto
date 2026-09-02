@@ -20,7 +20,7 @@ class HistoryRepository
                            ])
                            ->allowedSorts(['created_at', 'updated_at'])
                            ->allowedIncludes(['track'])
-                           ->with(['track.artists', 'track.rate'])
+                           ->with(['track.artists', 'track.rate', 'track.album.albumType'])
                            ->orderByDesc('created_at')
                            ->orderByDesc('id')
                            ->cursorPaginate(50);

@@ -9,5 +9,5 @@ enum NotificationChannelEnum: string
     use Arrayable;
 
     case EMAIL = 'email';
-    // Future: TELEGRAM = 'telegram', PUSH = 'push', DATABASE = 'database';
+    case DATABASE = 'database';
 }

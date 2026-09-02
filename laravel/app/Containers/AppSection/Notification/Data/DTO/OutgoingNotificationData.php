@@ -9,6 +9,8 @@ class OutgoingNotificationData extends Data
     public function __construct(
         public string $subject,
         public string $body,
+        public string $type = 'system',
+        public array $data = [],
         public array $meta = [],
     ) {
     }

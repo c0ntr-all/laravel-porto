@@ -17,3 +17,7 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('music.uploads.{uploadId}', function (User $user, int $uploadId) {
     return $user->hasRole('admin') ? ['id' => $user->id] : false;
 });
+
+Broadcast::channel('users.{userId}.notifications', function (User $user, int $userId) {
+    return (int) $user->id === $userId ? ['id' => $user->id] : false;
+});

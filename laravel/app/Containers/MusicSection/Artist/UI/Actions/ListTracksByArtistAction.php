@@ -30,7 +30,7 @@ final class ListTracksByArtistAction extends BaseAction
 
         return fractal($tracks, new TrackTransformer())
             ->withResourceName('tracks')
-            ->parseIncludes(['tags'])
+            ->parseIncludes(['tags', 'artists'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

@@ -13,7 +13,7 @@ class GetPlaylistAction extends BaseAction
 
     public function handle(Playlist $playlist): Playlist
     {
-        return $playlist->load(['tracks']);
+        return $playlist->load(['tracks.artists']);
     }
 
     public function asController(Playlist $playlist, GetRequest $request): JsonResponse
@@ -22,7 +22,7 @@ class GetPlaylistAction extends BaseAction
 
         return fractal($playlist, new PlaylistTransformer())
             ->withResourceName('playlists')
-            ->parseIncludes(['tracks'])
+            ->parseIncludes(['tracks', 'tracks.artists'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

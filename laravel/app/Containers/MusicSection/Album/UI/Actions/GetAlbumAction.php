@@ -30,7 +30,7 @@ class GetAlbumAction extends BaseAction
 
         return fractal($album, new AlbumTransformer())
             ->withResourceName('albums')
-            ->parseIncludes(['artists', 'tracks', 'tags', 'versions', 'parent'])
+            ->parseIncludes(['artists', 'tracks', 'tracks.artists', 'tags', 'versions', 'parent'])
             ->respond(200, [], JSON_PRETTY_PRINT);
     }
 }

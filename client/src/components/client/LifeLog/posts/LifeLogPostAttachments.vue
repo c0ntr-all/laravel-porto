@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { IPost, IPostDocumentAttachment } from 'src/types'
+import { IPost } from 'src/types'
 import { isGalleryVideoAttachment, splitPostAttachments } from 'src/utils/attachment'
 import LifeLogCardImage from 'src/components/client/LifeLog/LifeLogCardImage.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
@@ -58,9 +58,7 @@ const props = defineProps<{
 const attachments = computed(() => props.post.attachments ?? [])
 const splitAttachments = computed(() => splitPostAttachments(attachments.value))
 const mediaAttachments = computed(() => splitAttachments.value.media)
-const documentAttachments = computed(() =>
-  splitAttachments.value.documents as IPostDocumentAttachment[]
-)
+const documentAttachments = computed(() => splitAttachments.value.documents)
 
 const showCarousel = ref(false)
 const currentSlideId = ref('')

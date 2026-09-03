@@ -72,8 +72,10 @@ export function mapTaskAttachments(items: unknown[] = []): IPostAttachment[] {
     .map(item => mapTaskAttachment(item))
 }
 
-export function mapPostAttachmentsResponse(items: Record<string, unknown>[]): IPostAttachment[] {
-  return items.map(item => normalizePostAttachment(item))
+export function mapPostAttachmentsResponse(items: unknown[] = []): IPostAttachment[] {
+  return items
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+    .map(item => normalizePostAttachment(item))
 }
 
 export function isNormalizedPostAttachment(

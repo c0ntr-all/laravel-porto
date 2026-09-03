@@ -3,6 +3,7 @@ import {
   DOCUMENT_EXTENSIONS,
   DOCUMENT_MIME_TYPES
 } from 'src/constants/LifeLog/attachment'
+import { IPostDocumentAttachment } from 'src/types/document'
 
 export function getFileExtension(fileName: string): string {
   const parts = fileName.split('.')
@@ -35,7 +36,7 @@ export function isDocumentFile(file: File): boolean {
 
 export function isPostDocumentAttachment(
   attachment: { attachment_type?: string }
-): boolean {
+): attachment is IPostDocumentAttachment {
   return attachment.attachment_type === ATTACHMENT_TYPES.document
 }
 

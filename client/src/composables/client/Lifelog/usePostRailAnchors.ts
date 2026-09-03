@@ -1,4 +1,4 @@
-import { nextTick, ref, watch, watchEffect, type Ref } from 'vue'
+import { nextTick, ref, watch, watchEffect, type ComponentPublicInstance, type Ref } from 'vue'
 import { IPost } from 'src/types'
 
 export function usePostRailAnchors(posts: Ref<IPost[]>) {
@@ -7,9 +7,15 @@ export function usePostRailAnchors(posts: Ref<IPost[]>) {
   const containerHeight = ref(0)
   const postRefs = new Map<string, HTMLElement>()
 
-  function setPostRef(postId: string, element: Element | null) {
-    if (element instanceof HTMLElement) {
-      postRefs.set(postId, element)
+  function setPostRef(postId: string, element: Element | ComponentPublicInstance | null) {
+    const el = element instanceof HTMLElement
+      ? element
+      : element && '$el' in element && element.$el instanceof HTMLElement
+        ? element.$el
+        : null
+
+    if (el) {
+      postRefs.set(postId, el)
       return
     }
 

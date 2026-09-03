@@ -678,7 +678,12 @@ export const useTaskStore = defineStore('task', () => {
 
   async function createComment(payload: ICommentCreatePayload): Promise<void> {
     const responseData = await commentApi.createComment(payload)
-    const { entity, related } = normalizeEntity<IComment>(responseData.data, responseData.included)
+    const resource = Array.isArray(responseData.data) ? responseData.data[0] : responseData.data
+    if (!resource) {
+      return
+    }
+
+    const { entity, related } = normalizeEntity<IComment>(resource, responseData.included)
 
     upsertEntity(comments, entity)
 

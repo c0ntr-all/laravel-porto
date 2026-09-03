@@ -20,7 +20,7 @@ export interface IPostGalleryAttachment {
 
 export type IPostAttachment = IPostGalleryAttachment | IPostDocumentAttachment
 
-export interface IPostAttachmentWithState extends IPostAttachment {
+export type IPostAttachmentWithState = IPostAttachment & {
   is_deleted?: boolean
 }
 

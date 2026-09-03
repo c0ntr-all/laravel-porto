@@ -1,19 +1,19 @@
-import { IPostAttachment } from 'src/types'
+import { IPostAttachment, IPostDocumentAttachment, IPostGalleryAttachment } from 'src/types'
 import { isGalleryVideo } from 'src/utils/gallery'
 import { isPostDocumentAttachment } from 'src/utils/document'
 
 export function isPostMediaAttachment(
   attachment: IPostAttachment
-): boolean {
+): attachment is IPostGalleryAttachment {
   return !isPostDocumentAttachment(attachment)
 }
 
 export function splitPostAttachments(attachments: IPostAttachment[] = []): {
-  media: IPostAttachment[]
-  documents: IPostAttachment[]
+  media: IPostGalleryAttachment[]
+  documents: IPostDocumentAttachment[]
 } {
-  const media: IPostAttachment[] = []
-  const documents: IPostAttachment[] = []
+  const media: IPostGalleryAttachment[] = []
+  const documents: IPostDocumentAttachment[] = []
 
   for (const attachment of attachments) {
     if (isPostDocumentAttachment(attachment)) {
@@ -33,6 +33,6 @@ export function getPostAttachmentDeleteId(attachment: IPostAttachment): string {
 
 export function isGalleryVideoAttachment(
   attachment: IPostAttachment
-): boolean {
+): attachment is IPostGalleryAttachment {
   return isPostMediaAttachment(attachment) && isGalleryVideo(attachment)
 }

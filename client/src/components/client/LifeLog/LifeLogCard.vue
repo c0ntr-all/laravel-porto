@@ -49,10 +49,10 @@
           </div>
         </div>
       </q-card-section>
-      <q-card-section v-if="post.attachments?.length" class="q-pa-sm">
+      <q-card-section v-if="mediaAttachments.length" class="q-pa-sm">
         <div class="row q-col-gutter-xs">
           <div class="col-2 flex column justify-end"
-               v-for="attachment in post.attachments"
+               v-for="attachment in mediaAttachments"
                :key="attachment.id"
                @click="openCarousel(attachment.id)"
           >
@@ -72,7 +72,7 @@
         <GalleryCarousel
           v-model="showCarousel"
           v-model:current-slide-id="currentSlideId"
-          :slides="post.attachments"
+          :slides="mediaAttachments"
         />
       </q-card-section>
       <q-card-section class="q-pa-sm">
@@ -113,6 +113,7 @@ import GalleryCarousel from 'src/components/client/Gallery/GalleryCarousel.vue'
 import LifeLogCardVideo from 'src/components/client/LifeLog/forms/LifeLogCardVideo.vue'
 import useLifelogPresets from 'src/composables/client/Lifelog/useLifelogPreset'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
+import { splitPostAttachments } from 'src/utils/attachment'
 
 interface Action {
   fn: () => void
@@ -165,6 +166,7 @@ const availableActions: Action[] = [{
 
 const isPostStartPreset = computed(() => startPresetPostId.value === props.post.id)
 const isPostEndPreset = computed(() => endPresetPostId.value === props.post.id)
+const mediaAttachments = computed(() => splitPostAttachments(props.post.attachments).media)
 const openCarousel = (id: string) => {
   currentSlideId.value = id
   showCarousel.value = true

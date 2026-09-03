@@ -49,12 +49,11 @@ export function mapNotificationList(payload: unknown): INotificationListResult {
     return { items: [], meta: emptyNotificationListMeta() }
   }
 
-  const response = payload as IJsonApiResponse
-  const items = mapResponse(response)
+  const items = mapResponse(payload as unknown as IJsonApiResponse)
     .map(item => mapNotification(item))
     .filter(item => item.id)
 
-  const meta = isRecord(response.meta) ? response.meta : {}
+  const meta = isRecord(payload.meta) ? payload.meta : {}
   const pagination = isRecord(meta.pagination) ? meta.pagination : meta
 
   return {

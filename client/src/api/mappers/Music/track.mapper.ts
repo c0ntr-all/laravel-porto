@@ -7,12 +7,8 @@ import { normalizeAlbumType } from 'src/utils/albumMeta'
 
 type TrackArtistSource = {
   artist?: string | null
-  artists?: IArtistShort[] | { data?: IArtistShort[] } | null
-  relationships?: {
-    artists?: {
-      data?: Array<{ id?: string; name?: string }>
-    }
-  }
+  artists?: unknown
+  relationships?: unknown
 }
 
 function artistListFromUnknown(value: unknown): IArtistShort[] {
@@ -45,9 +41,9 @@ export function formatTrackArtist(track: TrackArtistSource, fallback = ''): stri
     return fromArtists.join(' • ')
   }
 
-  const fromRelationships = (track.relationships?.artists?.data ?? [])
+  const fromRelationships = artistListFromUnknown(asRecord(track.relationships)?.artists)
     .map(artist => artist.name)
-    .filter((name): name is string => Boolean(name))
+    .filter(Boolean)
   if (fromRelationships.length) {
     return fromRelationships.join(' • ')
   }

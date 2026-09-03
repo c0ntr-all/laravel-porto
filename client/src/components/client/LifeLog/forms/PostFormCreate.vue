@@ -61,7 +61,7 @@
 import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
-import { IPostModel } from 'src/types'
+import { IPost, IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'

@@ -18,11 +18,11 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { IGalleryImage } from 'src/types/gallery'
+import { IImageSource } from 'src/types/carousel'
 import { getAttachmentThumbSrc } from 'src/utils/gallery'
 
 const props = defineProps<{
-  image: IGalleryImage
+  image: IImageSource
 }>()
 
 const thumbSrc = computed(() => getAttachmentThumbSrc(props.image))

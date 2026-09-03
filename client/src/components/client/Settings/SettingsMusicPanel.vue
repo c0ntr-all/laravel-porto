@@ -23,7 +23,7 @@
           :min="0"
           :max="100"
           color="primary"
-          @update:model-value="player.setVolumePercent($event)"
+          @update:model-value="onVolumePercent"
         />
         <span class="settings-panel__volume-value">{{ Math.round(player.volumePercent) }}%</span>
       </div>
@@ -76,5 +76,13 @@ const onShuffle = (enabled: boolean) => {
   if (player.shuffleEnabled !== enabled) {
     player.toggleShuffle()
   }
+}
+
+const onVolumePercent = (value: number | null) => {
+  if (value == null) {
+    return
+  }
+
+  player.setVolumePercent(value)
 }
 </script>

@@ -11,4 +11,5 @@ export interface IImageSource {
   description?: string | null
   album_id?: string | null
   saved_from_id?: string | null
+  duration?: string | null
 }

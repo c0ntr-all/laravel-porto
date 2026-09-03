@@ -24,7 +24,7 @@ export function normalizePreset(raw: Record<string, unknown>): IPreset {
   const rules = raw.rules as IPresetRules | undefined
 
   return {
-    ...(raw as IPreset),
+    ...(raw as unknown as IPreset),
     date_from: rules?.date_from ?? (raw.date_from as string | null) ?? (raw.start_date as string | null) ?? null,
     date_to: rules?.date_to ?? (raw.date_to as string | null) ?? (raw.end_date as string | null) ?? null,
     tags: normalizePresetTags(rules?.tags ?? raw.tags),

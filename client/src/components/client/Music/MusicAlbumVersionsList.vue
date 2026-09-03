@@ -15,7 +15,7 @@
           class="album-versions__row"
           :props="props"
           :key="`m_${props.row.index}`"
-          @click="$router.push(`/music/albums/${props.row.id}`)"
+          @click="router.push(`/music/albums/${props.row.id}`)"
         >
           <q-td
             v-for="col in props.cols"
@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { AlbumVersion } from 'src/components/client/Music/types'
 import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
 import { IAlbumType } from 'src/types'
@@ -68,6 +69,7 @@ interface AlbumVersionsProp {
 const props = defineProps<{
   versions: AlbumVersionsProp
 }>()
+const router = useRouter()
 const versions = ref(props.versions)
 const columns = [{
   name: 'id',

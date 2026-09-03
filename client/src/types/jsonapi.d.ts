@@ -54,6 +54,8 @@ export interface IJsonApiResponse<T = IJsonApiResource> {
 
 export type ApiError = import('axios').AxiosError<{ message: string }>
 
+export type IFilterValue = string | number | boolean | Array<string | number> | null | undefined
+
 export interface IFilter {
-  [key: string]: string | number
+  [key: string]: IFilterValue
 }

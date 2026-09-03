@@ -77,7 +77,13 @@ defineEmits<{
 
 const isDocument = computed(() => isPostDocumentAttachment(props.attachment))
 const isVideo = computed(() => isGalleryVideo(props.attachment))
-const thumbSrc = computed(() => getAttachmentThumbSrc(props.attachment))
+const thumbSrc = computed(() => {
+  if (isPostDocumentAttachment(props.attachment)) {
+    return ''
+  }
+
+  return getAttachmentThumbSrc(props.attachment)
+})
 
 const documentAttachment = computed(() =>
   isDocument.value ? props.attachment as IPostDocumentAttachment : null

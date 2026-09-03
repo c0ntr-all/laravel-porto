@@ -32,6 +32,22 @@ class ListAlbumsTest extends TestCase
         $this->assertSame($puppets->id, (int) $response->json('data.0.id'));
     }
 
+    public function test_filter_by_artist_id_returns_only_that_artists_albums(): void
+    {
+        $user = User::factory()->create();
+        $metallica = $this->makeArtist($user, 'Metallica', 'F:\\Music\\Metallica');
+        $maiden = $this->makeArtist($user, 'Iron Maiden', 'F:\\Music\\Maiden');
+        $puppets = $this->makeAlbum($metallica, 'Master Of Puppets', 'F:\\Music\\Metallica\\Master Of Puppets');
+        $this->makeAlbum($maiden, 'Killers', 'F:\\Music\\Maiden\\Killers');
+
+        $response = $this->actingAs($user, 'api')
+            ->getJson('/api/v1/music/albums?filter[artist_id]='.$metallica->id);
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertSame([(int) $puppets->id], $ids);
+    }
+
     public function test_filter_by_name_matches_edition_and_returns_the_root_album(): void
     {
         $user = User::factory()->create();
@@ -76,12 +92,12 @@ class ListAlbumsTest extends TestCase
         $this->assertSame(2, (int) $response->json('data.0.attributes.discs_count'));
     }
 
-    private function makeArtist(User $user): Artist
+    private function makeArtist(User $user, string $name = 'Metallica', string $path = 'F:\\Music\\Metallica'): Artist
     {
         return Artist::query()->create([
             'user_id' => $user->id,
-            'name' => 'Metallica',
-            'path' => 'F:\\Music\\Metallica',
+            'name' => $name,
+            'path' => $path,
         ]);
     }
 

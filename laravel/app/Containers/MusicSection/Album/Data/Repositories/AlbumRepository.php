@@ -185,6 +185,16 @@ class AlbumRepository
                     $artists->where('music_artists.name', 'like', $term);
                 });
             }),
+            AllowedFilter::callback('artist_id', function (Builder $query, mixed $value): void {
+                $ids = $this->artistIds($value);
+                if ($ids === []) {
+                    return;
+                }
+
+                $query->whereHas('artists', function (Builder $artists) use ($ids): void {
+                    $artists->whereIn('music_artists.id', $ids);
+                });
+            }),
             AllowedFilter::exact('album_type_id'),
             AllowedFilter::exact('parent_id'),
             $this->hasMultipleDiscsFilter(),
@@ -205,6 +215,28 @@ class AlbumRepository
                 $query->has('discs', '<', 2);
             }
         });
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function artistIds(mixed $value): array
+    {
+        if (is_string($value) || is_numeric($value)) {
+            $value = preg_split('/\s*,\s*/', (string) $value) ?: [];
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return collect($value)
+            ->flatten()
+            ->map(fn (mixed $id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function like(string $value): ?string

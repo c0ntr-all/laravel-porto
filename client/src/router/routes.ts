@@ -162,6 +162,13 @@ const routes: RouteRecordRaw[] = [{
     },
     name: 'profile'
   }, {
+    path: '/notifications',
+    component: () => import('pages/client/NotificationsPage.vue'),
+    meta: {
+      title: 'Оповещения'
+    },
+    name: 'notifications'
+  }, {
     path: '/settings',
     component: () => import('pages/client/SettingsPage.vue'),
     meta: {

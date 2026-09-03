@@ -6,5 +6,10 @@ declare namespace NodeJS {
     VUE_ROUTER_MODE: 'hash' | 'history' | 'abstract' | undefined;
     VUE_ROUTER_BASE: string | undefined;
     GALLERY_UPLOAD_ALBUM_ID: string;
+    host: string;
+    reverbKey: string;
+    reverbHost: string;
+    reverbPort: string;
+    reverbScheme: string;
   }
 }

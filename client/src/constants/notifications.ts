@@ -1,0 +1,4 @@
+export const NOTIFICATION_PAGE_SIZE = 20
+export const NOTIFICATION_INBOX_SIZE = 50
+export const NOTIFICATION_PREVIEW_LENGTH = 140
+export const NOTIFICATION_CHANNEL_SUFFIX = 'notifications'

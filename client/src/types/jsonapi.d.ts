@@ -27,6 +27,9 @@ export interface IJsonApiResponse<T = IJsonApiResource> {
     count?: number
     message?: string
     correlation_uuid?: string
+    current_page?: number
+    last_page?: number
+    total?: number
     per_page?: number
     has_more?: boolean
     next_cursor?: string | null

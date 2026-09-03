@@ -287,10 +287,10 @@ export function extractCursorFromLink(link?: string | { href?: string } | null):
 }
 
 export function extractCursorFromResponse(response: IJsonApiResponse): string | null {
-  return response.meta?.next_cursor
-    ?? response.meta?.cursor?.next
-    ?? extractCursorFromLink(response.links?.next)
-    ?? extractCursorFromLink(response.meta?.next_page_url)
+  return response.meta?.next_cursor ??
+    response.meta?.cursor?.next ??
+    extractCursorFromLink(response.links?.next) ??
+    extractCursorFromLink(response.meta?.next_page_url)
 }
 
 export function hasMoreFromResponse(response: IJsonApiResponse): boolean {

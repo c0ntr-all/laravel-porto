@@ -1,5 +1,4 @@
-import { IJsonApiResponse } from 'src/types'
-import { IPostAttachment, IPostDocumentAttachment } from 'src/types'
+import { IJsonApiResponse, IPostAttachment, IPostDocumentAttachment } from 'src/types'
 import { ATTACHMENT_TYPES } from 'src/constants/LifeLog/attachment'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { isPostDocumentAttachment } from 'src/utils/document'

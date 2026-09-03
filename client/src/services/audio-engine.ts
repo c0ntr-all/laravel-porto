@@ -1,3 +1,8 @@
+export type AudioBufferedRange = {
+  start: number
+  end: number
+}
+
 export type AudioEngineEventMap = {
   timeupdate: { currentTime: number; duration: number }
   durationchange: { duration: number }
@@ -9,11 +14,6 @@ export type AudioEngineEventMap = {
   playing: undefined
   error: { message: string }
   volumechange: { volume: number; muted: boolean }
-}
-
-export type AudioBufferedRange = {
-  start: number
-  end: number
 }
 
 type AudioEngineHandler<K extends keyof AudioEngineEventMap> = (

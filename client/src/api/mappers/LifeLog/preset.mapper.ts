@@ -1,5 +1,4 @@
-import { IJsonApiResponse } from 'src/types'
-import { IPost, IPreset } from 'src/types'
+import { IJsonApiResponse, IPost, IPreset } from 'src/types'
 import { IPresetModel, IPresetRules } from 'src/types/LifeLog/preset'
 import { IPresetCreateDto } from 'src/api/DTO/PresetCreateDto'
 import { mapResponse } from 'src/utils/jsonApiMapper'

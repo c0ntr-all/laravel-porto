@@ -575,8 +575,8 @@ export const useTaskStore = defineStore('task', () => {
   async function deleteReminder(taskId: string): Promise<void> {
     try {
       const task = tasks.byId[taskId]
-      const reminderId = task?.reminderIds?.[0]
-        || Object.values(reminder.byId).find(item => item.task_id === taskId)?.id
+      const reminderId = task?.reminderIds?.[0] ||
+        Object.values(reminder.byId).find(item => item.task_id === taskId)?.id
 
       if (!reminderId) return
 
@@ -640,11 +640,11 @@ export const useTaskStore = defineStore('task', () => {
       const includedReminders = relatedReminders?.length
         ? relatedReminders
         : (responseData.included || [])
-          .filter(item => item.type === 'reminders' || item.type === 'reminder')
-          .map(item => ({
-            id: item.id,
-            ...(item.attributes || {})
-          } as IReminderItem))
+            .filter(item => item.type === 'reminders' || item.type === 'reminder')
+            .map(item => ({
+              id: item.id,
+              ...(item.attributes || {})
+            } as IReminderItem))
 
       for (const item of includedReminders) {
         if (!item.id) continue

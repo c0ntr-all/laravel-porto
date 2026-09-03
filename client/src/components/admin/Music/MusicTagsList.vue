@@ -68,7 +68,7 @@ const emit = defineEmits<{
 }>()
 
 const filterMethod = (node: IMusicTag, text: string) => (
-  node.name.toLowerCase().includes(text.toLowerCase())
-    || node.slug.toLowerCase().includes(text.toLowerCase())
+  node.name.toLowerCase().includes(text.toLowerCase()) ||
+  node.slug.toLowerCase().includes(text.toLowerCase())
 )
 </script>

@@ -38,6 +38,9 @@ class NotificationServiceProvider extends ServiceProvider
             'notification'
         );
 
-        Broadcast::routes(['middleware' => ['auth:api']]);
+        Broadcast::routes([
+            'middleware' => ['auth:api'],
+            'prefix' => 'api',
+        ]);
     }
 }

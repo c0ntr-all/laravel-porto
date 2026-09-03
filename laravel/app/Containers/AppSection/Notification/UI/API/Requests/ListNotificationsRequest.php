@@ -12,6 +12,7 @@ class ListNotificationsRequest extends AuthenticatedRequest
             'unread_only' => 'sometimes|boolean',
             'per_page' => 'sometimes|integer|min:1|max:100',
             'cursor' => 'sometimes|string',
+            'page' => 'sometimes|integer|min:1',
         ];
     }
 }

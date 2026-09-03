@@ -4,6 +4,8 @@ namespace App\Containers\AppSection\Notification\Data\Repositories;
 
 use App\Containers\AppSection\Notification\Models\UserNotification;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserNotificationRepository
 {
@@ -20,18 +22,31 @@ class UserNotificationRepository
             ->first();
     }
 
-    public function paginateForUser(int $userId, ?bool $unreadOnly, int $perPage, ?string $cursor): CursorPaginator
+    public function paginateForUser(int $userId, ?bool $unreadOnly, int $perPage, int $page): LengthAwarePaginator
+    {
+        return $this->baseQuery($userId, $unreadOnly)
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->withQueryString();
+    }
+
+    public function paginateForUserCursor(int $userId, ?bool $unreadOnly, int $perPage, ?string $cursor): CursorPaginator
+    {
+        return $this->baseQuery($userId, $unreadOnly)
+            ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
+    }
+
+    private function baseQuery(int $userId, ?bool $unreadOnly): Builder
     {
         $query = UserNotification::query()
             ->where('user_id', $userId)
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        if ($unreadOnly === true) {
+        if ($unreadOnly) {
             $query->whereNull('read_at');
         }
 
-        return $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
+        return $query;
     }
 
     public function countUnread(int $userId): int

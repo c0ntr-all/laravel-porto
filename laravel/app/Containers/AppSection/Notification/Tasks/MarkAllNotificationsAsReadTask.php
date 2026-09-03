@@ -18,7 +18,7 @@ class MarkAllNotificationsAsReadTask extends ParentTask
         $updated = $this->userNotificationRepository->markAllAsRead($userId);
         $unreadCount = $this->userNotificationRepository->countUnread($userId);
 
-        UserNotificationRead::dispatch($userId, '', $unreadCount, markAll: true);
+        UserNotificationRead::dispatch($userId, '', $unreadCount, true);
 
         return $updated;
     }

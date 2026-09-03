@@ -6,6 +6,7 @@ use App\Containers\AppSection\Notification\Data\DTO\NotificationListDto;
 use App\Containers\AppSection\Notification\Data\Repositories\UserNotificationRepository;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ListUserNotificationsTask extends ParentTask
 {
@@ -14,9 +15,19 @@ class ListUserNotificationsTask extends ParentTask
     ) {
     }
 
-    public function run(NotificationListDto $dto): CursorPaginator
+    public function run(NotificationListDto $dto): LengthAwarePaginator
     {
         return $this->userNotificationRepository->paginateForUser(
+            $dto->user_id,
+            $dto->unread_only,
+            $dto->per_page,
+            $dto->page,
+        );
+    }
+
+    public function runCursor(NotificationListDto $dto): CursorPaginator
+    {
+        return $this->userNotificationRepository->paginateForUserCursor(
             $dto->user_id,
             $dto->unread_only,
             $dto->per_page,

@@ -10,6 +10,7 @@ class NotificationListDto extends Data
     public ?bool $unread_only = null;
     public ?string $cursor = null;
     public int $per_page = 20;
+    public int $page = 1;
 
     public function __construct()
     {

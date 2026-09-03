@@ -80,4 +80,39 @@ class NotificationsApiTest extends TestCase
 
         $this->assertSame(0, UserNotification::query()->whereNull('read_at')->count());
     }
+
+    public function test_user_can_paginate_notifications_by_page(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $this->actingAs($user, 'api');
+
+        $task = app(SendNotificationTask::class);
+
+        foreach (range(1, 3) as $index) {
+            $task->run(
+                $user,
+                new OutgoingNotificationData(
+                    subject: "Notification {$index}",
+                    body: 'Body',
+                    type: NotificationTypeEnum::SYSTEM->value,
+                ),
+                [NotificationChannelEnum::DATABASE->value],
+            );
+        }
+
+        $this->getJson('/api/v1/app/notifications?page=1&per_page=2')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.current_page', 1)
+            ->assertJsonPath('meta.last_page', 2)
+            ->assertJsonPath('meta.per_page', 2)
+            ->assertJsonPath('meta.total', 3);
+
+        $this->getJson('/api/v1/app/notifications?page=2&per_page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.current_page', 2);
+    }
 }

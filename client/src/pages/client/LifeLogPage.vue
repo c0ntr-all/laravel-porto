@@ -100,9 +100,9 @@ const openCreatePostModal = () => {
   isCreatePostModalOpen.value = true
 }
 
-const onPostCreated = async () => {
+const onPostCreated = () => {
   isCreatePostModalOpen.value = false
-  await applyFilter(filter.value, { syncRoute: false })
+  void nextTick(syncSidebarScroll)
 }
 
 const onFilterSubmit = async (nextFilter: ILifeLogFilter) => {

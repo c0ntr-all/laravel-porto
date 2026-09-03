@@ -1,5 +1,8 @@
 <template>
-  <div class="ll-post-row">
+  <div
+    class="ll-post-row"
+    :class="{ 'll-post-row--pending': post.is_pending }"
+  >
     <button
       type="button"
       class="ll-post-row__button row items-center no-wrap"
@@ -62,6 +65,13 @@ const formattedDate = computed(() => humanDatetime(formatPostDateTime(props.post
 
 <style scoped lang="scss">
 .ll-post-row {
+  &--pending {
+    .ll-post-row__button {
+      opacity: 0.72;
+      border-style: dashed;
+    }
+  }
+
   &__button {
     width: 100%;
     border: 1px solid #e4e7eb;

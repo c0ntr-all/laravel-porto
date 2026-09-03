@@ -35,6 +35,7 @@ export interface IPost {
   user: IUser
   tags: ITag[]
   attachments: IPostAttachment[]
+  is_pending?: boolean
 }
 
 export interface IPostModel {

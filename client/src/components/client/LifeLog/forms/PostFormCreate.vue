@@ -46,6 +46,8 @@
           <q-btn
             label="Отправить"
             color="primary"
+            :loading="isSubmitting"
+            :disable="isSubmitting"
             :round="false"
             @click="createPost"
           />
@@ -59,7 +61,7 @@
 import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
-import { IPost, IPostModel } from 'src/types'
+import { IPostModel } from 'src/types'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
@@ -81,7 +83,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  success: [post: IPost]
+  success: []
 }>()
 
 const getEmptyPostModel = (): IPostModel => {
@@ -98,6 +100,7 @@ const getEmptyPostModel = (): IPostModel => {
 // --- Models ---
 const model = ref<IPostModel>(getEmptyPostModel())
 const attachmentModel = ref<File[]>([])
+const isSubmitting = ref(false)
 
 // --- State ---
 const originalPost = ref({})
@@ -108,11 +111,23 @@ const formTagsRef = ref<ITagsRef | null>(null)
 
 // --- Methods ---
 const createPost = async () => {
-  const newPost = await postStore.createPost(model.value, attachmentModel.value)
+  if (isSubmitting.value) {
+    return
+  }
+
+  isSubmitting.value = true
+  const submission = postStore.createPost(model.value, attachmentModel.value)
+
   clearModel()
   clearAttachmentModel()
   resetAvailableTags()
-  emit('success', newPost)
+  emit('success')
+
+  try {
+    await submission
+  } finally {
+    isSubmitting.value = false
+  }
 }
 const clearAttachmentModel = () => {
   attachmentModel.value = []

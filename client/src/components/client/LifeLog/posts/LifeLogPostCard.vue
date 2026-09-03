@@ -2,6 +2,7 @@
   <article
     class="ll-post-card"
     :class="{
+      'll-post-card--pending': post.is_pending,
       'll-post-card--start-preset': isPostStartPreset,
       'll-post-card--end-preset': isPostEndPreset
     }"
@@ -98,6 +99,11 @@ const {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+
+  &--pending {
+    opacity: 0.72;
+    border-style: dashed;
+  }
 
   &__header {
     padding: 14px 14px 0;

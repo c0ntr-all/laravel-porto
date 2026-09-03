@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     locales \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql opcache exif \
+    && docker-php-ext-install gd pdo_mysql opcache exif pcntl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

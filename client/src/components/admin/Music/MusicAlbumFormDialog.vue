@@ -73,7 +73,8 @@
               dense
               clearable
               input-debounce="300"
-              hint="Leave empty for a standalone original release"
+              :loading="parentSearchLoading"
+              hint="Same artist only. Leave empty for a standalone original"
               @filter="filterParents"
             />
             <q-select
@@ -149,7 +150,6 @@ import { IAlbum, IAlbumFormState, IArtistShort } from 'src/types'
 const props = defineProps<{
   modelValue: boolean
   album: IAlbum
-  parentOptions: IAlbum[]
 }>()
 
 const emit = defineEmits<{
@@ -175,6 +175,7 @@ const tagIds = ref(props.album.tags.map(tag => tag.id))
 const imageFile = ref<File | null>(null)
 const artistOptions = ref<IArtistShort[]>([...props.album.artists])
 const extraParents = ref<IAlbum[]>([])
+const parentSearchLoading = ref(false)
 
 const typeOptions = computed(() => admin.albumTypes)
 
@@ -187,17 +188,12 @@ const coverPreview = computed(() => {
 })
 
 const parentSelectOptions = computed(() => {
-  const merged = new Map<string, IAlbum>()
-  ;[...props.parentOptions, ...extraParents.value].forEach(item => {
-    if (item.id !== props.album.id && !item.parent_id) {
-      merged.set(item.id, item)
-    }
-  })
-
-  const options = [...merged.values()].map(item => ({
-    id: item.id,
-    label: `${item.name}${item.artists[0] ? ` — ${item.artists[0].name}` : ''}`
-  }))
+  const options = extraParents.value
+    .filter(item => item.id !== props.album.id && !item.parent_id)
+    .map(item => ({
+      id: item.id,
+      label: `${item.name}${item.artists[0] ? ` — ${item.artists[0].name}` : ''}`
+    }))
 
   if (props.album.parent && !options.some(item => item.id === props.album.parent?.id)) {
     options.unshift({
@@ -220,6 +216,7 @@ const hydrate = (album: IAlbum) => {
   tagIds.value = album.tags.map(tag => tag.id)
   imageFile.value = null
   artistOptions.value = [...album.artists]
+  extraParents.value = []
 }
 
 watch(() => props.album, hydrate)
@@ -251,10 +248,20 @@ const filterArtists = async (val: string, update: (fn: () => void) => void) => {
 }
 
 const filterParents = async (val: string, update: (fn: () => void) => void) => {
-  const found = await admin.searchAlbumOptions(val)
-  update(() => {
-    extraParents.value = found
-  })
+  parentSearchLoading.value = true
+
+  try {
+    const found = await admin.searchAlbumOptions(val, artistIds.value)
+    update(() => {
+      extraParents.value = found
+    })
+  } catch {
+    update(() => {
+      extraParents.value = []
+    })
+  } finally {
+    parentSearchLoading.value = false
+  }
 }
 
 const save = async () => {

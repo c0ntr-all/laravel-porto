@@ -40,6 +40,7 @@ export interface IAlbum {
 export interface IAlbumListQuery {
   name?: string
   artist?: string
+  artist_id?: Array<string | number> | string | number
   cursor?: string | null
 }
 

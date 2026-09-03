@@ -328,9 +328,23 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     }
   }
 
-  async function searchAlbumOptions(name: string): Promise<IAlbum[]> {
+  async function searchAlbumOptions(
+    name: string,
+    artistIds?: Array<string | number>
+  ): Promise<IAlbum[]> {
+    const ids = (artistIds ?? [])
+      .map(id => String(id))
+      .filter(id => id !== '')
+
+    if (ids.length === 0) {
+      return []
+    }
+
     try {
-      const response = await albumApi.listAlbums({ name: name.trim() || undefined })
+      const response = await albumApi.listAlbums({
+        name: name.trim() || undefined,
+        artist_id: ids
+      })
 
       return mapAlbumsResponse(response)
     } catch {

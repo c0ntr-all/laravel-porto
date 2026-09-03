@@ -150,7 +150,6 @@
       v-if="editing"
       v-model="showDialog"
       :album="editing"
-      :parent-options="parentOptions"
       @saved="onSaved"
     />
 
@@ -177,7 +176,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useMusicAdminStore } from 'src/stores/modules/musicAdminStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import MusicAlbumFormDialog from 'src/components/admin/Music/MusicAlbumFormDialog.vue'
@@ -193,8 +192,6 @@ const showDialog = ref(false)
 const editing = ref<IAlbum | null>(null)
 const showDelete = ref(false)
 const deleting = ref<IAlbum | IAlbumVersion | null>(null)
-
-const parentOptions = computed(() => admin.albums.filter(album => !album.parent_id))
 
 const artistNames = (album: IAlbum) => (
   album.artists.map(artist => artist.name).join(' • ') || 'Unknown artist'

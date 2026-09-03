@@ -53,7 +53,8 @@ export const albumApi = {
   async listAlbums(query?: IAlbumListQuery): Promise<IJsonApiResponse> {
     const filters = buildFilterForUrl({
       name: query?.name,
-      artist: query?.artist
+      artist: query?.artist,
+      artist_id: query?.artist_id
     })
     const response = await api.get(
       filters ? `v1/music/albums?${filters}` : 'v1/music/albums',

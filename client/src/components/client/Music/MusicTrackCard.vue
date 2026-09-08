@@ -1,6 +1,6 @@
 <template>
   <div
-    class="music-track flex no-wrap self-start items-center col-grow q-pr-sm rounded-borders"
+    class="music-track flex no-wrap self-start items-stretch col-grow q-pr-sm rounded-borders"
     :class="{
       'music-track--active': isCurrent,
       'music-track--with-add': canAddToThisPlaylist
@@ -33,11 +33,39 @@
           dense
         />
       </div>
-      <div class="music-track__title">
-        <div class="music-track__name">
-          <MusicTrackName :name="track.name" :credits="track.credits" />
+      <div class="music-track__info">
+        <div class="music-track__title">
+          <div class="music-track__name">
+            <MusicTrackName :name="track.name" :credits="track.credits" />
+          </div>
+          <div class="music-track__artist">
+            <template v-if="trackArtists.length">
+              <template v-for="(artist, index) in trackArtists" :key="artist.id">
+                <router-link
+                  class="music-track__artist-link"
+                  :to="{ name: 'artist-albums', params: { id: artist.id } }"
+                  @click.stop
+                >{{ artist.name }}</router-link>
+                <span v-if="index < trackArtists.length - 1"> • </span>
+              </template>
+            </template>
+            <template v-else>{{ trackArtist }}</template>
+          </div>
         </div>
-        <div class="music-track__artist">{{ trackArtist }}</div>
+        <div
+          v-if="isCurrent"
+          class="music-track__seek"
+          @click.stop
+          @pointerdown.stop
+        >
+          <AppSlider
+            v-model="seekProgress"
+            compact
+            only-drop
+            :disable="musicPlayer.duration <= 0"
+            :buffered="musicPlayer.bufferedPercents"
+          />
+        </div>
       </div>
     </div>
     <div class="music-track__right">
@@ -176,8 +204,9 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { getIncluded, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { api } from 'src/boot/axios'
 import { ITrack } from 'src/types'
-import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
+import { formatTrackArtist, listTrackArtists } from 'src/api/mappers/Music/track.mapper'
 import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
+import AppSlider from 'src/components/default/AppSlider.vue'
 
 interface PlaylistTrack {
   id: string
@@ -248,7 +277,12 @@ const musicPlayer = useMusicPlayer()
 const route = useRoute()
 const isCurrent = computed(() => musicPlayer.isCurrentTrack(props.track.id))
 const isPlaying = computed(() => isCurrent.value && musicPlayer.isPlaying)
+const trackArtists = computed(() => listTrackArtists(props.track))
 const trackArtist = computed(() => formatTrackArtist(props.track) || 'Unknown artist')
+const seekProgress = computed({
+  get: () => musicPlayer.progress,
+  set: value => musicPlayer.seekToProgress(value)
+})
 const albumId = computed(() => props.track.album?.id)
 const canGoToAlbum = computed(() => Boolean(albumId.value) && route.name !== 'album')
 
@@ -401,12 +435,14 @@ watch(playlistSearch, (value) => {
 <style lang="scss" scoped>
 .music-track {
   position: relative;
+  min-height: 48px;
 
   &__left {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
     overflow: hidden;
   }
 
@@ -422,6 +458,7 @@ watch(playlistSearch, (value) => {
     position: relative;
     justify-content: center;
     align-items: center;
+    align-self: center;
     flex-shrink: 0;
     width: 40px;
     height: 40px;
@@ -463,12 +500,37 @@ watch(playlistSearch, (value) => {
     font-size: 12.5px;
     line-height: 16px;
     font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__artist-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__info {
+    position: relative;
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    min-height: 48px;
+    margin: 0 4px;
+    overflow: hidden;
   }
 
   &__title {
     white-space: nowrap;
     overflow: hidden;
-    margin-left: 4px;
+    transition: transform 0.16s ease;
   }
 
   &__name {
@@ -476,6 +538,16 @@ watch(playlistSearch, (value) => {
     line-height: 16px;
     text-overflow: ellipsis;
     overflow: hidden;
+  }
+
+  &__seek {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
   }
 
   &__rate {
@@ -506,10 +578,6 @@ watch(playlistSearch, (value) => {
 
   &__more {
     position: absolute;
-    //top: 50%;
-    //left: 50%;
-    //margin-top: -10px;
-    //margin-left: -9px;
     visibility: hidden;
   }
 
@@ -520,6 +588,17 @@ watch(playlistSearch, (value) => {
 
     .music-track-cover__overlay {
       display: block;
+    }
+  }
+
+  &--active:hover {
+    .music-track__title {
+      transform: translateY(-3px);
+    }
+
+    .music-track__seek {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 

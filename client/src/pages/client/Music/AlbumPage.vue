@@ -58,6 +58,7 @@
       </div>
       <div class="album-body q-mb-lg bg-white">
         <MusicAlbumTracksList
+          :key="album.id"
           :tracks="album?.relationships.tracks"
         />
       </div>
@@ -82,7 +83,7 @@ import { ITrack } from 'src/components/client/Music/types'
 import { albumYear } from 'src/utils/albumDate'
 import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
 import { IAlbumType } from 'src/types'
-import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
+import { formatTrackArtist, listTrackArtists } from 'src/api/mappers/Music/track.mapper'
 
 interface Artist {
   id: string
@@ -193,11 +194,13 @@ const showImage = ref(false)
 const album = ref<Album | null>(null)
 
 const getAlbum = async (id: string): Promise<void> => {
-  await api.get<GetAlbumApiResponse>(`v1/music/albums/${id}`)
+  await api.get<GetAlbumApiResponse>(`v1/music/albums/${id}`, {
+    params: { include: 'artists,tracks,tracks.artists,tags,versions,parent,discs' }
+  })
     .then(response => {
       const responseAlbum = response.data.data
       const artists = getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included) as { data: Artist[] }
-      const tracks = getIncluded<ITrack>('tracks', responseAlbum.relationships, response.data.included) as { data: ITrack[] }
+      const tracks = getIncluded<ITrack>('tracks.artists', responseAlbum.relationships, response.data.included) as { data: ITrack[] }
       const albumArtist = artists.data.map(artist => artist.name).filter(Boolean).join(' • ')
 
       album.value = {
@@ -208,10 +211,15 @@ const getAlbum = async (id: string): Promise<void> => {
           tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as { data: Tag[] },
           tracks: {
             ...tracks,
-            data: tracks.data.map(track => ({
-              ...track,
-              artist: formatTrackArtist(track, albumArtist)
-            }))
+            data: tracks.data.map(track => {
+              const trackArtists = listTrackArtists(track)
+
+              return {
+                ...track,
+                artists: trackArtists,
+                artist: formatTrackArtist({ ...track, artists: trackArtists }, trackArtists.length ? '' : albumArtist)
+              }
+            })
           },
           versions: {
             ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included) as { data: AlbumVersion[] },

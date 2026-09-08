@@ -4,7 +4,8 @@
     class="app-slider"
     :class="{
       'app-slider--disabled': disable,
-      'app-slider--dragging': dragging
+      'app-slider--dragging': dragging,
+      'app-slider--compact': compact
     }"
     :style="{ width: width || '100%' }"
     role="slider"
@@ -46,6 +47,7 @@ interface Props {
   width?: string
   onlyDrop?: boolean
   disable?: boolean
+  compact?: boolean
   buffered?: SliderBufferedRange[]
 }
 
@@ -56,6 +58,7 @@ const props = withDefaults(defineProps<Props>(), {
   width: '100%',
   onlyDrop: false,
   disable: false,
+  compact: false,
   buffered: () => []
 })
 
@@ -253,6 +256,22 @@ onBeforeUnmount(() => {
   &:focus-visible {
     .app-slider__rail {
       box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
+    }
+  }
+
+  &--compact {
+    height: 10px;
+
+    .app-slider__rail {
+      height: 2px;
+    }
+
+    &:hover,
+    &:focus-visible,
+    &--dragging {
+      .app-slider__rail {
+        height: 3px;
+      }
     }
   }
 

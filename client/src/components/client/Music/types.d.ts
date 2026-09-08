@@ -20,12 +20,22 @@ export interface ITrack {
   credits?: string | null
   number: number
   artist: string
+  artists?: Array<{
+    id: string
+    name: string
+  }>
   image: string
   duration: string
   rate: number
   relationships: {
     tags: {
       data: ITagShort[]
+    }
+    artists?: {
+      data: Array<{
+        id: string
+        name: string
+      }>
     }
   }
 }

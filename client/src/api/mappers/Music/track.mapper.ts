@@ -28,27 +28,43 @@ function artistListFromUnknown(value: unknown): IArtistShort[] {
   return asRecords(value).map(normalizeArtistShort)
 }
 
+export function listTrackArtists(track: TrackArtistSource): IArtistShort[] {
+  const fromArtists = namedArtists(artistListFromUnknown(track.artists))
+  if (fromArtists.length) {
+    return fromArtists
+  }
+
+  return namedArtists(artistListFromUnknown(asRecord(track.relationships)?.artists))
+}
+
 export function formatTrackArtist(track: TrackArtistSource, fallback = ''): string {
+  const names = listTrackArtists(track).map(artist => artist.name)
+  if (names.length) {
+    return names.join(' • ')
+  }
+
   const named = typeof track.artist === 'string' ? track.artist.trim() : ''
   if (named) {
     return named
   }
 
-  const fromArtists = artistListFromUnknown(track.artists)
-    .map(artist => artist.name)
-    .filter(Boolean)
-  if (fromArtists.length) {
-    return fromArtists.join(' • ')
-  }
-
-  const fromRelationships = artistListFromUnknown(asRecord(track.relationships)?.artists)
-    .map(artist => artist.name)
-    .filter(Boolean)
-  if (fromRelationships.length) {
-    return fromRelationships.join(' • ')
-  }
-
   return fallback
+}
+
+function namedArtists(artists: IArtistShort[]): IArtistShort[] {
+  const seen = new Set<string>()
+  const unique: IArtistShort[] = []
+
+  for (const artist of artists) {
+    if (!artist.id || !artist.name || seen.has(artist.id)) {
+      continue
+    }
+
+    seen.add(artist.id)
+    unique.push(artist)
+  }
+
+  return unique
 }
 
 function normalizeCredits(value: unknown): string | null {
@@ -64,7 +80,7 @@ export function normalizeTrack(
   raw: Record<string, unknown>,
   fallbackArtist = ''
 ): ITrack {
-  const artists = artistListFromUnknown(raw.artists)
+  const artists = listTrackArtists({ ...raw, artists: artistListFromUnknown(raw.artists) })
   const albumRaw = asRecord(raw.album)
 
   return {

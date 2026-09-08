@@ -174,6 +174,8 @@ class PersistLibraryTaskTest extends TestCase
         $coalesceTrack = \App\Containers\MusicSection\Track\Models\Track::query()->where('name', 'A New Language')->first();
         $this->assertEquals(['Napalm Death'], $napalmTrack?->artists()->get()->pluck('name')->all());
         $this->assertEquals(['Coalesce'], $coalesceTrack?->artists()->get()->pluck('name')->all());
+        $this->assertSame('primary', $napalmTrack?->artists()->first()?->pivot->role);
+        $this->assertSame('primary', $coalesceTrack?->artists()->first()?->pivot->role);
 
         $upload->refresh();
         $this->assertEqualsCanonicalizing(
@@ -449,6 +451,57 @@ class PersistLibraryTaskTest extends TestCase
         $this->assertSame(2, $album->tracks()->count());
     }
 
+    public function test_it_links_featured_artists_without_adding_them_to_the_album(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $upload = $this->makeSession($user, 'F:\\Music\\Drake');
+
+        app(PersistLibraryTask::class)->run($upload, [
+            'name' => 'Drake',
+            'path' => 'F:\\Music\\Drake',
+            'albums' => [[
+                'name' => 'Nothing Was The Same',
+                'date' => '2013-01-01',
+                'path' => 'F:\\Music\\Drake\\NWTS',
+                'album_type_id' => 1,
+                'original_album' => null,
+                'edition' => null,
+                'image' => null,
+                'artists' => ['Drake'],
+                'tracks' => [
+                    $this->makeTrackDto(
+                        title: 'Hold On We\'re Going Home',
+                        album: 'Nothing Was The Same',
+                        artist: 'Drake',
+                        windowsPath: 'F:\\Music\\Drake\\NWTS\\01.mp3',
+                        albumPath: 'F:\\Music\\Drake\\NWTS',
+                        number: 1,
+                        credits: 'feat. Majid Jordan',
+                        featuredArtists: ['Majid Jordan'],
+                    ),
+                ],
+            ]],
+        ], $user->id);
+
+        $album = Album::query()->where('name', 'Nothing Was The Same')->first();
+        $this->assertNotNull($album);
+        $this->assertEquals(['Drake'], $album->artists()->pluck('name')->all());
+
+        $track = \App\Containers\MusicSection\Track\Models\Track::query()
+            ->where('name', 'Hold On We\'re Going Home')
+            ->first();
+        $this->assertNotNull($track);
+
+        $roles = $track->artists()->get()->mapWithKeys(
+            static fn ($artist) => [$artist->name => $artist->pivot->role],
+        )->all();
+        $this->assertSame('primary', $roles['Drake'] ?? null);
+        $this->assertSame('featured', $roles['Majid Jordan'] ?? null);
+        $this->assertDatabaseHas('music_artists', ['name' => 'Majid Jordan']);
+    }
+
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload
     {
         return MusicUpload::create([
@@ -495,6 +548,7 @@ class PersistLibraryTaskTest extends TestCase
         int $number,
         int $discNumber = 1,
         ?string $credits = null,
+        array $featuredArtists = [],
     ): ParsedTrackDto {
         return ParsedTrackDto::from([
             'linux_path' => '/tmp/' . basename(str_replace('\\', '/', $windowsPath)),
@@ -508,6 +562,7 @@ class PersistLibraryTaskTest extends TestCase
             'track_number' => $number,
             'disc_number' => $discNumber,
             'credits' => $credits,
+            'featured_artists' => $featuredArtists,
             'duration' => '00:05:31',
             'bitrate' => 320,
             'album_cover_linux_path' => null,

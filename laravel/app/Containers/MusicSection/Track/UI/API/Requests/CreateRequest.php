@@ -22,6 +22,8 @@ class CreateRequest extends AdminRequest
             'path' => 'sometimes|nullable|string|max:255',
             'artist_ids' => 'sometimes|array',
             'artist_ids.*' => 'integer|exists:music_artists,id',
+            'featured_artist_ids' => 'sometimes|array',
+            'featured_artist_ids.*' => 'integer|exists:music_artists,id',
             'tags' => 'sometimes|array',
             'tags.*' => 'integer|exists:music_tags,id',
             'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',

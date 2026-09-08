@@ -19,6 +19,16 @@ class TrackResource extends JsonResource
             'link' => $this->link,
             'rate' => $this->rate?->rate ?? 0,
             'artist' => $this->artists?->first()?->name,
+            'artists' => $this->artists?->map(static function ($artist): array {
+                return [
+                    'id' => $artist->id,
+                    'name' => $artist->name,
+                    'role' => $artist->pivot->role ?? null,
+                    'is_author' => isset($artist->pivot->is_author)
+                        ? (bool) $artist->pivot->is_author
+                        : null,
+                ];
+            })->values()->all(),
             'image' => $this->full_image,
         ];
     }

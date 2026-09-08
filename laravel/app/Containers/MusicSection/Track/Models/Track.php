@@ -97,7 +97,10 @@ class Track extends Model
 
     public function artists(): BelongsToMany
     {
-        return $this->belongsToMany(Artist::class, 'music_track_artist', 'track_id', 'artist_id');
+        return $this->belongsToMany(Artist::class, 'music_track_artist', 'track_id', 'artist_id')
+                    ->withPivot(['is_author', 'role'])
+                    ->orderByRaw("CASE WHEN music_track_artist.role = 'primary' THEN 0 ELSE 1 END")
+                    ->orderBy('music_artists.name');
     }
 
     public function album(): BelongsTo

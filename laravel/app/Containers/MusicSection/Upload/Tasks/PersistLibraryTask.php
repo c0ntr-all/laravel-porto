@@ -125,7 +125,20 @@ class PersistLibraryTask extends ParentTask
                         $artistCache,
                         $counters,
                     );
-                    $this->persistTrack($upload, $trackArtist, $album, $trackDto, $tags, $discMap, $counters);
+                    $this->persistTrack(
+                        $upload,
+                        $trackArtist,
+                        $album,
+                        $trackDto,
+                        $tags,
+                        $discMap,
+                        $counters,
+                        $artistCache,
+                        $folderPath,
+                        $folderArtistName,
+                        $cover,
+                        $userId,
+                    );
                     event(new UploadProgressed($upload, 'persisting', $processed, $total, $trackDto->title));
                 }
             }
@@ -387,6 +400,11 @@ class PersistLibraryTask extends ParentTask
         array $tags,
         array $discMap,
         array &$counters,
+        array &$artistCache,
+        string $folderPath,
+        string $folderArtistName,
+        ?string $cover,
+        int $userId,
     ): void {
         try {
             $existing = $this->findTrackByPathTask->run($trackDto->windows_path);
@@ -394,9 +412,19 @@ class PersistLibraryTask extends ParentTask
             $cd = (string) $discNumber;
             $discId = $discMap[$discNumber]->id ?? null;
             $snapshot = $this->snapshot($trackDto);
+            $featuredIds = $this->resolveFeaturedArtistIds(
+                $trackDto,
+                $artist,
+                $userId,
+                $folderPath,
+                $folderArtistName,
+                $cover,
+                $artistCache,
+                $counters,
+            );
 
             if ($existing && $this->trackUnchanged($existing, $album, $trackDto, $cd, $discId)) {
-                $this->syncArtistsForTrackTask->run($existing, [$artist->id]);
+                $this->syncArtistsForTrackTask->run($existing, [$artist->id], $featuredIds);
                 $this->musicUploadRepository->addTrackLog(
                     $upload,
                     UploadTrackStatusEnum::Skipped,
@@ -445,7 +473,7 @@ class PersistLibraryTask extends ParentTask
                 $counters['tracks_created']++;
             }
 
-            $this->syncArtistsForTrackTask->run($track, [$artist->id]);
+            $this->syncArtistsForTrackTask->run($track, [$artist->id], $featuredIds);
             $this->syncGenre($track, $trackDto->genre, $tags, $status === UploadTrackStatusEnum::Created);
 
             $this->musicUploadRepository->addTrackLog(
@@ -512,6 +540,46 @@ class PersistLibraryTask extends ParentTask
         $this->syncTagsTask->run($track, $dto);
     }
 
+    /**
+     * @param array<string, Artist> $artistCache
+     * @return list<int>
+     */
+    private function resolveFeaturedArtistIds(
+        ParsedTrackDto $trackDto,
+        Artist $primary,
+        int $userId,
+        string $folderPath,
+        string $folderArtistName,
+        ?string $cover,
+        array &$artistCache,
+        array &$counters,
+    ): array {
+        $ids = [];
+
+        foreach ($trackDto->featured_artists as $name) {
+            $name = trim($name);
+            if ($name === '' || strcasecmp($name, $primary->name) === 0) {
+                continue;
+            }
+
+            $featured = $this->artistFromCache(
+                $name,
+                $userId,
+                $folderPath,
+                $folderArtistName,
+                $cover,
+                $artistCache,
+                $counters,
+            );
+
+            if ($featured->id !== $primary->id) {
+                $ids[] = $featured->id;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     private function snapshot(ParsedTrackDto $dto): array
     {
         return [
@@ -523,6 +591,7 @@ class PersistLibraryTask extends ParentTask
             'track_number' => $dto->track_number,
             'disc_number' => $dto->disc_number,
             'credits' => $dto->credits,
+            'featured_artists' => $dto->featured_artists,
             'duration' => $dto->duration,
             'bitrate' => $dto->bitrate,
             'path' => $dto->windows_path,

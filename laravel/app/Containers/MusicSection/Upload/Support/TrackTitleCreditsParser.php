@@ -19,8 +19,13 @@ final class TrackTitleCreditsParser
 
     public const BRACKET_PATTERN = '/\[([^\[\]]+)\]|\(([^()]+)\)/u';
 
+    public function __construct(
+        private readonly FeaturedArtistParser $featuredArtistParser,
+    ) {
+    }
+
     /**
-     * @return array{name: string, credits: string|null}
+     * @return array{name: string, credits: string|null, featured_artists: list<string>}
      */
     public function parse(string $title): array
     {
@@ -31,6 +36,7 @@ final class TrackTitleCreditsParser
             return [
                 'name' => $name,
                 'credits' => null,
+                'featured_artists' => [],
             ];
         }
 
@@ -51,10 +57,12 @@ final class TrackTitleCreditsParser
         }
 
         $credits = array_values(array_unique($credits));
+        $joined = $credits === [] ? null : implode(' / ', $credits);
 
         return [
             'name' => $cleaned,
-            'credits' => $credits === [] ? null : implode(' / ', $credits),
+            'credits' => $joined,
+            'featured_artists' => $this->featuredArtistParser->namesFromCredits($joined),
         ];
     }
 

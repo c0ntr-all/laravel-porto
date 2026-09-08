@@ -7,6 +7,7 @@ use App\Containers\MusicSection\Album\Tasks\UpdateOrCreateAlbumDiscTask;
 use App\Containers\MusicSection\Tag\Data\DTO\SyncTagsDto;
 use App\Containers\MusicSection\Tag\Tasks\SyncTagsTask;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
+use App\Containers\MusicSection\Track\Enums\TrackArtistRoleEnum;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Track\Tasks\SyncArtistsForTrackTask;
 use App\Containers\MusicSection\Track\Tasks\UpdateTrackTask;
@@ -41,8 +42,12 @@ class UpdateTrackAction extends BaseAction
 
             $track = $this->updateTrackTask->run($track, $dto);
 
-            if (array_key_exists('artist_ids', $requestData)) {
-                $this->syncArtistsForTrackTask->run($track, $requestData['artist_ids']);
+            if (array_key_exists('artist_ids', $requestData) || array_key_exists('featured_artist_ids', $requestData)) {
+                $this->syncArtistsForTrackTask->run(
+                    $track,
+                    $requestData['artist_ids'] ?? $this->artistIdsByRole($track, TrackArtistRoleEnum::Primary),
+                    $requestData['featured_artist_ids'] ?? $this->artistIdsByRole($track, TrackArtistRoleEnum::Featured),
+                );
             }
 
             if (!empty($requestData['tags'])) {
@@ -80,5 +85,17 @@ class UpdateTrackAction extends BaseAction
         $disc = $this->updateOrCreateAlbumDiscTask->run($album, (int) $cd ?: 1);
         $dto->disc_id = $disc->id;
         $dto->cd = (string) $disc->number;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function artistIdsByRole(Track $track, TrackArtistRoleEnum $role): array
+    {
+        return $track->artists()
+            ->wherePivot('role', $role->value)
+            ->pluck('music_artists.id')
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->all();
     }
 }

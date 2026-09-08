@@ -14,6 +14,7 @@ class ParseTrackTitleTaskTest extends TestCase
 
         $this->assertSame('Humble', $parsed['name']);
         $this->assertSame('feat. Kendrick / prod. Mike Will', $parsed['credits']);
+        $this->assertSame(['Kendrick'], $parsed['featured_artists']);
     }
 
     public function test_it_keeps_artistic_parentheticals_in_the_title(): void
@@ -21,19 +22,19 @@ class ParseTrackTitleTaskTest extends TestCase
         $parser = app(TrackTitleCreditsParser::class);
 
         $this->assertSame(
-            ['name' => 'Helplessness Blues (Acoustic)', 'credits' => null],
+            ['name' => 'Helplessness Blues (Acoustic)', 'credits' => null, 'featured_artists' => []],
             $parser->parse('Helplessness Blues (Acoustic)'),
         );
         $this->assertSame(
-            ['name' => 'Bohemian Rhapsody (Live)', 'credits' => null],
+            ['name' => 'Bohemian Rhapsody (Live)', 'credits' => null, 'featured_artists' => []],
             $parser->parse('Bohemian Rhapsody (Live)'),
         );
         $this->assertSame(
-            ['name' => 'Happiness Is A Warm Gun (It Happened One Night)', 'credits' => null],
+            ['name' => 'Happiness Is A Warm Gun (It Happened One Night)', 'credits' => null, 'featured_artists' => []],
             $parser->parse('Happiness Is A Warm Gun (It Happened One Night)'),
         );
         $this->assertSame(
-            ['name' => 'Song (Club Remix)', 'credits' => null],
+            ['name' => 'Song (Club Remix)', 'credits' => null, 'featured_artists' => []],
             $parser->parse('Song (Club Remix)'),
         );
         $this->assertFalse($parser->isCredit('Radio Edit'));
@@ -55,5 +56,6 @@ class ParseTrackTitleTaskTest extends TestCase
 
         $this->assertSame('(feat. Only)', $parsed['name']);
         $this->assertNull($parsed['credits']);
+        $this->assertSame([], $parsed['featured_artists']);
     }
 }

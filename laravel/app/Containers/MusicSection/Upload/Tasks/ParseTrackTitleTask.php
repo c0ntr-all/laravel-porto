@@ -13,7 +13,7 @@ class ParseTrackTitleTask extends ParentTask
     }
 
     /**
-     * @return array{name: string, credits: string|null}
+     * @return array{name: string, credits: string|null, featured_artists: list<string>}
      */
     public function run(string $title): array
     {

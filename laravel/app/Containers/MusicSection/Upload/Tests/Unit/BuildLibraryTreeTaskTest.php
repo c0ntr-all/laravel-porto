@@ -218,4 +218,32 @@ class BuildLibraryTreeTaskTest extends TestCase
         $this->assertSame(1, $album['tracks'][0]->disc_number);
         $this->assertSame(2, $album['tracks'][1]->disc_number);
     }
+
+    public function test_it_extracts_featured_artists_from_title_and_artist_tag(): void
+    {
+        $tracks = [
+            ParsedTrackDto::from([
+                'linux_path' => '/tmp/01.mp3',
+                'windows_path' => 'F:\\Music\\Drake\\Nothing Was The Same\\01.mp3',
+                'title' => 'Hold On We\'re Going Home (feat. Majid Jordan)',
+                'album' => 'Nothing Was The Same',
+                'artist' => 'Drake feat. Rihanna',
+                'year' => '2013',
+                'date' => '2013-01-01',
+                'album_windows_path' => 'F:\\Music\\Drake\\Nothing Was The Same',
+            ]),
+        ];
+
+        $tree = app(BuildLibraryTreeTask::class)->run(
+            $tracks,
+            'Drake',
+            'F:\\Music\\Drake',
+        );
+
+        $track = $tree['albums'][0]['tracks'][0];
+        $this->assertSame('Hold On We\'re Going Home', $track->title);
+        $this->assertSame('Drake', $track->artist);
+        $this->assertEqualsCanonicalizing(['Majid Jordan', 'Rihanna'], $track->featured_artists);
+        $this->assertSame(['Drake'], $tree['albums'][0]['artists']);
+    }
 }

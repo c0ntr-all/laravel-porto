@@ -17,6 +17,8 @@ class ParsedTrackDto extends Data
     public int $track_number = 0;
     public ?int $disc_number = null;
     public ?string $credits = null;
+    /** @var list<string> */
+    public array $featured_artists = [];
     public ?string $duration = null;
     public ?int $bitrate = null;
     public ?string $album_cover_linux_path = null;

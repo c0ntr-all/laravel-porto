@@ -43,6 +43,7 @@ class PreviewUploadAction extends BaseAction
                             'title' => $track->title,
                             'credits' => $track->credits,
                             'artist' => $track->artist,
+                            'featured_artists' => $track->featured_artists,
                             'path' => $track->windows_path,
                             'track_number' => $track->track_number,
                             'disc_number' => $track->disc_number,

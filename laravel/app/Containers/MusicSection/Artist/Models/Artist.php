@@ -78,7 +78,8 @@ class Artist extends Model
 
     public function tracks(): BelongsToMany
     {
-        return $this->belongsToMany(Track::class, 'music_track_artist', 'artist_id', 'track_id');
+        return $this->belongsToMany(Track::class, 'music_track_artist', 'artist_id', 'track_id')
+                    ->withPivot(['is_author', 'role']);
     }
 
     public function aggregatedTags(): HasMany

@@ -15,8 +15,6 @@ class ListTracksByArtistTask extends Task
 
     public function run(Artist $artist)
     {
-        $albumIds = $artist->albums()->pluck('id')->toArray();
-
-        return $this->trackRepository->listTracksByAlbumIdsWithCursor($albumIds);
+        return $this->trackRepository->listTracksByArtistWithCursor($artist);
     }
 }

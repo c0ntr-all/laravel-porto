@@ -3,12 +3,14 @@
 namespace App\Containers\MusicSection\Track\Data\Repositories;
 
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Tag\Data\Filters\ArtistTagsFilter;
 use App\Containers\MusicSection\Track\Data\Filters\TrackRateFilter;
 use App\Containers\MusicSection\Track\Data\Filters\TrackSearchFilter;
 use App\Containers\MusicSection\Track\Data\DTO\CreateTrackDto;
 use App\Containers\MusicSection\Track\Data\DTO\UpdateTrackDto;
 use App\Containers\MusicSection\Track\Data\Sorts\TrackRateSort;
+use App\Containers\MusicSection\Track\Enums\TrackArtistRoleEnum;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,17 +35,16 @@ class TrackRepository
     }
 
     /**
-     * Get list of all tracks for Artist
-     *
-     * @param array $albumIds
-     * @return CursorPaginator
+     * Tracks linked to the artist (primary and featured), not every track of their albums.
      */
-    public function listTracksByAlbumIdsWithCursor(array $albumIds): CursorPaginator
+    public function listTracksByArtistWithCursor(Artist $artist): CursorPaginator
     {
-        return QueryBuilder::for(Track::whereIn('album_id', $albumIds))
-                           ->allowedFilters($this->allowedFilters())
+        return QueryBuilder::for($artist->tracks())
+                           ->allowedFilters($this->allowedFilters(withPivotRole: true))
                            ->allowedSorts($this->allowedSorts())
                            ->with(['tags', 'artists', 'rate', 'album.albumType'])
+                           ->defaultSort('-created_at')
+                           ->orderByDesc('music_tracks.id')
                            ->cursorPaginate(50);
     }
 
@@ -122,9 +123,9 @@ class TrackRepository
     /**
      * @return list<AllowedFilter>
      */
-    private function allowedFilters(): array
+    private function allowedFilters(bool $withPivotRole = false): array
     {
-        return [
+        $filters = [
             AllowedFilter::partial('name'),
             AllowedFilter::exact('album_id'),
             AllowedFilter::exact('cd'),
@@ -161,6 +162,20 @@ class TrackRepository
             }),
             AllowedFilter::custom('rate', new TrackRateFilter()),
         ];
+
+        if ($withPivotRole) {
+            $filters[] = AllowedFilter::callback('role', function (Builder $query, mixed $value): void {
+                $raw = is_array($value) ? (string) ($value[0] ?? '') : (string) $value;
+                $role = TrackArtistRoleEnum::tryFrom($raw);
+                if ($role === null) {
+                    return;
+                }
+
+                $query->where('music_track_artist.role', $role->value);
+            });
+        }
+
+        return $filters;
     }
 
     /**

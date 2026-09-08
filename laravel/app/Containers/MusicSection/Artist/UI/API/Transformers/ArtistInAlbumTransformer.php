@@ -12,6 +12,10 @@ class ArtistInAlbumTransformer extends TransformerAbstract
         return [
             'id' => $artist->id,
             'name' => $artist->name,
+            'role' => $artist->pivot->role ?? null,
+            'is_author' => isset($artist->pivot->is_author)
+                ? (bool) $artist->pivot->is_author
+                : null,
         ];
     }
 }

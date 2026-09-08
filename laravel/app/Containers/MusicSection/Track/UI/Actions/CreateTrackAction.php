@@ -64,8 +64,12 @@ class CreateTrackAction extends BaseAction
                 $track->save();
             }
 
-            if (!empty($requestData['artist_ids'])) {
-                $this->syncArtistsForTrackTask->run($track, $requestData['artist_ids']);
+            if (!empty($requestData['artist_ids']) || !empty($requestData['featured_artist_ids'])) {
+                $this->syncArtistsForTrackTask->run(
+                    $track,
+                    $requestData['artist_ids'] ?? [],
+                    $requestData['featured_artist_ids'] ?? [],
+                );
             }
 
             if (!empty($requestData['tags'])) {

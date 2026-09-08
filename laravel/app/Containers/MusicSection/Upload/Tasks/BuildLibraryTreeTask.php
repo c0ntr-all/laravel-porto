@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Upload\Tasks;
 
 use App\Containers\MusicSection\Album\Models\AlbumType;
 use App\Containers\MusicSection\Upload\Data\DTO\ParsedTrackDto;
+use App\Containers\MusicSection\Upload\Support\FeaturedArtistParser;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Enumerable;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +14,7 @@ class BuildLibraryTreeTask extends ParentTask
     public function __construct(
         private readonly ParseAlbumTitleTask $parseAlbumTitleTask,
         private readonly ParseTrackTitleTask $parseTrackTitleTask,
+        private readonly FeaturedArtistParser $featuredArtistParser,
     ) {
     }
 
@@ -172,13 +174,19 @@ class BuildLibraryTreeTask extends ParentTask
     {
         $albumParsed = $this->parseAlbumTitleTask->run($track->album, $albumTypes);
         $titleParsed = $this->parseTrackTitleTask->run($track->title);
+        $artistParsed = $this->featuredArtistParser->parseArtistField($track->artist);
 
         $track->album_type_id = $albumParsed['album_type_id'];
         $track->album_version = $albumParsed['edition'];
         $track->original_album = $albumParsed['original_album'];
         $track->album = $albumParsed['name'];
         $track->title = $titleParsed['name'];
-        $track->credits = $titleParsed['credits'];
+        $track->artist = $artistParsed['name'] !== '' ? $artistParsed['name'] : $track->artist;
+        $track->credits = $this->mergeCredits($titleParsed['credits'], $artistParsed['featured_artists']);
+        $track->featured_artists = $this->uniqueFeaturedNames(
+            array_merge($titleParsed['featured_artists'], $artistParsed['featured_artists']),
+            $track->artist,
+        );
 
         if ($track->disc_number === null || $track->disc_number < 1) {
             $track->disc_number = $albumParsed['disc_number'] ?? 1;
@@ -189,5 +197,54 @@ class BuildLibraryTreeTask extends ParentTask
         $track->disc_number = max(1, (int) $track->disc_number);
 
         return $track;
+    }
+
+    /**
+     * @param list<string> $fromArtistField
+     */
+    private function mergeCredits(?string $fromTitle, array $fromArtistField): ?string
+    {
+        $parts = [];
+        if ($fromTitle !== null && $fromTitle !== '') {
+            $parts[] = $fromTitle;
+        }
+
+        foreach ($fromArtistField as $name) {
+            $credit = 'feat. '.$name;
+            foreach ($parts as $existing) {
+                if (stripos($existing, $name) !== false) {
+                    continue 2;
+                }
+            }
+            $parts[] = $credit;
+        }
+
+        return $parts === [] ? null : implode(' / ', $parts);
+    }
+
+    /**
+     * @param list<string> $names
+     * @return list<string>
+     */
+    private function uniqueFeaturedNames(array $names, string $primaryArtist): array
+    {
+        $seen = [];
+        $unique = [];
+
+        foreach ($names as $name) {
+            $name = trim($name);
+            if ($name === '' || strcasecmp($name, $primaryArtist) === 0) {
+                continue;
+            }
+
+            $key = mb_strtolower($name);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $unique[] = $name;
+        }
+
+        return $unique;
     }
 }

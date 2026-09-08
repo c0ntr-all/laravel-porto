@@ -8,10 +8,12 @@ use App\Containers\MusicSection\Artist\Models\Artist;
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
 use App\Containers\MusicSection\Upload\Enums\UploadTrackStatusEnum;
+use App\Containers\MusicSection\Upload\Jobs\ImportArtistMusicJob;
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use App\Containers\MusicSection\Upload\Support\Id3Reader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -169,6 +171,21 @@ class UploadCrudTest extends TestCase
         $this->assertDatabaseCount('music_uploads', 2);
         $this->assertDatabaseCount('music_upload_artist', 2);
         $this->assertDatabaseCount('music_upload_album', 2);
+    }
+
+    public function test_admin_create_upload_queues_import_job(): void
+    {
+        Queue::fake();
+        $this->seedArtistFolder();
+
+        $this->actingAs($this->makeAdmin(), 'api')
+            ->postJson('/api/v1/music/uploads', [
+                'path' => 'F:\\Music\\Metallica',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.attributes.status', UploadStatusEnum::Pending->value);
+
+        Queue::assertPushed(ImportArtistMusicJob::class);
     }
 
     public function test_admin_can_inspect_all_artists_albums_and_tracks_of_a_session(): void

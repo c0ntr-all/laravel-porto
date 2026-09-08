@@ -4,11 +4,11 @@ namespace App\Containers\MusicSection\Upload\Events;
 
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class UploadStarted implements ShouldBroadcast
+class UploadStarted implements ShouldBroadcastNow
 {
     use Dispatchable;
     use SerializesModels;

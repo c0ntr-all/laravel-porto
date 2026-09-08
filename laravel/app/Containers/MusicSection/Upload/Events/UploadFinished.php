@@ -4,11 +4,11 @@ namespace App\Containers\MusicSection\Upload\Events;
 
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class UploadFinished implements ShouldBroadcast
+class UploadFinished implements ShouldBroadcastNow
 {
     use Dispatchable;
     use SerializesModels;
@@ -44,6 +44,11 @@ class UploadFinished implements ShouldBroadcast
             'tracks_updated' => $this->upload->tracks_updated,
             'tracks_skipped' => $this->upload->tracks_skipped,
             'tracks_failed' => $this->upload->tracks_failed,
+            'albums_created' => $this->upload->albums_created,
+            'albums_updated' => $this->upload->albums_updated,
+            'albums_total' => (int) (data_get($this->upload->meta, 'albums_total') ?: $this->upload->albums_created + $this->upload->albums_updated),
+            'artists_created' => $this->upload->artists_created,
+            'artists_total' => (int) (data_get($this->upload->meta, 'artists_total') ?: $artists->count()),
             'error_message' => $this->upload->error_message,
             'stage' => 'finished',
         ];

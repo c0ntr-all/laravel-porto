@@ -41,6 +41,8 @@ class UploadTransformer extends TransformerAbstract
             'albums_created' => $upload->albums_created,
             'albums_updated' => $upload->albums_updated,
             'artists_created' => $upload->artists_created,
+            'albums_total' => (int) (data_get($upload->meta, 'albums_total') ?: $upload->albums_created + $upload->albums_updated),
+            'artists_total' => (int) (data_get($upload->meta, 'artists_total') ?: count($this->ids($upload, 'artists'))),
             'error_message' => $upload->error_message,
             'created_at' => $upload->created_at?->format('Y-m-d H:i:s'),
         ];

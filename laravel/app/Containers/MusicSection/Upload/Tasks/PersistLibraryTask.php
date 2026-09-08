@@ -89,7 +89,12 @@ class PersistLibraryTask extends ParentTask
             $cover = $this->firstAlbumCover($tree);
             $processed = 0;
             $total = $this->countTracks($tree);
+            $albumsTotal = count($tree['albums']);
+            $artistsTotal = $this->countArtists($tree);
+            $albumsProcessed = 0;
             $albumIds = [];
+
+            $albums = $tree['albums'];
 
             $albums = $tree['albums'];
             usort($albums, static function (array $left, array $right): int {
@@ -100,6 +105,7 @@ class PersistLibraryTask extends ParentTask
             });
 
             foreach ($albums as $albumData) {
+                $albumsProcessed++;
                 $albumArtists = $this->resolveAlbumArtists(
                     $albumData,
                     $userId,
@@ -139,7 +145,21 @@ class PersistLibraryTask extends ParentTask
                         $cover,
                         $userId,
                     );
-                    event(new UploadProgressed($upload, 'persisting', $processed, $total, $trackDto->title));
+                    event(new UploadProgressed(
+                        $upload,
+                        'persisting',
+                        $processed,
+                        $total,
+                        $trackDto->title,
+                        [
+                            'tracks_processed' => $processed,
+                            'tracks_total' => $total,
+                            'albums_processed' => $albumsProcessed,
+                            'albums_total' => $albumsTotal,
+                            'artists_processed' => count($artistCache),
+                            'artists_total' => $artistsTotal,
+                        ],
+                    ));
                 }
             }
 
@@ -617,5 +637,35 @@ class PersistLibraryTask extends ParentTask
         }
 
         return $total;
+    }
+
+    /**
+     * @param array{albums?: list<array{artists?: list<string>, tracks?: list<mixed>}>} $tree
+     */
+    private function countArtists(array $tree): int
+    {
+        $names = [];
+
+        foreach ($tree['albums'] ?? [] as $album) {
+            foreach ($album['artists'] ?? [] as $name) {
+                $name = trim((string) $name);
+                if ($name !== '') {
+                    $names[$name] = true;
+                }
+            }
+
+            foreach ($album['tracks'] ?? [] as $track) {
+                $name = trim((string) ($track->artist ?? ''));
+                if ($name !== '') {
+                    $names[$name] = true;
+                }
+            }
+        }
+
+        if ($names === [] && filled($tree['name'] ?? null)) {
+            return 1;
+        }
+
+        return count($names);
     }
 }

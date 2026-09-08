@@ -51,7 +51,11 @@ class ParseArtistFolderTask extends ParentTask
                     'parsing',
                     $index + 1,
                     $total,
-                    basename($file)
+                    basename($file),
+                    [
+                        'tracks_processed' => $index + 1,
+                        'tracks_total' => $total,
+                    ],
                 ));
             }
         }

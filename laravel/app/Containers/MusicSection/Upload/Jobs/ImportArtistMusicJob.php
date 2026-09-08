@@ -20,8 +20,7 @@ class ImportArtistMusicJob implements ShouldQueue
     public int $timeout = 1800;
     public int $tries = 1;
 
-    // Currently executed with dispatchSync() from CreateUploadAction.
-    // Switch that call to dispatch() when import should run in the background.
+    // Dispatched asynchronously from CreateUploadAction so the UI can follow Echo progress.
 
     public function __construct(
         public readonly MusicUpload $upload

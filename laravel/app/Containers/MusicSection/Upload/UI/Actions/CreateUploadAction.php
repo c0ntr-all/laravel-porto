@@ -25,7 +25,7 @@ class CreateUploadAction extends BaseAction
         $upload = $this->createUploadSessionTask->run($dto);
 
         try {
-            ImportArtistMusicJob::dispatchSync($upload);
+            ImportArtistMusicJob::dispatch($upload);
         } catch (Throwable) {
             // Session already contains failed status and error_message.
         }
@@ -40,10 +40,14 @@ class CreateUploadAction extends BaseAction
             'path' => PathHelper::normalizeWindows($request->validated('path')),
         ]));
 
+        $message = in_array($upload->status->value, ['pending', 'running'], true)
+            ? 'Upload session started.'
+            : 'Upload session finished with status ' . $upload->status->value . '.';
+
         return fractal($upload, new UploadTransformer())
             ->withResourceName('uploads')
             ->parseIncludes(['artists', 'albums.artists', 'tracks'])
-            ->addMeta(['message' => 'Upload session finished with status ' . $upload->status->value . '.'])
+            ->addMeta(['message' => $message])
             ->respond(201, [], JSON_PRETTY_PRINT);
     }
 }

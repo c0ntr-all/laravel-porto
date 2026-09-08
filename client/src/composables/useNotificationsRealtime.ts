@@ -2,7 +2,7 @@ import { onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useNotificationStore } from 'src/stores/modules/notificationStore'
 import { useUserStore } from 'src/stores/modules/userStore'
-import { connectNotificationsRealtime, disconnectNotificationsRealtime } from 'src/services/realtime/echo.client'
+import { connectNotificationsRealtime, disconnectRealtime } from 'src/services/realtime/echo.client'
 
 export function useNotificationsRealtime() {
   const userStore = useUserStore()
@@ -10,7 +10,7 @@ export function useNotificationsRealtime() {
   const { isLoggedIn, user } = storeToRefs(userStore)
 
   function startSession(userId: string): void {
-    disconnectNotificationsRealtime()
+    disconnectRealtime()
     connectNotificationsRealtime(userId, {
       onCreated: payload => notificationStore.applyCreated(payload),
       onRead: payload => notificationStore.applyRead(payload),
@@ -20,7 +20,7 @@ export function useNotificationsRealtime() {
   }
 
   function stopSession(): void {
-    disconnectNotificationsRealtime()
+    disconnectRealtime()
     notificationStore.reset()
   }
 

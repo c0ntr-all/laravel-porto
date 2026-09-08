@@ -81,7 +81,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/userStore'
-// import { useNotificationsRealtime } from 'src/composables/useNotificationsRealtime'
+import { useNotificationsRealtime } from 'src/composables/useNotificationsRealtime'
 import AppMusicPlayer from 'src/components/default/AppMusicPlayer.vue'
 import AppUserMenu from 'src/components/default/AppUserMenu.vue'
 import AppNotificationsBell from 'src/components/default/AppNotificationsBell.vue'
@@ -107,7 +107,7 @@ const $route: Route = useRoute()
 const userStore = useUserStore()
 const leftDrawerOpen = ref<boolean>(false)
 
-// useNotificationsRealtime()
+useNotificationsRealtime()
 
 const defaultTitleText = 'No title for route'
 const defaultIcon = 'label'

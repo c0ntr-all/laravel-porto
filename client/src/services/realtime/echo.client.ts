@@ -4,6 +4,7 @@ import {
   INotificationCreatedPayload,
   INotificationReadPayload
 } from 'src/types/notification'
+import { IMusicUploadProgress } from 'src/types'
 
 declare global {
   interface Window {
@@ -20,8 +21,15 @@ export type NotificationRealtimeHandlers = {
   onReadAll: (payload: INotificationReadPayload) => void
 }
 
+export type MusicUploadRealtimeHandlers = {
+  onStarted?: (payload: IMusicUploadProgress) => void
+  onProgressed: (payload: IMusicUploadProgress) => void
+  onFinished: (payload: IMusicUploadProgress) => void
+}
+
 let echo: Echo<'reverb'> | null = null
-let subscribedChannel: string | null = null
+let notificationsChannel: string | null = null
+const uploadChannels = new Set<string>()
 
 function apiOrigin(): string {
   return (process.env.host ?? '').replace(/\/$/, '')
@@ -57,14 +65,37 @@ function createEcho(): Echo<'reverb'> | null {
   })
 }
 
-export function disconnectNotificationsRealtime(): void {
-  if (echo && subscribedChannel) {
-    echo.leave(subscribedChannel)
+function ensureEcho(): Echo<'reverb'> | null {
+  if (echo) {
+    return echo
   }
 
-  echo?.disconnect()
+  echo = createEcho()
+  if (echo) {
+    window.Echo = echo
+  }
+
+  return echo
+}
+
+export function disconnectNotificationsRealtime(): void {
+  if (echo && notificationsChannel) {
+    echo.leave(notificationsChannel)
+  }
+
+  notificationsChannel = null
+}
+
+export function disconnectRealtime(): void {
+  disconnectNotificationsRealtime()
+
+  if (echo) {
+    uploadChannels.forEach(channelName => echo?.leave(channelName))
+    uploadChannels.clear()
+    echo.disconnect()
+  }
+
   echo = null
-  subscribedChannel = null
   window.Echo = undefined
 }
 
@@ -72,17 +103,19 @@ export function connectNotificationsRealtime(
   userId: string | number,
   handlers: NotificationRealtimeHandlers
 ): () => void {
-  disconnectNotificationsRealtime()
+  if (echo && notificationsChannel) {
+    echo.leave(notificationsChannel)
+    notificationsChannel = null
+  }
 
-  echo = createEcho()
-  if (!echo) {
+  const instance = ensureEcho()
+  if (!instance) {
     return () => undefined
   }
 
-  window.Echo = echo
-  subscribedChannel = `users.${userId}.notifications`
+  notificationsChannel = `users.${userId}.notifications`
 
-  const channel = echo.private(subscribedChannel)
+  const channel = instance.private(notificationsChannel)
   channel.listen('.notification.created', (payload: INotificationCreatedPayload) => {
     handlers.onCreated(payload)
   })
@@ -94,4 +127,35 @@ export function connectNotificationsRealtime(
   })
 
   return disconnectNotificationsRealtime
+}
+
+export function subscribeMusicUploadRealtime(
+  uploadId: string,
+  handlers: MusicUploadRealtimeHandlers
+): () => void {
+  const instance = ensureEcho()
+  if (!instance) {
+    return () => undefined
+  }
+
+  const channelName = `music.uploads.${uploadId}`
+  uploadChannels.add(channelName)
+
+  const channel = instance.private(channelName)
+  if (handlers.onStarted) {
+    channel.listen('.upload.started', (payload: IMusicUploadProgress) => {
+      handlers.onStarted?.(payload)
+    })
+  }
+  channel.listen('.upload.progressed', (payload: IMusicUploadProgress) => {
+    handlers.onProgressed(payload)
+  })
+  channel.listen('.upload.finished', (payload: IMusicUploadProgress) => {
+    handlers.onFinished(payload)
+  })
+
+  return () => {
+    instance.leave(channelName)
+    uploadChannels.delete(channelName)
+  }
 }

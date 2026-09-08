@@ -24,14 +24,17 @@
     />
   </form>
 
+  <MusicUploadProgress />
+
   <div class="text-h6 q-mb-md">Upload sessions</div>
   <MusicUploadsTable />
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import type { QInput } from 'quasar'
 import { useMusicUploadStore } from 'src/stores/modules/musicUploadStore'
 import MusicUploadsTable from 'src/components/admin/Music/MusicUploadsTable.vue'
+import MusicUploadProgress from 'src/components/admin/Music/MusicUploadProgress.vue'
 
 const store = useMusicUploadStore()
 const fullPath = ref<string | null>(null)
@@ -57,4 +60,8 @@ const onReset = () => {
   fullPath.value = null
   fullPathRef.value?.resetValidation()
 }
+
+onUnmounted(() => {
+  store.stopWatching()
+})
 </script>

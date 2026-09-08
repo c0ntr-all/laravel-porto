@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Image\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Tasks\SaveImageToSaveAlbumTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\SaveImageRequest;
@@ -20,7 +19,6 @@ class SaveImageAction extends UseCaseAction
 
     public function __construct(
         private readonly SaveImageToSaveAlbumTask $saveImageToSaveAlbumTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -31,9 +29,7 @@ class SaveImageAction extends UseCaseAction
             $saved = $this->saveImageToSaveAlbumTask->run($image, $userId);
 
             if ($saved->wasRecentlyCreated) {
-                DB::afterCommit(function () use ($saved) {
-                    $this->createActivityUseCaseTask->run($saved, $this->eventTypesEnum->value);
-                });
+                $this->recordUseCase($saved);
             }
 
             return $saved;

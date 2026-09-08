@@ -3,18 +3,15 @@
 namespace App\Containers\TaskManagerSection\Task\Events;
 
 use App\Containers\TaskManagerSection\Task\Models\Task;
-use Illuminate\Queue\SerializesModels;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Events\DomainActivityEvent;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class TaskEvent
+abstract class TaskEvent extends DomainActivityEvent
 {
-    use SerializesModels;
-
-    protected string $eventType = 'unknown';
-
     public function __construct(
         protected Task $task
-    )
-    {
+    ) {
     }
 
     public function getTask(): Task
@@ -22,8 +19,29 @@ abstract class TaskEvent
         return $this->task;
     }
 
-    public function getEventType(): string
+    public function activityMainType(): string
     {
-        return $this->eventType;
+        return $this->task->getLoggableType();
+    }
+
+    public function activityMainId(): string
+    {
+        return (string) $this->task->id;
+    }
+
+    public function activityMetadata(): array
+    {
+        $metadata = $this->snapshot(['title', 'content', 'finished_at', 'is_declined']);
+
+        if ($this->eventType === EventTypesEnum::UPDATED->value) {
+            return ['changes' => $this->task->getChanges()];
+        }
+
+        return $metadata;
+    }
+
+    protected function activitySubject(): Model
+    {
+        return $this->task;
     }
 }

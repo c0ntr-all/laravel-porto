@@ -3,14 +3,11 @@
 namespace App\Containers\GallerySection\Album\Events;
 
 use App\Containers\GallerySection\Album\Models\Album;
-use Illuminate\Queue\SerializesModels;
+use App\Ship\Events\DomainActivityEvent;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class GalleryAlbumEvent
+abstract class GalleryAlbumEvent extends DomainActivityEvent
 {
-    use SerializesModels;
-
-    protected string $eventType = 'unknown';
-
     public function __construct(
         protected Album $album
     ) {
@@ -21,8 +18,23 @@ abstract class GalleryAlbumEvent
         return $this->album;
     }
 
-    public function getEventType(): string
+    public function activityMainType(): string
     {
-        return $this->eventType;
+        return $this->album->getLoggableType();
+    }
+
+    public function activityMainId(): string
+    {
+        return (string) $this->album->id;
+    }
+
+    public function activityMetadata(): array
+    {
+        return $this->snapshot(['name', 'description']);
+    }
+
+    protected function activitySubject(): Model
+    {
+        return $this->album;
     }
 }

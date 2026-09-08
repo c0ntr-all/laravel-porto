@@ -2,7 +2,6 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsDeleteDto;
 use App\Containers\AppSection\Attachment\Tasks\DeleteAttachmentsTask;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
@@ -34,8 +33,7 @@ class UpdatePostAction extends UseCaseAction
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
-        private readonly CreateAttachmentsTask $createAttachmentsTask
+        private readonly CreateAttachmentsTask $createAttachmentsTask,
     )
     {
         parent::__construct();
@@ -105,10 +103,7 @@ class UpdatePostAction extends UseCaseAction
             return $updatedPost;
         });
 
-        // Сделать Event запускающий таску
-        DB::afterCommit(function () use ($updatedPost) {
-            $this->createActivityUseCaseTask->run($updatedPost, $this->eventTypesEnum->value);
-        });
+        $this->recordUseCase($updatedPost);
 
         return $updatedPost;
     }

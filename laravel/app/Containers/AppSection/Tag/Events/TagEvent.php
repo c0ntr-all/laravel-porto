@@ -3,18 +3,14 @@
 namespace App\Containers\AppSection\Tag\Events;
 
 use App\Containers\AppSection\Tag\Models\Tag;
-use Illuminate\Queue\SerializesModels;
+use App\Ship\Events\DomainActivityEvent;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class TagEvent
+abstract class TagEvent extends DomainActivityEvent
 {
-    use SerializesModels;
-
-    protected string $eventType = 'unknown';
-
     public function __construct(
         protected Tag $tag
-    )
-    {
+    ) {
     }
 
     public function getTag(): Tag
@@ -22,8 +18,23 @@ abstract class TagEvent
         return $this->tag;
     }
 
-    public function getEventType(): string
+    public function activityMainType(): string
     {
-        return $this->eventType;
+        return $this->tag->getLoggableType();
+    }
+
+    public function activityMainId(): string
+    {
+        return (string) $this->tag->id;
+    }
+
+    public function activityMetadata(): array
+    {
+        return $this->tag->only(['user_id', 'name', 'slug', 'description']);
+    }
+
+    protected function activitySubject(): Model
+    {
+        return $this->tag;
     }
 }

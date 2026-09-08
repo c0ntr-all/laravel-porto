@@ -2,7 +2,6 @@
 
 namespace App\Containers\LifelogSection\Post\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
@@ -30,7 +29,6 @@ class CreatePostAction extends UseCaseAction
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
@@ -85,10 +83,7 @@ class CreatePostAction extends UseCaseAction
             return $post;
         });
 
-        // TODO: Сделать Event запускающий таску
-        DB::afterCommit(function () use ($post) {
-            $this->createActivityUseCaseTask->run($post, $this->eventTypesEnum->value);
-        });
+        $this->recordUseCase($post);
 
         return $post;
     }

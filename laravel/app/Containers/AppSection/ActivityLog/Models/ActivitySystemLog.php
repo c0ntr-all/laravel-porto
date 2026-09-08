@@ -27,8 +27,8 @@ class ActivitySystemLog extends Model
         'metadata' => 'array',
     ];
 
-    public function userLog(): BelongsTo
+    public function useCaseLog(): BelongsTo
     {
-        return $this->belongsTo(ActivityUseCaseLog::class, 'correlation_id', 'correlation_id');
+        return $this->belongsTo(ActivityUseCaseLog::class, 'correlation_uuid', 'correlation_uuid');
     }
 }

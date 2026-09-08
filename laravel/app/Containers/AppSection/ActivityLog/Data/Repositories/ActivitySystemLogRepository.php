@@ -7,20 +7,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ActivitySystemLogRepository
 {
-    /**
-     * @param array $criteria
-     * @return Collection
-     */
-    public function getByCriteria(array $criteria): Collection
+    public function getByCorrelationUuid(string $uuid): Collection
     {
-        return ActivitySystemLog::where($criteria)
-                                ->get();
+        return ActivitySystemLog::query()
+            ->where('correlation_uuid', $uuid)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
     }
 
-    /**
-     * @param array $data
-     * @return mixed
-     */
     public function create(array $data): ActivitySystemLog
     {
         return ActivitySystemLog::create($data);

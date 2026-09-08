@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Video\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Video\Data\DTO\UpdateVideoDto;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Containers\GallerySection\Video\Tasks\UpdateVideoTask;
@@ -21,7 +20,6 @@ class UpdateVideoAction extends UseCaseAction
 
     public function __construct(
         private readonly UpdateVideoTask $updateVideoTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -31,9 +29,7 @@ class UpdateVideoAction extends UseCaseAction
         return DB::transaction(function () use ($video, $dto) {
             $updated = $this->updateVideoTask->run($video, $dto);
 
-            DB::afterCommit(function () use ($updated) {
-                $this->createActivityUseCaseTask->run($updated, $this->eventTypesEnum->value);
-            });
+            $this->recordUseCase($updated);
 
             return $updated;
         });

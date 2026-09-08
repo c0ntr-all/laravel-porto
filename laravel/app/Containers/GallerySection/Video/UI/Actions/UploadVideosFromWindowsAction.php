@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Video\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Video\Data\DTO\UploadVideoFromWindowsDto;
 use App\Containers\GallerySection\Video\Factories\VideoSourceFactory;
@@ -27,7 +26,6 @@ class UploadVideosFromWindowsAction extends UseCaseAction
 
     public function __construct(
         private readonly PersistVideoFromSourceTask $persistVideoFromSourceTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -48,11 +46,13 @@ class UploadVideosFromWindowsAction extends UseCaseAction
                 ));
             }
 
-            DB::afterCommit(function () use ($result) {
-                foreach ($result as $video) {
-                    $this->createActivityUseCaseTask->run($video, $this->eventTypesEnum->value);
-                }
-            });
+            if (!$album->isUploadStagingAlbum()) {
+                DB::afterCommit(function () use ($result) {
+                    foreach ($result as $video) {
+                        $this->recordUseCase($video);
+                    }
+                });
+            }
 
             return $result;
         });

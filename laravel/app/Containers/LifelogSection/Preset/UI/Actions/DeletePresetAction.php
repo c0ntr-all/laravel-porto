@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DeletePresetAction extends UseCaseAction
 {
@@ -24,7 +25,11 @@ class DeletePresetAction extends UseCaseAction
 
     public function handle(Preset $preset): ?bool
     {
-        return $this->deletePresetTask->run($preset);
+        return DB::transaction(function () use ($preset) {
+            $this->recordUseCase($preset);
+
+            return $this->deletePresetTask->run($preset);
+        });
     }
 
     public function asController(Preset $preset, DeleteRequest $request): JsonResponse

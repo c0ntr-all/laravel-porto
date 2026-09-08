@@ -3,18 +3,14 @@
 namespace App\Containers\LifelogSection\Post\Events;
 
 use App\Containers\LifelogSection\Post\Models\Post;
-use Illuminate\Queue\SerializesModels;
+use App\Ship\Events\DomainActivityEvent;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class PostEvent
+abstract class PostEvent extends DomainActivityEvent
 {
-    use SerializesModels;
-
-    protected string $eventType = 'unknown';
-
     public function __construct(
         protected Post $post
-    )
-    {
+    ) {
     }
 
     public function getPost(): Post
@@ -22,8 +18,23 @@ abstract class PostEvent
         return $this->post;
     }
 
-    public function getEventType(): string
+    public function activityMainType(): string
     {
-        return $this->eventType;
+        return $this->post->getLoggableType();
+    }
+
+    public function activityMainId(): string
+    {
+        return (string) $this->post->id;
+    }
+
+    public function activityMetadata(): array
+    {
+        return $this->snapshot(['title', 'content']);
+    }
+
+    protected function activitySubject(): Model
+    {
+        return $this->post;
     }
 }

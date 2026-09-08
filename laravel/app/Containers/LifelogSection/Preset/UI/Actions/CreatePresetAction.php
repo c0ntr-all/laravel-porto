@@ -2,7 +2,6 @@
 
 namespace App\Containers\LifelogSection\Preset\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\LifelogSection\Preset\Data\DTO\PresetCreateDto;
 use App\Containers\LifelogSection\Preset\Data\ValueObjects\PresetRules;
 use App\Containers\LifelogSection\Preset\Models\Preset;
@@ -13,7 +12,6 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class CreatePresetAction extends UseCaseAction
 {
@@ -22,7 +20,6 @@ class CreatePresetAction extends UseCaseAction
 
     public function __construct(
         private readonly CreatePresetTask $createPresetTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
@@ -32,9 +29,7 @@ class CreatePresetAction extends UseCaseAction
     {
         $preset = $this->createPresetTask->run($dto);
 
-        DB::afterCommit(function () use ($preset) {
-            $this->createActivityUseCaseTask->run($preset, $this->eventTypesEnum->value);
-        });
+        $this->recordUseCase($preset);
 
         return $preset;
     }

@@ -10,18 +10,11 @@ class ListSystemLogsByUuid extends ParentTask
 {
     public function __construct(
         private readonly ActivitySystemLogRepository $activitySystemLogRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param string $uuid
-     * @return Collection
-     */
     public function run(string $uuid): Collection
     {
-        return $this->activitySystemLogRepository->getByCriteria([
-            'correlation_uuid' => $uuid
-        ]);
+        return $this->activitySystemLogRepository->getByCorrelationUuid($uuid);
     }
 }

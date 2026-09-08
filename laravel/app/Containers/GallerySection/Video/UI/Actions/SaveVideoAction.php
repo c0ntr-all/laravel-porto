@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Video\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Containers\GallerySection\Video\Tasks\SaveVideoToSaveAlbumTask;
 use App\Containers\GallerySection\Video\UI\API\Requests\SaveVideoRequest;
@@ -20,7 +19,6 @@ class SaveVideoAction extends UseCaseAction
 
     public function __construct(
         private readonly SaveVideoToSaveAlbumTask $saveVideoToSaveAlbumTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -31,9 +29,7 @@ class SaveVideoAction extends UseCaseAction
             $saved = $this->saveVideoToSaveAlbumTask->run($video, $userId);
 
             if ($saved->wasRecentlyCreated) {
-                DB::afterCommit(function () use ($saved) {
-                    $this->createActivityUseCaseTask->run($saved, $this->eventTypesEnum->value);
-                });
+                $this->recordUseCase($saved);
             }
 
             return $saved;

@@ -22,6 +22,8 @@ class ActivityUseCaseLog extends Model
 
     public function systemLogs(): HasMany
     {
-        return $this->hasMany(ActivityUseCaseLog::class, 'correlation_id', 'correlation_id');
+        return $this->hasMany(ActivitySystemLog::class, 'correlation_uuid', 'correlation_uuid')
+            ->orderBy('created_at')
+            ->orderBy('id');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Image\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Image\Data\DTO\UpdateImageDto;
 use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Tasks\UpdateImageTask;
@@ -21,7 +20,6 @@ class UpdateImageAction extends UseCaseAction
 
     public function __construct(
         private readonly UpdateImageTask $updateImageTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -31,9 +29,7 @@ class UpdateImageAction extends UseCaseAction
         return DB::transaction(function () use ($image, $dto) {
             $updated = $this->updateImageTask->run($image, $dto);
 
-            DB::afterCommit(function () use ($updated) {
-                $this->createActivityUseCaseTask->run($updated, $this->eventTypesEnum->value);
-            });
+            $this->recordUseCase($updated);
 
             return $updated;
         });

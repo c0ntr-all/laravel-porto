@@ -6,34 +6,22 @@ use App\Containers\AppSection\ActivityLog\Data\DTO\UserLogCreateDto;
 use App\Containers\AppSection\ActivityLog\Data\Repositories\ActivityUserLogRepository;
 use App\Containers\AppSection\ActivityLog\Models\ActivityUseCaseLog;
 use App\Ship\Helpers\Correlation;
-use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 
 class CreateActivityUseCaseTask extends ParentTask
 {
     public function __construct(
         private readonly ActivityUserLogRepository $activityUserLogRepository
-    )
-    {
+    ) {
     }
 
-    /**
-     * @param ActivityLoggableModel $model
-     * @param string $eventTypesValue
-     * @return ActivityUseCaseLog
-     */
-    public function run(ActivityLoggableModel $model, string $eventTypesValue): ActivityUseCaseLog
+    public function run(UserLogCreateDto $dto): ActivityUseCaseLog
     {
-        $correlationUuid = Correlation::getUuid();
+        if ($dto->correlation_uuid === '' || $dto->correlation_uuid === null) {
+            Correlation::init();
+            $dto->correlation_uuid = (string) Correlation::getUuid();
+        }
 
-        $userLogCreateDto = UserLogCreateDto::from([
-            'user_id' => $model->user_id,
-            'correlation_uuid' => $correlationUuid,
-            'loggable_type' => $model->getLoggableType(),
-            'loggable_id' => $model->id,
-            'event_type' => $eventTypesValue,
-        ]);
-
-        return $this->activityUserLogRepository->create($userLogCreateDto->toArray());
+        return $this->activityUserLogRepository->create($dto->toArray());
     }
 }

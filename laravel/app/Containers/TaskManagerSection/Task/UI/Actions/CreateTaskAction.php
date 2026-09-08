@@ -2,7 +2,6 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\TaskManagerSection\Task\Data\DTO\TaskCreateData;
 use App\Containers\TaskManagerSection\Task\Models\Task;
@@ -26,7 +25,6 @@ class CreateTaskAction extends UseCaseAction
         private readonly CreateTaskTask $createTaskTask,
         private readonly ApplyTaskTemplateTask $applyTaskTemplateTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     )
     {
         parent::__construct();
@@ -50,9 +48,7 @@ class CreateTaskAction extends UseCaseAction
                 );
             }
 
-            DB::afterCommit(function () use ($createdTask) {
-                $this->createActivityUseCaseTask->run($createdTask, $this->eventTypesEnum->value);
-            });
+            $this->recordUseCase($createdTask);
 
             return $createdTask;
         });

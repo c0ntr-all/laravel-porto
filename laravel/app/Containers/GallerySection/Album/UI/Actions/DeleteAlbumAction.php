@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DeleteAlbumAction extends UseCaseAction
 {
@@ -23,7 +24,11 @@ class DeleteAlbumAction extends UseCaseAction
 
     public function handle(Album $album): bool
     {
-        return $this->deleteAlbumTask->run($album);
+        return DB::transaction(function () use ($album) {
+            $this->recordUseCase($album);
+
+            return $this->deleteAlbumTask->run($album);
+        });
     }
 
     public function asController(Album $album, DeleteAlbumRequest $request): JsonResponse

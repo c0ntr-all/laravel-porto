@@ -3,6 +3,7 @@
 namespace App\Containers\GallerySection\Album\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
+use App\Containers\GallerySection\Album\Enums\SystemAlbumsEnum;
 use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Ship\Enums\ContainerAliasEnum;
@@ -52,6 +53,11 @@ class Album extends ActivityLoggableModel
     public function isSystem(): bool
     {
         return $this->system_code !== null && $this->system_code !== '';
+    }
+
+    public function isUploadStagingAlbum(): bool
+    {
+        return $this->system_code === SystemAlbumsEnum::UPLOAD->value;
     }
 
     public function images(): HasMany

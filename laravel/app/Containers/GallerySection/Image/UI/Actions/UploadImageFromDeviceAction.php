@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Image\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromDeviceDto;
@@ -36,7 +35,6 @@ class UploadImageFromDeviceAction extends UseCaseAction
         private readonly CreateImageInAlbumTask $createImageInAlbumTask,
         private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
         private readonly PathGenerationService $pathGenerationService,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -71,9 +69,9 @@ class UploadImageFromDeviceAction extends UseCaseAction
 
             $image = $this->createImageInAlbumTask->run($album, $createImageDto);
 
-            DB::afterCommit(function () use ($image) {
-                $this->createActivityUseCaseTask->run($image, $this->eventTypesEnum->value);
-            });
+            if (!$album->isUploadStagingAlbum()) {
+                $this->recordUseCase($image);
+            }
 
             return $image;
         });

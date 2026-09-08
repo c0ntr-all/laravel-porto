@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DeleteTaskAction extends UseCaseAction
 {
@@ -24,7 +25,11 @@ class DeleteTaskAction extends UseCaseAction
 
     public function handle(Task $task): bool
     {
-        return $this->deleteTaskTask->run($task);
+        return DB::transaction(function () use ($task) {
+            $this->recordUseCase($task);
+
+            return $this->deleteTaskTask->run($task);
+        });
     }
 
     public function asController(Task $task, DeleteRequest $request): JsonResponse

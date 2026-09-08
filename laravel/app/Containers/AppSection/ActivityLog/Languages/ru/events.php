@@ -3,5 +3,7 @@
 return [
     'created' => 'создал',
     'updated' => 'обновил',
-    'deleted' => 'удалил'
+    'deleted' => 'удалил',
+    'attached' => 'привязал',
+    'detached' => 'отвязал',
 ];

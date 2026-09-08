@@ -4,18 +4,17 @@ namespace App\Containers\AppSection\ActivityLog\Tasks;
 
 use App\Containers\AppSection\ActivityLog\Data\Repositories\ActivityUserLogRepository;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 
 class ListUseCaseLogsTask extends Task
 {
     public function __construct(
         private readonly ActivityUserLogRepository $useCaseLogsRepository
-    )
-    {
+    ) {
     }
 
-    public function run(): Collection
+    public function run(int $perPage, ?string $cursor): CursorPaginator
     {
-        return $this->useCaseLogsRepository->get();
+        return $this->useCaseLogsRepository->paginate($perPage, $cursor);
     }
 }

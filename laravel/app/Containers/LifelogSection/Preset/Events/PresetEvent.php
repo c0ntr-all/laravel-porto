@@ -3,18 +3,14 @@
 namespace App\Containers\LifelogSection\Preset\Events;
 
 use App\Containers\LifelogSection\Preset\Models\Preset;
-use Illuminate\Queue\SerializesModels;
+use App\Ship\Events\DomainActivityEvent;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class PresetEvent
+abstract class PresetEvent extends DomainActivityEvent
 {
-    use SerializesModels;
-
-    protected string $eventType = 'unknown';
-
     public function __construct(
         protected Preset $preset
-    )
-    {
+    ) {
     }
 
     public function getPreset(): Preset
@@ -22,8 +18,26 @@ abstract class PresetEvent
         return $this->preset;
     }
 
-    public function getEventType(): string
+    public function activityMainType(): string
     {
-        return $this->eventType;
+        return $this->preset->getLoggableType();
+    }
+
+    public function activityMainId(): string
+    {
+        return (string) $this->preset->id;
+    }
+
+    public function activityMetadata(): array
+    {
+        $metadata = $this->snapshot(['title', 'color', 'start_date', 'end_date']);
+        $metadata['rules'] = $this->preset->rules?->toArray();
+
+        return $metadata;
+    }
+
+    protected function activitySubject(): Model
+    {
+        return $this->preset;
     }
 }

@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DeleteVideoAction extends UseCaseAction
 {
@@ -23,7 +24,11 @@ class DeleteVideoAction extends UseCaseAction
 
     public function handle(Video $video): bool
     {
-        return $this->deleteVideoTask->run($video);
+        return DB::transaction(function () use ($video) {
+            $this->recordUseCase($video);
+
+            return $this->deleteVideoTask->run($video);
+        });
     }
 
     public function asController(Video $video, DeleteVideoRequest $request): JsonResponse

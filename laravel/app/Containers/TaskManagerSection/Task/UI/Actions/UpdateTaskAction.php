@@ -2,7 +2,6 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsDeleteDto;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\AppSection\Attachment\Tasks\DeleteAttachmentsTask;
@@ -27,7 +26,6 @@ class UpdateTaskAction extends UseCaseAction
         private readonly UpdateTaskTask $updateTaskTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
         private readonly DeleteAttachmentsTask $deleteAttachmentsTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask
     ) {
         parent::__construct();
     }
@@ -57,9 +55,7 @@ class UpdateTaskAction extends UseCaseAction
             return $updatedTask;
         });
 
-        DB::afterCommit(function () use ($updatedTask) {
-            $this->createActivityUseCaseTask->run($updatedTask, $this->eventTypesEnum->value);
-        });
+        $this->recordUseCase($updatedTask);
 
         return $updatedTask;
     }

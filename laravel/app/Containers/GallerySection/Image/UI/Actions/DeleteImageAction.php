@@ -9,6 +9,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DeleteImageAction extends UseCaseAction
 {
@@ -23,7 +24,11 @@ class DeleteImageAction extends UseCaseAction
 
     public function handle(Image $image): bool
     {
-        return $this->deleteImageTask->run($image);
+        return DB::transaction(function () use ($image) {
+            $this->recordUseCase($image);
+
+            return $this->deleteImageTask->run($image);
+        });
     }
 
     public function asController(Image $image, DeleteImageRequest $request): JsonResponse

@@ -3,317 +3,67 @@
 namespace App\Containers\AppSection\ActivityLog\Listeners;
 
 use App\Containers\AppSection\ActivityLog\Data\DTO\SystemLogCreateDto;
-use App\Containers\AppSection\ActivityLog\UI\Actions\SystemLogCreateAction;
-use App\Containers\AppSection\Attachment\Events\AttachedEvent as AttachmentAttachedEvent;
-use App\Containers\AppSection\Attachment\Events\AttachmentEvent;
-use App\Containers\AppSection\Attachment\Events\DetachedEvent as AttachmentDetachedEvent;
-use App\Containers\AppSection\Tag\Events\AttachedEvent as TagAttachedEvent;
-use App\Containers\AppSection\Tag\Events\CreatedEvent as TagCreatedEvent;
-use App\Containers\AppSection\Tag\Events\DeletedEvent as TagDeletedEvent;
-use App\Containers\AppSection\Tag\Events\DetachedEvent as TagDetachedEvent;
-use App\Containers\AppSection\Tag\Events\TagEvent;
-use App\Containers\AppSection\Tag\Events\TaggableEvent;
-use App\Containers\AppSection\Tag\Events\UpdatedEvent as TagUpdatedEvent;
-use App\Containers\GallerySection\Album\Events\CreatedEvent as GalleryAlbumCreatedEvent;
-use App\Containers\GallerySection\Album\Events\DeletedEvent as GalleryAlbumDeletedEvent;
-use App\Containers\GallerySection\Album\Events\GalleryAlbumEvent;
-use App\Containers\GallerySection\Album\Events\UpdatedEvent as GalleryAlbumUpdatedEvent;
-use App\Containers\GallerySection\Image\Events\CreatedEvent as GalleryImageCreatedEvent;
-use App\Containers\GallerySection\Image\Events\DeletedEvent as GalleryImageDeletedEvent;
-use App\Containers\GallerySection\Image\Events\GalleryImageEvent;
-use App\Containers\GallerySection\Image\Events\UpdatedEvent as GalleryImageUpdatedEvent;
-use App\Containers\GallerySection\Video\Events\CreatedEvent as GalleryVideoCreatedEvent;
-use App\Containers\GallerySection\Video\Events\DeletedEvent as GalleryVideoDeletedEvent;
-use App\Containers\GallerySection\Video\Events\GalleryVideoEvent;
-use App\Containers\GallerySection\Video\Events\UpdatedEvent as GalleryVideoUpdatedEvent;
-use App\Containers\LifelogSection\Preset\Events\CreatedEvent as PresetCreatedEvent;
-use App\Containers\LifelogSection\Preset\Events\DeletedEvent as PresetDeletedEvent;
-use App\Containers\LifelogSection\Preset\Events\PresetEvent;
-use App\Containers\LifelogSection\Preset\Events\UpdatedEvent as PresetUpdatedEvent;
-use App\Containers\LifelogSection\Post\Events\CreatedEvent as PostCreatedEvent;
-use App\Containers\LifelogSection\Post\Events\DeletedEvent as PostDeletedEvent;
-use App\Containers\LifelogSection\Post\Events\PostEvent;
-use App\Containers\LifelogSection\Post\Events\UpdatedEvent as PostUpdatedEvent;
-use App\Containers\TaskManagerSection\Task\Events\CreatedEvent as TaskCreatedEvent;
-use App\Containers\TaskManagerSection\Task\Events\DeletedEvent as TaskDeletedEvent;
-use App\Containers\TaskManagerSection\Task\Events\TaskEvent;
-use App\Containers\TaskManagerSection\Task\Events\UpdatedEvent as TaskUpdatedEvent;
-use App\Ship\Enums\EventTypesEnum;
+use App\Containers\AppSection\ActivityLog\Data\DTO\UserLogCreateDto;
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivitySystemLogTask;
+use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
+use App\Ship\Contracts\RecordsActivity;
+use App\Ship\Events\UseCaseCompleted;
 use App\Ship\Helpers\Correlation;
 use Illuminate\Events\Dispatcher;
 
 class ActivityLogEventsSubscriber
 {
+    public function __construct(
+        private readonly CreateActivitySystemLogTask $createActivitySystemLogTask,
+        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
+    ) {
+    }
+
     public function subscribe(Dispatcher $events): void
     {
-        // CRUD posts
-        $events->listen([
-            PostCreatedEvent::class,
-            PostUpdatedEvent::class,
-            PostDeletedEvent::class
-        ], $this->handlePostEvents(...));
-
-        // CRUD presets
-        $events->listen([
-            PresetCreatedEvent::class,
-            PresetUpdatedEvent::class,
-            PresetDeletedEvent::class
-        ], $this->handlePresetEvents(...));
-
-        // CRUD tags
-        $events->listen([
-            TagCreatedEvent::class,
-            TagDeletedEvent::class,
-            TagUpdatedEvent::class,
-        ], $this->handleTagEvents(...));
-
-        // attaching/detaching tags
-        $events->listen([
-            TagAttachedEvent::class,
-            TagDetachedEvent::class,
-        ], $this->handleTaggableEvents(...));
-
-        // CRUD gallery_albums
-        $events->listen([
-            GalleryAlbumCreatedEvent::class,
-            GalleryAlbumDeletedEvent::class,
-            GalleryAlbumUpdatedEvent::class,
-        ], $this->handleGalleryAlbumEvents(...));
-
-        // CRUD gallery_images
-        $events->listen([
-            GalleryImageCreatedEvent::class,
-            GalleryImageDeletedEvent::class,
-            GalleryImageUpdatedEvent::class,
-        ], $this->handleGalleryImageEvents(...));
-
-        // CRUD gallery_videos
-        $events->listen([
-            GalleryVideoCreatedEvent::class,
-            GalleryVideoDeletedEvent::class,
-            GalleryVideoUpdatedEvent::class,
-        ], $this->handleGalleryVideoEvents(...));
-
-        // attaching/detaching attachments
-        $events->listen([
-            AttachmentAttachedEvent::class,
-            AttachmentDetachedEvent::class,
-        ], $this->handleAttachmentsEvents(...));
-
-        // CRUD tasks
-        $events->listen([
-            TaskCreatedEvent::class,
-            TaskUpdatedEvent::class,
-            TaskDeletedEvent::class
-        ], $this->handleTaskEvents(...));
+        $events->listen(RecordsActivity::class, $this->handleDomainActivity(...));
+        $events->listen(UseCaseCompleted::class, $this->handleUseCaseCompleted(...));
     }
 
-    private function handlePresetEvents(PresetEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $preset = $event->getPreset();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = [
-            ...$preset->only(['title', 'color', 'start_date', 'end_date']),
-            'rules' => $preset->rules?->toArray(),
-        ];
-
-        if ($eventType === EventTypesEnum::UPDATED->value) {
-            $metadata = $preset->getChanges();
-        }
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $preset->getLoggableType(),
-            'main_id' => $preset->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    private function handlePostEvents(PostEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $post = $event->getPost();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = $post->only(['title', 'content']);
-
-        if ($eventType === EventTypesEnum::UPDATED->value) {
-            $metadata = $post->getChanges();
-        }
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $post->getLoggableType(),
-            'main_id' => $post->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    public function handleTagEvents(TagEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $tag = $event->getTag();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $tag->getLoggableType(),
-            'main_id' => $tag->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => $tag->only(['user_id', 'name', 'slug', 'description']),
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    public function handleTaggableEvents(TaggableEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $taggable = $event->getTaggable();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $taggable->taggable_type,
-            'main_id' => $taggable->taggable_id,
-            'related_type' => $taggable->getLoggableType(),
-            'related_id' => $taggable->tag_id,
-            'correlation_uuid' => $uuid,
-            'metadata' => ['name' => $taggable->tag->name]
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    public function handleAttachmentsEvents(AttachmentEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $attachment = $event->getAttachment();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $attachment->attachable_type,
-            'main_id' => $attachment->attachable_id,
-            'related_type' => $attachment->getLoggableType(),
-            'related_id' => $attachment->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => ['fileable_type' => $attachment->fileable_type, 'fileable_id' => $attachment->fileable_id]
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    private function handleGalleryAlbumEvents(GalleryAlbumEvent $event): void
+    public function handleDomainActivity(RecordsActivity $event): void
     {
         if (Correlation::getUuid() === null) {
             Correlation::init();
         }
-        $uuid = Correlation::getUuid();
-        $album = $event->getAlbum();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = $album->only(['name', 'description']);
 
-        if ($eventType === EventTypesEnum::UPDATED->value) {
-            $metadata = $album->getChanges();
+        $uuid = Correlation::getUuid();
+
+        if ($uuid === null) {
+            return;
         }
 
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $album->getLoggableType(),
-            'main_id' => $album->id,
+        $this->createActivitySystemLogTask->run(SystemLogCreateDto::from([
+            'user_id' => $event->activityUserId(),
+            'event_type' => $event->activityEventType(),
+            'main_type' => $event->activityMainType(),
+            'main_id' => $event->activityMainId(),
+            'related_type' => $event->activityRelatedType(),
+            'related_id' => $event->activityRelatedId(),
             'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
+            'metadata' => $event->activityMetadata(),
+        ]));
     }
 
-    private function handleGalleryImageEvents(GalleryImageEvent $event): void
+    public function handleUseCaseCompleted(UseCaseCompleted $event): void
     {
-        if (Correlation::getUuid() === null) {
+        $uuid = Correlation::getUuid();
+
+        if ($uuid === null) {
             Correlation::init();
-        }
-        $uuid = Correlation::getUuid();
-        $galleryImage = $event->getImage();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = $galleryImage->only(['source', 'album_id', 'extension']);
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $galleryImage->getLoggableType(),
-            'main_id' => $galleryImage->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    private function handleGalleryVideoEvents(GalleryVideoEvent $event): void
-    {
-        if (Correlation::getUuid() === null) {
-            Correlation::init();
-        }
-        $uuid = Correlation::getUuid();
-        $galleryVideo = $event->getVideo();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = $galleryVideo->only(['source', 'album_id', 'extension', 'original_name']);
-
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $galleryVideo->getLoggableType(),
-            'main_id' => $galleryVideo->id,
-            'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
-    }
-
-    private function handleTaskEvents(TaskEvent $event): void
-    {
-        $uuid = Correlation::getUuid();
-        $task = $event->getTask();
-        $eventType = $event->getEventType();
-        $userId = auth()?->user()?->id;
-        $metadata = $task->only(['title', 'content', 'finished_at', 'is_declined']);
-
-        if ($eventType === EventTypesEnum::UPDATED->value) {
-            $metadata = ['changes' => $task->getChanges()];
+            $uuid = Correlation::getUuid();
         }
 
-        $systemLogDto = SystemLogCreateDto::from([
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'main_type' => $task->getLoggableType(),
-            'main_id' => $task->id,
+        $this->createActivityUseCaseTask->run(UserLogCreateDto::from([
+            'user_id' => $event->userId,
             'correlation_uuid' => $uuid,
-            'metadata' => $metadata,
-        ]);
-
-        SystemLogCreateAction::dispatchSync($systemLogDto);
+            'loggable_type' => $event->loggableType,
+            'loggable_id' => $event->loggableId,
+            'event_type' => $event->eventType,
+        ]));
     }
 }

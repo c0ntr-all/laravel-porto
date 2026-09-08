@@ -11,11 +11,11 @@ class TaggableObserver
 {
     public function created(Taggable $taggable): void
     {
-        Event::dispatch(new AttachedEvent($taggable));
+        Event::dispatch(new AttachedEvent($taggable->loadMissing('tag')));
     }
 
     public function deleted(Taggable $taggable): void
     {
-        Event::dispatch(new DetachedEvent($taggable));
+        Event::dispatch(new DetachedEvent($taggable->loadMissing('tag')));
     }
 }

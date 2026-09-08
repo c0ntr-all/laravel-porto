@@ -2,7 +2,6 @@
 
 namespace App\Containers\GallerySection\Album\UI\Actions;
 
-use App\Containers\AppSection\ActivityLog\Tasks\CreateActivityUseCaseTask;
 use App\Containers\GallerySection\Album\Data\DTO\AlbumUpdateData;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Album\Tasks\UpdateAlbumTask;
@@ -21,7 +20,6 @@ class UpdateAlbumAction extends UseCaseAction
 
     public function __construct(
         private readonly UpdateAlbumTask $updateAlbumTask,
-        private readonly CreateActivityUseCaseTask $createActivityUseCaseTask,
     ) {
         parent::__construct();
     }
@@ -31,11 +29,7 @@ class UpdateAlbumAction extends UseCaseAction
         return DB::transaction(function () use ($album, $dto) {
             $updated = $this->updateAlbumTask->run($album, $dto);
 
-            DB::afterCommit(function () use ($updated) {
-                if ($updated->user_id) {
-                    $this->createActivityUseCaseTask->run($updated, $this->eventTypesEnum->value);
-                }
-            });
+            $this->recordUseCase($updated);
 
             return $updated;
         });

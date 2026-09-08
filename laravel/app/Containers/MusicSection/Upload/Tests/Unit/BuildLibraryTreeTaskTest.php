@@ -213,13 +213,14 @@ class BuildLibraryTreeTaskTest extends TestCase
         );
         $this->assertSame('Right Next Door To Hell', $album['tracks'][0]->title);
         $this->assertSame('feat. Axl', $album['tracks'][0]->credits);
+        $this->assertSame([], $album['tracks'][0]->featured_artists);
         $this->assertSame('Civil War', $album['tracks'][1]->title);
         $this->assertSame('prod. Bob', $album['tracks'][1]->credits);
         $this->assertSame(1, $album['tracks'][0]->disc_number);
         $this->assertSame(2, $album['tracks'][1]->disc_number);
     }
 
-    public function test_it_extracts_featured_artists_from_title_and_artist_tag(): void
+    public function test_it_extracts_featured_artists_from_artist_tag_but_not_title_brackets(): void
     {
         $tracks = [
             ParsedTrackDto::from([
@@ -243,7 +244,8 @@ class BuildLibraryTreeTaskTest extends TestCase
         $track = $tree['albums'][0]['tracks'][0];
         $this->assertSame('Hold On We\'re Going Home', $track->title);
         $this->assertSame('Drake', $track->artist);
-        $this->assertEqualsCanonicalizing(['Majid Jordan', 'Rihanna'], $track->featured_artists);
+        $this->assertSame('feat. Majid Jordan / feat. Rihanna', $track->credits);
+        $this->assertSame(['Rihanna'], $track->featured_artists);
         $this->assertSame(['Drake'], $tree['albums'][0]['artists']);
     }
 }

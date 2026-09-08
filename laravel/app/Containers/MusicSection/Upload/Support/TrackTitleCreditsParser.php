@@ -7,6 +7,7 @@ namespace App\Containers\MusicSection\Upload\Support;
  *
  * Only fragments that start with a known credit lead-in are removed.
  * Artistic parentheticals stay in the title: (Acoustic), (Live), (It Happened One Night).
+ * Feat/ft names are kept as credit text only — they are not turned into featured artists.
  */
 final class TrackTitleCreditsParser
 {
@@ -18,11 +19,6 @@ final class TrackTitleCreditsParser
     public const INNER_PATTERN = '/^'.self::LEAD_IN.'\b.*$/iu';
 
     public const BRACKET_PATTERN = '/\[([^\[\]]+)\]|\(([^()]+)\)/u';
-
-    public function __construct(
-        private readonly FeaturedArtistParser $featuredArtistParser,
-    ) {
-    }
 
     /**
      * @return array{name: string, credits: string|null, featured_artists: list<string>}
@@ -62,7 +58,8 @@ final class TrackTitleCreditsParser
         return [
             'name' => $cleaned,
             'credits' => $joined,
-            'featured_artists' => $this->featuredArtistParser->namesFromCredits($joined),
+            // Feat names in title brackets stay as credit text; linking is left to post-processing.
+            'featured_artists' => [],
         ];
     }
 

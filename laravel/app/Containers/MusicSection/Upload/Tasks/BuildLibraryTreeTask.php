@@ -184,7 +184,7 @@ class BuildLibraryTreeTask extends ParentTask
         $track->artist = $artistParsed['name'] !== '' ? $artistParsed['name'] : $track->artist;
         $track->credits = $this->mergeCredits($titleParsed['credits'], $artistParsed['featured_artists']);
         $track->featured_artists = $this->uniqueFeaturedNames(
-            array_merge($titleParsed['featured_artists'], $artistParsed['featured_artists']),
+            $artistParsed['featured_artists'],
             $track->artist,
         );
 

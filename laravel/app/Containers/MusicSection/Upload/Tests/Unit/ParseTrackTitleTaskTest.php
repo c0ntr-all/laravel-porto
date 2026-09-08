@@ -14,7 +14,7 @@ class ParseTrackTitleTaskTest extends TestCase
 
         $this->assertSame('Humble', $parsed['name']);
         $this->assertSame('feat. Kendrick / prod. Mike Will', $parsed['credits']);
-        $this->assertSame(['Kendrick'], $parsed['featured_artists']);
+        $this->assertSame([], $parsed['featured_artists']);
     }
 
     public function test_it_keeps_artistic_parentheticals_in_the_title(): void

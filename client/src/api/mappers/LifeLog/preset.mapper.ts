@@ -59,6 +59,8 @@ export function mapPresetFormModelToCreateDto(presetModel: IPresetModel): IPrese
 
   if (presetModel.tags?.length) {
     dto.tags = presetModel.tags
+  } else {
+    dto.tags = []
   }
 
   return dto

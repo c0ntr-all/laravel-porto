@@ -63,7 +63,7 @@ module.exports = configure(function (ctx) {
         mode: ctx.dev ? 'test' : 'prod',
         host: ctx.dev
           ? 'http://docker-porto.loc/api'
-          : 'https://api.home-portal.prod/api',
+          : 'https://home-portal.prod/api',
         galleryUploadAlbumId: '1',
         reverbKey: 'fxtmwduaoktnho1q7s1n',
         reverbHost: ctx.dev ? 'docker-porto.loc' : 'api.home-portal.prod',

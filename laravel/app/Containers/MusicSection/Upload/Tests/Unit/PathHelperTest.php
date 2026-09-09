@@ -22,6 +22,7 @@ class PathHelperTest extends TestCase
             'filesystems.disks.windows_f.root' => $this->libraryRoot,
             'music_upload.disk' => 'windows_f',
             'music_upload.drive' => 'F',
+            'music_upload.root_path' => 'F:\\Music',
         ]);
         Storage::forgetDisk('windows_f');
     }
@@ -69,6 +70,26 @@ class PathHelperTest extends TestCase
     {
         $this->assertSame('Metallica', PathHelper::basename('F:\\Music\\Metallica'));
         $this->assertSame('F:\\Music', PathHelper::dirname('F:\\Music\\Metallica'));
+    }
+
+    public function test_it_resolves_directories_inside_library_root(): void
+    {
+        $music = $this->libraryRoot . DIRECTORY_SEPARATOR . 'Music' . DIRECTORY_SEPARATOR . 'Metallica';
+        mkdir($music, 0777, true);
+
+        $this->assertTrue(PathHelper::isInsideLibrary('F:/Music/Metallica'));
+        $this->assertFalse(PathHelper::isInsideLibrary('F:\\Images'));
+        $this->assertStringEndsWith('Music' . DIRECTORY_SEPARATOR . 'Metallica', PathHelper::resolveLibraryDirectory('F:\\Music\\Metallica'));
+    }
+
+    public function test_it_rejects_path_traversal_outside_library_root(): void
+    {
+        mkdir($this->libraryRoot . DIRECTORY_SEPARATOR . 'Music', 0777, true);
+        mkdir($this->libraryRoot . DIRECTORY_SEPARATOR . 'Images', 0777, true);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        PathHelper::resolveLibraryDirectory('F:\\Music\\..\\Images');
     }
 
     private function deleteDirectory(string $directory): void

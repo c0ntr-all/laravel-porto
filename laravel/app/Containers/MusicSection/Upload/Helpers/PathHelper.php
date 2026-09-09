@@ -76,6 +76,49 @@ class PathHelper
         return self::normalizeWindows(str_replace('/', '\\', $dir));
     }
 
+    public static function libraryRootWindows(): string
+    {
+        return self::normalizeWindows((string) config('music_upload.root_path', 'F:\\Music'));
+    }
+
+    public static function isInsideLibrary(string $windowsPath): bool
+    {
+        $path = self::normalizeWindows($windowsPath);
+        $root = self::libraryRootWindows();
+
+        return $path === $root || str_starts_with($path, $root . '\\');
+    }
+
+    public static function resolveLibraryDirectory(string $windowsPath): string
+    {
+        $windowsPath = self::normalizeWindows($windowsPath);
+
+        if (!self::isInsideLibrary($windowsPath)) {
+            throw new InvalidArgumentException('Path must be inside the music library root.');
+        }
+
+        $linuxPath = self::toLinux($windowsPath);
+        $realPath = realpath($linuxPath);
+
+        if ($realPath === false || !is_dir($realPath)) {
+            throw new InvalidArgumentException('The chosen catalog does not exist.');
+        }
+
+        $rootReal = realpath(self::toLinux(self::libraryRootWindows()));
+        if ($rootReal === false) {
+            throw new InvalidArgumentException('The chosen catalog does not exist.');
+        }
+
+        $normalizedReal = rtrim(str_replace('\\', '/', $realPath), '/');
+        $normalizedRoot = rtrim(str_replace('\\', '/', $rootReal), '/');
+
+        if ($normalizedReal !== $normalizedRoot && !str_starts_with($normalizedReal, $normalizedRoot . '/')) {
+            throw new InvalidArgumentException('Path must be inside the music library root.');
+        }
+
+        return $realPath;
+    }
+
     private static function disk(): string
     {
         return (string) config('music_upload.disk', 'windows_f');

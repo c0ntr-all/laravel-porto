@@ -3,6 +3,7 @@
 return [
     'disk' => env('MUSIC_LIBRARY_DISK', 'windows_f'),
     'drive' => env('MUSIC_LIBRARY_DRIVE', 'F'),
+    'root_path' => env('MUSIC_LIBRARY_ROOT_PATH', 'F:\\Music'),
     'extensions' => ['mp3', 'm4a', 'flac', 'ogg', 'wav', 'aac'],
     'skip_directories' => ['FLAC'],
     'cover_filenames' => [

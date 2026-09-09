@@ -47,6 +47,22 @@ class ArtistRepository
         return Artist::query()->where('path', $path)->first();
     }
 
+    /**
+     * @param list<string> $paths
+     * @return list<string>
+     */
+    public function existingPaths(array $paths): array
+    {
+        if ($paths === []) {
+            return [];
+        }
+
+        return Artist::query()
+            ->whereIn('path', $paths)
+            ->pluck('path')
+            ->all();
+    }
+
     public function findByName(string $name): ?Artist
     {
         return Artist::query()->where('name', $name)->first();

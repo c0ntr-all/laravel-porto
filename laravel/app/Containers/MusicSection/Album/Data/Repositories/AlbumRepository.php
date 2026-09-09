@@ -85,6 +85,22 @@ class AlbumRepository
         return Album::query()->where('path', $path)->first();
     }
 
+    /**
+     * @param list<string> $paths
+     * @return list<string>
+     */
+    public function existingPaths(array $paths): array
+    {
+        if ($paths === []) {
+            return [];
+        }
+
+        return Album::query()
+            ->whereIn('path', $paths)
+            ->pluck('path')
+            ->all();
+    }
+
     public function findCanonical(Artist $artist, string $name, int $albumTypeId, ?string $edition = null): ?Album
     {
         $query = $artist->albums()

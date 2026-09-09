@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\Data\DTO;
 
+use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Ship\Parents\DTO\Data;
 use Spatie\LaravelData\Optional;
 
@@ -10,6 +11,7 @@ class PostUpdateDto extends Data
     public int $user_id;
     public string|Optional|null $title;
     public string|Optional|null $content;
+    public PostContentTypeEnum|Optional $content_type;
     public string $date;
     public string $time;
 

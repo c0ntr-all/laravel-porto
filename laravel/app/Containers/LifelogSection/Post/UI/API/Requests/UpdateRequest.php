@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\UI\API\Requests;
 
+use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,7 @@ class UpdateRequest extends AuthenticatedRequest
         return [
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:3000',
+            'content_type' => ['sometimes', Rule::enum(PostContentTypeEnum::class)],
             'date' => 'sometimes|date_format:Y-m-d',
             'time' => 'sometimes|date_format:H:i|nullable',
             'tags' => 'sometimes|array',

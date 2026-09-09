@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\Data\DTO;
 
+use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Ship\Parents\DTO\Data;
 use Illuminate\Support\Carbon;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -12,6 +13,7 @@ class PostCreateDto extends Data
     public int $user_id;
     public ?string $title = null;
     public ?string $content = null;
+    public PostContentTypeEnum $content_type = PostContentTypeEnum::DEFAULT;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
     public Carbon $date;
     #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]

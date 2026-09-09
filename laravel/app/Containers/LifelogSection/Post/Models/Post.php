@@ -7,6 +7,7 @@ use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
+use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Containers\LifelogSection\Preset\Models\Preset;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
@@ -23,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $title
  * @property string|null $content
+ * @property PostContentTypeEnum $content_type
  * @property Carbon $date
  * @property Carbon|null $time
  * @property Carbon $created_at
@@ -54,16 +56,22 @@ class Post extends ActivityLoggableModel
 
     protected $table = 'lifelog_posts';
 
+    protected $attributes = [
+        'content_type' => PostContentTypeEnum::DEFAULT->value,
+    ];
+
     protected $fillable = [
         'id',
         'user_id',
         'title',
         'content',
+        'content_type',
         'date',
         'time',
     ];
     protected $casts = [
         'id' => 'string',
+        'content_type' => PostContentTypeEnum::class,
         'date' => 'datetime',
         'time' => 'datetime',
     ];

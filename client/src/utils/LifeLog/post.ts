@@ -4,6 +4,7 @@ import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
 import { isGalleryVideo } from 'src/utils/gallery'
 import { isPostDocumentAttachment } from 'src/utils/document'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 
 const OPTIMISTIC_POST_PREFIX = 'optimistic-post-'
 
@@ -61,6 +62,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
     id: `${OPTIMISTIC_POST_PREFIX}${nanoid()}`,
     title: model.title,
     content: model.content,
+    content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     date: datePart,
     time: model.isNullTime ? null : (timePart || null),
     created_at: null,

@@ -1,6 +1,7 @@
 import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPostDocumentAttachment } from 'src/types/document'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 
 export interface IPostGalleryAttachment {
   id: string
@@ -29,6 +30,7 @@ export interface IPost {
   id: string
   title?: string
   content: string
+  content_type: PostContentTypeEnum
   date: string
   time: string | null
   created_at: string | null
@@ -41,6 +43,7 @@ export interface IPost {
 export interface IPostModel {
   title?: string
   content: string
+  content_type?: PostContentTypeEnum
   tags: ITag[]
   newTags: INewTag[]
   datetime: string

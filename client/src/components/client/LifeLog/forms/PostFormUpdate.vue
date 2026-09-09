@@ -101,6 +101,7 @@ import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPost, IPostAttachmentWithState, IPostUpdateModel } from 'src/types'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
 import AppAddButton from 'src/components/default/AppAddButton.vue'
@@ -123,6 +124,7 @@ const props = defineProps<{
 const model = ref<IPostUpdateModel>({
   title: '',
   content: '',
+  content_type: PostContentTypeEnum.DEFAULT,
   tags: [],
   newTags: [],
   datetime: getCurrentDateTime(),
@@ -207,6 +209,7 @@ const mapPostToModel = (post: IPost) => {
 
   const preparedPost: IPostUpdateModel = {
     ...rawPost,
+    content_type: rawPost.content_type ?? PostContentTypeEnum.DEFAULT,
     newTags: [],
     datetime: rawPost.time ? rawPost.date + ' ' + rawPost.time : rawPost.date,
     isNullTime: !rawPost.time
@@ -251,6 +254,7 @@ onUnmounted(() => {
   model.value = {
     title: rawPost.title,
     content: rawPost.content,
+    content_type: rawPost.content_type ?? PostContentTypeEnum.DEFAULT,
     tags: rawPost.tags,
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,

@@ -3,11 +3,13 @@ import { INewTag, ITag } from 'src/types/tag'
 import { IPostCreateDto } from 'src/api/DTO/PostCreateDto'
 import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 import { getPostAttachmentDeleteId } from 'src/utils/attachment'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 
 export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
   const data: IPostCreateDto = {
     title: postModel.title,
     content: postModel.content,
+    content_type: postModel.content_type ?? PostContentTypeEnum.DEFAULT,
     tags: postModel.tags.map((t: ITag) => t.id),
     date: postModel.datetime.split(' ')[0],
     time: postModel.isNullTime ? null : postModel.datetime.split(' ')[1]
@@ -24,6 +26,12 @@ export function mapPostFormToUpdateDto(edited: IPostUpdateModel, original: IPost
 
   if (edited.title !== original.title) dto.title = edited.title
   if (edited.content !== original.content) dto.content = edited.content
+  if (
+    edited.content_type &&
+    edited.content_type !== (original.content_type ?? PostContentTypeEnum.DEFAULT)
+  ) {
+    dto.content_type = edited.content_type
+  }
 
   // Reconstructing datetime for compare
   let originalDateTime = original.date

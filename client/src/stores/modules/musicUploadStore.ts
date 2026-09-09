@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { uploadApi } from 'src/api/requests/uploadApi'
-import { mapUploadResponse, mapUploadsResponse } from 'src/api/mappers/Music/upload.mapper'
+import { mapLibraryFoldersResponse, mapUploadResponse, mapUploadsResponse } from 'src/api/mappers/Music/upload.mapper'
 import { extractCursorFromLink, handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { subscribeMusicUploadRealtime } from 'src/services/realtime/echo.client'
-import { IMusicUpload, IMusicUploadProgress, MusicUploadStatus } from 'src/types'
+import { IMusicLibraryFoldersResult, IMusicUpload, IMusicUploadProgress, MusicUploadStatus } from 'src/types'
 
 const ACTIVE_STATUSES: MusicUploadStatus[] = ['pending', 'running']
+const IMPORTED_STATUSES: MusicUploadStatus[] = ['completed', 'completed_with_errors']
 
 function emptyProgress(partial: Partial<IMusicUploadProgress> = {}): IMusicUploadProgress {
   return {
@@ -79,9 +80,12 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
   const detailsLoadingIds = ref<string[]>([])
   const activeUploadId = ref<string | null>(null)
   const activeProgress = ref<IMusicUploadProgress | null>(null)
+  const importedFolderPath = ref<string | null>(null)
+  const importedFolderTick = ref(0)
 
   let unsubscribeEcho: (() => void) | undefined
   let pollTimer: ReturnType<typeof setInterval> | undefined
+  const rememberedImportedIds = new Set<string>()
 
   function upsertUpload(upload: IMusicUpload): void {
     const index = uploads.value.findIndex(item => item.id === upload.id)
@@ -115,6 +119,20 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
     })
   }
 
+  function rememberImportedFolder(upload: IMusicUpload): void {
+    if (!IMPORTED_STATUSES.includes(upload.status) || !upload.source_path) {
+      return
+    }
+
+    if (rememberedImportedIds.has(upload.id)) {
+      return
+    }
+
+    rememberedImportedIds.add(upload.id)
+    importedFolderPath.value = upload.source_path
+    importedFolderTick.value += 1
+  }
+
   function stopWatching(): void {
     unsubscribeEcho?.()
     unsubscribeEcho = undefined
@@ -139,6 +157,7 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
 
     if (!ACTIVE_STATUSES.includes(upload.status)) {
       stopWatching()
+      rememberImportedFolder(upload)
     }
   }
 
@@ -168,6 +187,12 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
           albums_processed: payload.albums_total ?? payload.albums_created ?? activeProgress.value?.albums_processed,
           artists_processed: payload.artists_total ?? payload.artists_created ?? activeProgress.value?.artists_processed
         })
+
+        const current = uploads.value.find(item => item.id === String(payload.id ?? activeUploadId.value))
+        if (current) {
+          rememberImportedFolder(current)
+        }
+
         void refreshWatchedUpload()
       }
     })
@@ -228,6 +253,7 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
       const response = await uploadApi.getUpload(id)
       const mapped = mapUploadResponse(response, true)
       upsertUpload(mapped)
+      rememberImportedFolder(mapped)
 
       return mapped
     } catch (error) {
@@ -257,6 +283,7 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
       } else {
         stopWatching()
         applyProgress(progressFromUpload(mapped))
+        rememberImportedFolder(mapped)
       }
 
       return mapped
@@ -282,6 +309,22 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
     }
   }
 
+  async function getLibraryFolders(
+    path?: string,
+    options?: { silent?: boolean }
+  ): Promise<IMusicLibraryFoldersResult | null> {
+    try {
+      const response = await uploadApi.getLibraryFolders(path)
+
+      return mapLibraryFoldersResponse(response)
+    } catch (error) {
+      if (!options?.silent) {
+        handleApiError(error)
+      }
+      return null
+    }
+  }
+
   function isDetailsLoading(id: string): boolean {
     return detailsLoadingIds.value.includes(id)
   }
@@ -299,10 +342,13 @@ export const useMusicUploadStore = defineStore('musicUpload', () => {
     isUploadsLoadingMore,
     activeUploadId,
     activeProgress,
+    importedFolderPath,
+    importedFolderTick,
     getUploads,
     getUpload,
     createUpload,
     deleteUpload,
+    getLibraryFolders,
     isDetailsLoading,
     watchUpload,
     watchLatestActiveUpload,

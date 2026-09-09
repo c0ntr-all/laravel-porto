@@ -83,8 +83,32 @@ export interface IMusicUploadProgress {
   error_message?: string | null
 }
 
+export interface IMusicLibraryFolder {
+  id: string
+  name: string
+  path: string
+  has_children: boolean
+  uploaded: boolean
+}
+
+export interface IMusicLibraryFoldersResult {
+  path: string
+  name: string
+  uploaded: boolean
+  folders: IMusicLibraryFolder[]
+}
+
+export interface IMusicLibraryFolderTreeNode {
+  path: string
+  label: string
+  uploaded: boolean
+  lazy?: boolean
+  children?: IMusicLibraryFolderTreeNode[]
+}
+
 export interface IMusicUploadAlbumGroup {
   albumId: string | null
   albumName: string
+  albumYear: string | null
   tracks: IMusicUploadTrack[]
 }

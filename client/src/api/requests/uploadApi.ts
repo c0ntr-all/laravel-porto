@@ -34,5 +34,13 @@ export const uploadApi = {
     const response = await api.delete(`v1/music/uploads/${id}`)
 
     return response.data
+  },
+
+  async getLibraryFolders(path?: string): Promise<IJsonApiResponse> {
+    const response = await api.get('v1/music/library/folders', {
+      params: path ? { path } : {}
+    })
+
+    return response.data
   }
 }

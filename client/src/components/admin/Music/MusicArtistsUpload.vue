@@ -18,11 +18,13 @@
       ]"
       lazy-rules
       label="Folder path"
-      class="q-mb-lg"
+      class="q-mb-md"
       outlined
       dense
     />
   </form>
+
+  <MusicLibraryFolderTree v-model="fullPath" class="q-mb-lg" />
 
   <MusicUploadProgress />
 
@@ -35,6 +37,7 @@ import type { QInput } from 'quasar'
 import { useMusicUploadStore } from 'src/stores/modules/musicUploadStore'
 import MusicUploadsTable from 'src/components/admin/Music/MusicUploadsTable.vue'
 import MusicUploadProgress from 'src/components/admin/Music/MusicUploadProgress.vue'
+import MusicLibraryFolderTree from 'src/components/admin/Music/MusicLibraryFolderTree.vue'
 
 const store = useMusicUploadStore()
 const fullPath = ref<string | null>(null)

@@ -1,5 +1,8 @@
 import {
+  IAlbum,
   IJsonApiResponse,
+  IMusicLibraryFolder,
+  IMusicLibraryFoldersResult,
   IMusicUpload,
   IMusicUploadAlbumGroup,
   IMusicUploadTrack,
@@ -106,8 +109,40 @@ export function mapUploadResponse(response: IJsonApiResponse, detailsLoaded = tr
   return normalizeUpload(raw, detailsLoaded)
 }
 
-export function groupUploadTracksByAlbum(tracks: IMusicUploadTrack[]): IMusicUploadAlbumGroup[] {
+export function normalizeLibraryFolder(raw: Record<string, unknown>): IMusicLibraryFolder {
+  return {
+    id: String(raw.id),
+    name: String(raw.name ?? ''),
+    path: String(raw.path ?? raw.id ?? ''),
+    has_children: Boolean(raw.has_children),
+    uploaded: Boolean(raw.uploaded)
+  }
+}
+
+export function mapLibraryFoldersResponse(response: IJsonApiResponse): IMusicLibraryFoldersResult {
+  const meta = response.meta as (IJsonApiResponse['meta'] & {
+    path?: string
+    name?: string
+    uploaded?: boolean
+  }) | undefined
+  const folders = Array.isArray(response.data) && response.data.length === 0
+    ? []
+    : mapResponse(response).map(normalizeLibraryFolder)
+
+  return {
+    path: String(meta?.path ?? ''),
+    name: String(meta?.name ?? ''),
+    uploaded: Boolean(meta?.uploaded),
+    folders
+  }
+}
+
+export function groupUploadTracksByAlbum(
+  tracks: IMusicUploadTrack[],
+  albums: IAlbum[] = []
+): IMusicUploadAlbumGroup[] {
   const groups = new Map<string, IMusicUploadAlbumGroup>()
+  const albumsById = new Map(albums.map(album => [album.id, album]))
 
   tracks.forEach(track => {
     const key = track.album_id ?? track.album_name ?? 'unknown'
@@ -118,12 +153,25 @@ export function groupUploadTracksByAlbum(tracks: IMusicUploadTrack[]): IMusicUpl
       return
     }
 
+    const album = track.album_id ? albumsById.get(track.album_id) : undefined
+
     groups.set(key, {
       albumId: track.album_id,
-      albumName: track.album_name || 'Unknown album',
+      albumName: album?.name || track.album_name || 'Unknown album',
+      albumYear: albumYear(album?.date),
       tracks: [track]
     })
   })
 
   return Array.from(groups.values())
+}
+
+function albumYear(date: string | null | undefined): string | null {
+  if (!date) {
+    return null
+  }
+
+  const match = date.match(/^(\d{4})/)
+
+  return match ? match[1] : null
 }

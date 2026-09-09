@@ -36,27 +36,6 @@
     </div>
     <div v-else class="text-grey-6 q-mb-md">No artists in this session</div>
 
-    <div class="text-subtitle2 q-mb-sm">Albums</div>
-    <div v-if="upload.albums.length" class="q-gutter-xs q-mb-md">
-      <router-link
-        v-for="album in upload.albums"
-        :key="album.id"
-        :to="`/music/albums/${album.id}`"
-        class="upload-session-details__link"
-      >
-        <q-chip
-          outline
-          color="primary"
-          clickable
-          dense
-        >
-          {{ album.name }}
-          <span v-if="album.date" class="q-ml-xs text-grey-7">{{ album.date }}</span>
-        </q-chip>
-      </router-link>
-    </div>
-    <div v-else class="text-grey-6 q-mb-md">No albums in this session</div>
-
     <div class="row items-center q-mb-sm">
       <div class="text-subtitle2">Tracks</div>
       <q-space />
@@ -75,8 +54,15 @@
         class="q-mb-md"
       >
         <div class="text-weight-medium q-mb-xs">
-          {{ group.albumName }}
-          <span class="text-caption text-grey-6">{{ group.tracks.length }}</span>
+          <router-link
+            v-if="group.albumId"
+            :to="{ name: 'album', params: { id: group.albumId } }"
+            class="upload-session-details__album-link"
+          >
+            {{ albumTitle(group) }}
+          </router-link>
+          <span v-else>{{ albumTitle(group) }}</span>
+          <span class="text-caption text-grey-6 q-ml-xs">{{ group.tracks.length }}</span>
         </div>
         <q-markup-table flat dense>
           <tbody>
@@ -102,7 +88,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { groupUploadTracksByAlbum } from 'src/api/mappers/Music/upload.mapper'
-import { IArtistShort, IMusicUpload, MusicUploadTrackStatus } from 'src/types'
+import { IArtistShort, IMusicUpload, IMusicUploadAlbumGroup, MusicUploadTrackStatus } from 'src/types'
 
 const props = defineProps<{
   upload: IMusicUpload
@@ -124,7 +110,11 @@ const artists = computed<IArtistShort[]>(() => {
   }]
 })
 
-const albumGroups = computed(() => groupUploadTracksByAlbum(props.upload.tracks))
+const albumGroups = computed(() => groupUploadTracksByAlbum(props.upload.tracks, props.upload.albums))
+
+const albumTitle = (group: IMusicUploadAlbumGroup): string => (
+  group.albumYear ? `${group.albumYear} - ${group.albumName}` : group.albumName
+)
 
 const trackStatusColor = (status: MusicUploadTrackStatus): string => {
   const colors: Record<MusicUploadTrackStatus, string> = {
@@ -150,6 +140,16 @@ const trackStatusColor = (status: MusicUploadTrackStatus): string => {
 
   &__link {
     text-decoration: none;
+  }
+
+  &__album-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--q-primary);
+      text-decoration: underline;
+    }
   }
 }
 </style>

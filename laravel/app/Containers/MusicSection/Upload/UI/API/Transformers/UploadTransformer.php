@@ -28,6 +28,7 @@ class UploadTransformer extends TransformerAbstract
             'artist_ids' => $this->ids($upload, 'artists'),
             'album_ids' => $this->ids($upload, 'albums'),
             'artist_name' => $this->artistName($upload),
+            'imported_artists' => $this->importedArtists($upload),
             'source_path' => $upload->source_path,
             'status' => $upload->status->value,
             'started_at' => $upload->started_at?->format('Y-m-d H:i:s'),
@@ -77,6 +78,15 @@ class UploadTransformer extends TransformerAbstract
 
     private function artistName(MusicUpload $upload): ?string
     {
+        if (is_string($upload->artist_name) && trim($upload->artist_name) !== '') {
+            return $upload->artist_name;
+        }
+
+        $imported = collect($this->importedArtists($upload))->pluck('name')->filter()->implode(' / ');
+        if ($imported !== '') {
+            return $imported;
+        }
+
         if (!$upload->relationLoaded('artists')) {
             return null;
         }
@@ -84,5 +94,13 @@ class UploadTransformer extends TransformerAbstract
         $name = $upload->artists->pluck('name')->filter()->implode(' / ');
 
         return $name !== '' ? $name : null;
+    }
+
+    /**
+     * @return list<array{id: int|null, name: string}>
+     */
+    private function importedArtists(MusicUpload $upload): array
+    {
+        return $upload->importedArtists();
     }
 }

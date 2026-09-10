@@ -38,7 +38,8 @@ class UploadFinished implements ShouldBroadcastNow
             'id' => $this->upload->id,
             'status' => $this->upload->status->value,
             'artist_ids' => $artists->pluck('id')->all(),
-            'artist_name' => $artists->pluck('name')->filter()->implode(' / ') ?: null,
+            'artist_name' => $this->upload->artist_name
+                ?: ($artists->pluck('name')->filter()->implode(' / ') ?: null),
             'tracks_found' => $this->upload->tracks_found,
             'tracks_created' => $this->upload->tracks_created,
             'tracks_updated' => $this->upload->tracks_updated,

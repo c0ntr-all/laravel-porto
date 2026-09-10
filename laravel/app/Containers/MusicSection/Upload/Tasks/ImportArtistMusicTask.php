@@ -36,6 +36,7 @@ class ImportArtistMusicTask extends ParentTask
 
             $upload->update([
                 'tracks_found' => $tracksTotal,
+                'artist_name' => trim((string) ($tree['name'] ?? '')) ?: $upload->artist_name,
                 'meta' => array_merge($upload->meta ?? [], [
                     'albums_total' => $albumsTotal,
                     'artists_total' => $artistsTotal,
@@ -73,6 +74,7 @@ class ImportArtistMusicTask extends ParentTask
             }
 
             $counters = $this->persistLibraryTask->run($upload, $parsed['tree'], (int) $upload->user_id);
+            $upload->refresh();
 
             $failed = $counters['tracks_failed'] + count($parsed['errors']);
             $status = $failed > 0 ? UploadStatusEnum::CompletedWithErrors : UploadStatusEnum::Completed;
@@ -94,6 +96,7 @@ class ImportArtistMusicTask extends ParentTask
                     'parse_errors' => count($parsed['errors']),
                     'albums_total' => $albumsTotal,
                     'artists_total' => $artistsTotal,
+                    'imported_artists' => data_get($upload->meta, 'imported_artists', []),
                 ]),
             ]);
         } catch (Throwable $exception) {

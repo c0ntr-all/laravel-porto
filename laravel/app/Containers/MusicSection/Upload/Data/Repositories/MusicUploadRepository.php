@@ -25,8 +25,11 @@ class MusicUploadRepository
                                    });
                                }),
                                AllowedFilter::callback('artist_name', function ($query, $value) {
-                                   $query->whereHas('artists', function ($query) use ($value) {
-                                       $query->where('music_artists.name', 'like', '%' . $value . '%');
+                                   $query->where(function ($query) use ($value) {
+                                       $query->where('music_uploads.artist_name', 'like', '%'.$value.'%')
+                                           ->orWhereHas('artists', function ($query) use ($value) {
+                                               $query->where('music_artists.name', 'like', '%'.$value.'%');
+                                           });
                                    });
                                }),
                            ])
@@ -92,11 +95,13 @@ class MusicUploadRepository
         ?string $errorMessage = null,
         ?int $albumId = null,
         ?int $artistId = null,
+        ?string $artistName = null,
     ): MusicUploadTrack {
         return $upload->tracks()->create([
             'track_id' => $trackId,
             'album_id' => $albumId,
             'artist_id' => $artistId,
+            'artist_name' => $artistName,
             'album_name' => $albumName,
             'track_name' => $trackName,
             'source_path' => $sourcePath,

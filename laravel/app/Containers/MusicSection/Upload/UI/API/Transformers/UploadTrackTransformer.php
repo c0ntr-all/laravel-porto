@@ -26,6 +26,7 @@ class UploadTrackTransformer extends TransformerAbstract
             'track_id' => $item->track_id,
             'album_id' => $item->album_id,
             'artist_id' => $item->artist_id,
+            'artist_name' => $item->artist_name,
             'album_name' => $item->album_name,
             'track_name' => $item->track_name,
             'source_path' => $item->source_path,

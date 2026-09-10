@@ -135,6 +135,75 @@ class UploadCrudTest extends TestCase
         $this->assertDatabaseHas('music_tracks', ['name' => 'Enter Sandman']);
     }
 
+    public function test_upload_session_keeps_imported_names_after_catalog_rename(): void
+    {
+        $admin = $this->makeAdmin();
+        $artist = Artist::create([
+            'user_id' => $admin->id,
+            'name' => 'Metallica',
+            'path' => 'F:\\Music\\Metalica',
+        ]);
+        $album = Album::create([
+            'name' => 'Metallica',
+            'path' => 'F:\\Music\\Metalica\\Black Albumn',
+            'album_type_id' => 1,
+        ]);
+        $track = Track::create([
+            'album_id' => $album->id,
+            'name' => 'Enter Sandman',
+            'path' => 'F:\\Music\\Metalica\\Black Albumn\\01. Entrer Sandman.mp3',
+            'number' => 1,
+        ]);
+
+        $upload = MusicUpload::create([
+            'user_id' => $admin->id,
+            'artist_name' => 'Metalica',
+            'source_path' => 'F:\\Music\\Metalica',
+            'status' => UploadStatusEnum::Completed,
+            'meta' => [
+                'imported_artists' => [
+                    ['id' => $artist->id, 'name' => 'Metalica'],
+                ],
+            ],
+        ]);
+        $upload->artists()->attach($artist->id);
+        $upload->albums()->attach($album->id);
+        $upload->tracks()->create([
+            'track_id' => $track->id,
+            'album_id' => $album->id,
+            'artist_id' => $artist->id,
+            'artist_name' => 'Metalica',
+            'album_name' => 'Black Albumn',
+            'track_name' => 'Entrer Sandman',
+            'source_path' => $track->path,
+            'status' => UploadTrackStatusEnum::Created,
+        ]);
+
+        $artist->update(['name' => 'Metallica']);
+        $album->update(['name' => 'The Black Album']);
+        $track->update(['name' => 'Enter Sandman']);
+
+        $this->actingAs($admin, 'api')
+            ->getJson('/api/v1/music/uploads')
+            ->assertOk()
+            ->assertJsonPath('data.0.attributes.artist_name', 'Metalica');
+
+        $detail = $this->actingAs($admin, 'api')
+            ->getJson('/api/v1/music/uploads/' . $upload->id)
+            ->assertOk()
+            ->assertJsonPath('data.attributes.artist_name', 'Metalica');
+
+        $imported = $detail->json('data.attributes.imported_artists');
+        $this->assertEquals([['id' => $artist->id, 'name' => 'Metalica']], $imported);
+
+        $trackLog = collect($detail->json('included'))
+            ->firstWhere('type', 'upload_tracks');
+        $this->assertNotNull($trackLog);
+        $this->assertSame('Metalica', $trackLog['attributes']['artist_name']);
+        $this->assertSame('Black Albumn', $trackLog['attributes']['album_name']);
+        $this->assertSame('Entrer Sandman', $trackLog['attributes']['track_name']);
+    }
+
     public function test_admin_can_import_artist_folder_and_skip_unchanged_reimport(): void
     {
         $this->mockId3Reader();

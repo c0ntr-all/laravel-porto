@@ -17,6 +17,7 @@ class MusicUpload extends Model
 
     protected $fillable = [
         'user_id',
+        'artist_name',
         'source_path',
         'status',
         'started_at',
@@ -64,5 +65,35 @@ class MusicUpload extends Model
     public function tracks(): HasMany
     {
         return $this->hasMany(MusicUploadTrack::class, 'upload_id');
+    }
+
+    /**
+     * @return list<array{id: int|null, name: string}>
+     */
+    public function importedArtists(): array
+    {
+        $stored = data_get($this->meta, 'imported_artists');
+        if (!is_array($stored) || $stored === []) {
+            return [];
+        }
+
+        $artists = [];
+        foreach ($stored as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $artists[] = [
+                'id' => isset($row['id']) && $row['id'] !== null && $row['id'] !== '' ? (int) $row['id'] : null,
+                'name' => $name,
+            ];
+        }
+
+        return $artists;
     }
 }

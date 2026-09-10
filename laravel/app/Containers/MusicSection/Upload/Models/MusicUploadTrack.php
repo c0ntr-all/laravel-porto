@@ -18,6 +18,7 @@ class MusicUploadTrack extends Model
         'track_id',
         'album_id',
         'artist_id',
+        'artist_name',
         'album_name',
         'track_name',
         'source_path',

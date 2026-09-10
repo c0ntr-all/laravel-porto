@@ -168,6 +168,7 @@ class PersistLibraryTask extends ParentTask
                 $artistCache,
             ))));
             $upload->albums()->sync(array_values(array_unique($albumIds)));
+            $this->rememberImportedNames($upload, $artistCache, $folderArtistName);
 
             return $counters;
         });
@@ -450,12 +451,13 @@ class PersistLibraryTask extends ParentTask
                     UploadTrackStatusEnum::Skipped,
                     $trackDto->windows_path,
                     $existing->id,
-                    $album->name,
-                    $existing->name,
+                    $trackDto->album,
+                    $trackDto->title,
                     $snapshot,
                     null,
                     $album->id,
                     $artist->id,
+                    $trackDto->artist !== '' ? $trackDto->artist : $folderArtistName,
                 );
                 $counters['tracks_skipped']++;
                 return;
@@ -501,12 +503,13 @@ class PersistLibraryTask extends ParentTask
                 $status,
                 $trackDto->windows_path,
                 $track->id,
-                $album->name,
-                $track->name,
+                $trackDto->album,
+                $trackDto->title,
                 $snapshot,
                 null,
                 $album->id,
                 $artist->id,
+                $trackDto->artist !== '' ? $trackDto->artist : $folderArtistName,
             );
         } catch (\Throwable $exception) {
             $counters['tracks_failed']++;
@@ -515,12 +518,13 @@ class PersistLibraryTask extends ParentTask
                 UploadTrackStatusEnum::Failed,
                 $trackDto->windows_path,
                 null,
-                $album->name,
+                $trackDto->album,
                 $trackDto->title,
                 $this->snapshot($trackDto),
                 $exception->getMessage(),
                 $album->id,
                 $artist->id,
+                $trackDto->artist !== '' ? $trackDto->artist : $folderArtistName,
             );
         }
     }
@@ -598,6 +602,41 @@ class PersistLibraryTask extends ParentTask
         }
 
         return array_values(array_unique($ids));
+    }
+
+    /**
+     * @param array<string, Artist> $artistCache
+     */
+    private function rememberImportedNames(MusicUpload $upload, array $artistCache, string $folderArtistName): void
+    {
+        $imported = [];
+        foreach ($artistCache as $importedName => $artist) {
+            $name = trim((string) $importedName);
+            if ($name === '') {
+                continue;
+            }
+
+            $imported[] = [
+                'id' => (int) $artist->id,
+                'name' => $name,
+            ];
+        }
+
+        if ($imported === [] && $folderArtistName !== '') {
+            $imported[] = [
+                'id' => null,
+                'name' => $folderArtistName,
+            ];
+        }
+
+        $artistName = collect($imported)->pluck('name')->filter()->implode(' / ');
+
+        $upload->forceFill([
+            'artist_name' => $artistName !== '' ? $artistName : null,
+            'meta' => array_merge($upload->meta ?? [], [
+                'imported_artists' => $imported,
+            ]),
+        ])->save();
     }
 
     private function snapshot(ParsedTrackDto $dto): array

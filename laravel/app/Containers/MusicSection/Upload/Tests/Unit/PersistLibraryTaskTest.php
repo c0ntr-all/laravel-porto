@@ -58,7 +58,63 @@ class PersistLibraryTaskTest extends TestCase
             'status' => UploadTrackStatusEnum::Created->value,
             'album_id' => $upload->albums()->first()?->id,
             'artist_id' => $upload->artists()->first()?->id,
+            'artist_name' => 'Metallica',
+            'album_name' => 'Metallica',
+            'track_name' => 'Enter Sandman',
         ]);
+        $this->assertSame('Metallica', $upload->artist_name);
+        $this->assertEquals([
+            ['id' => (int) $upload->artists()->first()->id, 'name' => 'Metallica'],
+        ], $upload->importedArtists());
+    }
+
+    public function test_it_freezes_imported_names_when_catalog_records_are_renamed(): void
+    {
+        Event::fake();
+
+        $user = User::factory()->create();
+        $upload = $this->makeSession($user, 'F:\\Music\\Metalica');
+        $tree = $this->makeTree();
+        $tree['name'] = 'Metalica';
+        $tree['path'] = 'F:\\Music\\Metalica';
+        $tree['albums'][0]['name'] = 'Black Albumn';
+        $tree['albums'][0]['path'] = 'F:\\Music\\Metalica\\Black Albumn';
+        $tree['albums'][0]['artists'] = ['Metalica'];
+        $tree['albums'][0]['tracks'] = [
+            $this->makeTrackDto(
+                title: 'Entrer Sandman',
+                album: 'Black Albumn',
+                artist: 'Metalica',
+                windowsPath: 'F:\\Music\\Metalica\\Black Albumn\\01. Entrer Sandman.mp3',
+                albumPath: 'F:\\Music\\Metalica\\Black Albumn',
+                number: 1,
+            ),
+        ];
+
+        app(PersistLibraryTask::class)->run($upload, $tree, $user->id);
+
+        $artist = \App\Containers\MusicSection\Artist\Models\Artist::query()->first();
+        $album = Album::query()->first();
+        $track = \App\Containers\MusicSection\Track\Models\Track::query()->first();
+        $this->assertNotNull($artist);
+        $this->assertNotNull($album);
+        $this->assertNotNull($track);
+
+        $artist->update(['name' => 'Metallica']);
+        $album->update(['name' => 'Metallica']);
+        $track->update(['name' => 'Enter Sandman']);
+
+        $upload->refresh();
+        $log = $upload->tracks()->first();
+
+        $this->assertSame('Metalica', $upload->artist_name);
+        $this->assertSame([['id' => $artist->id, 'name' => 'Metalica']], $upload->importedArtists());
+        $this->assertSame('Metalica', $log?->artist_name);
+        $this->assertSame('Black Albumn', $log?->album_name);
+        $this->assertSame('Entrer Sandman', $log?->track_name);
+        $this->assertSame('Metallica', $artist->fresh()->name);
+        $this->assertSame('Metallica', $album->fresh()->name);
+        $this->assertSame('Enter Sandman', $track->fresh()->name);
     }
 
     public function test_it_skips_unchanged_tracks_on_reimport(): void

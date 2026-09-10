@@ -1,5 +1,6 @@
 import {
   IAlbum,
+  IArtistShort,
   IJsonApiResponse,
   IMusicLibraryFolder,
   IMusicLibraryFoldersResult,
@@ -41,6 +42,29 @@ function asStatus<T extends string>(value: unknown, allowed: T[], fallback: T): 
   return allowed.includes(value as T) ? value as T : fallback
 }
 
+function normalizeImportedArtists(value: unknown): IArtistShort[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') {
+      return []
+    }
+
+    const row = item as Record<string, unknown>
+    const name = String(row.name ?? '').trim()
+    if (!name) {
+      return []
+    }
+
+    return [{
+      id: row.id == null || row.id === '' ? '' : String(row.id),
+      name
+    }]
+  })
+}
+
 export function normalizeUploadTrack(raw: Record<string, unknown>): IMusicUploadTrack {
   return {
     id: String(raw.id),
@@ -48,6 +72,7 @@ export function normalizeUploadTrack(raw: Record<string, unknown>): IMusicUpload
     track_id: raw.track_id == null ? null : String(raw.track_id),
     album_id: raw.album_id == null ? null : String(raw.album_id),
     artist_id: raw.artist_id == null ? null : String(raw.artist_id),
+    artist_name: raw.artist_name == null ? null : String(raw.artist_name),
     album_name: raw.album_name == null ? null : String(raw.album_name),
     track_name: String(raw.track_name ?? ''),
     source_path: String(raw.source_path ?? ''),
@@ -71,6 +96,7 @@ export function normalizeUpload(
     artist_ids: asStringIds(raw.artist_ids),
     album_ids: asStringIds(raw.album_ids),
     artist_name: raw.artist_name == null ? null : String(raw.artist_name),
+    imported_artists: normalizeImportedArtists(raw.imported_artists),
     source_path: String(raw.source_path ?? ''),
     status: asStatus(raw.status, UPLOAD_STATUSES, 'pending'),
     started_at: raw.started_at == null ? null : String(raw.started_at),
@@ -157,7 +183,7 @@ export function groupUploadTracksByAlbum(
 
     groups.set(key, {
       albumId: track.album_id,
-      albumName: album?.name || track.album_name || 'Unknown album',
+      albumName: track.album_name || album?.name || 'Unknown album',
       albumYear: albumYear(album?.date),
       tracks: [track]
     })

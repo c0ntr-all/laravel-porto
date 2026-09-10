@@ -20,6 +20,7 @@ export interface IMusicUploadTrack {
   track_id: string | null
   album_id: string | null
   artist_id: string | null
+  artist_name: string | null
   album_name: string | null
   track_name: string
   source_path: string
@@ -35,6 +36,7 @@ export interface IMusicUpload {
   artist_ids: string[]
   album_ids: string[]
   artist_name: string | null
+  imported_artists: IArtistShort[]
   source_path: string
   status: MusicUploadStatus
   started_at: string | null

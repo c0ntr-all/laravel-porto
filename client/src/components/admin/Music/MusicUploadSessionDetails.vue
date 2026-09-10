@@ -96,6 +96,10 @@ const props = defineProps<{
 }>()
 
 const artists = computed<IArtistShort[]>(() => {
+  if (props.upload.imported_artists?.length) {
+    return props.upload.imported_artists
+  }
+
   if (props.upload.artists.length) {
     return props.upload.artists
   }

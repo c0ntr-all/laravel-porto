@@ -76,7 +76,13 @@ module.exports = configure(function (ctx) {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf) {
+        viteConf.resolve = viteConf.resolve || {}
+        viteConf.resolve.alias = {
+          ...(viteConf.resolve.alias || {}),
+          '@hp/data-grid': path.resolve(__dirname, 'packages/data-grid/src')
+        }
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [

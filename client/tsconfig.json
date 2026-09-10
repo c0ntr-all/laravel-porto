@@ -5,6 +5,9 @@
     "paths": {
       "src/*": [
         "src/*"
+      ],
+      "@hp/data-grid": [
+        "packages/data-grid/src/index.ts"
       ]
     },
     "typeRoots": [

@@ -155,6 +155,14 @@ const routes: RouteRecordRaw[] = [{
     name: 'musicmanage',
     alias: '/admin/music'
   }, {
+    path: '/data-grid',
+    component: () => import('pages/client/DataGridPlaygroundPage.vue'),
+    meta: {
+      title: 'Data Grid',
+      icon: 'table_chart'
+    },
+    name: 'data-grid'
+  }, {
     path: '/profile',
     component: () => import('pages/client/ProfilePage.vue'),
     meta: {

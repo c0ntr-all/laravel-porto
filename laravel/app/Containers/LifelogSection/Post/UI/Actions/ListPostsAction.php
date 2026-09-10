@@ -32,6 +32,11 @@ class ListPostsAction extends BaseAction
 
         $posts = $this->handle($dto);
 
+        $include = (string) $request->query('include', '');
+        if (str_contains($include, 'customFields')) {
+            $posts->load('customFields');
+        }
+
         return fractal($posts, new PostTransformer($dto->user_id))
             ->parseIncludes(['user', 'tags', 'attachments'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)

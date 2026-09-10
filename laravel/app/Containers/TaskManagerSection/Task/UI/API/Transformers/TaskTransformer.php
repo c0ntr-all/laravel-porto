@@ -4,6 +4,7 @@ namespace App\Containers\TaskManagerSection\Task\UI\API\Transformers;
 
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
+use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
@@ -22,6 +23,7 @@ class TaskTransformer extends TransformerAbstract
         'progress',
         'reminder',
         'attachments',
+        'customFields',
     ];
 
     public function transform(Task $task): array
@@ -112,5 +114,15 @@ class TaskTransformer extends TransformerAbstract
 
         return $this->collection($attachments, new AttachmentTransformer(), 'attachments')
             ->setMeta(['count' => $attachments->count()]);
+    }
+
+    public function includeCustomFields(Task $task): Collection
+    {
+        $customFields = $task->relationLoaded('customFields')
+            ? $task->customFields
+            : $task->customFields()->get();
+
+        return $this->collection($customFields, new CustomFieldTransformer(), 'custom_fields')
+            ->setMeta(['count' => $customFields->count()]);
     }
 }

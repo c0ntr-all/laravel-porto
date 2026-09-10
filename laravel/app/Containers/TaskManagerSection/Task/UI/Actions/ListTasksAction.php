@@ -69,6 +69,9 @@ class ListTasksAction extends BaseAction
         if (str_contains($include, 'attachments')) {
             $with[] = 'attachments.fileable';
         }
+        if (str_contains($include, 'customFields')) {
+            $with[] = 'customFields';
+        }
 
         return $with;
     }

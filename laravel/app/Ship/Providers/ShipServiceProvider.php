@@ -25,6 +25,7 @@ class ShipServiceProvider extends ServiceProvider
         LocalizationServiceProvider::class,
         AuthServiceProvider::class,
         AttachmentServiceProvider::class,
+        \App\Containers\AppSection\CustomField\Providers\CustomFieldServiceProvider::class,
         JwtServiceProvider::class,
         TelescopeServiceProvider::class,
         \App\Containers\AppSection\Notification\Providers\NotificationServiceProvider::class,

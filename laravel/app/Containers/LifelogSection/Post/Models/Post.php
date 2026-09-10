@@ -3,6 +3,7 @@
 namespace App\Containers\LifelogSection\Post\Models;
 
 use App\Containers\AppSection\Attachment\Models\Traits\HasAttachments;
+use App\Containers\AppSection\CustomField\Models\Traits\HasCustomFields;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
@@ -52,7 +53,8 @@ class Post extends ActivityLoggableModel
         HasImage,
         HasUser,
         HasTags,
-        HasAttachments;
+        HasAttachments,
+        HasCustomFields;
 
     protected $table = 'lifelog_posts';
 

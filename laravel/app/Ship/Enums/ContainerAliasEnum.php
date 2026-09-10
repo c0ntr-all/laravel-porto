@@ -16,6 +16,7 @@ enum ContainerAliasEnum: string
     case ATTACHMENT = 'attachments';
     case APP_DOCUMENT = 'app_documents';
     case COMMENTS = 'comments';
+    case CUSTOM_FIELD = 'custom_fields';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
@@ -44,6 +45,7 @@ enum ContainerAliasEnum: string
             self::ATTACHMENT => 'Вложение',
             self::APP_DOCUMENT => 'Документ',
             self::COMMENTS => 'Комментарий',
+            self::CUSTOM_FIELD => 'Дополнительное поле',
             self::MUSIC_ARTIST => 'Исполнитель',
             self::MUSIC_ALBUM => 'Альбом',
             self::MUSIC_TRACK => 'Трек',
@@ -95,6 +97,17 @@ enum ContainerAliasEnum: string
      * @return list<string>
      */
     public static function attachmentAttachableTypes(): array
+    {
+        return [
+            self::LL_POST->value,
+            self::TM_TASK->value,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function customFieldableTypes(): array
     {
         return [
             self::LL_POST->value,

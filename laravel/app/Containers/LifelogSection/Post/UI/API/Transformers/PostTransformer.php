@@ -3,6 +3,7 @@
 namespace App\Containers\LifelogSection\Post\UI\API\Transformers;
 
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
+use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\LifelogSection\Post\Models\Post;
@@ -24,6 +25,7 @@ class PostTransformer extends TransformerAbstract
         'user',
         'tags',
         'attachments',
+        'customFields',
     ];
 
     public function transform(Post $post): array
@@ -56,5 +58,15 @@ class PostTransformer extends TransformerAbstract
             : $post->attachments()->with('fileable')->get();
 
         return $this->collection($attachments, new AttachmentTransformer(), 'attachments');
+    }
+
+    public function includeCustomFields(Post $post): Collection
+    {
+        $customFields = $post->relationLoaded('customFields')
+            ? $post->customFields
+            : $post->customFields()->get();
+
+        return $this->collection($customFields, new CustomFieldTransformer(), 'custom_fields')
+            ->setMeta(['count' => $customFields->count()]);
     }
 }

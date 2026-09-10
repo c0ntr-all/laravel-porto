@@ -25,6 +25,10 @@ class GetTaskAction extends BaseAction
     {
         $task = $this->handle($task);
 
+        if (str_contains((string) $request->query('include', ''), 'customFields')) {
+            $task->load('customFields');
+        }
+
         $fractal = fractal($task, new TaskTransformer())
             ->withResourceName('tasks');
 

@@ -22,6 +22,22 @@
         </q-icon>
       </div>
     </div>
+
+    <q-btn
+      v-if="canComplete"
+      class="reminder-row__complete"
+      icon="done"
+      color="grey-7"
+      flat
+      round
+      dense
+      :loading="isCompleting"
+      @click.stop="completeOccurrence"
+    >
+      <q-tooltip>
+        {{ completeTooltip }}
+      </q-tooltip>
+    </q-btn>
   </article>
 </template>
 
@@ -30,11 +46,13 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { IReminderItem, ITask } from 'src/types/TaskManager/task'
 import { humanDatetime } from 'src/utils/datetime'
 import {
+  canCompleteReminder,
   formatReminderInterval,
   formatReminderRelative,
   getReminderUrgency,
   isRecurringReminder
 } from 'src/utils/reminder'
+import { useTaskStore } from 'src/stores/modules/taskStore'
 
 const props = defineProps<{
   task: ITask
@@ -45,15 +63,34 @@ const emit = defineEmits<{
   (e: 'opened', task: ITask): void
 }>()
 
+const taskStore = useTaskStore()
 const now = ref(Date.now())
+const isCompleting = ref(false)
 let ticker: ReturnType<typeof setInterval> | null = null
 
 const urgency = computed(() => getReminderUrgency(props.reminder, now.value))
 const relativeLabel = computed(() => formatReminderRelative(props.reminder.datetime, now.value))
 const isRecurring = computed(() => isRecurringReminder(props.reminder))
 const intervalLabel = computed(() => formatReminderInterval(props.reminder.interval))
+const canComplete = computed(() => canCompleteReminder(props.reminder))
+const completeTooltip = computed(() =>
+  isRecurring.value
+    ? 'Отметить выполненным — закроет цикл и перенесёт дату'
+    : 'Отметить выполненным'
+)
 
 const openTask = () => emit('opened', props.task)
+
+async function completeOccurrence() {
+  if (isCompleting.value || !canComplete.value) return
+
+  isCompleting.value = true
+  try {
+    await taskStore.completeReminder(props.task.id)
+  } finally {
+    isCompleting.value = false
+  }
+}
 
 onMounted(() => {
   ticker = setInterval(() => {
@@ -68,7 +105,10 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .reminder-row {
-  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 12px 14px;
   background: #fff;
   border: 1px solid #e4e6ee;
   border-radius: 10px;
@@ -148,6 +188,15 @@ onUnmounted(() => {
 
   &__repeat {
     color: #9ca3af;
+  }
+
+  &__body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__complete {
+    flex-shrink: 0;
   }
 }
 </style>

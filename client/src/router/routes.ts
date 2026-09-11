@@ -145,6 +145,25 @@ const routes: RouteRecordRaw[] = [{
       props: true
     }]
   }, {
+    path: '/movies',
+    component: () => import('layouts/PageLayout.vue'),
+    meta: {
+      title: 'Фильмы',
+      icon: 'movie',
+      menu: true
+    },
+    children: [{
+      path: '/movies',
+      component: () => import('pages/client/Movies/MoviesPage.vue'),
+      name: 'movies',
+      props: true
+    }, {
+      path: '/movies/:id',
+      component: () => import('pages/client/Movies/MoviePage.vue'),
+      name: 'movie',
+      props: true
+    }]
+  }, {
     path: '/admin/music',
     component: () => import('pages/admin/Music/AdminMusicPage.vue'),
     meta: {

@@ -17,6 +17,7 @@ enum ContainerAliasEnum: string
     case APP_DOCUMENT = 'app_documents';
     case COMMENTS = 'comments';
     case CUSTOM_FIELD = 'custom_fields';
+    case COUNTRY = 'countries';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
@@ -36,6 +37,9 @@ enum ContainerAliasEnum: string
     case GALLERY_ALBUM = 'gallery_albums';
     case GALLERY_IMAGE = 'gallery_images';
     case GALLERY_VIDEO = 'gallery_videos';
+    //MovieSection
+    case MOVIE = 'movies';
+    case MOVIE_GENRE = 'movie_genres';
 
     public function getContainerMessage(): string
     {
@@ -46,6 +50,7 @@ enum ContainerAliasEnum: string
             self::APP_DOCUMENT => 'Документ',
             self::COMMENTS => 'Комментарий',
             self::CUSTOM_FIELD => 'Дополнительное поле',
+            self::COUNTRY => 'Страна',
             self::MUSIC_ARTIST => 'Исполнитель',
             self::MUSIC_ALBUM => 'Альбом',
             self::MUSIC_TRACK => 'Трек',
@@ -60,6 +65,8 @@ enum ContainerAliasEnum: string
             self::GALLERY_ALBUM => 'Альбом',
             self::GALLERY_IMAGE => 'Изображение',
             self::GALLERY_VIDEO => 'Видео',
+            self::MOVIE => 'Фильм',
+            self::MOVIE_GENRE => 'Жанр фильма',
         };
     }
 

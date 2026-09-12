@@ -174,6 +174,16 @@ const routes: RouteRecordRaw[] = [{
     name: 'musicmanage',
     alias: '/admin/music'
   }, {
+    path: '/admin/movies',
+    component: () => import('pages/admin/Movies/AdminMoviesPage.vue'),
+    meta: {
+      title: 'Movie Manager',
+      icon: 'movie_filter',
+      is_admin: true
+    },
+    name: 'moviemanage',
+    alias: '/admin/movies'
+  }, {
     path: '/data-grid',
     component: () => import('pages/client/DataGridPlaygroundPage.vue'),
     meta: {

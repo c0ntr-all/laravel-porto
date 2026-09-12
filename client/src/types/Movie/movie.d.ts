@@ -38,3 +38,20 @@ export interface IMovieListQuery {
   sort?: string
   cursor?: string | null
 }
+
+export interface IMovieWriteDto {
+  kp_id: number
+  title: string
+  year: number
+  type: MovieTypeEnum
+  cover?: string | null
+  kp_rating?: number | null
+  kp_img?: string | null
+  genre_ids?: number[]
+}
+
+export interface IMovieGenreWriteDto {
+  name: string
+  slug?: string | null
+  kp_id?: number | null
+}

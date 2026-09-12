@@ -1,6 +1,6 @@
 import { api } from 'src/boot/axios'
 import { IJsonApiResponse } from 'src/types'
-import { IMovieListQuery } from 'src/types/Movie'
+import { IMovieListQuery, IMovieWriteDto } from 'src/types/Movie'
 import { buildFilterForUrl } from 'src/utils/jsonapi'
 
 export const movieApi = {
@@ -32,6 +32,24 @@ export const movieApi = {
         include: 'genres,countries'
       }
     })
+
+    return response.data
+  },
+
+  async createMovie(payload: IMovieWriteDto): Promise<IJsonApiResponse> {
+    const response = await api.post('v1/movie/movies', payload)
+
+    return response.data
+  },
+
+  async updateMovie(id: string, payload: IMovieWriteDto): Promise<IJsonApiResponse> {
+    const response = await api.patch(`v1/movie/movies/${id}`, payload)
+
+    return response.data
+  },
+
+  async deleteMovie(id: string): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/movie/movies/${id}`)
 
     return response.data
   }

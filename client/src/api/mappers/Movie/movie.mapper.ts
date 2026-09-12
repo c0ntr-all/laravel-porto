@@ -99,3 +99,17 @@ export function mapMovieResponse(response: IJsonApiResponse): IMovie {
 export function moviePosterUrl(movie: Pick<IMovie, 'cover' | 'kp_img'>): string | null {
   return movie.cover || movie.kp_img || null
 }
+
+export function mapMovieGenresResponse(response: IJsonApiResponse): IMovieGenre[] {
+  return mapResponse(response).map(normalizeMovieGenre)
+}
+
+export function mapMovieGenreResponse(response: IJsonApiResponse): IMovieGenre {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Genre not found')
+  }
+
+  return normalizeMovieGenre(raw)
+}

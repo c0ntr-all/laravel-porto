@@ -6,31 +6,43 @@ An application for accounting household tasks. Based on Laravel Porto and Quasar
 
 **Run containers**
 ```shell
-docker-compose up -d
+docker compose up -d
 ```
 
 **Install php dependencies**
 ```shell
-docker-compose exec app composer install
+docker compose exec app composer install
 ```
 
 **Run migrations**
 ```shell
-docker-compose exec app php artisan migrate
+docker compose exec app php artisan migrate
 ```
 
 ## Authentication
+
 Application uses Laravel Passport as base authentication module.
 
-**Generate keys**
+**Generate application key**
 ```shell
-php artisan passport:keys
+docker compose exec app php artisan key:generate
 ```
 
-**Generate client**
-Generating client for password authentication.
-More information - https://laravel.com/docs/11.x/passport
+**Generate Passport keys**
 ```shell
-php artisan passport:client --password
+docker compose exec app php artisan passport:keys --force
 ```
-Then write client id and client secret to PASSPORT_CLIENT_ID and PASSPORT_CLIENT_SECRET in .env file
+
+**Generate password grant client**
+```shell
+docker compose exec app php artisan passport:client --password --no-interaction --name="Home Portal Password Grant"
+```
+
+Then write **Client ID** and **Client secret** to `PASSPORT_PERSONAL_ACCESS_CLIENT_ID` and `PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET` in `.env`.
+
+Restart app container after key generation:
+```shell
+docker compose restart app
+```
+
+More information — https://laravel.com/docs/11.x/passport

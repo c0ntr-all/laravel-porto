@@ -8,6 +8,7 @@
       outlined
       dense
       lazy-rules
+      no-error-icon
     >
       <template #prepend>
         <q-icon name="person_outline" />
@@ -23,6 +24,7 @@
       outlined
       dense
       lazy-rules
+      no-error-icon
     >
       <template #prepend>
         <q-icon name="mail_outline" />
@@ -39,6 +41,7 @@
       outlined
       dense
       lazy-rules
+      no-error-icon
     >
       <template #prepend>
         <q-icon name="lock_outline" />
@@ -62,6 +65,7 @@
       outlined
       dense
       lazy-rules
+      no-error-icon
     >
       <template #prepend>
         <q-icon name="lock_outline" />

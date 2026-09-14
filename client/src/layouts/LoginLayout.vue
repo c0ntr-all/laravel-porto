@@ -45,7 +45,6 @@
               <q-tabs
                 v-model="tab"
                 class="auth-tabs__control"
-                active-color="primary"
                 indicator-color="transparent"
                 no-caps
                 stretch
@@ -271,8 +270,12 @@ const tab = ref('login')
 
   :deep(.q-tab--active) {
     background: #fff;
-    color: #282f53;
+    color: #282f53 !important;
     box-shadow: 0 1px 4px rgba(40, 47, 83, 0.08);
+  }
+
+  :deep(.q-tab--active .q-tab__label) {
+    color: #282f53 !important;
   }
 
   :deep(.q-tab__label) {

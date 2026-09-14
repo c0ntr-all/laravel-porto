@@ -19,6 +19,7 @@ interface RegisterPayload {
   name: string
   email: string
   password: string
+  password_confirm: string
 }
 
 const USER_STORAGE_KEY = 'home-portal.user'
@@ -118,8 +119,10 @@ export const useUserStore = defineStore('userStore', () => {
     }
   }
 
-  async function login(data: LoginPayload): Promise<void> {
-    const payload = await userApi.login(data)
+  async function applySession(
+    payload: unknown,
+    fallback: { name: string, email: string }
+  ): Promise<void> {
     const token = extractAccessToken(payload)
 
     if (!token) {
@@ -134,11 +137,19 @@ export const useUserStore = defineStore('userStore', () => {
     } catch {
       setUser({
         ...emptyUser(),
-        name: data.email,
-        email: data.email,
-        login: data.email
+        name: fallback.name,
+        email: fallback.email,
+        login: fallback.email
       })
     }
+  }
+
+  async function login(data: LoginPayload): Promise<void> {
+    const payload = await userApi.login(data)
+    await applySession(payload, {
+      name: data.email,
+      email: data.email
+    })
   }
 
   async function logout(): Promise<void> {
@@ -154,8 +165,18 @@ export const useUserStore = defineStore('userStore', () => {
     }
   }
 
-  async function register(data: RegisterPayload): Promise<void> {
-    await userApi.register(data)
+  async function register(data: RegisterPayload): Promise<boolean> {
+    const payload = await userApi.register(data)
+
+    if (!extractAccessToken(payload)) {
+      return false
+    }
+
+    await applySession(payload, {
+      name: data.name,
+      email: data.email
+    })
+    return true
   }
 
   async function updateProfile(form: IProfileForm): Promise<IUser> {

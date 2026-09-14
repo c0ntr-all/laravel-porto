@@ -39,7 +39,12 @@ export const userApi = {
     return response.data
   },
 
-  async register(payload: { name: string, email: string, password: string }): Promise<unknown> {
+  async register(payload: {
+    name: string
+    email: string
+    password: string
+    password_confirm: string
+  }): Promise<unknown> {
     const response = await api.post('v1/register', payload)
     return response.data
   }

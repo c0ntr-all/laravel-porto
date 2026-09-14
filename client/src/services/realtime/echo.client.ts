@@ -31,10 +31,6 @@ let echo: Echo<'reverb'> | null = null
 let notificationsChannel: string | null = null
 const uploadChannels = new Set<string>()
 
-function apiOrigin(): string {
-  return (process.env.host ?? '').replace(/\/$/, '')
-}
-
 function createEcho(): Echo<'reverb'> | null {
   const key = process.env.reverbKey
   const host = process.env.reverbHost
@@ -55,7 +51,7 @@ function createEcho(): Echo<'reverb'> | null {
     wssPort: port,
     forceTLS,
     enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${apiOrigin()}/broadcasting/auth`,
+    authEndpoint: '/broadcasting/auth',
     auth: {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}`,

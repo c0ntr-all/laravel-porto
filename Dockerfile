@@ -26,6 +26,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Копируем конфиги PHP
 COPY docker/php/php.ini /usr/local/etc/php/php.ini
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/php/entrypoint.sh /usr/local/bin/app-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/app-entrypoint.sh \
+    && chmod +x /usr/local/bin/app-entrypoint.sh
 
 # Настройка рабочей директории
 WORKDIR /var/www/laravel
@@ -42,3 +45,5 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1" \
     PHP_OPCACHE_MEMORY_CONSUMPTION="128"
 
 EXPOSE 9000
+
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/app-entrypoint.sh"]

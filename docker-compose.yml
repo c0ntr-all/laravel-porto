@@ -70,6 +70,7 @@ services:
             - app-network
         depends_on:
             - app
+            - client
 
 #    go-service:
 #        build:
@@ -117,18 +118,35 @@ services:
 #        ports:
 #            - "3000:3000"
 
-#    quasar:
-#        build:
-#            context: .
-#            dockerfile: ./docker/client/Dockerfile
-#        ports:
-#            - "8080:80"
-#        networks:
-#            - app-network
+    client:
+        build:
+            context: .
+            dockerfile: docker/client/Dockerfile
+        container_name: quasar-client
+        restart: unless-stopped
+        volumes:
+            - ./client:/app
+            - client_node_modules:/app/node_modules
+        environment:
+            QUASAR_DEV_HOST: "0.0.0.0"
+            QUASAR_DEV_PORT: "9000"
+            QUASAR_API_URL: ${QUASAR_API_URL:-/api}
+            QUASAR_PUBLIC_HOST: ${QUASAR_PUBLIC_HOST:-docker-porto.loc}
+            QUASAR_HMR_CLIENT_PORT: ${QUASAR_HMR_CLIENT_PORT:-80}
+            QUASAR_REVERB_HOST: ${QUASAR_REVERB_HOST:-docker-porto.loc}
+            QUASAR_REVERB_PORT: ${QUASAR_REVERB_PORT:-80}
+            QUASAR_REVERB_SCHEME: ${QUASAR_REVERB_SCHEME:-http}
+            QUASAR_REVERB_KEY: ${QUASAR_REVERB_KEY:-fxtmwduaoktnho1q7s1n}
+            CHOKIDAR_USEPOLLING: "true"
+        extra_hosts:
+            - "docker-porto.loc:host-gateway"
+        networks:
+            - app-network
 
 volumes:
     mysql_data:
     rabbitmq_data:
+    client_node_modules:
 
 networks:
     app-network:

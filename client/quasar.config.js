@@ -11,6 +11,9 @@
 const { configure } = require('quasar/wrappers')
 const path = require('path')
 
+const isDockerDev = process.env.QUASAR_DEV_HOST === '0.0.0.0'
+const devServerPort = Number(process.env.QUASAR_DEV_PORT || 9000)
+
 module.exports = configure(function (ctx) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -61,14 +64,14 @@ module.exports = configure(function (ctx) {
       // analyze: true,
       env: {
         mode: ctx.dev ? 'test' : 'prod',
-        host: ctx.dev
-          ? 'http://docker-porto.loc/api'
-          : 'https://home-portal.prod/api',
-        galleryUploadAlbumId: '1',
-        reverbKey: 'fxtmwduaoktnho1q7s1n',
-        reverbHost: ctx.dev ? 'docker-porto.loc' : 'api.home-portal.prod',
-        reverbPort: ctx.dev ? '80' : '443',
-        reverbScheme: ctx.dev ? 'http' : 'https'
+        host: process.env.QUASAR_API_URL ?? (ctx.dev
+          ? '/api'
+          : 'https://home-portal.prod/api'),
+        galleryUploadAlbumId: process.env.QUASAR_GALLERY_UPLOAD_ALBUM_ID ?? '1',
+        reverbKey: process.env.QUASAR_REVERB_KEY ?? 'fxtmwduaoktnho1q7s1n',
+        reverbHost: process.env.QUASAR_REVERB_HOST ?? (ctx.dev ? 'docker-porto.loc' : 'api.home-portal.prod'),
+        reverbPort: process.env.QUASAR_REVERB_PORT ?? (ctx.dev ? '80' : '443'),
+        reverbScheme: process.env.QUASAR_REVERB_SCHEME ?? (ctx.dev ? 'http' : 'https')
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -81,6 +84,28 @@ module.exports = configure(function (ctx) {
         viteConf.resolve.alias = {
           ...(viteConf.resolve.alias || {}),
           '@hp/data-grid': path.resolve(__dirname, 'packages/data-grid/src')
+        }
+
+        if (process.env.CHOKIDAR_USEPOLLING === 'true') {
+          viteConf.server = viteConf.server || {}
+          viteConf.server.watch = {
+            ...(viteConf.server.watch || {}),
+            usePolling: true
+          }
+        }
+
+        if (isDockerDev) {
+          const publicHost = process.env.QUASAR_PUBLIC_HOST || 'docker-porto.loc'
+          const hmrClientPort = Number(process.env.QUASAR_HMR_CLIENT_PORT || 80)
+
+          viteConf.server = viteConf.server || {}
+          viteConf.server.origin = `http://${publicHost}`
+          viteConf.server.hmr = {
+            ...(viteConf.server.hmr || {}),
+            protocol: 'ws',
+            host: publicHost,
+            clientPort: hmrClientPort
+          }
         }
       },
       // viteVuePluginOptions: {},
@@ -110,9 +135,10 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
-      host: 'docker-porto.loc',
+      host: process.env.QUASAR_DEV_HOST || 'docker-porto.loc',
+      port: devServerPort,
       https: false,
-      open: true // opens browser window automatically
+      open: !isDockerDev
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework

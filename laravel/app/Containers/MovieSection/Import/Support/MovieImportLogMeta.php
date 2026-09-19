@@ -2,7 +2,7 @@
 
 namespace App\Containers\MovieSection\Import\Support;
 
-use App\Containers\MovieSection\Import\Data\DTO\KinopoiskPageDto;
+use App\Containers\MovieSection\Import\Data\DTO\KinopoiskApiResponseDto;
 use App\Containers\MovieSection\Import\Data\DTO\ParsedKinopoiskFilmDto;
 use App\Containers\MovieSection\Import\Exceptions\KinopoiskImportException;
 use Throwable;
@@ -13,28 +13,26 @@ class MovieImportLogMeta
      * @return array<string, mixed>
      */
     public static function from(
-        ?KinopoiskPageDto $page,
+        ?KinopoiskApiResponseDto $response,
         ?ParsedKinopoiskFilmDto $parsed,
         ?Throwable $exception,
         int $apiStatus,
     ): array {
         $context = $exception instanceof KinopoiskImportException ? $exception->context : [];
-        $kinopoisk = $context['kinopoisk'] ?? ($page !== null ? (new KinopoiskResponseInspector())->snapshot(
-            html: $page->html,
-            requestedUrl: $page->url,
-            finalUrl: $page->final_url,
-            httpStatus: $page->http_status,
-            headers: $page->headers,
-        ) : null);
+        $kinopoisk = $context['kinopoisk'] ?? ($response !== null ? [
+            'requested_url' => $response->url,
+            'http_status' => $response->http_status,
+            'payload_keys' => array_keys($response->payload),
+            'body_preview' => mb_strlen($response->body) > 4000
+                ? mb_substr($response->body, 0, 4000).'…'
+                : $response->body,
+        ] : null);
 
         $meta = [
             'api_status' => $apiStatus,
-            'stage' => self::stage($page, $parsed, $exception),
+            'stage' => self::stage($response, $parsed, $exception),
+            'source' => 'poiskkino',
             'kinopoisk' => $kinopoisk,
-            'attempts' => $context['attempts'] ?? $page?->attempts ?? [],
-            'parser' => $context['parser'] ?? ($parsed !== null ? [
-                'sources' => $parsed->parser_sources,
-            ] : null),
             'extracted' => $context['extracted'] ?? ($parsed !== null ? [
                 'title' => $parsed->title,
                 'year' => $parsed->year,
@@ -65,7 +63,7 @@ class MovieImportLogMeta
     }
 
     private static function stage(
-        ?KinopoiskPageDto $page,
+        ?KinopoiskApiResponseDto $response,
         ?ParsedKinopoiskFilmDto $parsed,
         ?Throwable $exception,
     ): string {
@@ -75,7 +73,7 @@ class MovieImportLogMeta
         if ($parsed !== null) {
             return 'persist';
         }
-        if ($page !== null) {
+        if ($response !== null) {
             return 'parse';
         }
 

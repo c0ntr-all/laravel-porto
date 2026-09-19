@@ -2,18 +2,19 @@
 
 namespace App\Containers\MovieSection\Import\UI\Actions;
 
-use App\Containers\MovieSection\Import\Data\DTO\KinopoiskPageDto;
+use App\Containers\MovieSection\Import\Data\DTO\KinopoiskApiResponseDto;
 use App\Containers\MovieSection\Import\Data\DTO\MovieImportCreateData;
 use App\Containers\MovieSection\Import\Enums\MovieImportStatusEnum;
 use App\Containers\MovieSection\Import\Exceptions\KinopoiskImportException;
 use App\Containers\MovieSection\Import\Models\MovieImport;
+use App\Containers\MovieSection\Import\Support\KinopoiskApiUrl;
 use App\Containers\MovieSection\Import\Support\MovieImportLogMeta;
 use App\Containers\MovieSection\Import\Tasks\CreateMovieImportLogTask;
-use App\Containers\MovieSection\Import\Tasks\FetchKinopoiskFilmPageTask;
+use App\Containers\MovieSection\Import\Tasks\FetchKinopoiskMovieTask;
 use App\Containers\MovieSection\Import\Tasks\FinalizeMovieImportLogTask;
 use App\Containers\MovieSection\Import\Tasks\FindOrCreateCountriesFromParsedTask;
 use App\Containers\MovieSection\Import\Tasks\FindOrCreateGenresFromParsedTask;
-use App\Containers\MovieSection\Import\Tasks\ParseKinopoiskFilmPageTask;
+use App\Containers\MovieSection\Import\Tasks\MapKinopoiskMovieTask;
 use App\Containers\MovieSection\Import\Tasks\UpsertImportedMovieTask;
 use App\Containers\MovieSection\Import\UI\API\Requests\ImportRequest;
 use App\Containers\MovieSection\Import\UI\API\Transformers\MovieImportTransformer;
@@ -29,8 +30,8 @@ class ImportMovieFromKinopoiskAction extends BaseAction
 {
     public function __construct(
         private readonly CreateMovieImportLogTask $createMovieImportLogTask,
-        private readonly FetchKinopoiskFilmPageTask $fetchKinopoiskFilmPageTask,
-        private readonly ParseKinopoiskFilmPageTask $parseKinopoiskFilmPageTask,
+        private readonly FetchKinopoiskMovieTask $fetchKinopoiskMovieTask,
+        private readonly MapKinopoiskMovieTask $mapKinopoiskMovieTask,
         private readonly FindOrCreateGenresFromParsedTask $findOrCreateGenresFromParsedTask,
         private readonly FindOrCreateCountriesFromParsedTask $findOrCreateCountriesFromParsedTask,
         private readonly UpsertImportedMovieTask $upsertImportedMovieTask,
@@ -42,19 +43,18 @@ class ImportMovieFromKinopoiskAction extends BaseAction
 
     public function handle(int $kpId, int $userId): MovieImport
     {
-        $sourceUrl = rtrim((string) config('movie_import.base_url'), '/').'/film/'.$kpId.'/';
         $import = $this->createMovieImportLogTask->run(MovieImportCreateData::from([
             'user_id' => $userId,
             'kp_id' => $kpId,
-            'source_url' => $sourceUrl,
+            'source_url' => KinopoiskApiUrl::movie($kpId),
         ]));
         $startedAtNs = hrtime(true);
-        $page = null;
+        $response = null;
         $parsed = null;
 
         try {
-            $page = $this->fetchKinopoiskFilmPageTask->run($kpId);
-            $parsed = $this->parseKinopoiskFilmPageTask->run($page);
+            $response = $this->fetchKinopoiskMovieTask->run($kpId);
+            $parsed = $this->mapKinopoiskMovieTask->run($response);
 
             $result = DB::transaction(function () use ($parsed) {
                 $genres = $this->findOrCreateGenresFromParsedTask->run($parsed->genres);
@@ -81,18 +81,18 @@ class ImportMovieFromKinopoiskAction extends BaseAction
                 startedAtNs: $startedAtNs,
                 movieId: (int) $movie->id,
                 wasCreated: $result['was_created'],
-                httpStatus: $page->http_status,
+                httpStatus: $response->http_status,
                 parsedPayload: $parsed->toArray(),
-                meta: MovieImportLogMeta::from($page, $parsed, null, 201),
+                meta: MovieImportLogMeta::from($response, $parsed, null, 201),
             )->load(['movie.genres', 'movie.countries']);
         } catch (KinopoiskImportException $exception) {
             $failed = $this->finalizeMovieImportLogTask->run(
                 import: $import,
                 status: MovieImportStatusEnum::Failed,
                 startedAtNs: $startedAtNs,
-                httpStatus: $this->kinopoiskHttpStatus($page, $exception),
+                httpStatus: $this->kinopoiskHttpStatus($response, $exception),
                 errorMessage: $exception->getMessage(),
-                meta: MovieImportLogMeta::from($page, $parsed, $exception, $exception->httpStatus),
+                meta: MovieImportLogMeta::from($response, $parsed, $exception, $exception->httpStatus),
             );
 
             throw $exception->withImport($failed);
@@ -101,13 +101,13 @@ class ImportMovieFromKinopoiskAction extends BaseAction
                 import: $import,
                 status: MovieImportStatusEnum::Failed,
                 startedAtNs: $startedAtNs,
-                httpStatus: $page?->http_status,
+                httpStatus: $response?->http_status,
                 errorMessage: $exception->getMessage(),
-                meta: MovieImportLogMeta::from($page, $parsed, $exception, 500),
+                meta: MovieImportLogMeta::from($response, $parsed, $exception, 500),
             );
 
             throw (new KinopoiskImportException(
-                'Failed to import film from Kinopoisk.',
+                'Failed to import film from PoiskKino API.',
                 500,
                 $failed,
                 $exception,
@@ -135,10 +135,10 @@ class ImportMovieFromKinopoiskAction extends BaseAction
             ->respond($status, [], JSON_PRETTY_PRINT);
     }
 
-    private function kinopoiskHttpStatus(?KinopoiskPageDto $page, KinopoiskImportException $exception): ?int
+    private function kinopoiskHttpStatus(?KinopoiskApiResponseDto $response, KinopoiskImportException $exception): ?int
     {
-        if ($page !== null) {
-            return $page->http_status;
+        if ($response !== null) {
+            return $response->http_status;
         }
 
         $status = $exception->context['kinopoisk']['http_status'] ?? null;

@@ -2,14 +2,14 @@
 
 namespace App\Containers\MovieSection\Import\Providers;
 
-use App\Containers\MovieSection\Import\Clients\KinopoiskHttpClient;
-use App\Containers\MovieSection\Import\Contracts\KinopoiskFilmPageClientInterface;
+use App\Containers\MovieSection\Import\Clients\PoiskKinoHttpClient;
+use App\Containers\MovieSection\Import\Contracts\KinopoiskMovieApiClientInterface;
 use Illuminate\Support\ServiceProvider;
 
 class ImportServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(KinopoiskFilmPageClientInterface::class, KinopoiskHttpClient::class);
+        $this->app->bind(KinopoiskMovieApiClientInterface::class, PoiskKinoHttpClient::class);
     }
 }

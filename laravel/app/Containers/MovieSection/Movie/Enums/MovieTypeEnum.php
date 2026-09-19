@@ -20,6 +20,7 @@ enum MovieTypeEnum: string
             str_contains($haystack, 'tvseries')
             || str_contains($haystack, 'tv_series')
             || str_contains($haystack, 'tv-series')
+            || str_contains($haystack, 'animated-series')
             || str_contains($haystack, 'mini_series')
             || str_contains($haystack, 'miniseries')
             || str_contains($haystack, 'сериал')

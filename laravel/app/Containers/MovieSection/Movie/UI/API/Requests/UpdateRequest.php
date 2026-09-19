@@ -20,6 +20,7 @@ class UpdateRequest extends AuthenticatedRequest
                 Rule::unique('movies', 'kp_id')->ignore($movie),
             ],
             'title' => 'sometimes|string|max:255',
+            'description' => 'sometimes|nullable|string|max:10000',
             'year' => 'sometimes|integer|min:1888|max:2100',
             'type' => ['sometimes', Rule::enum(MovieTypeEnum::class)],
             'cover' => 'sometimes|nullable|url|max:2048',

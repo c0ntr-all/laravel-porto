@@ -26,12 +26,35 @@ class GenreRepository
             ->get();
     }
 
+    public function firstOrCreateByName(string $name, ?int $kpId = null): Genre
+    {
+        $genre = Genre::query()->where('name', $name)->first();
+
+        if ($genre === null) {
+            return $this->create(GenreCreateData::from([
+                'name' => $name,
+                'kp_id' => $kpId,
+            ]));
+        }
+
+        if ($kpId !== null && $genre->kp_id === null) {
+            $genre->update(['kp_id' => $kpId]);
+        }
+
+        return $genre;
+    }
+
     public function create(GenreCreateData $dto): Genre
     {
+        $slug = $dto->slug ?: Str::slug($dto->name);
+        if ($slug === '') {
+            $slug = 'genre-'.substr(sha1($dto->name), 0, 12);
+        }
+
         return Genre::create([
             'kp_id' => $dto->kp_id,
             'name' => $dto->name,
-            'slug' => $dto->slug ?: Str::slug($dto->name),
+            'slug' => $slug,
         ]);
     }
 

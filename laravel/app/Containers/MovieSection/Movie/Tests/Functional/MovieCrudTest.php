@@ -43,6 +43,7 @@ class MovieCrudTest extends TestCase
                 'cover' => 'https://example.com/cover.jpg',
                 'kp_rating' => 8.6,
                 'kp_img' => 'https://kinopoisk.ru/pulp.jpg',
+                'description' => 'Криминальная история из Лос-Анджелеса.',
                 'genre_ids' => [$drama->id, $crime->id],
                 'country_ids' => [$usa->id, $uk->id],
             ]);
@@ -55,7 +56,8 @@ class MovieCrudTest extends TestCase
             ->assertJsonPath('data.attributes.type', 'movie')
             ->assertJsonPath('data.attributes.cover', 'https://example.com/cover.jpg')
             ->assertJsonPath('data.attributes.kp_rating', 8.6)
-            ->assertJsonPath('data.attributes.kp_img', 'https://kinopoisk.ru/pulp.jpg');
+            ->assertJsonPath('data.attributes.kp_img', 'https://kinopoisk.ru/pulp.jpg')
+            ->assertJsonPath('data.attributes.description', 'Криминальная история из Лос-Анджелеса.');
 
         $includedTypes = collect($response->json('included'))->pluck('type')->unique()->values()->all();
         $this->assertContains('movie_genres', $includedTypes);

@@ -10,6 +10,7 @@ class MovieUpdateData extends Data
 {
     public int|Optional $kp_id;
     public string|Optional $title;
+    public string|Optional|null $description;
     public int|Optional $year;
     public MovieTypeEnum|Optional $type;
     public string|Optional|null $cover;

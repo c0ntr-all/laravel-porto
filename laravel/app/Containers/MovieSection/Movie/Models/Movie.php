@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $kp_id
  * @property string $title
+ * @property string|null $description
  * @property int $year
  * @property MovieTypeEnum $type
  * @property string|null $cover
@@ -36,6 +37,7 @@ class Movie extends Model
     protected $fillable = [
         'kp_id',
         'title',
+        'description',
         'year',
         'type',
         'cover',

@@ -30,6 +30,7 @@ class ShipServiceProvider extends ServiceProvider
         TelescopeServiceProvider::class,
         \App\Containers\AppSection\Notification\Providers\NotificationServiceProvider::class,
         \App\Containers\DashboardSection\Widget\Providers\WidgetServiceProvider::class,
+        \App\Containers\MovieSection\Import\Providers\ImportServiceProvider::class,
     ];
 
     /**
@@ -63,6 +64,7 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::MOVIE->value => 'App\Containers\MovieSection\Movie\Models\Movie',
             ContainerAliasEnum::MOVIE_GENRE->value => 'App\Containers\MovieSection\Genre\Models\Genre',
             ContainerAliasEnum::COUNTRY->value => 'App\Containers\AppSection\Country\Models\Country',
+            ContainerAliasEnum::MOVIE_IMPORT->value => 'App\Containers\MovieSection\Import\Models\MovieImport',
             // JSON:API resource names that may have been stored as morph types
             'albums' => 'App\Containers\GallerySection\Album\Models\Album',
             'images' => 'App\Containers\GallerySection\Image\Models\Image',

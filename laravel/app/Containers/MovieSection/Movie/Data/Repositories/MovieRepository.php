@@ -25,11 +25,17 @@ class MovieRepository
             ->cursorPaginate(24);
     }
 
+    public function findByKpId(int $kpId): ?Movie
+    {
+        return Movie::query()->where('kp_id', $kpId)->first();
+    }
+
     public function create(MovieCreateData $dto): Movie
     {
         return Movie::create([
             'kp_id' => $dto->kp_id,
             'title' => $dto->title,
+            'description' => $dto->description,
             'year' => $dto->year,
             'type' => $dto->type,
             'cover' => $dto->cover,

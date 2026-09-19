@@ -1,6 +1,7 @@
 import { IJsonApiResponse } from 'src/types'
-import { IMovie, IMovieCountry, IMovieGenre } from 'src/types/Movie'
+import { IMovie, IMovieCountry, IMovieGenre, IMovieImport } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
+import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 
 function asRecords(value: unknown): Record<string, unknown>[] {
@@ -112,4 +113,64 @@ export function mapMovieGenreResponse(response: IJsonApiResponse): IMovieGenre {
   }
 
   return normalizeMovieGenre(raw)
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+
+  return value as Record<string, unknown>
+}
+
+function asBoolean(value: unknown): boolean | null {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  return Boolean(value)
+}
+
+function normalizeMovieImportStatus(value: unknown): MovieImportStatusEnum {
+  if (value === MovieImportStatusEnum.COMPLETED || value === MovieImportStatusEnum.FAILED) {
+    return value
+  }
+
+  return MovieImportStatusEnum.PENDING
+}
+
+export function normalizeMovieImport(raw: Record<string, unknown>): IMovieImport {
+  const movieRaw = asRecord(raw.movie)
+
+  return {
+    id: String(raw.id),
+    kp_id: Number(raw.kp_id ?? 0),
+    movie_id: toNullableNumber(raw.movie_id),
+    source_url: String(raw.source_url ?? ''),
+    status: normalizeMovieImportStatus(raw.status),
+    http_status: toNullableNumber(raw.http_status),
+    was_created: asBoolean(raw.was_created),
+    parsed_payload: asRecord(raw.parsed_payload),
+    meta: asRecord(raw.meta),
+    error_message: toNullableString(raw.error_message),
+    started_at: toNullableString(raw.started_at),
+    finished_at: toNullableString(raw.finished_at),
+    duration_ms: toNullableNumber(raw.duration_ms),
+    created_at: toNullableString(raw.created_at),
+    movie: movieRaw ? normalizeMovie(movieRaw) : null
+  }
+}
+
+export function mapMovieImportsResponse(response: IJsonApiResponse): IMovieImport[] {
+  return mapResponse(response).map(normalizeMovieImport)
+}
+
+export function mapMovieImportResponse(response: IJsonApiResponse): IMovieImport {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Import not found')
+  }
+
+  return normalizeMovieImport(raw)
 }

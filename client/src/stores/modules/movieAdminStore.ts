@@ -64,6 +64,11 @@ export const useMovieAdminStore = defineStore('movieAdmin', () => {
     movies.value.splice(index, 1, incoming)
   }
 
+  function upsertImportedMovie(incoming: IMovie): void {
+    upsertMovie(incoming)
+    syncPublicStore(incoming)
+  }
+
   async function getMovies(options?: {
     append?: boolean
     title?: string
@@ -195,6 +200,7 @@ export const useMovieAdminStore = defineStore('movieAdmin', () => {
     getMovies,
     createMovie,
     updateMovie,
-    deleteMovie
+    deleteMovie,
+    upsertImportedMovie
   }
 })

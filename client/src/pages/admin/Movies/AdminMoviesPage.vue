@@ -9,6 +9,7 @@
     narrow-indicator
   >
     <q-tab name="catalog" label="Catalog"/>
+    <q-tab name="import" label="Import"/>
     <q-tab name="genres" label="Genres"/>
   </q-tabs>
 
@@ -17,6 +18,9 @@
   <q-tab-panels v-model="tabs">
     <q-tab-panel name="catalog">
       <MovieManagerCatalog/>
+    </q-tab-panel>
+    <q-tab-panel name="import">
+      <MovieManagerImport/>
     </q-tab-panel>
     <q-tab-panel name="genres">
       <MovieManagerGenres/>
@@ -27,6 +31,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import MovieManagerCatalog from 'src/components/admin/Movies/MovieManagerCatalog.vue'
+import MovieManagerImport from 'src/components/admin/Movies/MovieManagerImport.vue'
 import MovieManagerGenres from 'src/components/admin/Movies/MovieManagerGenres.vue'
 
 const tabs = ref('catalog')

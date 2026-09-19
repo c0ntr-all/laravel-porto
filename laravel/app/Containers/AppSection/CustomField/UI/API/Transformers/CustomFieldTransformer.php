@@ -12,6 +12,7 @@ class CustomFieldTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $customField->id,
+            'uuid' => (string) $customField->uuid,
             'type' => $customField->type->value,
             'payload' => $customField->payload,
             'position' => (int) $customField->position,

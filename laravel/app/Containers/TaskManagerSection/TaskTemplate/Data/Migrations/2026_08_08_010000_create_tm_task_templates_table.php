@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('tm_task_templates', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('user_id');
             $table->string('title');
             $table->text('content')->nullable()->default(null);

@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('app_documents', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
             $table->string('original_name');
             $table->string('mime_type');

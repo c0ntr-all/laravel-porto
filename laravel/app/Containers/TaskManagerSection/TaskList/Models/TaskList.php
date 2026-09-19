@@ -4,6 +4,7 @@ namespace App\Containers\TaskManagerSection\TaskList\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TaskList extends Model
 {
     use HasUser,
+        HasUuidV7,
         SoftDeletes;
 
     protected $table = 'tm_task_lists';

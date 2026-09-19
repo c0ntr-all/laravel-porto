@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('lifelog_posts', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
             $table->string('title', 300)->nullable();
             $table->text('content')->nullable();

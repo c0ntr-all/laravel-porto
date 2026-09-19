@@ -17,11 +17,11 @@ use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Enums\FileSourceEnum;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Uuid\Uuid;
 
 class UploadImageFromDeviceAction extends UseCaseAction
 {
@@ -43,7 +43,7 @@ class UploadImageFromDeviceAction extends UseCaseAction
     {
         return DB::transaction(function () use ($album, $uploadImagesDto) {
             $file = $uploadImagesDto->file;
-            $uuid = Uuid::uuid4()->toString();
+            $uuid = UuidV7::generate();
 
             $albumPath = $this->pathGenerationService->getAlbumFolderPath((string) $uploadImagesDto->user_id, (string) $album->id);
             $basePath = $albumPath . '/' . $uuid;
@@ -58,7 +58,7 @@ class UploadImageFromDeviceAction extends UseCaseAction
             }
 
             $createImageDto = CreateImageDto::from([
-                'id' => $uuid,
+                'uuid' => $uuid,
                 'user_id' => $uploadImagesDto->user_id,
                 'extension' => ImageMimeEnum::canonicalize($file->getClientOriginalExtension())
                     ?? strtolower($file->getClientOriginalExtension()),

@@ -10,7 +10,7 @@ use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Models\ActivityLoggableModel;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -18,7 +18,8 @@ use Illuminate\Support\Carbon;
 /**
  * App\Containers\GallerySection\Image\Models
  *
- * @property string $id
+ * @property int $id
+ * @property string $uuid
  * @property int $user_id
  * @property int $album_id
  * @property string $source
@@ -38,7 +39,7 @@ use Illuminate\Support\Carbon;
  */
 class Image extends ActivityLoggableModel
 {
-    use HasUuids,
+    use HasUuidV7,
         HasUser,
         HasComments,
         HasFileableAttachments;
@@ -47,7 +48,6 @@ class Image extends ActivityLoggableModel
 
     protected $table = 'gallery_images';
     protected $fillable = [
-        'id',
         'user_id',
         'album_id',
         'source',
@@ -78,7 +78,7 @@ class Image extends ActivityLoggableModel
     {
         return match ($this->source) {
             FileSourceEnum::WEB->value => (string) $this->external_url,
-            FileSourceEnum::WINDOWS->value => url('') . '/api/v1/gallery/images/' . $this->id . '/file',
+            FileSourceEnum::WINDOWS->value => url('') . '/api/v1/gallery/images/' . $this->getKey() . '/file',
             default => $this->publicStorageUrl($this->relativePath('base')),
         };
     }
@@ -89,7 +89,7 @@ class Image extends ActivityLoggableModel
         $replace = [
             (string) $this->user_id,
             (string) $this->album_id,
-            (string) $this->id,
+            (string) $this->uuid,
             ImageMimeEnum::canonicalize((string) $this->extension)
                 ?? strtolower((string) $this->extension),
         ];

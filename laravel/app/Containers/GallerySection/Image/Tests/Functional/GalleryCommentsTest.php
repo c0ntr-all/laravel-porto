@@ -47,7 +47,7 @@ class GalleryCommentsTest extends TestCase
 
         $create->assertOk()
             ->assertJsonPath('data.type', 'comments')
-            ->assertJsonPath('data.attributes.commentable_id', $this->image->id)
+            ->assertJsonPath('data.attributes.commentable_id', (string) $this->image->id)
             ->assertJsonPath('data.attributes.commentable_type', ContainerAliasEnum::GALLERY_IMAGE->value);
 
         $this->assertDatabaseHas('comments', [

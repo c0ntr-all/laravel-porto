@@ -9,7 +9,7 @@ use App\Containers\GallerySection\Album\Models\Album;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Models\ActivityLoggableModel;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -17,7 +17,8 @@ use Illuminate\Support\Carbon;
 /**
  * App\Containers\GallerySection\Video\Models
  *
- * @property string $id
+ * @property int $id
+ * @property string $uuid
  * @property int $user_id
  * @property int $album_id
  * @property string $source
@@ -38,7 +39,7 @@ use Illuminate\Support\Carbon;
  */
 class Video extends ActivityLoggableModel
 {
-    use HasUuids,
+    use HasUuidV7,
         HasUser,
         HasComments,
         HasFileableAttachments;
@@ -47,7 +48,6 @@ class Video extends ActivityLoggableModel
 
     protected $table = 'gallery_videos';
     protected $fillable = [
-        'id',
         'user_id',
         'album_id',
         'source',
@@ -75,7 +75,7 @@ class Video extends ActivityLoggableModel
     {
         return match ($this->source) {
             FileSourceEnum::WEB->value => (string) $this->external_url,
-            FileSourceEnum::WINDOWS->value => url('') . '/api/v1/gallery/videos/' . $this->id . '/file',
+            FileSourceEnum::WINDOWS->value => url('') . '/api/v1/gallery/videos/' . $this->getKey() . '/file',
             default => $this->publicStorageUrl($this->relativePath('base')),
         };
     }
@@ -84,7 +84,7 @@ class Video extends ActivityLoggableModel
     {
         $extension = $maskKey === 'list_thumb' ? 'jpg' : (string) $this->extension;
         $search = ['{user_id}', '{album_id}', '{file_id}', '{ext}'];
-        $replace = [(string) $this->user_id, (string) $this->album_id, (string) $this->id, $extension];
+        $replace = [(string) $this->user_id, (string) $this->album_id, (string) $this->uuid, $extension];
 
         return str_replace($search, $replace, (string) config("video.default.mask.{$maskKey}"));
     }

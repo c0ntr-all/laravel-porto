@@ -17,6 +17,7 @@ class TaskListTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $taskList->id,
+            'uuid' => (string) $taskList->uuid,
             'title' => $taskList->title,
             'tasks_count' => $taskList->relationLoaded('tasks')
                 ? $taskList->tasks->count()

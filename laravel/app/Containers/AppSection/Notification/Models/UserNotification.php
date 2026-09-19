@@ -3,13 +3,12 @@
 namespace App\Containers\AppSection\Notification\Models;
 
 use App\Containers\AppSection\User\Models\User;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * @property string $id
+ * @property int $id
  * @property int $user_id
  * @property string $type
  * @property string $title
@@ -21,8 +20,6 @@ use Illuminate\Support\Carbon;
  */
 class UserNotification extends Model
 {
-    use HasUuids;
-
     protected $table = 'user_notifications';
 
     protected $fillable = [

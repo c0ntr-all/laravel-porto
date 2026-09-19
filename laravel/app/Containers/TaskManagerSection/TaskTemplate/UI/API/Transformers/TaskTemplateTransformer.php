@@ -15,7 +15,8 @@ class TaskTemplateTransformer extends TransformerAbstract
     public function transform(TaskTemplate $taskTemplate): array
     {
         return [
-            'id' => $taskTemplate->id,
+            'id' => (string) $taskTemplate->id,
+            'uuid' => (string) $taskTemplate->uuid,
             'title' => $taskTemplate->title,
             'content' => $taskTemplate->content,
             'checklists_count' => $taskTemplate->relationLoaded('checklists')

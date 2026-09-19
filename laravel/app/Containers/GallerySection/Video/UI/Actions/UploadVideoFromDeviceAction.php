@@ -13,10 +13,10 @@ use App\Containers\GallerySection\Video\UI\API\Transformers\VideoTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Enums\FileSourceEnum;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Ramsey\Uuid\Uuid;
 
 class UploadVideoFromDeviceAction extends UseCaseAction
 {
@@ -36,7 +36,7 @@ class UploadVideoFromDeviceAction extends UseCaseAction
     {
         return DB::transaction(function () use ($album, $uploadVideoDto) {
             $file = $uploadVideoDto->file;
-            $uuid = Uuid::uuid4()->toString();
+            $uuid = UuidV7::generate();
             $relativePath = $this->saveUploadedVideoTask->run(
                 $file,
                 (string) $uploadVideoDto->user_id,

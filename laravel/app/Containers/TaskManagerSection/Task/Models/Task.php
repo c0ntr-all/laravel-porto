@@ -12,6 +12,7 @@ use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -36,6 +37,7 @@ class Task extends ActivityLoggableModel
         HasComments,
         HasAttachments,
         HasCustomFields,
+        HasUuidV7,
         SoftDeletes;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_TASK;

@@ -31,7 +31,8 @@ class PostTransformer extends TransformerAbstract
     public function transform(Post $post): array
     {
         return [
-            'id' => $post->id,
+            'id' => (string) $post->id,
+            'uuid' => (string) $post->uuid,
             'title' => $post->title,
             'content' => $post->content,
             'content_type' => $post->content_type->value,

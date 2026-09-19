@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attachments', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
-            $table->uuidMorphs('attachable');
-            $table->uuidMorphs('fileable');
+            $table->morphs('attachable');
+            $table->morphs('fileable');
             $table->timestamps();
 
             $table->foreign('user_id')

@@ -6,12 +6,12 @@ use App\Containers\AppSection\Attachment\Models\Traits\HasFileableAttachments;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Support\Facades\Storage;
 
 class Document extends ActivityLoggableModel
 {
-    use HasUuids,
+    use HasUuidV7,
         HasUser,
         HasFileableAttachments;
 
@@ -20,7 +20,6 @@ class Document extends ActivityLoggableModel
     protected $table = 'app_documents';
 
     protected $fillable = [
-        'id',
         'user_id',
         'original_name',
         'mime_type',

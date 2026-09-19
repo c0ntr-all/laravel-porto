@@ -28,14 +28,14 @@ class CreateAttachmentsTask extends ParentTask
             $fileableType = ContainerAliasEnum::toCanonicalMorphAlias($reference['type']);
             $fileableId = (string) $reference['id'];
 
-            $this->validateFileableOwnershipTask->run($fileableType, $fileableId, $userId);
+            $fileable = $this->validateFileableOwnershipTask->run($fileableType, $fileableId, $userId);
 
             $this->createAttachmentTask->run(AttachmentCreateDto::from([
                 'user_id' => (string) $userId,
                 'attachable_type' => ContainerAliasEnum::toCanonicalMorphAlias($attachableType),
                 'attachable_id' => (string) $attachable->getKey(),
                 'fileable_type' => $fileableType,
-                'fileable_id' => $fileableId,
+                'fileable_id' => (string) $fileable->getKey(),
             ]));
         }
     }

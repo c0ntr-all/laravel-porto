@@ -16,7 +16,7 @@ class VideoRepository
         return $album->videos()->orderByDesc('created_at')->get();
     }
 
-    public function findSavedCopy(int $userId, int|string $albumId, string $originId): ?Video
+    public function findSavedCopy(int $userId, int|string $albumId, int|string $originId): ?Video
     {
         return Video::query()
             ->where('user_id', $userId)
@@ -30,19 +30,14 @@ class VideoRepository
     public function findForUser(string $id, int $userId): ?Video
     {
         return Video::query()
-            ->whereKey($id)
             ->where('user_id', $userId)
+            ->whereIdOrUuid($id)
             ->first();
     }
 
     public function create(CreateVideoDto $dto): Video
     {
         $video = new Video($dto->toArray());
-
-        if ($dto->id !== null && $dto->id !== '') {
-            $video->id = $dto->id;
-        }
-
         $video->save();
 
         return $video;

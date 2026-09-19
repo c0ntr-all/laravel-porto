@@ -19,13 +19,13 @@ class UpdateRequest extends AuthenticatedRequest
             'finished_at' => 'sometimes|nullable|date_format:Y-m-d H:i:s',
             'is_declined' => 'sometimes|boolean',
             'deleted_attachments_ids' => 'sometimes|array',
-            'deleted_attachments_ids.*' => 'sometimes|string|uuid',
+            'deleted_attachments_ids.*' => 'sometimes|string|max:36',
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',
                 Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
-            'attachments.*.id' => 'required|uuid',
+            'attachments.*.id' => 'required|string|max:36',
         ];
     }
 

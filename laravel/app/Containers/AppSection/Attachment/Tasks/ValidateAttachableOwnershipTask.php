@@ -21,7 +21,9 @@ class ValidateAttachableOwnershipTask extends ParentTask
         }
 
         /** @var Model|null $model */
-        $model = $modelClass::query()->find($attachableId);
+        $model = in_array(\App\Ship\Models\Traits\HasUuidV7::class, class_uses_recursive($modelClass), true)
+            ? $modelClass::query()->whereIdOrUuid($attachableId)->first()
+            : $modelClass::query()->find($attachableId);
 
         if ($model === null) {
             throw new NotFoundHttpException('Attachable entity not found.');

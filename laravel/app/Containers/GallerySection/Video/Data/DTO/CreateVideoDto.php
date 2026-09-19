@@ -6,7 +6,7 @@ use App\Ship\Parents\DTO\Data;
 
 class CreateVideoDto extends Data
 {
-    public ?string $id = null;
+    public ?string $uuid = null;
     public int|string $user_id;
     public int|string $album_id;
     public string $source;
@@ -17,7 +17,7 @@ class CreateVideoDto extends Data
     public string $extension;
     public ?string $external_url = null;
     public ?string $description = null;
-    public ?string $saved_from_id = null;
+    public int|string|null $saved_from_id = null;
 
     public function __construct()
     {

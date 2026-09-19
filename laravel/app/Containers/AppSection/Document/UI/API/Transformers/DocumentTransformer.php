@@ -11,6 +11,7 @@ class DocumentTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $document->id,
+            'uuid' => (string) $document->uuid,
             'original_name' => $document->original_name,
             'mime_type' => $document->mime_type,
             'extension' => $document->extension,

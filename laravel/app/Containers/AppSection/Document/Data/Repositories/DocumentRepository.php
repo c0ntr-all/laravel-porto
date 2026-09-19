@@ -14,8 +14,8 @@ class DocumentRepository
     public function findForUser(string $id, int $userId): ?Document
     {
         return Document::query()
-            ->whereKey($id)
             ->where('user_id', $userId)
+            ->whereIdOrUuid($id)
             ->first();
     }
 }

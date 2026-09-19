@@ -16,7 +16,7 @@ class ImageRepository
         return $album->images()->orderByDesc('created_at')->get();
     }
 
-    public function findSavedCopy(int $userId, int|string $albumId, string $originId): ?Image
+    public function findSavedCopy(int $userId, int|string $albumId, int|string $originId): ?Image
     {
         return Image::query()
             ->where('user_id', $userId)
@@ -30,19 +30,14 @@ class ImageRepository
     public function findForUser(string $id, int $userId): ?Image
     {
         return Image::query()
-            ->whereKey($id)
             ->where('user_id', $userId)
+            ->whereIdOrUuid($id)
             ->first();
     }
 
     public function create(Album $album, CreateImageDto $dto): Image
     {
         $image = $album->images()->make($dto->toArray());
-
-        if ($dto->id !== null && $dto->id !== '') {
-            $image->id = $dto->id;
-        }
-
         $image->save();
 
         return $image;

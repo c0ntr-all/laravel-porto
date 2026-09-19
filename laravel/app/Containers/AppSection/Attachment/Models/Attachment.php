@@ -4,12 +4,12 @@ namespace App\Containers\AppSection\Attachment\Models;
 
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Attachment extends ActivityLoggableModel
 {
-    use HasUuids;
+    use HasUuidV7;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::ATTACHMENT;
 

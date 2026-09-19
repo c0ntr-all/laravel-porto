@@ -9,7 +9,7 @@ use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
 use App\Ship\Helpers\ImageUpload;
 use App\Ship\Parents\Tasks\Task;
 use Illuminate\Support\Facades\Storage;
-use Ramsey\Uuid\Uuid;
+use App\Ship\Helpers\UuidV7;
 
 class UploadUserAvatarTask extends Task
 {
@@ -23,7 +23,7 @@ class UploadUserAvatarTask extends Task
         $extension = ImageMimeEnum::canonicalize($dto->file->getClientOriginalExtension())
             ?? (strtolower((string) $dto->file->getClientOriginalExtension()) ?: 'jpg');
         $folder = 'avatars/' . $user->id;
-        $filename = Uuid::uuid4()->toString() . '.' . $extension;
+        $filename = UuidV7::generate() . '.' . $extension;
         $previous = $user->avatar;
 
         $path = ImageUpload::make()

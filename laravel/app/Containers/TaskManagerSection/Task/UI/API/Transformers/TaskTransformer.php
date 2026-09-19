@@ -30,6 +30,7 @@ class TaskTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $task->id,
+            'uuid' => (string) $task->uuid,
             'task_list_id' => $task->task_list_id !== null ? (string) $task->task_list_id : null,
             'title' => $task->title,
             'content' => $task->content,

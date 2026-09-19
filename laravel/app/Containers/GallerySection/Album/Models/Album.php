@@ -9,6 +9,7 @@ use App\Containers\GallerySection\Video\Models\Video;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * App\Containers\GallerySection\Album\Models
  *
  * @property int $id
+ * @property string $uuid
  * @property int|null $user_id
  * @property string|null $system_code
  * @property string $name
@@ -32,7 +34,8 @@ use Illuminate\Support\Carbon;
 class Album extends ActivityLoggableModel
 {
     use HasImage,
-        HasUser;
+        HasUser,
+        HasUuidV7;
 
     protected ContainerAliasEnum $loggableType = ContainerAliasEnum::GALLERY_ALBUM;
 

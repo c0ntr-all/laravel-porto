@@ -7,6 +7,7 @@ use App\Containers\GallerySection\Image\Data\Repositories\ImageRepository;
 use App\Containers\GallerySection\Video\Data\Repositories\VideoRepository;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Tasks\Task as ParentTask;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -20,7 +21,7 @@ class ValidateFileableOwnershipTask extends ParentTask
     ) {
     }
 
-    public function run(string $fileableType, string $fileableId, int $userId): void
+    public function run(string $fileableType, string $fileableId, int $userId): Model
     {
         $canonicalType = ContainerAliasEnum::toCanonicalMorphAlias($fileableType);
         $modelClass = Relation::getMorphedModel($canonicalType);
@@ -29,15 +30,17 @@ class ValidateFileableOwnershipTask extends ParentTask
             throw new NotFoundHttpException('Unknown fileable type.');
         }
 
-        $owned = match ($canonicalType) {
-            ContainerAliasEnum::GALLERY_IMAGE->value => $this->imageRepository->findForUser($fileableId, $userId) !== null,
-            ContainerAliasEnum::GALLERY_VIDEO->value => $this->videoRepository->findForUser($fileableId, $userId) !== null,
-            ContainerAliasEnum::APP_DOCUMENT->value => $this->documentRepository->findForUser($fileableId, $userId) !== null,
-            default => false,
+        $model = match ($canonicalType) {
+            ContainerAliasEnum::GALLERY_IMAGE->value => $this->imageRepository->findForUser($fileableId, $userId),
+            ContainerAliasEnum::GALLERY_VIDEO->value => $this->videoRepository->findForUser($fileableId, $userId),
+            ContainerAliasEnum::APP_DOCUMENT->value => $this->documentRepository->findForUser($fileableId, $userId),
+            default => null,
         };
 
-        if (!$owned) {
+        if ($model === null) {
             throw new AccessDeniedHttpException('File does not belong to the current user.');
         }
+
+        return $model;
     }
 }

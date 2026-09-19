@@ -32,7 +32,7 @@ class CreateRequest extends AuthenticatedRequest
                 'required',
                 Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
-            'attachments.*.id' => 'required|uuid',
+            'attachments.*.id' => 'required|string|max:36',
         ];
     }
 }

@@ -7,9 +7,9 @@ use App\Containers\GallerySection\Video\Contracts\VideoSourceContract;
 use App\Containers\GallerySection\Video\Data\DTO\CreateVideoDto;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Containers\GallerySection\Video\Strategies\WebVideoSourceStrategy;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Uuid\Uuid;
 
 class PersistVideoFromSourceTask extends ParentTask
 {
@@ -27,7 +27,7 @@ class PersistVideoFromSourceTask extends ParentTask
         VideoSourceContract $videoSource,
         ?string $fileId = null,
     ): Video {
-        $uuid = $fileId ?? Uuid::uuid4()->toString();
+        $uuid = $fileId ?? UuidV7::generate();
         $width = 0;
         $height = 0;
         $duration = null;
@@ -52,7 +52,7 @@ class PersistVideoFromSourceTask extends ParentTask
         }
 
         $createVideoDto = CreateVideoDto::from([
-            'id' => $uuid,
+            'uuid' => $uuid,
             'user_id' => $userId,
             'album_id' => (int) $album->id,
             'source' => $source,

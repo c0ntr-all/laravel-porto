@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('type', 100);
             $table->string('title');

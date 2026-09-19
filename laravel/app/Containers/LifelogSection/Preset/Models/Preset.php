@@ -9,6 +9,7 @@ use App\Containers\LifelogSection\Preset\Data\ValueObjects\PresetRules;
 use App\Ship\Casts\ValueObjectCast;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -33,7 +34,8 @@ class Preset extends ActivityLoggableModel
     use SoftDeletes,
         HasFactory,
         HasUser,
-        HasTags;
+        HasTags,
+        HasUuidV7;
 
     protected $table = 'lifelog_presets';
 

@@ -9,11 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('custom_fields', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
             $table->string('type', 32);
             $table->string('fieldable_type');
-            $table->string('fieldable_id', 36);
+            $table->unsignedBigInteger('fieldable_id');
             $table->json('payload');
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();

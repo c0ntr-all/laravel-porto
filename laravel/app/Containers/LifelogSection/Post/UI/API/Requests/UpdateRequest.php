@@ -28,13 +28,13 @@ class UpdateRequest extends AuthenticatedRequest
             'new_tags' => 'sometimes|array',
             'new_tags.*' => 'sometimes|string|unique:App\Containers\AppSection\Tag\Models\Tag,name',
             'deleted_attachments_ids' => 'sometimes|array',
-            'deleted_attachments_ids.*' => 'sometimes|string|uuid',
+            'deleted_attachments_ids.*' => 'sometimes|string|max:36',
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',
                 Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
-            'attachments.*.id' => 'required|uuid',
+            'attachments.*.id' => 'required|string|max:36',
         ];
     }
 }

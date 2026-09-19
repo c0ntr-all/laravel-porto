@@ -7,8 +7,8 @@ use App\Containers\GallerySection\Album\Tasks\GetSystemAlbumTask;
 use App\Containers\GallerySection\Video\Data\DTO\CreateVideoDto;
 use App\Containers\GallerySection\Video\Data\Repositories\VideoRepository;
 use App\Containers\GallerySection\Video\Models\Video;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Parents\Tasks\Task as ParentTask;
-use Ramsey\Uuid\Uuid;
 
 class SaveVideoToSaveAlbumTask extends ParentTask
 {
@@ -23,7 +23,7 @@ class SaveVideoToSaveAlbumTask extends ParentTask
     public function run(Video $video, int $userId): Video
     {
         $saveAlbum = $this->getSystemAlbumTask->run(SystemAlbumsEnum::SAVE->value);
-        $originId = $video->saved_from_id ?: (string) $video->id;
+        $originId = $video->saved_from_id ?: $video->id;
 
         $existing = $this->videoRepository->findSavedCopy($userId, $saveAlbum->id, $originId);
         if ($existing !== null) {
@@ -31,7 +31,7 @@ class SaveVideoToSaveAlbumTask extends ParentTask
         }
 
         $copy = $this->createVideoTask->run(CreateVideoDto::from([
-            'id' => Uuid::uuid4()->toString(),
+            'uuid' => UuidV7::generate(),
             'user_id' => $userId,
             'album_id' => $saveAlbum->id,
             'source' => $video->source,

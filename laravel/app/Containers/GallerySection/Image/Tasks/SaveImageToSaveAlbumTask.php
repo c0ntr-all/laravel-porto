@@ -7,8 +7,8 @@ use App\Containers\GallerySection\Album\Tasks\GetSystemAlbumTask;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\Repositories\ImageRepository;
 use App\Containers\GallerySection\Image\Models\Image;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Parents\Tasks\Task as ParentTask;
-use Ramsey\Uuid\Uuid;
 
 class SaveImageToSaveAlbumTask extends ParentTask
 {
@@ -23,7 +23,7 @@ class SaveImageToSaveAlbumTask extends ParentTask
     public function run(Image $image, int $userId): Image
     {
         $saveAlbum = $this->getSystemAlbumTask->run(SystemAlbumsEnum::SAVE->value);
-        $originId = $image->saved_from_id ?: (string) $image->id;
+        $originId = $image->saved_from_id ?: $image->id;
 
         $existing = $this->imageRepository->findSavedCopy($userId, $saveAlbum->id, $originId);
         if ($existing !== null) {
@@ -31,7 +31,7 @@ class SaveImageToSaveAlbumTask extends ParentTask
         }
 
         $copy = $this->createImageInAlbumTask->run($saveAlbum, CreateImageDto::from([
-            'id' => Uuid::uuid4()->toString(),
+            'uuid' => UuidV7::generate(),
             'user_id' => $userId,
             'source' => $image->source,
             'width' => $image->width,

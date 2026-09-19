@@ -27,7 +27,10 @@ class ValidateFieldableOwnershipTask extends ParentTask
         }
 
         /** @var Model|null $model */
-        $model = $modelClass::query()->find($fieldableId);
+        $query = $modelClass::query();
+        $model = in_array(\App\Ship\Models\Traits\HasUuidV7::class, class_uses_recursive($modelClass), true)
+            ? $query->whereIdOrUuid($fieldableId)->first()
+            : $query->find($fieldableId);
 
         if ($model === null) {
             throw new NotFoundHttpException('Fieldable entity not found.');

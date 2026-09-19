@@ -30,6 +30,7 @@ class AttachmentTransformer extends TransformerAbstract
 
         return [
             'attachment_id' => (string) $attachment->id,
+            'attachment_uuid' => (string) $attachment->uuid,
             'attachment_type' => $fileableType,
             'attachment_created_at' => $attachment->created_at->format('Y-m-d H:i:s'),
             ...$data,

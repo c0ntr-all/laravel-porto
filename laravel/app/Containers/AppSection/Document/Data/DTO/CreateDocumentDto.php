@@ -6,7 +6,7 @@ use App\Ship\Parents\DTO\Data;
 
 class CreateDocumentDto extends Data
 {
-    public string $id;
+    public string $uuid;
     public int $user_id;
     public string $original_name;
     public string $mime_type;

@@ -14,13 +14,13 @@ use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Enums\FileSourceEnum;
+use App\Ship\Helpers\UuidV7;
 use App\Ship\Helpers\WindowsPathHelper;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Uuid\Uuid;
 
 class UploadImagesFromWindowsAction extends UseCaseAction
 {
@@ -43,7 +43,7 @@ class UploadImagesFromWindowsAction extends UseCaseAction
             $result = collect();
 
             foreach ($uploadImageDto->paths as $filePath) {
-                $uuid = Uuid::uuid4()->toString();
+                $uuid = UuidV7::generate();
                 $windowsPath = WindowsPathHelper::normalizeWindows($filePath);
                 $imageStrategy = ImageSourceFactory::create($windowsPath, self::SOURCE_TYPE);
                 $albumPath = $this->pathGenerationService->getAlbumFolderPath(
@@ -58,7 +58,7 @@ class UploadImagesFromWindowsAction extends UseCaseAction
                 }
 
                 $createImageDto = CreateImageDto::from([
-                    'id' => $uuid,
+                    'uuid' => $uuid,
                     'user_id' => $uploadImageDto->user_id,
                     'extension' => $imageStrategy->getExtension(),
                     'external_url' => $windowsPath,

@@ -20,6 +20,7 @@ class ImageTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $image->id,
+            'uuid' => (string) $image->uuid,
             'album_id' => (string) $image->album_id,
             'source' => $image->source,
             'width' => $image->width,

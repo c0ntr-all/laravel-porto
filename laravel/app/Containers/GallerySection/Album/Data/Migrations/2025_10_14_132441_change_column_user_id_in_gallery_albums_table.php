@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 use App\Containers\GallerySection\Album\Enums\SystemAlbumsEnum;
+use App\Ship\Helpers\UuidV7;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ return new class extends Migration
         $now = DB::raw('CURRENT_TIMESTAMP');
 
         DB::table('gallery_albums')->insert(array_map(static function (array $item) use ($now) {
-            return [...$item, 'created_at' => $now, 'updated_at' => $now];
+            return [...$item, 'uuid' => UuidV7::generate(), 'created_at' => $now, 'updated_at' => $now];
         }, [[
                 'system_code' => SystemAlbumsEnum::UPLOAD->value,
                 'name' => 'Upload',

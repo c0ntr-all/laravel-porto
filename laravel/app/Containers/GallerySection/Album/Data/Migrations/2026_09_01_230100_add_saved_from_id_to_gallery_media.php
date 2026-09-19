@@ -9,12 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('gallery_images', function (Blueprint $table) {
-            $table->uuid('saved_from_id')->nullable()->after('album_id');
+            $table->unsignedBigInteger('saved_from_id')->nullable()->after('album_id');
             $table->index(['user_id', 'album_id', 'saved_from_id']);
         });
 
         Schema::table('gallery_videos', function (Blueprint $table) {
-            $table->uuid('saved_from_id')->nullable()->after('album_id');
+            $table->unsignedBigInteger('saved_from_id')->nullable()->after('album_id');
             $table->index(['user_id', 'album_id', 'saved_from_id']);
         });
     }

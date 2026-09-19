@@ -16,7 +16,13 @@ class DeleteAttachmentsTask extends ParentTask
      */
     public function run(Model $model, AttachmentsDeleteDto $dto): Collection
     {
-        $model->attachments()->whereIn('id', $dto->deleted_attachments_ids)->delete();
+        $ids = $dto->deleted_attachments_ids;
+
+        $model->attachments()
+            ->where(function ($query) use ($ids): void {
+                $query->whereIn('id', $ids)->orWhereIn('uuid', $ids);
+            })
+            ->delete();
 
         return $model->attachments;
     }

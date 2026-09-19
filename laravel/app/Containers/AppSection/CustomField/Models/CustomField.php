@@ -4,13 +4,13 @@ namespace App\Containers\AppSection\CustomField\Models;
 
 use App\Containers\AppSection\CustomField\Enums\CustomFieldTypeEnum;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class CustomField extends Model
 {
-    use HasUuids;
+    use HasUuidV7;
     use HasUser;
 
     protected $table = 'custom_fields';
@@ -28,7 +28,6 @@ class CustomField extends Model
         'type' => CustomFieldTypeEnum::class,
         'payload' => 'array',
         'position' => 'integer',
-        'fieldable_id' => 'string',
     ];
 
     public function fieldable(): MorphTo

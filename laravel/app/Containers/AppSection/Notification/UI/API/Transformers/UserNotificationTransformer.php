@@ -10,7 +10,7 @@ class UserNotificationTransformer extends TransformerAbstract
     public function transform(UserNotification $notification): array
     {
         return [
-            'id' => $notification->id,
+            'id' => (string) $notification->id,
             'type' => $notification->type,
             'title' => $notification->title,
             'body' => $notification->body,

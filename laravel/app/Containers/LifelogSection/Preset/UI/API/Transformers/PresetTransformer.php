@@ -16,7 +16,8 @@ class PresetTransformer extends TransformerAbstract
     public function transform(Preset $preset): array
     {
         return [
-            'id' => $preset->id,
+            'id' => (string) $preset->id,
+            'uuid' => (string) $preset->uuid,
             'title' => $preset->title,
             'description' => $preset->description,
             'color' => $preset->color,

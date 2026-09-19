@@ -13,7 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gallery_videos', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('album_id');
             $table->enum('source', FileSourceEnum::toArray());

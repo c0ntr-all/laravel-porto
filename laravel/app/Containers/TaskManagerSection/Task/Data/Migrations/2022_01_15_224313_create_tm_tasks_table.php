@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('tm_tasks', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('task_list_id')->nullable()->default(NULL);
             $table->string('title');

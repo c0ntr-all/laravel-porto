@@ -23,6 +23,7 @@ class AlbumTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $album->id,
+            'uuid' => (string) $album->uuid,
             'name' => $album->name,
             'description' => $album->description,
             'image' => $album->full_image,

@@ -21,6 +21,7 @@ class VideoTransformer extends TransformerAbstract
     {
         return [
             'id' => (string) $video->id,
+            'uuid' => (string) $video->uuid,
             'album_id' => (string) $video->album_id,
             'source' => $video->source,
             'width' => $video->width,

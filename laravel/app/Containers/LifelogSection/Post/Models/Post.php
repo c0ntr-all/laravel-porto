@@ -13,6 +13,7 @@ use App\Containers\LifelogSection\Preset\Models\Preset;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
+use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
@@ -54,7 +55,8 @@ class Post extends ActivityLoggableModel
         HasUser,
         HasTags,
         HasAttachments,
-        HasCustomFields;
+        HasCustomFields,
+        HasUuidV7;
 
     protected $table = 'lifelog_posts';
 
@@ -63,7 +65,6 @@ class Post extends ActivityLoggableModel
     ];
 
     protected $fillable = [
-        'id',
         'user_id',
         'title',
         'content',

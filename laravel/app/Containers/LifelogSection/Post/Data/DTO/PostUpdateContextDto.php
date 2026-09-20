@@ -23,8 +23,30 @@ class PostUpdateContextDto extends Data
     public array|null $new_tags;
     public array $deleted_attachments_ids = [];
     public ?array $attachments = [];
+    public int|Optional|null $movie_id;
+    public string|Optional|null $movie_title;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
+    }
+
+    public function toContentAttachDto(?PostContentTypeEnum $fallbackContentType = null): ?PostContentAttachDto
+    {
+        $movieId = $this->movie_id instanceof Optional ? null : $this->movie_id;
+        $movieTitle = $this->movie_title instanceof Optional ? null : $this->movie_title;
+
+        if ($movieId === null && ($movieTitle === null || trim((string) $movieTitle) === '')) {
+            return null;
+        }
+
+        $contentType = $this->content_type instanceof PostContentTypeEnum
+            ? $this->content_type
+            : ($fallbackContentType ?? PostContentTypeEnum::MOVIE);
+
+        return PostContentAttachDto::from([
+            'content_type' => $contentType,
+            'movie_id' => $movieId,
+            'movie_title' => $movieTitle,
+        ]);
     }
 }

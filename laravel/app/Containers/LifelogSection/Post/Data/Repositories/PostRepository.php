@@ -18,8 +18,9 @@ class PostRepository
                                AllowedFilter::custom('tags', new TagsFilter()),
                                // Filter exists only in tags scope
                                AllowedFilter::exact('tags_mode')->ignore(['or', 'and']),
+                               AllowedFilter::exact('content_type'),
                            ])
-                           ->with(['user', 'attachments.fileable'])
+                           ->with(['user', 'attachments.fileable', 'movies.genres', 'movies.countries'])
                            ->get();
     }
 

@@ -7,8 +7,11 @@ use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransfo
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
 use App\Containers\LifelogSection\Post\Models\Post;
+use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
+use League\Fractal\Resource\NullResource;
 use League\Fractal\TransformerAbstract;
 
 /**
@@ -26,6 +29,8 @@ class PostTransformer extends TransformerAbstract
         'tags',
         'attachments',
         'customFields',
+        'movies',
+        'movie',
     ];
 
     public function transform(Post $post): array
@@ -69,5 +74,27 @@ class PostTransformer extends TransformerAbstract
 
         return $this->collection($customFields, new CustomFieldTransformer(), 'custom_fields')
             ->setMeta(['count' => $customFields->count()]);
+    }
+
+    public function includeMovies(Post $post): Collection
+    {
+        $movies = $post->relationLoaded('movies')
+            ? $post->movies
+            : $post->movies()->with(['genres', 'countries'])->get();
+
+        return $this->collection($movies, new MovieTransformer(), ContainerAliasEnum::MOVIE->value);
+    }
+
+    public function includeMovie(Post $post): Item|NullResource
+    {
+        $movie = $post->relationLoaded('movies')
+            ? $post->movies->first()
+            : $post->movies()->with(['genres', 'countries'])->first();
+
+        if (!$movie) {
+            return $this->null();
+        }
+
+        return $this->item($movie, new MovieTransformer(), ContainerAliasEnum::MOVIE->value);
     }
 }

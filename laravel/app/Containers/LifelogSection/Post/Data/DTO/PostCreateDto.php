@@ -21,8 +21,19 @@ class PostCreateDto extends Data
     public ?array $tags = null;
     public ?array $new_tags = null;
     public ?array $attachments = [];
+    public ?int $movie_id = null;
+    public ?string $movie_title = null;
 
     public function __construct(
     ) {
+    }
+
+    public function toContentAttachDto(): PostContentAttachDto
+    {
+        return PostContentAttachDto::from([
+            'content_type' => $this->content_type,
+            'movie_id' => $this->movie_id,
+            'movie_title' => $this->movie_title,
+        ]);
     }
 }

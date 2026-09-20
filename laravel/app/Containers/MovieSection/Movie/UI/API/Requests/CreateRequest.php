@@ -11,12 +11,12 @@ class CreateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'kp_id' => 'required|integer|min:1|unique:movies,kp_id',
+            'kp_id' => 'sometimes|nullable|integer|min:1|unique:movies,kp_id',
             'title' => 'required|string|max:255',
             'description' => 'sometimes|nullable|string|max:10000',
             'short_description' => 'sometimes|nullable|string|max:2000',
-            'year' => 'required|integer|min:1888|max:2100',
-            'type' => ['required', Rule::enum(MovieTypeEnum::class)],
+            'year' => 'sometimes|nullable|integer|min:1888|max:2100',
+            'type' => ['sometimes', Rule::enum(MovieTypeEnum::class)],
             'cover' => 'sometimes|nullable|url|max:2048',
             'kp_rating' => 'sometimes|nullable|numeric|between:0,10',
             'kp_img' => 'sometimes|nullable|url|max:2048',

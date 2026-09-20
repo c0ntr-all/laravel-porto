@@ -97,6 +97,18 @@ class MovieRepository
     {
         return [
             AllowedFilter::partial('title'),
+            AllowedFilter::callback('search', function (Builder $query, mixed $value): void {
+                $term = trim((string) $value);
+                if ($term === '') {
+                    return;
+                }
+
+                $query->where(function (Builder $builder) use ($term): void {
+                    $builder->where('title', 'like', '%' . $term . '%')
+                        ->orWhere('description', 'like', '%' . $term . '%')
+                        ->orWhere('short_description', 'like', '%' . $term . '%');
+                });
+            }),
             AllowedFilter::exact('year'),
             AllowedFilter::exact('type'),
             AllowedFilter::exact('kp_id'),

@@ -11,14 +11,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
- * @property int $kp_id
+ * @property int|null $kp_id
  * @property string $title
  * @property string|null $description
  * @property string|null $short_description
- * @property int $year
+ * @property int|null $year
  * @property MovieTypeEnum $type
  * @property string|null $cover
  * @property string|null $kp_rating
@@ -47,6 +48,10 @@ class Movie extends Model
         'kp_img',
     ];
 
+    protected $attributes = [
+        'type' => MovieTypeEnum::MOVIE->value,
+    ];
+
     protected function casts(): array
     {
         return [
@@ -59,7 +64,14 @@ class Movie extends Model
 
     protected static function booted(): void
     {
-        static::deleting(fn (Movie $movie) => $movie->countries()->detach());
+        static::deleting(function (Movie $movie): void {
+            $movie->countries()->detach();
+
+            DB::table('lifelog_post_subjectables')
+                ->where('subjectable_type', $movie->getMorphClass())
+                ->where('subjectable_id', $movie->getKey())
+                ->delete();
+        });
     }
 
     public function countries(): BelongsToMany

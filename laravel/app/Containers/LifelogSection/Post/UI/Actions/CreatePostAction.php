@@ -7,6 +7,7 @@ use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
+use App\Containers\LifelogSection\Post\Tasks\AttachPostContentTask;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
@@ -29,6 +30,7 @@ class CreatePostAction extends UseCaseAction
         private readonly CreateTagsByNamesTask     $createTagsByNamesTask,
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
+        private readonly AttachPostContentTask $attachPostContentTask,
     )
     {
         parent::__construct();
@@ -80,7 +82,9 @@ class CreatePostAction extends UseCaseAction
                 );
             }
 
-            return $post;
+            $this->attachPostContentTask->run($post, $postCreateDto->toContentAttachDto());
+
+            return $post->load(['movies.genres', 'movies.countries']);
         });
 
         $this->recordUseCase($post);
@@ -101,7 +105,7 @@ class CreatePostAction extends UseCaseAction
         $post = $this->handle($postCreateDto);
 
         return fractal($post, new PostTransformer($postCreateDto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries'])
             ->withResourceName('ll_posts')
             ->addMeta(['message' => 'New post successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

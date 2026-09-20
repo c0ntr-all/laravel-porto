@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('movies', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('kp_id')->unique();
+            $table->unsignedInteger('kp_id')->nullable()->unique();
             $table->string('title');
-            $table->unsignedSmallInteger('year');
+            $table->unsignedSmallInteger('year')->nullable();
             $table->string('type', 32);
             $table->string('cover', 2048)->nullable();
             $table->decimal('kp_rating', 3, 1)->nullable();

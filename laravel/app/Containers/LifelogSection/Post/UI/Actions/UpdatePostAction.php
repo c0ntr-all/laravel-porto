@@ -10,6 +10,7 @@ use App\Containers\LifelogSection\Post\Data\DTO\PostTagsUpdateDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
+use App\Containers\LifelogSection\Post\Tasks\AttachPostContentTask;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
@@ -34,6 +35,7 @@ class UpdatePostAction extends UseCaseAction
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
+        private readonly AttachPostContentTask $attachPostContentTask,
     )
     {
         parent::__construct();
@@ -100,7 +102,12 @@ class UpdatePostAction extends UseCaseAction
                 );
             }
 
-            return $updatedPost;
+            $contentAttachDto = $postUpdateContextDto->toContentAttachDto($updatedPost->content_type);
+            if ($contentAttachDto !== null) {
+                $this->attachPostContentTask->run($updatedPost, $contentAttachDto);
+            }
+
+            return $updatedPost->load(['movies.genres', 'movies.countries']);
         });
 
         $this->recordUseCase($updatedPost);
@@ -121,7 +128,7 @@ class UpdatePostAction extends UseCaseAction
         $post = $this->handle($post, $postUpdateContextDto);
 
         return fractal($post, new PostTransformer($postUpdateContextDto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

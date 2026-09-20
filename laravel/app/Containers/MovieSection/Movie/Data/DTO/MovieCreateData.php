@@ -7,12 +7,12 @@ use App\Ship\Parents\DTO\Data;
 
 class MovieCreateData extends Data
 {
-    public int $kp_id;
+    public ?int $kp_id = null;
     public string $title;
     public ?string $description = null;
     public ?string $short_description = null;
-    public int $year;
-    public MovieTypeEnum $type;
+    public ?int $year = null;
+    public MovieTypeEnum $type = MovieTypeEnum::MOVIE;
     public ?string $cover = null;
     public ?float $kp_rating = null;
     public ?string $kp_img = null;

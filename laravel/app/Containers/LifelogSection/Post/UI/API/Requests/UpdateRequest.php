@@ -9,7 +9,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateRequest extends AuthenticatedRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,6 +16,8 @@ class UpdateRequest extends AuthenticatedRequest
      */
     public function rules(): array
     {
+        $requiresMoviePayload = $this->requiresMoviePayload();
+
         return [
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:3000',
@@ -35,6 +36,52 @@ class UpdateRequest extends AuthenticatedRequest
                 Rule::in(ContainerAliasEnum::attachmentFileableTypes()),
             ],
             'attachments.*.id' => 'required|string|max:36',
+            'movie_id' => [
+                Rule::requiredIf(fn () => $requiresMoviePayload && !$this->filled('movie_title')),
+                Rule::prohibitedIf(fn () => $this->isNonMovieContentType()),
+                'sometimes',
+                'nullable',
+                'integer',
+                'exists:movies,id',
+                'prohibits:movie_title',
+            ],
+            'movie_title' => [
+                Rule::requiredIf(fn () => $requiresMoviePayload && !$this->filled('movie_id')),
+                Rule::prohibitedIf(fn () => $this->isNonMovieContentType()),
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+                'prohibits:movie_id',
+            ],
         ];
+    }
+
+    private function requiresMoviePayload(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === null) {
+            return false;
+        }
+
+        return in_array($contentType, [
+            PostContentTypeEnum::MOVIE->value,
+            PostContentTypeEnum::TV_SERIES->value,
+        ], true);
+    }
+
+    private function isNonMovieContentType(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === null) {
+            return false;
+        }
+
+        return !in_array($contentType, [
+            PostContentTypeEnum::MOVIE->value,
+            PostContentTypeEnum::TV_SERIES->value,
+        ], true);
     }
 }

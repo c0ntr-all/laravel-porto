@@ -9,11 +9,14 @@ use App\Containers\AppSection\Tag\Models\Traits\HasTags;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
+use App\Containers\LifelogSection\Post\Models\Traits\HasSubjects;
 use App\Containers\LifelogSection\Preset\Models\Preset;
+use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
 use App\Ship\Models\Traits\HasUuidV7;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
@@ -34,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $datetime
  * @property User $user
  * @property Tag[] $tags
+ * @property-read EloquentCollection<int, Movie> $movies
  * @method static Builder|Post newModelQuery()
  * @method static Builder|Post newQuery()
  * @method static Builder|Post onlyTrashed()
@@ -56,6 +60,7 @@ class Post extends ActivityLoggableModel
         HasTags,
         HasAttachments,
         HasCustomFields,
+        HasSubjects,
         HasUuidV7;
 
     protected $table = 'lifelog_posts';

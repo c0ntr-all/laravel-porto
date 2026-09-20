@@ -38,7 +38,7 @@ class ListPostsAction extends BaseAction
         }
 
         return fractal($posts, new PostTransformer($dto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['count' => $posts->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);

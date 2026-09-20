@@ -10,6 +10,9 @@ use Throwable;
 class MovieImportLogMeta
 {
     /**
+     * @param array<string, mixed>|null $before
+     * @param array<string, mixed>|null $after
+     * @param array<string, mixed> $changes
      * @return array<string, mixed>
      */
     public static function from(
@@ -17,6 +20,10 @@ class MovieImportLogMeta
         ?ParsedKinopoiskFilmDto $parsed,
         ?Throwable $exception,
         int $apiStatus,
+        ?array $before = null,
+        ?array $after = null,
+        array $changes = [],
+        ?bool $wasCreated = null,
     ): array {
         $context = $exception instanceof KinopoiskImportException ? $exception->context : [];
         $kinopoisk = $context['kinopoisk'] ?? ($response !== null ? [
@@ -32,7 +39,12 @@ class MovieImportLogMeta
             'api_status' => $apiStatus,
             'stage' => self::stage($response, $parsed, $exception),
             'source' => 'poiskkino',
+            'action' => $wasCreated === null ? null : ($wasCreated ? 'created' : 'updated'),
+            'duplicate' => $wasCreated === false,
             'kinopoisk' => $kinopoisk,
+            'before' => $before,
+            'after' => $after,
+            'changes' => $changes,
             'extracted' => $context['extracted'] ?? ($parsed !== null ? [
                 'title' => $parsed->title,
                 'year' => $parsed->year,
@@ -59,7 +71,7 @@ class MovieImportLogMeta
             $meta['reason'] = $context['reason'] ?? null;
         }
 
-        return array_filter($meta, static fn (mixed $value) => $value !== null && $value !== []);
+        return array_filter($meta, static fn (mixed $value) => $value !== null);
     }
 
     private static function stage(

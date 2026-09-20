@@ -25,9 +25,14 @@ class MovieRepository
             ->cursorPaginate(24);
     }
 
-    public function findByKpId(int $kpId): ?Movie
+    public function findByKpId(int $kpId, bool $forUpdate = false): ?Movie
     {
-        return Movie::query()->where('kp_id', $kpId)->first();
+        $query = Movie::query()->where('kp_id', $kpId);
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first()?->load(['genres', 'countries']);
     }
 
     public function create(MovieCreateData $dto): Movie

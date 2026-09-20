@@ -50,7 +50,14 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->assertJsonPath('data.attributes.kp_id', 325)
             ->assertJsonPath('data.attributes.was_created', true)
             ->assertJsonPath('data.attributes.source_url', 'https://api.poiskkino.dev/v1.5/movie/325')
-            ->assertJsonPath('data.meta.source', 'poiskkino');
+            ->assertJsonPath('data.meta.source', 'poiskkino')
+            ->assertJsonPath('data.meta.action', 'created')
+            ->assertJsonPath('data.meta.duplicate', false)
+            ->assertJsonPath('data.meta.after.title', 'Крестный отец')
+            ->assertJsonPath('data.meta.after.id', $response->json('data.attributes.movie_id'));
+
+        $this->assertNull($response->json('data.meta.before'));
+        $this->assertDatabaseCount('movies', 1);
 
         $this->assertDatabaseHas('movies', [
             'kp_id' => 325,
@@ -87,7 +94,22 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->postJson('/api/v1/movie/imports', ['kp_id' => 325]);
 
         $response->assertCreated()
-            ->assertJsonPath('data.attributes.was_created', false);
+            ->assertJsonPath('data.attributes.was_created', false)
+            ->assertJsonPath('data.attributes.movie_id', $movie->id)
+            ->assertJsonPath('data.meta.action', 'updated')
+            ->assertJsonPath('data.meta.duplicate', true)
+            ->assertJsonPath('data.meta.before.id', $movie->id)
+            ->assertJsonPath('data.meta.before.title', 'Old Title')
+            ->assertJsonPath('data.meta.before.kp_img', 'https://example.com/old.jpg')
+            ->assertJsonPath('data.meta.after.id', $movie->id)
+            ->assertJsonPath('data.meta.after.title', 'Крестный отец')
+            ->assertJsonPath('data.meta.after.cover', 'https://example.com/custom-cover.jpg')
+            ->assertJsonPath('data.meta.changes.title.old', 'Old Title')
+            ->assertJsonPath('data.meta.changes.title.new', 'Крестный отец')
+            ->assertJsonPath('data.meta.changes.kp_img.old', 'https://example.com/old.jpg')
+            ->assertJsonPath('data.meta.changes.kp_img.new', 'https://avatars.mds.yandex.net/get-kinopoisk-image/poster/600x900');
+
+        $this->assertDatabaseCount('movies', 1);
 
         $movie->refresh();
         $this->assertSame('Крестный отец', $movie->title);

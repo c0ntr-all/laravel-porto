@@ -8,6 +8,7 @@ use App\Containers\MovieSection\Movie\Data\DTO\MovieUpdateData;
 use App\Containers\MovieSection\Movie\Data\Repositories\MovieRepository;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Parents\Tasks\Task as ParentTask;
+use Illuminate\Database\QueryException;
 
 class UpsertImportedMovieTask extends ParentTask
 {
@@ -21,21 +22,32 @@ class UpsertImportedMovieTask extends ParentTask
      */
     public function run(ParsedKinopoiskFilmDto $dto): array
     {
-        $existing = $this->movieRepository->findByKpId($dto->kp_id);
+        $existing = $this->movieRepository->findByKpId($dto->kp_id, forUpdate: true);
 
         if ($existing === null) {
-            $movie = $this->movieRepository->create(MovieCreateData::from([
-                'kp_id' => $dto->kp_id,
-                'title' => $dto->title,
-                'year' => $dto->year,
-                'type' => $dto->type,
-                'description' => $dto->description,
-                'cover' => $dto->cover ?? $dto->kp_img,
-                'kp_rating' => $dto->kp_rating,
-                'kp_img' => $dto->kp_img,
-            ]));
+            try {
+                $movie = $this->movieRepository->create(MovieCreateData::from([
+                    'kp_id' => $dto->kp_id,
+                    'title' => $dto->title,
+                    'year' => $dto->year,
+                    'type' => $dto->type,
+                    'description' => $dto->description,
+                    'cover' => $dto->cover ?? $dto->kp_img,
+                    'kp_rating' => $dto->kp_rating,
+                    'kp_img' => $dto->kp_img,
+                ]));
 
-            return ['movie' => $movie, 'was_created' => true];
+                return ['movie' => $movie, 'was_created' => true];
+            } catch (QueryException $exception) {
+                if (!$this->isDuplicateKpId($exception)) {
+                    throw $exception;
+                }
+
+                $existing = $this->movieRepository->findByKpId($dto->kp_id, forUpdate: true);
+                if ($existing === null) {
+                    throw $exception;
+                }
+            }
         }
 
         $update = [
@@ -57,5 +69,13 @@ class UpsertImportedMovieTask extends ParentTask
         $movie = $this->movieRepository->update($existing, MovieUpdateData::from($update));
 
         return ['movie' => $movie, 'was_created' => false];
+    }
+
+    private function isDuplicateKpId(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? null;
+        $driverCode = $exception->errorInfo[1] ?? null;
+
+        return $sqlState === '23000' || $driverCode === 1062;
     }
 }

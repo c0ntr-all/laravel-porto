@@ -17,6 +17,7 @@ class ParsedKinopoiskFilmDto extends Data
         public int $year,
         public MovieTypeEnum $type,
         public ?string $description = null,
+        public ?string $short_description = null,
         public ?string $cover = null,
         public ?string $kp_img = null,
         public ?float $kp_rating = null,

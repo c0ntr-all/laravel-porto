@@ -54,6 +54,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->assertJsonPath('data.meta.action', 'created')
             ->assertJsonPath('data.meta.duplicate', false)
             ->assertJsonPath('data.meta.after.title', 'Крестный отец')
+            ->assertJsonPath('data.meta.after.short_description', 'Революция в гангстерском кино.')
             ->assertJsonPath('data.meta.after.id', $response->json('data.attributes.movie_id'));
 
         $this->assertNull($response->json('data.meta.before'));
@@ -65,6 +66,8 @@ class ImportMovieFromKinopoiskTest extends TestCase
             'year' => 1972,
             'type' => MovieTypeEnum::MOVIE->value,
             'kp_img' => 'https://avatars.mds.yandex.net/get-kinopoisk-image/poster/600x900',
+            'description' => 'Криминальная сага о семье Корлеоне.',
+            'short_description' => 'Революция в гангстерском кино.',
         ]);
         $this->assertDatabaseHas('movie_genres', ['name' => 'драма']);
         $this->assertDatabaseHas('countries', ['name' => 'США']);

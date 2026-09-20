@@ -14,6 +14,7 @@ class CreateRequest extends AuthenticatedRequest
             'kp_id' => 'required|integer|min:1|unique:movies,kp_id',
             'title' => 'required|string|max:255',
             'description' => 'sometimes|nullable|string|max:10000',
+            'short_description' => 'sometimes|nullable|string|max:2000',
             'year' => 'required|integer|min:1888|max:2100',
             'type' => ['required', Rule::enum(MovieTypeEnum::class)],
             'cover' => 'sometimes|nullable|url|max:2048',

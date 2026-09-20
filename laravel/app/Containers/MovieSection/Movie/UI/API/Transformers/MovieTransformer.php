@@ -23,6 +23,7 @@ class MovieTransformer extends TransformerAbstract
             'kp_id' => $movie->kp_id,
             'title' => $movie->title,
             'description' => $movie->description,
+            'short_description' => $movie->short_description,
             'year' => $movie->year,
             'type' => $movie->type->value,
             'cover' => $movie->cover,

@@ -32,6 +32,7 @@ class UpsertImportedMovieTask extends ParentTask
                     'year' => $dto->year,
                     'type' => $dto->type,
                     'description' => $dto->description,
+                    'short_description' => $dto->short_description,
                     'cover' => $dto->cover ?? $dto->kp_img,
                     'kp_rating' => $dto->kp_rating,
                     'kp_img' => $dto->kp_img,
@@ -60,6 +61,10 @@ class UpsertImportedMovieTask extends ParentTask
 
         if ($dto->description !== null && $dto->description !== '') {
             $update['description'] = $dto->description;
+        }
+
+        if ($dto->short_description !== null && $dto->short_description !== '') {
+            $update['short_description'] = $dto->short_description;
         }
 
         if ($existing->cover === null || $existing->cover === '') {

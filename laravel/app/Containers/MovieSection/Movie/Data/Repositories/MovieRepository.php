@@ -41,6 +41,7 @@ class MovieRepository
             'kp_id' => $dto->kp_id,
             'title' => $dto->title,
             'description' => $dto->description,
+            'short_description' => $dto->short_description,
             'year' => $dto->year,
             'type' => $dto->type,
             'cover' => $dto->cover,

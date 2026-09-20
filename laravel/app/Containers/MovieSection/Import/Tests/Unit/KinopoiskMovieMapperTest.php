@@ -18,6 +18,7 @@ class KinopoiskMovieMapperTest extends TestCase
             'year' => 1972,
             'type' => 'movie',
             'description' => 'Криминальная сага о семье Корлеоне.',
+            'shortDescription' => 'Революция в гангстерском кино.',
             'poster' => ['url' => 'https://example.com/poster.jpg'],
             'rating' => ['kp' => 8.709],
             'genres' => [['id' => 8, 'name' => 'драма']],
@@ -28,6 +29,8 @@ class KinopoiskMovieMapperTest extends TestCase
         $this->assertSame('Крестный отец', $parsed->title);
         $this->assertSame(1972, $parsed->year);
         $this->assertSame(MovieTypeEnum::MOVIE, $parsed->type);
+        $this->assertSame('Криминальная сага о семье Корлеоне.', $parsed->description);
+        $this->assertSame('Революция в гангстерском кино.', $parsed->short_description);
         $this->assertSame(8.7, $parsed->kp_rating);
         $this->assertSame('драма', $parsed->genres[0]->name);
         $this->assertSame(8, $parsed->genres[0]->kp_id);

@@ -10,6 +10,7 @@ class MovieCreateData extends Data
     public int $kp_id;
     public string $title;
     public ?string $description = null;
+    public ?string $short_description = null;
     public int $year;
     public MovieTypeEnum $type;
     public ?string $cover = null;

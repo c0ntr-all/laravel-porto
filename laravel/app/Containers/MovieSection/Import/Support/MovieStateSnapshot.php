@@ -12,6 +12,7 @@ class MovieStateSnapshot
      *     kp_id: int,
      *     title: string,
      *     description: string|null,
+     *     short_description: string|null,
      *     year: int,
      *     type: string,
      *     cover: string|null,
@@ -30,6 +31,7 @@ class MovieStateSnapshot
             'kp_id' => (int) $movie->kp_id,
             'title' => $movie->title,
             'description' => $movie->description,
+            'short_description' => $movie->short_description,
             'year' => (int) $movie->year,
             'type' => $movie->type->value,
             'cover' => $movie->cover,
@@ -52,7 +54,7 @@ class MovieStateSnapshot
         }
 
         $changes = [];
-        foreach (['title', 'description', 'year', 'type', 'cover', 'kp_rating', 'kp_img', 'genres', 'countries'] as $key) {
+        foreach (['title', 'description', 'short_description', 'year', 'type', 'cover', 'kp_rating', 'kp_img', 'genres', 'countries'] as $key) {
             $old = $before[$key] ?? null;
             $new = $after[$key] ?? null;
             if (self::same($old, $new)) {

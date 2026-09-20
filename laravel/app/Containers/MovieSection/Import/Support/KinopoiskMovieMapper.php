@@ -50,6 +50,8 @@ class KinopoiskMovieMapper
             type: MovieTypeEnum::fromKinopoisk($typeRaw),
             description: $this->firstString([
                 $data['description'] ?? null,
+            ]),
+            short_description: $this->firstString([
                 $data['shortDescription'] ?? null,
             ]),
             cover: $image,

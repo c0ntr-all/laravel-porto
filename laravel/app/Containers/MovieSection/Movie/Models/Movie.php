@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $kp_id
  * @property string $title
  * @property string|null $description
+ * @property string|null $short_description
  * @property int $year
  * @property MovieTypeEnum $type
  * @property string|null $cover
@@ -38,6 +39,7 @@ class Movie extends Model
         'kp_id',
         'title',
         'description',
+        'short_description',
         'year',
         'type',
         'cover',

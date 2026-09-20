@@ -21,6 +21,7 @@ class UpdateRequest extends AuthenticatedRequest
             ],
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|nullable|string|max:10000',
+            'short_description' => 'sometimes|nullable|string|max:2000',
             'year' => 'sometimes|integer|min:1888|max:2100',
             'type' => ['sometimes', Rule::enum(MovieTypeEnum::class)],
             'cover' => 'sometimes|nullable|url|max:2048',

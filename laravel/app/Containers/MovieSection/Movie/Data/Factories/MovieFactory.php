@@ -19,6 +19,7 @@ class MovieFactory extends Factory
             'kp_id' => fake()->unique()->numberBetween(1, 9_999_999),
             'title' => fake()->sentence(3),
             'description' => fake()->optional()->paragraph(),
+            'short_description' => fake()->optional()->sentence(),
             'year' => fake()->numberBetween(1950, (int) date('Y')),
             'type' => fake()->randomElement(MovieTypeEnum::cases()),
             'cover' => fake()->optional()->url(),

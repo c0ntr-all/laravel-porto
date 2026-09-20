@@ -52,6 +52,7 @@ class MovieImportLogMeta
                 'kp_img' => $parsed->kp_img,
                 'kp_rating' => $parsed->kp_rating,
                 'description' => $parsed->description,
+                'short_description' => $parsed->short_description,
                 'genres' => array_map(static fn ($genre) => $genre->name, $parsed->genres),
                 'countries' => $parsed->countries,
             ] : null),

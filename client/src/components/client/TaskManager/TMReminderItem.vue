@@ -3,13 +3,65 @@
     class="reminder-card"
     :class="`reminder-card--${urgency}`"
   >
-    <div class="reminder-card__header">
-      <div class="reminder-card__title">
-        <q-icon :name="statusIcon" size="20px" />
-        <span>{{ statusLabel }}</span>
+    <div class="reminder-card__main">
+      <div class="reminder-card__info">
+        <div class="reminder-card__title">
+          <q-icon :name="statusIcon" size="18px" />
+          <span>{{ statusLabel }}</span>
+        </div>
+        <div class="reminder-card__when">
+          <span class="reminder-card__datetime">{{ humanDatetime(reminder.datetime) }}</span>
+          <span class="reminder-card__relative">{{ relativeLabel }}</span>
+        </div>
+        <div
+          v-if="intervalLabel || remindBeforeLabel || lastCompletedLabel"
+          class="reminder-card__meta"
+        >
+          <q-chip
+            v-if="intervalLabel"
+            dense
+            outline
+            size="sm"
+            icon="repeat"
+            :color="chipColor"
+          >
+            {{ intervalLabel }}
+          </q-chip>
+          <q-chip
+            v-if="remindBeforeLabel"
+            dense
+            outline
+            size="sm"
+            icon="notifications_active"
+            :color="chipColor"
+          >
+            {{ remindBeforeLabel }}
+          </q-chip>
+          <span
+            v-if="lastCompletedLabel"
+            class="reminder-card__last-done"
+          >
+            {{ lastCompletedLabel }}
+          </span>
+        </div>
       </div>
 
       <div class="reminder-card__actions">
+        <q-btn
+          v-if="canComplete"
+          :loading="isCompleting"
+          class="reminder-card__complete"
+          icon="done"
+          label="Выполнено"
+          color="grey-8"
+          outline
+          dense
+          no-caps
+          @click="completeOccurrence"
+        >
+          <q-tooltip>{{ completeTooltip }}</q-tooltip>
+        </q-btn>
+
         <q-toggle
           :model-value="reminder.is_active"
           dense
@@ -20,6 +72,31 @@
             {{ reminder.is_active ? 'Выключить' : 'Включить' }}
           </q-tooltip>
         </q-toggle>
+
+        <q-btn
+          icon="edit"
+          size="sm"
+          flat
+          round
+          dense
+        >
+          <q-tooltip>Редактировать</q-tooltip>
+          <q-menu
+            ref="editMenuRef"
+            @show="hydrateEditModel"
+          >
+            <div class="q-pa-md">
+              <TMReminderForm
+                v-model="editModel"
+                title="Редактировать напоминание"
+                submit-label="Сохранить"
+                :loading="isSaving"
+                @submit="saveReminder"
+              />
+            </div>
+          </q-menu>
+        </q-btn>
+
         <q-btn
           icon="delete"
           size="sm"
@@ -32,69 +109,13 @@
         </q-btn>
       </div>
     </div>
-
-    <div class="reminder-card__datetime">
-      {{ humanDatetime(reminder.datetime) }}
-    </div>
-    <div class="reminder-card__relative">
-      {{ relativeLabel }}
-    </div>
-    <div
-      v-if="lastCompletedLabel"
-      class="reminder-card__last-done"
-    >
-      {{ lastCompletedLabel }}
-    </div>
-
-    <div
-      v-if="intervalLabel || remindBeforeLabel"
-      class="reminder-card__meta"
-    >
-      <q-chip
-        v-if="intervalLabel"
-        dense
-        outline
-        size="sm"
-        icon="repeat"
-        :color="chipColor"
-      >
-        {{ intervalLabel }}
-      </q-chip>
-      <q-chip
-        v-if="remindBeforeLabel"
-        dense
-        outline
-        size="sm"
-        icon="notifications_active"
-        :color="chipColor"
-      >
-        {{ remindBeforeLabel }}
-      </q-chip>
-    </div>
-
-    <q-btn
-      v-if="canComplete"
-      :loading="isCompleting"
-      class="reminder-card__complete"
-      color="grey-8"
-      :label="completeLabel"
-      icon="done"
-      outline
-      dense
-      no-caps
-      @click="completeOccurrence"
-    >
-      <q-tooltip v-if="isRecurring">
-        Закроет текущий цикл и перенесёт дату на следующий
-      </q-tooltip>
-    </q-btn>
   </article>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Dialog } from 'quasar'
-import { IReminderItem } from 'src/types/TaskManager/task'
+import { IReminderCreatePayload, IReminderFormModel, IReminderItem } from 'src/types/TaskManager/task'
 import { humanDatetime } from 'src/utils/datetime'
 import {
   canCompleteReminder,
@@ -102,9 +123,15 @@ import {
   formatReminderInterval,
   formatReminderRelative,
   getReminderUrgency,
-  isRecurringReminder
+  isRecurringReminder,
+  reminderToFormModel
 } from 'src/utils/reminder'
 import { useTaskStore } from 'src/stores/modules/taskStore'
+import TMReminderForm from 'src/components/client/TaskManager/TMReminderForm.vue'
+
+interface IReminderMenuRef {
+  hide: () => void
+}
 
 const taskStore = useTaskStore()
 
@@ -115,6 +142,9 @@ const props = defineProps<{
 
 const now = ref(Date.now())
 const isCompleting = ref(false)
+const isSaving = ref(false)
+const editMenuRef = ref<IReminderMenuRef | null>(null)
+const editModel = ref<IReminderFormModel>(reminderToFormModel(props.reminder))
 let ticker: ReturnType<typeof setInterval> | null = null
 
 const urgency = computed(() => getReminderUrgency(props.reminder, now.value))
@@ -123,14 +153,19 @@ const intervalLabel = computed(() => formatReminderInterval(props.reminder.inter
 const remindBeforeLabel = computed(() => formatRemindBefore(props.reminder.to_remind_before))
 const isRecurring = computed(() => isRecurringReminder(props.reminder))
 const canComplete = computed(() => canCompleteReminder(props.reminder))
+const completeTooltip = computed(() =>
+  isRecurring.value
+    ? 'Отметить выполненным — закроет цикл и перенесёт дату'
+    : 'Отметить выполненным'
+)
 
 const lastCompletedLabel = computed(() => {
   if (!props.reminder.last_completed_at) return null
-  return `Последнее выполнение: ${humanDatetime(props.reminder.last_completed_at)}`
+  return `Последнее: ${humanDatetime(props.reminder.last_completed_at)}`
 })
 
 const statusLabel = computed(() => {
-  if (urgency.value === 'inactive') return 'Напоминание выключено'
+  if (urgency.value === 'inactive') return 'Выключено'
   if (props.reminder.awaiting_completion) return 'Нужно подтвердить'
   if (urgency.value === 'overdue') return 'Просрочено'
   if (urgency.value === 'due-soon') return 'Скоро'
@@ -151,13 +186,24 @@ const chipColor = computed(() => {
   return 'primary'
 })
 
-const completeLabel = computed(() => {
-  if (isRecurring.value) return 'Отметить выполненным'
-  return 'Выполнено'
-})
+function hydrateEditModel() {
+  editModel.value = reminderToFormModel(props.reminder)
+}
 
 async function toggleActive(isActive: boolean) {
   await taskStore.updateReminder(props.taskId, { is_active: isActive })
+}
+
+async function saveReminder(payload: IReminderCreatePayload) {
+  if (isSaving.value) return
+
+  isSaving.value = true
+  try {
+    await taskStore.updateReminder(props.taskId, payload)
+    editMenuRef.value?.hide()
+  } finally {
+    isSaving.value = false
+  }
 }
 
 async function completeOccurrence() {
@@ -196,7 +242,7 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .reminder-card {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid #e4e6ee;
   border-left-width: 3px;
   border-radius: 10px;
@@ -224,18 +270,22 @@ onUnmounted(() => {
     opacity: 0.92;
   }
 
-  &__header {
+  &__main {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  &__info {
+    min-width: 0;
+    flex: 1;
   }
 
   &__title {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.2;
   }
@@ -252,24 +302,23 @@ onUnmounted(() => {
     color: #6b7280;
   }
 
-  &__actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
+  &__when {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 4px;
   }
 
   &__datetime {
-    margin-top: 8px;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 650;
     line-height: 1.3;
     color: #1f2439;
   }
 
   &__relative {
-    margin-top: 2px;
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
   }
 
@@ -283,21 +332,24 @@ onUnmounted(() => {
     font-weight: 600;
   }
 
-  &__last-done {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #6b7280;
-  }
-
   &__meta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
-    margin-top: 10px;
+    margin-top: 6px;
   }
 
-  &__complete {
-    margin-top: 12px;
+  &__last-done {
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
   }
 }
 </style>

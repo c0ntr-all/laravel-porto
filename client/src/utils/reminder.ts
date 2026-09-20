@@ -1,4 +1,17 @@
-import { IReminderDuration, IReminderItem, ReminderTimeUnit } from 'src/types/TaskManager/task'
+import {
+  IReminderCreatePayload,
+  IReminderDuration,
+  IReminderFormModel,
+  IReminderItem,
+  ReminderBeforeUnit,
+  ReminderIntervalUnit,
+  ReminderTimeUnit
+} from 'src/types/TaskManager/task'
+import { getCurrentDateTime } from 'src/utils/datetime'
+import {
+  ReminderBeforeUnitEnum,
+  ReminderIntervalUnitEnum
+} from 'src/enums/TaskManager/ReminderTimeUnitEnum'
 
 export type ReminderUrgency = 'overdue' | 'due-soon' | 'upcoming' | 'inactive'
 
@@ -88,6 +101,65 @@ export function canCompleteReminder(reminder: IReminderItem): boolean {
 
 export function formatDuration(value: number, unit: ReminderTimeUnit): string {
   return `${value} ${pluralizeRu(value, UNIT_FORMS[unit])}`
+}
+
+export function createReminderFormModel(): IReminderFormModel {
+  return {
+    datetime: getCurrentDateTime(),
+    is_repeating: false,
+    interval_value: 1,
+    interval_unit: ReminderIntervalUnitEnum.DAY,
+    is_to_remind_before: false,
+    remind_before_value: 30,
+    remind_before_unit: ReminderBeforeUnitEnum.MINUTE,
+    is_active: true
+  }
+}
+
+export function reminderToFormModel(reminder: IReminderItem): IReminderFormModel {
+  return {
+    datetime: toReminderDatetime(reminder.datetime),
+    is_repeating: Boolean(reminder.interval?.value && reminder.interval.unit),
+    interval_value: reminder.interval?.value || 1,
+    interval_unit: (reminder.interval?.unit as ReminderIntervalUnit) || ReminderIntervalUnitEnum.DAY,
+    is_to_remind_before: Boolean(reminder.to_remind_before?.value && reminder.to_remind_before.unit),
+    remind_before_value: reminder.to_remind_before?.value || 30,
+    remind_before_unit: (reminder.to_remind_before?.unit as ReminderBeforeUnit) || ReminderBeforeUnitEnum.MINUTE,
+    is_active: reminder.is_active
+  }
+}
+
+export function toReminderPayload(model: IReminderFormModel): IReminderCreatePayload {
+  const payload: IReminderCreatePayload = {
+    datetime: toReminderDatetime(model.datetime),
+    is_active: model.is_active
+  }
+
+  payload.interval = model.is_repeating
+    ? {
+      value: Number(model.interval_value),
+      unit: model.interval_unit
+    }
+    : null
+
+  payload.to_remind_before = model.is_to_remind_before
+    ? {
+      value: Number(model.remind_before_value),
+      unit: model.remind_before_unit
+    }
+    : null
+
+  return payload
+}
+
+export function isReminderPayloadValid(payload: IReminderCreatePayload): boolean {
+  if (!payload.datetime) return false
+  if (payload.interval && (!payload.interval.value || payload.interval.value < 1)) return false
+  if (payload.to_remind_before && (!payload.to_remind_before.value || payload.to_remind_before.value < 1)) {
+    return false
+  }
+
+  return true
 }
 
 function formatMsDuration(ms: number): string {

@@ -126,6 +126,16 @@ export interface IReminderCreatePayload {
   interval?: IReminderDuration | null
   to_remind_before?: IReminderDuration | null
 }
+export interface IReminderFormModel {
+  datetime: string
+  is_repeating: boolean
+  interval_value: number
+  interval_unit: ReminderIntervalUnit
+  is_to_remind_before: boolean
+  remind_before_value: number
+  remind_before_unit: ReminderBeforeUnit
+  is_active: boolean
+}
 export interface IReminderUpdatePayload {
   datetime?: string
   is_active?: boolean

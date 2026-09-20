@@ -26,8 +26,12 @@
             :ref="element => setPostRef(post.id, element)"
             class="ll-posts-list__item"
           >
+            <LifeLogPostMovieCard
+              v-if="viewMode === 'expanded' && isMovieWatchPost(post)"
+              :post="post"
+            />
             <LifeLogPostCard
-              v-if="viewMode === 'expanded'"
+              v-else-if="viewMode === 'expanded'"
               :post="post"
             />
             <LifeLogPostRow
@@ -60,7 +64,9 @@ import { computed, nextTick, watch } from 'vue'
 import { IPost, IPreset, LifeLogViewMode } from 'src/types'
 import { usePostRailAnchors } from 'src/composables/client/Lifelog/usePostRailAnchors'
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
+import LifeLogPostMovieCard from 'src/components/client/LifeLog/posts/LifeLogPostMovieCard.vue'
 import LifeLogPostRow from 'src/components/client/LifeLog/posts/LifeLogPostRow.vue'
+import { isMovieWatchPost } from 'src/utils/LifeLog/post'
 import LifeLogPresetRails from 'src/components/client/LifeLog/posts/LifeLogPresetRails.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 

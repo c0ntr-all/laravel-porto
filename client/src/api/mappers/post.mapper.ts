@@ -18,6 +18,18 @@ export function mapPostFormToCreateDto(postModel: IPostModel): IPostCreateDto {
     data.new_tags = postModel.newTags.map((t: INewTag) => t.name)
   }
 
+  const contentType = data.content_type ?? PostContentTypeEnum.DEFAULT
+  if (
+    contentType === PostContentTypeEnum.MOVIE ||
+    contentType === PostContentTypeEnum.TV_SERIES
+  ) {
+    if (postModel.movie_id != null) {
+      data.movie_id = postModel.movie_id
+    } else if (postModel.movie_title?.trim()) {
+      data.movie_title = postModel.movie_title.trim()
+    }
+  }
+
   return data
 }
 

@@ -7,6 +7,7 @@ export const movieApi = {
   async getMovies(query?: IMovieListQuery): Promise<IJsonApiResponse> {
     const filters = buildFilterForUrl({
       title: query?.title,
+      search: query?.search,
       year: query?.year,
       type: query?.type,
       genre_id: query?.genre_id,

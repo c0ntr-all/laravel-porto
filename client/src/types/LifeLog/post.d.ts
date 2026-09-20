@@ -2,6 +2,7 @@ import { IUser } from 'src/types/user'
 import { INewTag, ITag } from 'src/types/tag'
 import { IPostDocumentAttachment } from 'src/types/document'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import { IMovie } from 'src/types/Movie'
 
 export interface IPostGalleryAttachment {
   id: string
@@ -37,6 +38,7 @@ export interface IPost {
   user: IUser
   tags: ITag[]
   attachments: IPostAttachment[]
+  movie?: IMovie | null
   is_pending?: boolean
 }
 
@@ -48,6 +50,8 @@ export interface IPostModel {
   newTags: INewTag[]
   datetime: string
   isNullTime: boolean
+  movie_id?: number | null
+  movie_title?: string | null
 }
 
 export interface IPostUpdateModel extends IPostModel {

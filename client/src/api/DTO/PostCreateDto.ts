@@ -9,4 +9,6 @@ export interface IPostCreateDto {
   tags?: string[]
   new_tags?: string[]
   attachments?: {id: string, type: string}[]
+  movie_id?: number
+  movie_title?: string
 }

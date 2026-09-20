@@ -17,7 +17,7 @@
       <div class="col ll-post-row__main q-pl-sm">
         <div class="row items-center no-wrap">
           <div class="col ll-post-row__title ellipsis">
-            {{ post.title }}
+            {{ rowTitle }}
           </div>
           <LifeLogPostAttachmentsBadge
             class="q-mx-sm"
@@ -37,7 +37,8 @@
     </button>
 
     <div v-if="expanded" class="ll-post-row__expanded q-pt-sm">
-      <LifeLogPostCard :post="post" />
+      <LifeLogPostMovieCard v-if="isMovieWatchPost(post)" :post="post" />
+      <LifeLogPostCard v-else :post="post" />
     </div>
   </div>
 </template>
@@ -46,9 +47,14 @@
 import { computed } from 'vue'
 import { IPost } from 'src/types'
 import { humanDatetime } from 'src/utils/datetime'
-import { formatPostDateTime } from 'src/utils/LifeLog/post'
+import {
+  formatPostDateTime,
+  isMovieWatchPost,
+  MOVIE_WATCH_POST_TITLE
+} from 'src/utils/LifeLog/post'
 import LifeLogPostAttachmentsBadge from 'src/components/client/LifeLog/posts/LifeLogPostAttachmentsBadge.vue'
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
+import LifeLogPostMovieCard from 'src/components/client/LifeLog/posts/LifeLogPostMovieCard.vue'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
 const props = defineProps<{
@@ -61,6 +67,10 @@ const emit = defineEmits<{
 }>()
 
 const formattedDate = computed(() => humanDatetime(formatPostDateTime(props.post)))
+
+const rowTitle = computed(() =>
+  isMovieWatchPost(props.post) ? MOVIE_WATCH_POST_TITLE : props.post.title
+)
 </script>
 
 <style scoped lang="scss">

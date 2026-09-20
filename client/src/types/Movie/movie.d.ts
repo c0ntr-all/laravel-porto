@@ -33,6 +33,7 @@ export interface IMovie {
 
 export interface IMovieListQuery {
   title?: string
+  search?: string
   year?: number
   type?: MovieTypeEnum
   genre_id?: Array<string | number>

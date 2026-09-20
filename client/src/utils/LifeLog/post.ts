@@ -5,12 +5,19 @@ import { INewTag, ITag } from 'src/types/tag'
 import { isGalleryVideo } from 'src/utils/gallery'
 import { isPostDocumentAttachment } from 'src/utils/document'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 
 const OPTIMISTIC_POST_PREFIX = 'optimistic-post-'
 
 export function isOptimisticPostId(id: string): boolean {
   return id.startsWith(OPTIMISTIC_POST_PREFIX)
 }
+
+export function isMovieWatchPost(post: IPost): boolean {
+  return post.content_type === PostContentTypeEnum.MOVIE
+}
+
+export const MOVIE_WATCH_POST_TITLE = 'Просмотр фильма'
 
 export function parsePostDate(post: IPost): Date {
   const time = post.time ?? '12:00:00'
@@ -56,11 +63,32 @@ function mapNewTagsToOptimisticTags(newTags: INewTag[]): ITag[] {
 
 export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
   const [datePart, timePart = ''] = model.datetime.split(' ')
+  const contentType = model.content_type ?? PostContentTypeEnum.DEFAULT
+  const isMoviePost = contentType === PostContentTypeEnum.MOVIE
+  const movieTitle = model.title?.trim() ?? ''
 
   return {
     type: 'll_posts',
     id: `${OPTIMISTIC_POST_PREFIX}${nanoid()}`,
-    title: model.title,
+    title: isMoviePost ? MOVIE_WATCH_POST_TITLE : model.title,
+    movie: isMoviePost && movieTitle
+      ? {
+        id: `${OPTIMISTIC_POST_PREFIX}movie`,
+        kp_id: 0,
+        title: movieTitle,
+        description: null,
+        short_description: null,
+        year: 0,
+        type: MovieTypeEnum.MOVIE,
+        cover: null,
+        kp_rating: null,
+        kp_img: null,
+        created_at: null,
+        updated_at: null,
+        genres: [],
+        countries: []
+      }
+      : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     date: datePart,

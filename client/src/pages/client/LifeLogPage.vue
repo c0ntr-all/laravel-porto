@@ -3,6 +3,7 @@
     <LifeLogToolbar
       :view-mode="viewMode"
       @create-post="openCreatePostModal"
+      @create-movie-watch="openMovieWatchModal"
       @update:view-mode="setViewMode"
     />
 
@@ -50,6 +51,22 @@
         />
       </template>
     </AppModal>
+
+    <AppModal
+      v-model="isMovieWatchModalOpen"
+      width="520px"
+      scrollable
+    >
+      <template #header>
+        Просмотр фильма
+      </template>
+      <template #body>
+        <PostFormMovieWatch
+          v-if="isMovieWatchModalOpen"
+          @success="onMovieWatchCreated"
+        />
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -66,6 +83,7 @@ import LifeLogFilterPanel from 'src/components/client/LifeLog/layout/LifeLogFilt
 import LifeLogPostsList from 'src/components/client/LifeLog/posts/LifeLogPostsList.vue'
 import LifeLogPresetsSection from 'src/components/client/LifeLog/LifeLogPresetsSection.vue'
 import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
+import PostFormMovieWatch from 'src/components/client/LifeLog/forms/PostFormMovieWatch.vue'
 import AppModal from 'src/components/default/AppModal.vue'
 import { ILifeLogFilter, IPreset } from 'src/types'
 
@@ -95,13 +113,23 @@ const {
 const { syncSidebarScroll } = useLifeLogSidebarScroll(sidebarRef, contentRef)
 
 const isCreatePostModalOpen = ref(false)
+const isMovieWatchModalOpen = ref(false)
 
 const openCreatePostModal = () => {
   isCreatePostModalOpen.value = true
 }
 
+const openMovieWatchModal = () => {
+  isMovieWatchModalOpen.value = true
+}
+
 const onPostCreated = () => {
   isCreatePostModalOpen.value = false
+  void nextTick(syncSidebarScroll)
+}
+
+const onMovieWatchCreated = () => {
+  isMovieWatchModalOpen.value = false
   void nextTick(syncSidebarScroll)
 }
 

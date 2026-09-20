@@ -8,6 +8,14 @@
         no-caps
         @click="emit('create-post')"
       />
+      <q-btn
+        color="secondary"
+        icon="movie"
+        label="Просмотр фильма"
+        no-caps
+        outline
+        @click="emit('create-movie-watch')"
+      />
     </div>
 
     <q-btn-toggle
@@ -33,6 +41,7 @@ defineProps<{
 
 const emit = defineEmits<{
   'create-post': []
+  'create-movie-watch': []
   'update:viewMode': [value: LifeLogViewMode]
 }>()
 

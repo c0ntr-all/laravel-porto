@@ -73,8 +73,8 @@
               <span v-if="item.year"> · {{ item.year }}</span>
               <span v-if="item.kp_rating != null"> · {{ item.kp_rating.toFixed(1) }}</span>
             </q-item-label>
-            <q-item-label v-if="item.description" caption class="movie-row__description">
-              {{ item.description }}
+            <q-item-label v-if="item.short_description" caption class="movie-row__description">
+              {{ item.short_description }}
             </q-item-label>
             <div v-if="item.genres.length" class="q-gutter-xs q-mt-xs">
               <q-chip

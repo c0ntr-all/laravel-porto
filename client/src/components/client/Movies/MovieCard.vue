@@ -36,8 +36,8 @@
         <span v-if="countriesLabel" class="movie-card__dot">·</span>
         <span v-if="countriesLabel" :title="countriesLabel">{{ countriesLabel }}</span>
       </div>
-      <div v-if="movie.description" class="movie-card__description" :title="movie.description">
-        {{ movie.description }}
+      <div v-if="movie.short_description" class="movie-card__description" :title="movie.short_description">
+        {{ movie.short_description }}
       </div>
       <div v-if="visibleGenres.length" class="movie-card__genres">
         <q-chip

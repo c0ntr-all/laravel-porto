@@ -71,6 +71,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     id: String(raw.id),
     kp_id: Number(raw.kp_id ?? 0),
     title: String(raw.title ?? ''),
+    description: toNullableString(raw.description),
     year: Number(raw.year ?? 0),
     type: normalizeMovieType(raw.type),
     cover: toNullableString(raw.cover),

@@ -8,6 +8,7 @@
     <div class="movie-page-skeleton__info">
       <q-skeleton type="text" width="60%" />
       <q-skeleton type="text" width="30%" />
+      <q-skeleton type="text" width="90%" />
       <q-skeleton type="text" width="80%" />
     </div>
   </div>
@@ -47,6 +48,10 @@
         </div>
         <div v-if="countriesLabel" class="movie-head__line">
           {{ countriesLabel }}
+        </div>
+        <div class="movie-head__description">
+          <p v-if="movieStore.movie.description">{{ movieStore.movie.description }}</p>
+          <p v-else class="text-grey-5">Описание отсутствует</p>
         </div>
         <div v-if="movieStore.movie.genres.length" class="movie-head__genres">
           <q-chip
@@ -180,6 +185,18 @@ watch(
   &__line {
     margin-bottom: 0.75rem;
     color: #777a8f;
+  }
+
+  &__description {
+    margin: 0 0 1rem;
+    color: #282f53;
+    font-size: 15px;
+    line-height: 1.55;
+    white-space: pre-line;
+
+    p {
+      margin: 0;
+    }
   }
 
   &__genres {

@@ -18,6 +18,7 @@ export interface IMovie {
   id: string
   kp_id: number
   title: string
+  description: string | null
   year: number
   type: MovieTypeEnum
   cover: string | null
@@ -44,6 +45,7 @@ export interface IMovieWriteDto {
   title: string
   year: number
   type: MovieTypeEnum
+  description?: string | null
   cover?: string | null
   kp_rating?: number | null
   kp_img?: string | null

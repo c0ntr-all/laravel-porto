@@ -73,6 +73,9 @@
               <span v-if="item.year"> · {{ item.year }}</span>
               <span v-if="item.kp_rating != null"> · {{ item.kp_rating.toFixed(1) }}</span>
             </q-item-label>
+            <q-item-label v-if="item.description" caption class="movie-row__description">
+              {{ item.description }}
+            </q-item-label>
             <div v-if="item.genres.length" class="q-gutter-xs q-mt-xs">
               <q-chip
                 v-for="genre in item.genres.slice(0, 4)"
@@ -220,6 +223,15 @@ onMounted(() => {
 <style lang="scss" scoped>
 .movie-row {
   min-height: 84px;
+
+  &__description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    margin-top: 4px;
+  }
 }
 
 .list-sentinel {

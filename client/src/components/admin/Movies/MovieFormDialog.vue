@@ -24,6 +24,15 @@
           dense
           :rules="[value => Boolean(String(value).trim()) || 'Required']"
         />
+        <q-input
+          v-model="model.description"
+          label="Description"
+          type="textarea"
+          filled
+          dense
+          autogrow
+          hint="Optional, up to 10000 characters"
+        />
         <div class="row q-col-gutter-md">
           <div class="col-12 col-sm-6">
             <q-input
@@ -122,6 +131,7 @@ const genreStore = useMovieGenreStore()
 const model = reactive({
   type: MovieTypeEnum.MOVIE as MovieTypeEnum,
   title: '',
+  description: '',
   year: new Date().getFullYear(),
   kp_id: null as number | null,
   kp_rating: null as number | null,
@@ -215,6 +225,7 @@ function payload(): IMovieWriteDto {
   return {
     kp_id: Number(model.kp_id),
     title: model.title.trim(),
+    description: model.description.trim() || null,
     year: Number(model.year),
     type: model.type,
     cover: model.cover.trim() || null,
@@ -241,6 +252,7 @@ watch(() => [props.modelValue, props.movie] as const, ([open]) => {
 
   model.type = props.movie?.type ?? MovieTypeEnum.MOVIE
   model.title = props.movie?.title ?? ''
+  model.description = props.movie?.description ?? ''
   model.year = props.movie?.year ?? new Date().getFullYear()
   model.kp_id = props.movie?.kp_id ?? null
   model.kp_rating = props.movie?.kp_rating ?? null

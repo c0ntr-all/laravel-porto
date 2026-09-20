@@ -36,6 +36,9 @@
         <span v-if="countriesLabel" class="movie-card__dot">·</span>
         <span v-if="countriesLabel" :title="countriesLabel">{{ countriesLabel }}</span>
       </div>
+      <div v-if="movie.description" class="movie-card__description" :title="movie.description">
+        {{ movie.description }}
+      </div>
       <div v-if="visibleGenres.length" class="movie-card__genres">
         <q-chip
           v-for="genre in visibleGenres"
@@ -187,6 +190,18 @@ const countriesLabel = computed(() => (
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 6px;
+  }
+
+  &__description {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #777a8f;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
     margin-bottom: 6px;
   }
 

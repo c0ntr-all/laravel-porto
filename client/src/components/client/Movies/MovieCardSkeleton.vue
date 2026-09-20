@@ -3,6 +3,7 @@
     <q-skeleton class="movie-card-skeleton__poster" square />
     <q-skeleton type="text" width="80%" />
     <q-skeleton type="text" width="45%" />
+    <q-skeleton type="text" width="95%" />
   </div>
 </template>
 

@@ -52,6 +52,7 @@ class CreatePresetAction extends UseCaseAction
                 'date_from' => $validated['date_from'] ?? null,
                 'date_to' => $validated['date_to'] ?? null,
                 'text' => $validated['text'] ?? null,
+                'content_type' => $validated['content_type'] ?? [],
             ]),
         ]);
 

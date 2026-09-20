@@ -95,6 +95,9 @@ class Post extends ActivityLoggableModel
                         $subQuery->where('end_date', '>=', $this->datetime)
                             ->orWhereNull('end_date');
                     });
+            })
+            ->where(function ($query) {
+                $this->constrainPresetsByContentType($query);
             });
     }
 
@@ -110,7 +113,21 @@ class Post extends ActivityLoggableModel
                                 ->orWhereNull('end_date');
                         });
                 });
+            })
+            ->where(function ($query) {
+                $this->constrainPresetsByContentType($query);
             });
+    }
+
+    private function constrainPresetsByContentType($query): void
+    {
+        $contentType = $this->content_type->value;
+
+        $query->whereNull('rules')
+            ->orWhereNull('rules->content_type')
+            ->orWhereJsonContains('rules->content_type', $contentType)
+            // legacy: content_type stored as a plain string
+            ->orWhere('rules->content_type', $contentType);
     }
 
     public function getDatetimeAttribute(): Carbon

@@ -64,6 +64,9 @@ class UpdatePresetAction extends UseCaseAction
                 'text' => array_key_exists('text', $validated)
                     ? $validated['text']
                     : ($existingRules['text'] ?? null),
+                'content_type' => array_key_exists('content_type', $validated)
+                    ? ($validated['content_type'] ?? [])
+                    : ($existingRules['content_type'] ?? []),
             ]);
         }
 
@@ -78,7 +81,7 @@ class UpdatePresetAction extends UseCaseAction
 
     private function hasRulesUpdate(array $validated): bool
     {
-        return collect(['tags', 'date_from', 'date_to', 'text'])
+        return collect(['tags', 'date_from', 'date_to', 'text', 'content_type'])
             ->contains(fn (string $field): bool => array_key_exists($field, $validated));
     }
 }

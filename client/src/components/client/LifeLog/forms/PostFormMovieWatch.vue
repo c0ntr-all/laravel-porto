@@ -15,9 +15,10 @@
         dense
         clearable
         :rules="[() => canSubmit || 'Укажите название фильма']"
-        hint="Начните вводить название — выберите из каталога или сохраните свой вариант"
+        hint="Показаны последние добавленные — начните ввод для поиска или сохраните свой вариант"
         @filter="filterMovies"
         @input-value="onMovieInputValue"
+        @popup-show="onMoviePopupShow"
       >
         <template #no-option>
           <q-item>
@@ -98,6 +99,8 @@ const movieInput = ref('')
 const movieOptions = ref<IMovie[]>([])
 const isSearchLoading = ref(false)
 
+const RECENT_MOVIES_LIMIT = 5
+
 let searchRequestId = 0
 
 const canSubmit = computed(() => {
@@ -116,45 +119,72 @@ const onMovieInputValue = (value: string) => {
   }
 }
 
-const filterMovies = (val: string, update: (fn: () => void) => void) => {
-  const term = val.trim()
-  movieInput.value = val
-
-  if (term.length < 2) {
-    update(() => {
-      movieOptions.value = []
-    })
-    return
-  }
-
+const loadMovieOptions = (
+  term: string,
+  update?: (fn: () => void) => void
+) => {
   const requestId = ++searchRequestId
   isSearchLoading.value = true
 
+  const query = term.length > 0
+    ? { search: term }
+    : { sort: '-created_at' }
+
   void movieApi
-    .getMovies({ search: term })
+    .getMovies(query)
     .then(response => {
       if (requestId !== searchRequestId) {
         return
       }
 
-      update(() => {
-        movieOptions.value = mapMoviesResponse(response)
-      })
+      const movies = mapMoviesResponse(response)
+      const nextOptions = term.length > 0
+        ? movies
+        : movies.slice(0, RECENT_MOVIES_LIMIT)
+
+      const apply = () => {
+        movieOptions.value = nextOptions
+      }
+
+      if (update) {
+        update(apply)
+      } else {
+        apply()
+      }
     })
     .catch(() => {
       if (requestId !== searchRequestId) {
         return
       }
 
-      update(() => {
+      const apply = () => {
         movieOptions.value = []
-      })
+      }
+
+      if (update) {
+        update(apply)
+      } else {
+        apply()
+      }
     })
     .finally(() => {
       if (requestId === searchRequestId) {
         isSearchLoading.value = false
       }
     })
+}
+
+const filterMovies = (val: string, update: (fn: () => void) => void) => {
+  movieInput.value = val
+  loadMovieOptions(val.trim(), update)
+}
+
+const onMoviePopupShow = () => {
+  if (movieInput.value.trim().length > 0) {
+    return
+  }
+
+  loadMovieOptions('')
 }
 
 const resetForm = () => {

@@ -15,24 +15,56 @@
       </template>
     </q-input>
 
-    <q-btn-toggle
-      v-model="typeFilter"
-      unelevated
-      dense
-      no-caps
-      toggle-color="primary"
-      color="grey-2"
-      text-color="primary"
-      :options="typeOptions"
-      @update:model-value="onTypeChange"
-    />
+    <div class="movies-toolbar__actions">
+      <q-btn-toggle
+        v-model="typeFilter"
+        unelevated
+        dense
+        no-caps
+        toggle-color="primary"
+        color="grey-2"
+        text-color="primary"
+        :options="typeOptions"
+        @update:model-value="onTypeChange"
+      />
+
+      <q-btn-toggle
+        v-model="viewMode"
+        unelevated
+        dense
+        no-caps
+        toggle-color="primary"
+        color="grey-2"
+        text-color="primary"
+        :options="viewModeOptions"
+      >
+        <template #tile>
+          <q-icon name="grid_view" size="sm" />
+          <q-tooltip>Плитка</q-tooltip>
+        </template>
+        <template #list>
+          <q-icon name="view_agenda" size="sm" />
+          <q-tooltip>Список</q-tooltip>
+        </template>
+      </q-btn-toggle>
+    </div>
   </div>
 
-  <MoviesPageSkeleton v-if="movieStore.isMoviesLoading && !movieStore.movies.length" />
+  <MoviesPageSkeleton
+    v-if="movieStore.isMoviesLoading && !movieStore.movies.length"
+    :view-mode="viewMode"
+  />
 
   <template v-else-if="movieStore.movies.length">
-    <div class="movies-grid">
+    <div v-if="viewMode === MoviesViewModeEnum.TILE" class="movies-grid">
       <MovieCard
+        v-for="movie in movieStore.movies"
+        :key="movie.id"
+        :movie="movie"
+      />
+    </div>
+    <div v-else class="movies-list">
+      <MovieCardRow
         v-for="movie in movieStore.movies"
         :key="movie.id"
         :movie="movie"
@@ -66,19 +98,27 @@ import { onMounted, ref } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
+import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
 import MovieCard from 'src/components/client/Movies/MovieCard.vue'
+import MovieCardRow from 'src/components/client/Movies/MovieCardRow.vue'
 import MoviesPageSkeleton from 'src/pages/client/Movies/MoviesPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const movieStore = useMovieStore()
 const searchText = ref(movieStore.listTitle)
 const typeFilter = ref<MovieTypeEnum | 'all'>(movieStore.listType ?? 'all')
+const viewMode = ref(MoviesViewModeEnum.TILE)
 
 const typeOptions = [
   { label: 'Все', value: 'all' },
   { label: MOVIE_TYPE_LABELS[MovieTypeEnum.MOVIE], value: MovieTypeEnum.MOVIE },
   { label: MOVIE_TYPE_LABELS[MovieTypeEnum.TV_SERIES], value: MovieTypeEnum.TV_SERIES },
   { label: MOVIE_TYPE_LABELS[MovieTypeEnum.SHOW], value: MovieTypeEnum.SHOW }
+]
+
+const viewModeOptions = [
+  { value: MoviesViewModeEnum.TILE, slot: 'tile' },
+  { value: MoviesViewModeEnum.LIST, slot: 'list' }
 ]
 
 const { sentinel } = useScrollSentinel(
@@ -127,12 +167,25 @@ onMounted(() => {
     flex: 1 1 260px;
     max-width: 420px;
   }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 .movies-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.5rem 1.25rem;
+}
+
+.movies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .movies-sentinel {

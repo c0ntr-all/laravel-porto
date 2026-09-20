@@ -32,7 +32,7 @@
       <div class="movie-card-h__title" :title="movie.title">{{ movie.title }}</div>
       <div v-if="movie.genres.length" class="movie-card-h__genres">
         <q-chip
-          v-for="genre in visibleGenres"
+          v-for="genre in movie.genres"
           :key="genre.id"
           size="sm"
           dense
@@ -41,15 +41,6 @@
           text-color="primary"
         >
           {{ genre.name }}
-        </q-chip>
-        <q-chip
-          v-if="hiddenGenresCount"
-          size="sm"
-          dense
-          color="grey-3"
-          text-color="grey-8"
-        >
-          +{{ hiddenGenresCount }}
         </q-chip>
       </div>
     </div>
@@ -75,9 +66,6 @@ const ratingLabel = computed(() => {
 
   return props.movie.kp_rating.toFixed(1)
 })
-
-const visibleGenres = computed(() => props.movie.genres.slice(0, 4))
-const hiddenGenresCount = computed(() => Math.max(props.movie.genres.length - 4, 0))
 
 const isNavigable = computed(() => /^\d+$/.test(props.movie.id))
 

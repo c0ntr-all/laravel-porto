@@ -8,6 +8,7 @@ export function createEmptyLifeLogFilter(): ILifeLogFilter {
     date_from: null,
     date_to: null,
     ignore_time: false,
+    content_types: [],
     activePresetId: null
   }
 }
@@ -15,6 +16,7 @@ export function createEmptyLifeLogFilter(): ILifeLogFilter {
 export function cloneLifeLogFilter(filter: ILifeLogFilter): ILifeLogFilter {
   return {
     ...filter,
-    tags: [...filter.tags]
+    tags: [...filter.tags],
+    content_types: [...filter.content_types]
   }
 }

@@ -44,7 +44,22 @@
 
       <PresetTagsSelect
         v-model="selectedTags"
+        class="q-mb-md"
+      />
+
+      <q-select
+        v-model="selectedContentTypes"
+        :options="contentTypeOptions"
+        label="Тип поста"
         class="q-mb-lg"
+        multiple
+        emit-value
+        map-options
+        outlined
+        dense
+        clearable
+        use-chips
+        hint="Не выбрано — подходят посты любого типа"
       />
 
       <q-banner dense rounded class="bg-blue-1 text-primary q-mb-md">
@@ -86,6 +101,11 @@ import { generateRandomHex } from 'src/utils/colors'
 import { formatPostDatetime, mapPresetToFormModel } from 'src/api/mappers/LifeLog/preset.mapper'
 import { handleApiError } from 'src/utils/jsonapi'
 import { IPreset, IPresetModel } from 'src/types'
+import {
+  POST_CONTENT_TYPES,
+  POST_CONTENT_TYPE_LABELS,
+  PostContentTypeEnum
+} from 'src/enums/LifeLog/PostContentTypeEnum'
 
 const props = defineProps<{
   presetId?: string | null
@@ -114,8 +134,14 @@ const model = ref<IPresetModel>(createBaseModel())
 const dateFrom = ref('')
 const dateTo = ref('')
 const selectedTags = ref<string[]>([])
+const selectedContentTypes = ref<PostContentTypeEnum[]>([])
 const isSubmitting = ref(false)
 const isLoading = ref(false)
+
+const contentTypeOptions = POST_CONTENT_TYPES.map(value => ({
+  value,
+  label: POST_CONTENT_TYPE_LABELS[value]
+}))
 
 const isEditMode = computed(() => Boolean(props.presetId))
 const isSaveAvailable = computed(() => !!model.value.title?.trim())
@@ -126,7 +152,10 @@ const buildPayload = (): IPresetModel => ({
   color: model.value.color,
   date_from: dateFrom.value.trim() || null,
   date_to: dateTo.value.trim() || null,
-  tags: selectedTags.value.length ? [...selectedTags.value] : undefined
+  tags: selectedTags.value.length ? [...selectedTags.value] : undefined,
+  content_type: selectedContentTypes.value.length
+    ? [...selectedContentTypes.value]
+    : []
 })
 
 const populateForm = (preset: IPreset) => {
@@ -143,6 +172,7 @@ const populateForm = (preset: IPreset) => {
   dateFrom.value = formModel.date_from ?? ''
   dateTo.value = formModel.date_to ?? ''
   selectedTags.value = formModel.tags ?? []
+  selectedContentTypes.value = formModel.content_type ?? []
 }
 
 const applyPostDatesIfNeeded = () => {
@@ -197,6 +227,7 @@ const resetForm = () => {
   dateFrom.value = ''
   dateTo.value = ''
   selectedTags.value = []
+  selectedContentTypes.value = []
   model.value = createBaseModel()
 }
 

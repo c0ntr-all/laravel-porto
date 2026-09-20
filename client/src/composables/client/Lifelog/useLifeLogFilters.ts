@@ -88,7 +88,8 @@ export function useLifeLogFilters() {
   async function clearPreset() {
     await applyFilter({
       ...filter.value,
-      activePresetId: null
+      activePresetId: null,
+      content_types: []
     })
   }
 

@@ -2,6 +2,10 @@ import { IJsonApiResponse, IPost, IPreset } from 'src/types'
 import { IPresetModel, IPresetRules } from 'src/types/LifeLog/preset'
 import { IPresetCreateDto } from 'src/api/DTO/PresetCreateDto'
 import { mapResponse } from 'src/utils/jsonApiMapper'
+import {
+  POST_CONTENT_TYPES,
+  PostContentTypeEnum
+} from 'src/enums/LifeLog/PostContentTypeEnum'
 
 export function formatPostDatetime(post: IPost): string {
   if (post.time) {
@@ -19,6 +23,19 @@ function normalizePresetTags(tags: unknown): string[] {
     .filter((tag): tag is string => Boolean(tag))
 }
 
+export function normalizePresetContentTypes(value: unknown): PostContentTypeEnum[] {
+  if (value === null || value === undefined || value === '') {
+    return []
+  }
+
+  const items = Array.isArray(value) ? value : [value]
+  const allowed = new Set<string>(POST_CONTENT_TYPES)
+
+  return items
+    .map(item => String(item))
+    .filter((item): item is PostContentTypeEnum => allowed.has(item))
+}
+
 export function normalizePreset(raw: Record<string, unknown>): IPreset {
   const rules = raw.rules as IPresetRules | undefined
 
@@ -27,6 +44,7 @@ export function normalizePreset(raw: Record<string, unknown>): IPreset {
     date_from: rules?.date_from ?? (raw.date_from as string | null) ?? (raw.start_date as string | null) ?? null,
     date_to: rules?.date_to ?? (raw.date_to as string | null) ?? (raw.end_date as string | null) ?? null,
     tags: normalizePresetTags(rules?.tags ?? raw.tags),
+    content_type: normalizePresetContentTypes(rules?.content_type ?? raw.content_type),
     rules
   }
 }
@@ -45,7 +63,10 @@ export function mapPresetToFormModel(preset: IPreset): IPresetModel {
     color: preset.color,
     date_from: preset.date_from,
     date_to: preset.date_to,
-    tags: normalizePresetTags(preset.tags)
+    tags: normalizePresetTags(preset.tags),
+    content_type: normalizePresetContentTypes(
+      preset.content_type ?? preset.rules?.content_type
+    )
   }
 }
 
@@ -62,6 +83,10 @@ export function mapPresetFormModelToCreateDto(presetModel: IPresetModel): IPrese
   } else {
     dto.tags = []
   }
+
+  dto.content_type = presetModel.content_type?.length
+    ? [...presetModel.content_type]
+    : []
 
   return dto
 }

@@ -1,3 +1,5 @@
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+
 export interface IPresetCreateDto {
   title: string
   description?: string | null
@@ -6,4 +8,5 @@ export interface IPresetCreateDto {
   color: string
   icon?: string | null
   tags?: string[]
+  content_type?: PostContentTypeEnum[]
 }

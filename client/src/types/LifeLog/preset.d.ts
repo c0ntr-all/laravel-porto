@@ -1,4 +1,5 @@
 import { IJsonApiResource, IJsonApiResponse, IUser } from '../jsonapi'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 
 export interface IPresetRules {
   tags?: string[]
@@ -6,6 +7,7 @@ export interface IPresetRules {
   date_to?: string | null
   ignore_time?: boolean
   text?: string | null
+  content_type?: PostContentTypeEnum[] | PostContentTypeEnum | string | string[]
 }
 
 export interface IPreset {
@@ -23,6 +25,7 @@ export interface IPreset {
   start_post_id: string | null
   end_post_id: string | null
   tags?: string[]
+  content_type?: PostContentTypeEnum[]
   created_at: string
   user?: IUser
 }
@@ -33,6 +36,7 @@ export interface IPresetModel {
   date_from?: string | null
   date_to?: string | null
   tags?: string[]
+  content_type?: PostContentTypeEnum[]
 }
 
 export interface IPresetFields {

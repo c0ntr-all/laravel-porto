@@ -197,6 +197,7 @@ export function areLifeLogFiltersEqual(
     left.date_from === right.date_from &&
     left.date_to === right.date_to &&
     left.ignore_time === right.ignore_time &&
-    left.activePresetId === right.activePresetId
+    left.activePresetId === right.activePresetId &&
+    left.content_types.join(',') === right.content_types.join(',')
   )
 }

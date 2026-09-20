@@ -1,10 +1,16 @@
 import { IFilter, ILifeLogFilter, IPost, IPreset } from 'src/types'
 import { ITag } from 'src/types/tag'
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
+import { normalizePresetContentTypes } from 'src/api/mappers/LifeLog/preset.mapper'
 import { parsePostDate, toDateOnly } from 'src/utils/LifeLog/post'
 
 export function mapLifeLogFilterToApiFilter(filter: ILifeLogFilter): IFilter {
   const apiFilter: IFilter = {}
+
+  if (filter.activePresetId) {
+    apiFilter.preset = filter.activePresetId
+  }
 
   if (filter.tags.length) {
     apiFilter.tags = filter.tags.map(tag => tag.id)
@@ -34,6 +40,9 @@ export function mapPresetToLifeLogFilter(
     preset.rules?.ignore_time ??
     (dateFrom && dateFrom.length <= 10 && dateTo && dateTo.length <= 10)
   )
+  const contentTypes = normalizePresetContentTypes(
+    preset.content_type ?? preset.rules?.content_type
+  )
 
   return {
     ...createEmptyLifeLogFilter(),
@@ -42,6 +51,7 @@ export function mapPresetToLifeLogFilter(
     date_from: dateFrom,
     date_to: dateTo,
     ignore_time: ignoreTime,
+    content_types: contentTypes,
     activePresetId: preset.id
   }
 }
@@ -84,10 +94,43 @@ function isPostWithinDateFilter(post: IPost, filter: ILifeLogFilter): boolean {
   return true
 }
 
+function isPostMatchingTags(post: IPost, filter: ILifeLogFilter): boolean {
+  if (!filter.tags.length) {
+    return true
+  }
+
+  const postTagIds = new Set((post.tags ?? []).map(tag => tag.id))
+  const requiredTagIds = filter.tags.map(tag => tag.id)
+
+  if (filter.tags_mode === 'or') {
+    return requiredTagIds.some(tagId => postTagIds.has(tagId))
+  }
+
+  return requiredTagIds.every(tagId => postTagIds.has(tagId))
+}
+
+function isPostMatchingContentTypes(post: IPost, filter: ILifeLogFilter): boolean {
+  if (!filter.content_types.length) {
+    return true
+  }
+
+  const contentType = post.content_type ?? PostContentTypeEnum.DEFAULT
+
+  return filter.content_types.includes(contentType)
+}
+
 export function applyClientSidePostFilter(posts: IPost[], filter: ILifeLogFilter): IPost[] {
   const search = filter.search.trim().toLowerCase()
 
   return posts.filter(post => {
+    if (!isPostMatchingContentTypes(post, filter)) {
+      return false
+    }
+
+    if (!isPostMatchingTags(post, filter)) {
+      return false
+    }
+
     if (search) {
       const haystack = [
         post.title ?? '',

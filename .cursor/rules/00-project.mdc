@@ -1,0 +1,14 @@
+---
+description: Home Portal monorepo map and non-negotiables
+alwaysApply: true
+---
+
+# Home Portal
+
+- Monorepo: `laravel/` Porto API (Laravel 11, PHP 8.3), `client/` Quasar Vue 3 SPA, Docker Compose.
+- Match existing code. No new libraries, layers, or drive-by refactors.
+- Do not write markdown/docs unless asked. Do not commit `.env` or secrets.
+- API: `/api/v1/...`. Frontend axios `baseURL` already has host — call `v1/...`, not `/api/v1/...`.
+- Auth: Passport Bearer. Responses: Fractal JSON:API (`data` / `attributes` / `meta`).
+- Compose from WSL. `WINDOWS_F_MOUNT=/mnt/f` — never `F:` (Docker treats `:` as volume separator).
+- After changing `docker-compose.yml` / Dockerfiles: recreate the affected service, do not assume an old container is fine.

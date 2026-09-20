@@ -1,0 +1,12 @@
+---
+description: Home Portal API workspace map (laravel/ folder)
+alwaysApply: true
+---
+
+# Home Portal API
+
+This workspace is `laravel/` (Porto API). SPA is sibling `../client/` (Quasar). Docker Compose is `../docker-compose.yml`.
+Match existing code. No new libraries or `app/Http/Controllers`. No docs unless asked. No `.env` commits.
+API `/api/v1`. JSON:API via Fractal. Auth Passport Bearer.
+Compose from WSL; `WINDOWS_F_MOUNT=/mnt/f` (never `F:`).
+If the user works on Vue/Quasar, follow `../client` conventions: `<script lang="ts" setup>`, axios `v1/...`, Pinia `StoreEntity`.

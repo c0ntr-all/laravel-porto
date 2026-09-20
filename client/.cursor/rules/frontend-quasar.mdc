@@ -1,0 +1,17 @@
+---
+description: Quasar Vue 3 SPA conventions (Pinia, JSON:API)
+globs: "**/*.{vue,ts,js}"
+alwaysApply: false
+---
+
+# Frontend (Quasar)
+
+- Vue 3 + `<script lang="ts" setup>`. Quasar components (`q-*`). New UI: composition API, not Options API.
+- Paths: `src/pages/{client|admin}/`, `src/components/{client|admin|default}/`, `src/stores/modules/`, `src/api/requests/`, `src/api/mappers/`, `src/types/`.
+- HTTP: `import { api } from 'src/boot/axios'` — endpoints `v1/...`. Token interceptor already set.
+- After fetch: mapper (`mapResponse` / container mapper) → Pinia. Do not dump raw JSON:API into templates.
+- Store: `defineStore(id, () => { ... })`. Collections: `reactive<StoreEntity<T>>({ byId: {}, allIds: [] })` + `upsertEntity` / `handleApiSuccess` / `handleApiError` from `src/utils/jsonapi`.
+- Types in `src/types` (not inline in components). `import ... from 'src/...'` (Quasar alias).
+- Scoped SCSS in the same `.vue`. Reuse `default/` before adding primitives.
+- `process.env.host` / Reverb keys come from `quasar.config.js` + compose env. Do not hardcode `docker-porto.loc` in components.
+- Lint: ESLint standard + vue3-essential. Do not add Prettier. Trailing commas as in neighboring files.

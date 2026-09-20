@@ -1,0 +1,30 @@
+---
+description: Laravel Porto API conventions (Ship/Containers)
+globs: laravel/**/*.php
+alwaysApply: false
+---
+
+# Backend (Porto)
+
+Do not use `app/Http/Controllers`. One feature lives in one container.
+
+```
+app/Containers/{Section}/{Name}/
+  UI/API/Routes/{Verb}{Name}.v1.private.php  → Action::class
+  UI/Actions/{Verb}{Name}Action.php          → asController + handle
+  UI/API/Requests/*Request.php
+  UI/API/Transformers/*Transformer.php
+  Tasks/{Verb}{Name}Task.php                 → run()
+  Data/DTO/*Dto.php                          → extends App\Ship\Parents\DTO\Data
+  Data/Repositories/*Repository.php
+  Models/
+  Tests/{Unit,Functional}/
+app/Ship/  → shared parents, middleware, helpers only
+```
+
+- `<?php declare(strict_types=1);` on line 1. Extend Ship parents (`BaseAction`, `Task`, `AuthenticatedRequest` / `PublicRequest`).
+- Route file: `Route::{verb}('resource', Action::class)->middleware(['auth:api']);` — auto-loaded, prefix already `api` + `/v1`.
+- Action: inject Task; `asController(Request $r): JsonResponse`; DTO via `XDto::from([...$r->validated(), 'user_id' => auth()->id()])`; return `fractal($m, new XTransformer())->withResourceName('...')->addMeta([...])->respond(...)`.
+- Task: inject repository; no HTTP. Repository: Eloquent / `App\Ship\Parents\QueryBuilder\QueryBuilder`.
+- Tests next to the container. Functional HTTP: `/api/v1/...`, `actingAs($user, 'api')`.
+- Unhandled exceptions must stay JSON (see `ConfigureExceptions`). Do not render Ignition HTML for API.

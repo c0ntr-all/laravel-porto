@@ -3,6 +3,8 @@
 namespace App\Containers\MovieSection\Movie\Models;
 
 use App\Containers\AppSection\Country\Models\Country;
+use App\Containers\MovieSection\Folder\Models\Folder;
+use App\Containers\MovieSection\Folder\Support\FolderMoviesCountCache;
 use App\Containers\MovieSection\Genre\Models\Genre;
 use App\Containers\MovieSection\Genre\Models\Traits\HasGenres;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
@@ -32,6 +34,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Genre> $genres
  * @property-read Collection<int, Country> $countries
  * @property-read Collection<int, Person> $persons
+ * @property-read Collection<int, Folder> $folders
  * @property-read Collection<int, MoviePersonCredit> $credits
  * @property-read int $actors_count
  */
@@ -73,8 +76,20 @@ class Movie extends Model
     protected static function booted(): void
     {
         static::deleting(function (Movie $movie): void {
+            $folderIds = DB::table('movie_folder_movie')
+                ->where('movie_id', $movie->id)
+                ->pluck('folder_id');
+
             $movie->countries()->detach();
             $movie->persons()->detach();
+            $movie->folders()->detach();
+
+            Folder::query()
+                ->whereIn('id', $folderIds)
+                ->get()
+                ->each(static function (Folder $folder): void {
+                    FolderMoviesCountCache::refresh($folder);
+                });
 
             DB::table('lifelog_post_subjectables')
                 ->where('subjectable_type', $movie->getMorphClass())
@@ -108,5 +123,17 @@ class Movie extends Model
     public function credits(): HasMany
     {
         return $this->hasMany(MoviePersonCredit::class, 'movie_id')->orderBy('id');
+    }
+
+    public function folders(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Folder::class,
+            'movie_folder_movie',
+            'movie_id',
+            'folder_id',
+        )
+            ->withPivot(['added_at'])
+            ->withTimestamps();
     }
 }

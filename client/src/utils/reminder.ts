@@ -137,16 +137,16 @@ export function toReminderPayload(model: IReminderFormModel): IReminderCreatePay
 
   payload.interval = model.is_repeating
     ? {
-      value: Number(model.interval_value),
-      unit: model.interval_unit
-    }
+        value: Number(model.interval_value),
+        unit: model.interval_unit
+      }
     : null
 
   payload.to_remind_before = model.is_to_remind_before
     ? {
-      value: Number(model.remind_before_value),
-      unit: model.remind_before_unit
-    }
+        value: Number(model.remind_before_value),
+        unit: model.remind_before_unit
+      }
     : null
 
   return payload

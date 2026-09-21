@@ -143,8 +143,8 @@ function onSelect(path: string) {
   }
 }
 
-function onExpanded(value: string[]) {
-  expanded.value = value
+function onExpanded(value: readonly unknown[]) {
+  expanded.value = value.map(item => String(item))
 }
 
 async function onLazyLoad(info: {

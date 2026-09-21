@@ -73,21 +73,21 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
     title: isMoviePost ? MOVIE_WATCH_POST_TITLE : model.title,
     movie: isMoviePost && movieTitle
       ? {
-        id: `${OPTIMISTIC_POST_PREFIX}movie`,
-        kp_id: 0,
-        title: movieTitle,
-        description: null,
-        short_description: null,
-        year: 0,
-        type: MovieTypeEnum.MOVIE,
-        cover: null,
-        kp_rating: null,
-        kp_img: null,
-        created_at: null,
-        updated_at: null,
-        genres: [],
-        countries: []
-      }
+          id: `${OPTIMISTIC_POST_PREFIX}movie`,
+          kp_id: 0,
+          title: movieTitle,
+          description: null,
+          short_description: null,
+          year: 0,
+          type: MovieTypeEnum.MOVIE,
+          cover: null,
+          kp_rating: null,
+          kp_img: null,
+          created_at: null,
+          updated_at: null,
+          genres: [],
+          countries: []
+        }
       : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,

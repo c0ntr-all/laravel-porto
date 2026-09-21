@@ -83,9 +83,9 @@ const indeterminate = computed(() => {
     return false
   }
 
-  return ['pending', 'running'].includes(progress.value.status)
-    && (progress.value.total || 0) <= 0
-    && (progress.value.tracks_total || 0) <= 0
+  return ['pending', 'running'].includes(progress.value.status) &&
+    (progress.value.total || 0) <= 0 &&
+    (progress.value.tracks_total || 0) <= 0
 })
 
 const title = computed(() => {

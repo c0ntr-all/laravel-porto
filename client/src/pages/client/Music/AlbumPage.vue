@@ -58,8 +58,9 @@
       </div>
       <div class="album-body q-mb-lg bg-white">
         <MusicAlbumTracksList
+          v-if="album"
           :key="album.id"
-          :tracks="album?.relationships.tracks"
+          :tracks="album.relationships.tracks"
         />
       </div>
     </div>

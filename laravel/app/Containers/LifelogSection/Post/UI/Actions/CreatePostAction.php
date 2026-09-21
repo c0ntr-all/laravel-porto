@@ -5,12 +5,14 @@ namespace App\Containers\LifelogSection\Post\UI\Actions;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Data\DTO\PostCreateDto;
+use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\LifelogSection\Post\Tasks\AttachPostContentTask;
 use App\Containers\LifelogSection\Post\Tasks\CreatePostTask;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
+use App\Containers\MovieSection\Folder\Tasks\AddMovieToWatchedFolderByMovieIdTask;
 use App\Containers\LifelogSection\Post\UI\API\Requests\CreateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
@@ -31,6 +33,7 @@ class CreatePostAction extends UseCaseAction
         private readonly SyncPostTagsTask          $syncPostTagsTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
         private readonly AttachPostContentTask $attachPostContentTask,
+        private readonly AddMovieToWatchedFolderByMovieIdTask $addMovieToWatchedFolderByMovieIdTask,
     )
     {
         parent::__construct();
@@ -83,6 +86,16 @@ class CreatePostAction extends UseCaseAction
             }
 
             $this->attachPostContentTask->run($post, $postCreateDto->toContentAttachDto());
+
+            if (
+                $postCreateDto->content_type === PostContentTypeEnum::MOVIE
+                && $postCreateDto->movie_id !== null
+            ) {
+                $this->addMovieToWatchedFolderByMovieIdTask->run(
+                    $postCreateDto->user_id,
+                    $postCreateDto->movie_id,
+                );
+            }
 
             return $post->load(['movies.genres', 'movies.countries']);
         });

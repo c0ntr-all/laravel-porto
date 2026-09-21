@@ -73,6 +73,9 @@
               <span v-if="item.year"> · {{ item.year }}</span>
               <span v-if="item.kp_rating != null"> · {{ item.kp_rating.toFixed(1) }}</span>
             </q-item-label>
+            <q-item-label caption>
+              {{ kinopoiskUpdatedLabel(item) }}
+            </q-item-label>
             <q-item-label v-if="item.short_description" caption class="movie-row__description">
               {{ item.short_description }}
             </q-item-label>
@@ -157,6 +160,7 @@ import { useMovieImportStore } from 'src/stores/modules/movieImportStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
+import { humanDatetime } from 'src/utils/datetime'
 import { IMovie } from 'src/types/Movie'
 import MovieFormDialog from 'src/components/admin/Movies/MovieFormDialog.vue'
 
@@ -183,6 +187,14 @@ function resolvedType(): MovieTypeEnum | null {
 
 function poster(item: IMovie): string | null {
   return moviePosterUrl(item)
+}
+
+function kinopoiskUpdatedLabel(item: IMovie): string {
+  if (!item.kp_imported_at) {
+    return 'Never imported from Kinopoisk'
+  }
+
+  return `Last Kinopoisk update: ${humanDatetime(item.kp_imported_at)}`
 }
 
 function onSearch(value: string | number | null): void {

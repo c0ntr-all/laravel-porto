@@ -86,6 +86,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     cover: toNullableString(raw.cover),
     kp_rating: toNullableNumber(raw.kp_rating),
     kp_img: toNullableString(raw.kp_img),
+    kp_imported_at: toNullableString(raw.kp_imported_at),
     created_at: toNullableString(raw.created_at),
     updated_at: toNullableString(raw.updated_at),
     genres: asRecords(raw.genres).map(normalizeMovieGenre),

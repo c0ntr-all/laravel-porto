@@ -27,6 +27,7 @@ export interface IMovie {
   cover: string | null
   kp_rating: number | null
   kp_img: string | null
+  kp_imported_at: string | null
   created_at: string | null
   updated_at: string | null
   genres: IMovieGenre[]

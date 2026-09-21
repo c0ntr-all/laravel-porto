@@ -31,6 +31,7 @@ class MovieTransformer extends TransformerAbstract
             'cover' => $movie->cover,
             'kp_rating' => $movie->kp_rating !== null ? (float) $movie->kp_rating : null,
             'kp_img' => $movie->kp_img,
+            'kp_imported_at' => $movie->kp_imported_at?->format('Y-m-d H:i:s'),
             'created_at' => $movie->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $movie->updated_at?->format('Y-m-d H:i:s'),
             'actors_count' => (int) ($movie->actors_count ?? 0),

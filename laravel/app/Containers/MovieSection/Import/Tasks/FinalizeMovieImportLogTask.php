@@ -5,6 +5,7 @@ namespace App\Containers\MovieSection\Import\Tasks;
 use App\Containers\MovieSection\Import\Data\Repositories\MovieImportRepository;
 use App\Containers\MovieSection\Import\Enums\MovieImportStatusEnum;
 use App\Containers\MovieSection\Import\Models\MovieImport;
+use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 
 class FinalizeMovieImportLogTask extends ParentTask
@@ -39,6 +40,14 @@ class FinalizeMovieImportLogTask extends ParentTask
         $import->finished_at = now();
         $import->duration_ms = (int) max(0, intdiv(hrtime(true) - $startedAtNs, 1_000_000));
 
-        return $this->movieImportRepository->save($import);
+        $saved = $this->movieImportRepository->save($import);
+
+        if ($status === MovieImportStatusEnum::Completed && $saved->movie_id !== null && $saved->finished_at !== null) {
+            Movie::query()->whereKey($saved->movie_id)->update([
+                'kp_imported_at' => $saved->finished_at,
+            ]);
+        }
+
+        return $saved;
     }
 }

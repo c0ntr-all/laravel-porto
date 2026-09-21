@@ -83,6 +83,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           cover: null,
           kp_rating: null,
           kp_img: null,
+          kp_imported_at: null,
           created_at: null,
           updated_at: null,
           genres: [],

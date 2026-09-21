@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $cover
  * @property string|null $kp_rating
  * @property string|null $kp_img
+ * @property Carbon|null $kp_imported_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Genre> $genres
@@ -51,6 +52,7 @@ class Movie extends Model
         'cover',
         'kp_rating',
         'kp_img',
+        'kp_imported_at',
     ];
 
     protected $attributes = [
@@ -64,6 +66,7 @@ class Movie extends Model
             'year' => 'integer',
             'type' => MovieTypeEnum::class,
             'kp_rating' => 'decimal:1',
+            'kp_imported_at' => 'datetime',
         ];
     }
 

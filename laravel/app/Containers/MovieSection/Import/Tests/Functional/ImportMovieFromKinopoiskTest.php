@@ -69,6 +69,10 @@ class ImportMovieFromKinopoiskTest extends TestCase
             'description' => 'Криминальная сага о семье Корлеоне.',
             'short_description' => 'Революция в гангстерском кино.',
         ]);
+        $this->assertNotNull(Movie::query()->where('kp_id', 325)->value('kp_imported_at'));
+        $includedMovie = collect($response->json('included'))->firstWhere('type', 'movies');
+        $this->assertIsArray($includedMovie);
+        $this->assertNotNull($includedMovie['attributes']['kp_imported_at'] ?? null);
         $this->assertDatabaseHas('movie_genres', ['name' => 'драма']);
         $this->assertDatabaseHas('countries', ['name' => 'США']);
         $this->assertDatabaseCount('movie_genre', 2);
@@ -128,6 +132,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
         $this->assertSame('Крестный отец', $movie->title);
         $this->assertSame('https://example.com/custom-cover.jpg', $movie->cover);
         $this->assertSame('https://avatars.mds.yandex.net/get-kinopoisk-image/poster/600x900', $movie->kp_img);
+        $this->assertNotNull($movie->kp_imported_at);
     }
 
     public function test_missing_api_key_is_logged_as_failed(): void

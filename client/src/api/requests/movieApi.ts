@@ -37,6 +37,12 @@ export const movieApi = {
     return response.data
   },
 
+  async getMovieCredits(id: string): Promise<IJsonApiResponse> {
+    const response = await api.get(`v1/movie/movies/${id}/credits`)
+
+    return response.data
+  },
+
   async createMovie(payload: IMovieWriteDto): Promise<IJsonApiResponse> {
     const response = await api.post('v1/movie/movies', payload)
 

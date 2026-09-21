@@ -86,7 +86,9 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           created_at: null,
           updated_at: null,
           genres: [],
-          countries: []
+          countries: [],
+          actors_count: 0,
+          credits: []
         }
       : null,
     content: model.content,

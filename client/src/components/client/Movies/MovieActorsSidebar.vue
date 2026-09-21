@@ -18,10 +18,10 @@
       :to="{
         name: 'movie-persons',
         params: { id: movieId },
-        hash: actors.length > MOVIE_ACTORS_SIDEBAR_LIMIT ? '#actors' : undefined
+        hash: actorsCount > MOVIE_ACTORS_SIDEBAR_LIMIT ? '#actors' : undefined
       }"
     >
-      Все актёры ({{ actors.length }})
+      Все актёры ({{ actorsCount }})
     </router-link>
   </aside>
 </template>
@@ -36,10 +36,12 @@ import MoviePersonLink from 'src/components/client/Movies/MoviePersonLink.vue'
 const props = defineProps<{
   movieId: string
   credits: IMovieCredit[]
+  actorsCount: number
 }>()
 
 const actors = computed(() => movieActorCredits(props.credits))
 const preview = computed(() => actors.value.slice(0, MOVIE_ACTORS_SIDEBAR_LIMIT))
+const actorsCount = computed(() => Math.max(props.actorsCount, actors.value.length))
 </script>
 
 <style lang="scss" scoped>

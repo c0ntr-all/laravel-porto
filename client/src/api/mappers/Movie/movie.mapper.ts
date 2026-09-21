@@ -90,6 +90,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     updated_at: toNullableString(raw.updated_at),
     genres: asRecords(raw.genres).map(normalizeMovieGenre),
     countries: asRecords(raw.countries).map(normalizeMovieCountry),
+    actors_count: Number(raw.actors_count ?? 0),
     credits: asRecords(raw.credits).map(normalizeMovieCredit)
   }
 }
@@ -106,6 +107,10 @@ export function mapMovieResponse(response: IJsonApiResponse): IMovie {
   }
 
   return normalizeMovie(raw)
+}
+
+export function mapMovieCreditsResponse(response: IJsonApiResponse): IMovieCredit[] {
+  return mapResponse(response).map(normalizeMovieCredit)
 }
 
 export function moviePosterUrl(movie: Pick<IMovie, 'cover' | 'kp_img'>): string | null {

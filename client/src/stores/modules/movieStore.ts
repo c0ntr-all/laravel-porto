@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
-import { mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
+import { mapMovieCreditsResponse, mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { extractCursorFromResponse, handleApiError, hasMoreFromResponse } from 'src/utils/jsonapi'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
-import { IMovie } from 'src/types/Movie'
+import { IMovie, IMovieCredit } from 'src/types/Movie'
 
 function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
   const seen = new Set(current.map(item => item.id))
@@ -15,15 +15,18 @@ function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
 export const useMovieStore = defineStore('movies', () => {
   const movies = ref<IMovie[]>([])
   const movie = ref<IMovie | null>(null)
+  const movieCredits = ref<IMovieCredit[]>([])
   const moviesCursor = ref<string | null>(null)
   const hasMoreMovies = ref(false)
   const isMoviesLoading = ref(false)
   const isMoviesLoadingMore = ref(false)
   const isMovieLoading = ref(false)
+  const isMovieCreditsLoading = ref(false)
   const listTitle = ref('')
   const listType = ref<MovieTypeEnum | null>(null)
 
   let listRequestId = 0
+  let creditsMovieId: string | null = null
 
   async function getMovies(options?: {
     append?: boolean
@@ -108,17 +111,41 @@ export const useMovieStore = defineStore('movies', () => {
     }
   }
 
+  async function getMovieCredits(id: string): Promise<IMovieCredit[]> {
+    if (creditsMovieId !== id) {
+      movieCredits.value = []
+      creditsMovieId = id
+    }
+
+    isMovieCreditsLoading.value = true
+
+    try {
+      const response = await movieApi.getMovieCredits(id)
+      movieCredits.value = mapMovieCreditsResponse(response)
+
+      return movieCredits.value
+    } catch (error) {
+      handleApiError(error)
+      return []
+    } finally {
+      isMovieCreditsLoading.value = false
+    }
+  }
+
   return {
     movies,
     movie,
+    movieCredits,
     moviesCursor,
     hasMoreMovies,
     isMoviesLoading,
     isMoviesLoadingMore,
     isMovieLoading,
+    isMovieCreditsLoading,
     listTitle,
     listType,
     getMovies,
-    getMovie
+    getMovie,
+    getMovieCredits
   }
 })

@@ -7,6 +7,8 @@ use App\Containers\AppSection\User\Models\User;
 use App\Containers\MovieSection\Genre\Models\Genre;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\MovieSection\Person\Models\Person;
+use App\Containers\MovieSection\Profession\Models\Profession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -133,5 +135,42 @@ class MovieCrudTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('movies', ['id' => $movie->id]);
+    }
+
+    public function test_movie_returns_actors_count_preview_and_full_credits_list(): void
+    {
+        $actor = Profession::factory()->create(['en_name' => 'actor', 'name' => 'актеры']);
+        $director = Profession::factory()->create(['en_name' => 'director', 'name' => 'режиссеры']);
+        $movie = Movie::factory()->create();
+        $directorPerson = Person::factory()->create(['profession_id' => $director->id]);
+        $movie->persons()->attach($directorPerson->id, [
+            'profession_id' => $director->id,
+            'description' => null,
+        ]);
+
+        for ($index = 1; $index <= 12; $index++) {
+            $person = Person::factory()->create(['profession_id' => $actor->id]);
+            $movie->persons()->attach($person->id, [
+                'profession_id' => $actor->id,
+                'description' => 'Role '.$index,
+            ]);
+        }
+
+        $show = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/movies/'.$movie->id);
+
+        $show->assertOk()
+            ->assertJsonPath('data.attributes.actors_count', 12);
+
+        $credits = collect($show->json('data.attributes.credits'));
+        $this->assertCount(10, $credits->where('profession.en_name', 'actor'));
+        $this->assertCount(1, $credits->where('profession.en_name', 'director'));
+
+        $all = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/movies/'.$movie->id.'/credits');
+
+        $all->assertOk();
+        $this->assertCount(13, $all->json('data'));
+        $this->assertSame('movie_credits', $all->json('data.0.type'));
     }
 }

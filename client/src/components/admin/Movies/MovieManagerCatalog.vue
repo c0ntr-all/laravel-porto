@@ -93,6 +93,18 @@
               <q-btn icon="edit" color="primary" flat round dense @click="openForm(item)">
                 <q-tooltip>Edit</q-tooltip>
               </q-btn>
+              <q-btn
+                icon="cloud_sync"
+                color="primary"
+                flat
+                round
+                dense
+                :loading="reimportingId === item.id"
+                :disable="!item.kp_id || (reimportingId !== null && reimportingId !== item.id)"
+                @click="reimport(item)"
+              >
+                <q-tooltip>Reimport from Kinopoisk</q-tooltip>
+              </q-btn>
               <q-btn icon="delete" color="negative" flat round dense @click="confirmDelete(item)">
                 <q-tooltip>Delete</q-tooltip>
               </q-btn>
@@ -141,6 +153,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useMovieAdminStore } from 'src/stores/modules/movieAdminStore'
+import { useMovieImportStore } from 'src/stores/modules/movieImportStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
@@ -148,12 +161,14 @@ import { IMovie } from 'src/types/Movie'
 import MovieFormDialog from 'src/components/admin/Movies/MovieFormDialog.vue'
 
 const movieStore = useMovieAdminStore()
+const importStore = useMovieImportStore()
 const searchText = ref(movieStore.listTitle)
 const typeFilter = ref<MovieTypeEnum | 'all'>(movieStore.listType ?? 'all')
 const showForm = ref(false)
 const editing = ref<IMovie | null>(null)
 const showDelete = ref(false)
 const deleting = ref<IMovie | null>(null)
+const reimportingId = ref<string | null>(null)
 
 const typeOptions = [
   { label: 'All', value: 'all' },
@@ -192,6 +207,20 @@ function openForm(item?: IMovie): void {
 function confirmDelete(item: IMovie): void {
   deleting.value = item
   showDelete.value = true
+}
+
+async function reimport(item: IMovie): Promise<void> {
+  if (!item.kp_id || reimportingId.value) {
+    return
+  }
+
+  reimportingId.value = item.id
+
+  try {
+    await importStore.importFromKinopoisk(item.kp_id)
+  } finally {
+    reimportingId.value = null
+  }
 }
 
 async function runDelete(): Promise<void> {

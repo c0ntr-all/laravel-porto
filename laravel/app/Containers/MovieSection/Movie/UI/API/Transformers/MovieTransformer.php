@@ -33,6 +33,7 @@ class MovieTransformer extends TransformerAbstract
             'kp_img' => $movie->kp_img,
             'created_at' => $movie->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $movie->updated_at?->format('Y-m-d H:i:s'),
+            'actors_count' => (int) ($movie->actors_count ?? 0),
             'credits' => $this->mapCredits($movie),
         ];
     }
@@ -71,25 +72,13 @@ class MovieTransformer extends TransformerAbstract
         $credits = [];
 
         foreach ($movie->credits as $credit) {
-            if ($credit->person === null || $credit->profession === null) {
+            $mapped = MovieCreditTransformer::map($credit);
+
+            if ($mapped === null) {
                 continue;
             }
 
-            $credits[] = [
-                'id' => $credit->id,
-                'description' => $credit->description,
-                'person' => [
-                    'id' => $credit->person->id,
-                    'name' => $credit->person->name,
-                    'en_name' => $credit->person->en_name,
-                    'photo' => $credit->person->photo,
-                ],
-                'profession' => [
-                    'id' => $credit->profession->id,
-                    'en_name' => $credit->profession->en_name,
-                    'name' => $credit->profession->name,
-                ],
-            ];
+            $credits[] = $mapped;
         }
 
         return $credits;

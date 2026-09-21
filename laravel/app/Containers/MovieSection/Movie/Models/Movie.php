@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Country> $countries
  * @property-read Collection<int, Person> $persons
  * @property-read Collection<int, MoviePersonCredit> $credits
+ * @property-read int $actors_count
  */
 class Movie extends Model
 {

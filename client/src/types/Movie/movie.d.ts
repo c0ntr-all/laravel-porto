@@ -31,6 +31,7 @@ export interface IMovie {
   updated_at: string | null
   genres: IMovieGenre[]
   countries: IMovieCountry[]
+  actors_count: number
   credits: IMovieCredit[]
 }
 

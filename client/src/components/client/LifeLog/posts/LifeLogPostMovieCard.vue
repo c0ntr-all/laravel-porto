@@ -104,7 +104,9 @@ const displayMovie = computed((): IMovie => {
     created_at: null,
     updated_at: null,
     genres: [],
-    countries: []
+    countries: [],
+    actors_count: 0,
+    credits: []
   }
 })
 </script>

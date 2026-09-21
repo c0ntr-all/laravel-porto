@@ -92,6 +92,7 @@
         class="movie-page__aside"
         :movie-id="movieStore.movie.id"
         :credits="movieStore.movie.credits"
+        :actors-count="movieStore.movie.actors_count"
       />
     </div>
   </template>
@@ -138,7 +139,15 @@ const ratingLabel = computed(() => {
 const countriesLabel = computed(() => (
   movieStore.movie?.countries.map(country => country.name).filter(Boolean).join(', ') ?? ''
 ))
-const hasActors = computed(() => movieActorCredits(movieStore.movie?.credits ?? []).length > 0)
+const hasActors = computed(() => {
+  const movie = movieStore.movie
+
+  if (!movie) {
+    return false
+  }
+
+  return movie.actors_count > 0 || movieActorCredits(movie.credits).length > 0
+})
 const kinopoiskUrl = computed(() => (
   movieStore.movie
     ? kinopoiskMovieUrl(movieStore.movie.kp_id, movieStore.movie.type)

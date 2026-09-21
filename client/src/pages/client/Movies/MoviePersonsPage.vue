@@ -15,6 +15,12 @@
     </h1>
     <div class="persons-page__caption">Создатели и актёры</div>
 
+    <div v-if="movieStore.isMovieCreditsLoading && !groups.length">
+      <q-skeleton type="text" width="30%" />
+      <q-skeleton type="text" width="70%" class="q-mt-md" />
+      <q-skeleton type="text" width="55%" />
+    </div>
+
     <section
       v-for="group in groups"
       :id="professionAnchor(group.profession.en_name)"
@@ -36,7 +42,7 @@
       </ul>
     </section>
 
-    <q-card v-if="!groups.length" class="q-mb-md" flat>
+    <q-card v-if="!groups.length && !movieStore.isMovieCreditsLoading" class="q-mb-md" flat>
       <AppNoResultsPlug
         title="Персоны не найдены"
         body="У этого фильма пока нет связанных персон."
@@ -66,7 +72,7 @@ const props = defineProps<{
 }>()
 
 const movieStore = useMovieStore()
-const groups = computed(() => groupMovieCredits(movieStore.movie?.credits ?? []))
+const groups = computed(() => groupMovieCredits(movieStore.movieCredits))
 
 function professionAnchor(enName: string): string {
   return enName === MOVIE_ACTOR_PROFESSION ? 'actors' : enName
@@ -76,6 +82,7 @@ watch(
   () => props.id,
   (id) => {
     void movieStore.getMovie(id)
+    void movieStore.getMovieCredits(id)
   },
   { immediate: true }
 )

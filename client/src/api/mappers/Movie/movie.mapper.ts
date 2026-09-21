@@ -1,5 +1,13 @@
 import { IJsonApiResponse } from 'src/types'
-import { IMovie, IMovieCountry, IMovieGenre, IMovieImport } from 'src/types/Movie'
+import {
+  IMovie,
+  IMovieCountry,
+  IMovieCredit,
+  IMovieGenre,
+  IMovieImport,
+  IMoviePerson,
+  IMovieProfession
+} from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
 import { mapResponse } from 'src/utils/jsonApiMapper'
@@ -81,7 +89,8 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     created_at: toNullableString(raw.created_at),
     updated_at: toNullableString(raw.updated_at),
     genres: asRecords(raw.genres).map(normalizeMovieGenre),
-    countries: asRecords(raw.countries).map(normalizeMovieCountry)
+    countries: asRecords(raw.countries).map(normalizeMovieCountry),
+    credits: asRecords(raw.credits).map(normalizeMovieCredit)
   }
 }
 
@@ -101,6 +110,64 @@ export function mapMovieResponse(response: IJsonApiResponse): IMovie {
 
 export function moviePosterUrl(movie: Pick<IMovie, 'cover' | 'kp_img'>): string | null {
   return movie.cover || movie.kp_img || null
+}
+
+export function normalizeMovieProfession(raw: Record<string, unknown>): IMovieProfession {
+  return {
+    id: String(raw.id),
+    en_name: String(raw.en_name ?? ''),
+    name: toNullableString(raw.name)
+  }
+}
+
+export function normalizeMoviePersonCard(raw: Record<string, unknown>): IMovieCredit['person'] {
+  return {
+    id: String(raw.id),
+    name: String(raw.name ?? ''),
+    en_name: toNullableString(raw.en_name),
+    photo: toNullableString(raw.photo)
+  }
+}
+
+export function normalizeMovieCredit(raw: Record<string, unknown>): IMovieCredit {
+  const personRaw = asRecord(raw.person) ?? { id: raw.person_id, name: raw.name }
+  const professionRaw = asRecord(raw.profession) ?? {
+    id: raw.profession_id,
+    en_name: raw.profession_en_name,
+    name: raw.profession_name
+  }
+
+  return {
+    id: String(raw.id),
+    description: toNullableString(raw.description),
+    person: normalizeMoviePersonCard(personRaw),
+    profession: normalizeMovieProfession(professionRaw)
+  }
+}
+
+export function normalizeMoviePerson(raw: Record<string, unknown>): IMoviePerson {
+  const professionRaw = asRecord(raw.profession)
+
+  return {
+    id: String(raw.id),
+    kp_id: Number(raw.kp_id ?? 0),
+    name: String(raw.name ?? ''),
+    en_name: toNullableString(raw.en_name),
+    photo: toNullableString(raw.photo),
+    profession: professionRaw ? normalizeMovieProfession(professionRaw) : null,
+    professions: asRecords(raw.professions).map(normalizeMovieProfession),
+    movies: asRecords(raw.movies).map(normalizeMovie)
+  }
+}
+
+export function mapMoviePersonResponse(response: IJsonApiResponse): IMoviePerson {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Person not found')
+  }
+
+  return normalizeMoviePerson(raw)
 }
 
 export function mapMovieGenresResponse(response: IJsonApiResponse): IMovieGenre[] {

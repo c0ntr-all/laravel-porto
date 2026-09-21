@@ -14,6 +14,8 @@ export interface IMovieCountry {
   image: string | null
 }
 
+import { IMovieCredit } from './person'
+
 export interface IMovie {
   id: string
   kp_id: number
@@ -29,6 +31,7 @@ export interface IMovie {
   updated_at: string | null
   genres: IMovieGenre[]
   countries: IMovieCountry[]
+  credits: IMovieCredit[]
 }
 
 export interface IMovieListQuery {

@@ -33,6 +33,7 @@ class MovieTransformer extends TransformerAbstract
             'kp_img' => $movie->kp_img,
             'created_at' => $movie->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $movie->updated_at?->format('Y-m-d H:i:s'),
+            'credits' => $this->mapCredits($movie),
         ];
     }
 
@@ -51,5 +52,46 @@ class MovieTransformer extends TransformerAbstract
         $movie->loadMissing('persons');
 
         return $this->collection($movie->persons, new PersonTransformer(), ContainerAliasEnum::MOVIE_PERSON->value);
+    }
+
+    /**
+     * @return list<array{
+     *     id: int,
+     *     description: string|null,
+     *     person: array{id: int, name: string, en_name: string|null, photo: string|null},
+     *     profession: array{id: int, en_name: string, name: string|null}
+     * }>
+     */
+    private function mapCredits(Movie $movie): array
+    {
+        if (!$movie->relationLoaded('credits')) {
+            return [];
+        }
+
+        $credits = [];
+
+        foreach ($movie->credits as $credit) {
+            if ($credit->person === null || $credit->profession === null) {
+                continue;
+            }
+
+            $credits[] = [
+                'id' => $credit->id,
+                'description' => $credit->description,
+                'person' => [
+                    'id' => $credit->person->id,
+                    'name' => $credit->person->name,
+                    'en_name' => $credit->person->en_name,
+                    'photo' => $credit->person->photo,
+                ],
+                'profession' => [
+                    'id' => $credit->profession->id,
+                    'en_name' => $credit->profession->en_name,
+                    'name' => $credit->profession->name,
+                ],
+            ];
+        }
+
+        return $credits;
     }
 }

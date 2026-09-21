@@ -13,7 +13,7 @@ class GetMovieAction extends BaseAction
 {
     public function handle(Movie $movie): Movie
     {
-        return $movie->load(['genres', 'countries']);
+        return $movie->load(['genres', 'countries', 'credits.person', 'credits.profession']);
     }
 
     public function asController(Movie $movie, GetRequest $request): JsonResponse

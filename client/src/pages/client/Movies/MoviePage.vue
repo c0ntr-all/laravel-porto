@@ -11,49 +11,50 @@
       <q-skeleton type="text" width="90%" />
       <q-skeleton type="text" width="80%" />
     </div>
+    <div class="movie-page-skeleton__aside">
+      <q-skeleton type="text" width="70%" />
+      <q-skeleton type="text" width="90%" />
+      <q-skeleton type="text" width="80%" />
+    </div>
   </div>
 
   <template v-else-if="movieStore.movie">
-    <div class="movie-head">
-      <div class="movie-head__poster">
+    <div class="movie-page" :class="{ 'movie-page--no-aside': !hasActors }">
+      <div class="movie-page__poster">
         <q-img
           v-if="poster"
           :src="poster"
           :alt="movieStore.movie.title"
-          class="movie-head__image"
+          class="movie-page__image"
           fit="cover"
         >
           <template #error>
-            <div class="movie-head__placeholder">
+            <div class="movie-page__placeholder">
               <q-icon name="movie" size="48px" />
             </div>
           </template>
         </q-img>
-        <div v-else class="movie-head__placeholder">
+        <div v-else class="movie-page__placeholder">
           <q-icon name="movie" size="48px" />
         </div>
       </div>
 
-      <div class="movie-head__info">
-        <h1 class="movie-head__title">{{ movieStore.movie.title }}</h1>
-        <div class="movie-head__meta">
+      <div class="movie-page__main">
+        <h1 class="movie-page__title">{{ movieStore.movie.title }}</h1>
+        <div class="movie-page__meta">
           <q-chip color="primary" text-color="white" dense>
             {{ typeLabel }}
           </q-chip>
           <span v-if="movieStore.movie.year">{{ movieStore.movie.year }}</span>
-          <span v-if="ratingLabel" class="movie-head__rating">
+          <span v-if="ratingLabel" class="movie-page__rating">
             <q-icon name="star" size="18px" color="amber" />
             {{ ratingLabel }}
           </span>
         </div>
-        <div v-if="countriesLabel" class="movie-head__line">
+        <div v-if="countriesLabel" class="movie-page__line">
           {{ countriesLabel }}
         </div>
-        <div class="movie-head__description">
-          <p v-if="movieStore.movie.description">{{ movieStore.movie.description }}</p>
-          <p v-else class="text-grey-5">Описание отсутствует</p>
-        </div>
-        <div v-if="movieStore.movie.genres.length" class="movie-head__genres">
+        <div v-if="movieStore.movie.genres.length" class="movie-page__genres">
           <q-chip
             v-for="genre in movieStore.movie.genres"
             :key="genre.id"
@@ -65,7 +66,33 @@
             {{ genre.name }}
           </q-chip>
         </div>
+        <q-btn
+          v-if="kinopoiskUrl"
+          class="movie-page__kinopoisk"
+          unelevated
+          no-caps
+          color="primary"
+          icon="open_in_new"
+          label="Перейти на Кинопоиск"
+          :href="kinopoiskUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+
+        <div class="movie-page__description">
+          <p v-if="movieStore.movie.description">{{ movieStore.movie.description }}</p>
+          <p v-else class="text-grey-5">Описание отсутствует</p>
+        </div>
+
+        <MovieCrewSection :credits="movieStore.movie.credits" :movie-id="movieStore.movie.id" />
       </div>
+
+      <MovieActorsSidebar
+        v-if="hasActors"
+        class="movie-page__aside"
+        :movie-id="movieStore.movie.id"
+        :credits="movieStore.movie.credits"
+      />
     </div>
   </template>
 
@@ -82,8 +109,12 @@ import { computed, watch } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
 import { MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
+import { movieActorCredits } from 'src/utils/movieCredits'
+import { kinopoiskMovieUrl } from 'src/utils/kinopoisk'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import MovieActorsSidebar from 'src/components/client/Movies/MovieActorsSidebar.vue'
+import MovieCrewSection from 'src/components/client/Movies/MovieCrewSection.vue'
 
 const props = defineProps<{
   id: string
@@ -107,6 +138,12 @@ const ratingLabel = computed(() => {
 const countriesLabel = computed(() => (
   movieStore.movie?.countries.map(country => country.name).filter(Boolean).join(', ') ?? ''
 ))
+const hasActors = computed(() => movieActorCredits(movieStore.movie?.credits ?? []).length > 0)
+const kinopoiskUrl = computed(() => (
+  movieStore.movie
+    ? kinopoiskMovieUrl(movieStore.movie.kp_id, movieStore.movie.type)
+    : null
+))
 
 watch(
   () => props.id,
@@ -119,30 +156,23 @@ watch(
 
 <style lang="scss" scoped>
 .movie-page-skeleton,
-.movie-head {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
+.movie-page {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(220px, 280px);
+  gap: 2rem;
+  align-items: start;
 }
 
 .movie-page-skeleton__poster,
-.movie-head__poster {
+.movie-page__poster {
   width: 220px;
   max-width: 100%;
   aspect-ratio: 2 / 3;
   border-radius: 16px;
   overflow: hidden;
-  flex-shrink: 0;
 }
 
-.movie-page-skeleton__info,
-.movie-head__info {
-  flex: 1 1 280px;
-  min-width: 0;
-}
-
-.movie-head {
+.movie-page {
   &__image,
   &__placeholder {
     height: 100%;
@@ -161,6 +191,7 @@ watch(
     margin: 0 0 0.75rem;
     font-size: 2rem;
     line-height: 1.2;
+    font-weight: 700;
     color: #282f53;
   }
 
@@ -187,8 +218,19 @@ watch(
     color: #777a8f;
   }
 
+  &__genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+
+  &__kinopoisk {
+    margin-bottom: 1rem;
+  }
+
   &__description {
-    margin: 0 0 1rem;
+    margin: 0;
     color: #282f53;
     font-size: 15px;
     line-height: 1.55;
@@ -199,10 +241,41 @@ watch(
     }
   }
 
-  &__genres {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  &__aside {
+    padding-left: 8px;
+    border-left: 1px solid rgba(40, 47, 83, 0.08);
+  }
+
+  &--no-aside {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .movie-page-skeleton,
+  .movie-page {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .movie-page__aside,
+  .movie-page-skeleton__aside {
+    grid-column: 1 / -1;
+    border-left: none;
+    padding-left: 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(40, 47, 83, 0.08);
+  }
+}
+
+@media (max-width: 700px) {
+  .movie-page-skeleton,
+  .movie-page {
+    grid-template-columns: 1fr;
+  }
+
+  .movie-page-skeleton__poster,
+  .movie-page__poster {
+    width: 180px;
   }
 }
 </style>

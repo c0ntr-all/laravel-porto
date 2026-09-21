@@ -1,4 +1,16 @@
+import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
+
 const KP_ID_IN_PATH = /\/(?:film|series)\/(\d+)/i
+
+export function kinopoiskMovieUrl(kpId: number, type: MovieTypeEnum): string | null {
+  if (!Number.isInteger(kpId) || kpId < 1) {
+    return null
+  }
+
+  const kind = type === MovieTypeEnum.MOVIE ? 'film' : 'series'
+
+  return `https://www.kinopoisk.ru/${kind}/${kpId}`
+}
 
 export function parseKinopoiskId(value: string | number | null | undefined): number | null {
   if (typeof value === 'number') {

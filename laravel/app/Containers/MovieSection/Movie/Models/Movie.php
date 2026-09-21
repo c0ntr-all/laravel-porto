@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Genre> $genres
  * @property-read Collection<int, Country> $countries
  * @property-read Collection<int, Person> $persons
+ * @property-read Collection<int, MoviePersonCredit> $credits
  */
 class Movie extends Model
 {
@@ -97,5 +99,10 @@ class Movie extends Model
         )
             ->withPivot(['profession_id', 'description'])
             ->withTimestamps();
+    }
+
+    public function credits(): HasMany
+    {
+        return $this->hasMany(MoviePersonCredit::class, 'movie_id')->orderBy('id');
     }
 }

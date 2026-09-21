@@ -20,7 +20,11 @@ class MovieRepository
             ->allowedFilters($this->allowedFilters())
             ->allowedSorts(['title', 'year', 'kp_rating', 'created_at'])
             ->allowedIncludes(['genres', 'countries', 'persons'])
-            ->with(['genres', 'countries'])
+            ->with([
+                'genres',
+                'countries',
+                'folders' => Movie::constrainFoldersToCurrentUser(),
+            ])
             ->defaultSort('-created_at')
             ->orderByDesc('id')
             ->cursorPaginate(24);

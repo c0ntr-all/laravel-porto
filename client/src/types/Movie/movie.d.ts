@@ -33,6 +33,7 @@ export interface IMovie {
   genres: IMovieGenre[]
   countries: IMovieCountry[]
   actors_count: number
+  folder_slugs: string[]
   credits: IMovieCredit[]
 }
 

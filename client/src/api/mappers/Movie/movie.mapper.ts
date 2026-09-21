@@ -5,6 +5,7 @@ import {
   IMovieCredit,
   IMovieGenre,
   IMovieImport,
+  IMovieFolder,
   IMoviePerson,
   IMovieProfession
 } from 'src/types/Movie'
@@ -28,6 +29,16 @@ function asRecords(value: unknown): Record<string, unknown>[] {
   }
 
   return []
+}
+
+function asStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map(item => String(item ?? '').trim())
+    .filter(Boolean)
 }
 
 function toNullableNumber(value: unknown): number | null {
@@ -92,6 +103,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     genres: asRecords(raw.genres).map(normalizeMovieGenre),
     countries: asRecords(raw.countries).map(normalizeMovieCountry),
     actors_count: Number(raw.actors_count ?? 0),
+    folder_slugs: asStrings(raw.folder_slugs),
     credits: asRecords(raw.credits).map(normalizeMovieCredit)
   }
 }
@@ -112,6 +124,33 @@ export function mapMovieResponse(response: IJsonApiResponse): IMovie {
 
 export function mapMovieCreditsResponse(response: IJsonApiResponse): IMovieCredit[] {
   return mapResponse(response).map(normalizeMovieCredit)
+}
+
+export function normalizeMovieFolder(raw: Record<string, unknown>): IMovieFolder {
+  return {
+    id: String(raw.id),
+    user_id: Number(raw.user_id ?? 0),
+    name: String(raw.name ?? ''),
+    slug: toNullableString(raw.slug),
+    is_system: Boolean(raw.is_system),
+    movies_count: Number(raw.movies_count ?? 0),
+    created_at: toNullableString(raw.created_at),
+    updated_at: toNullableString(raw.updated_at)
+  }
+}
+
+export function mapMovieFoldersResponse(response: IJsonApiResponse): IMovieFolder[] {
+  return mapResponse(response).map(normalizeMovieFolder)
+}
+
+export function mapMovieFolderResponse(response: IJsonApiResponse): IMovieFolder {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Folder not found')
+  }
+
+  return normalizeMovieFolder(raw)
 }
 
 export function moviePosterUrl(movie: Pick<IMovie, 'cover' | 'kp_img'>): string | null {

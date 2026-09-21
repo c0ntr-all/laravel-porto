@@ -136,4 +136,22 @@ class Movie extends Model
             ->withPivot(['added_at'])
             ->withTimestamps();
     }
+
+    /**
+     * @return \Closure(\Illuminate\Database\Eloquent\Relations\BelongsToMany): void
+     */
+    public static function constrainFoldersToCurrentUser(): \Closure
+    {
+        $userId = auth()->id();
+
+        return static function ($query) use ($userId): void {
+            if ($userId === null) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $query->where('movie_folders.user_id', $userId);
+        };
+    }
 }

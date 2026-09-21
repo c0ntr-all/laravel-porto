@@ -132,6 +132,31 @@ export const useMovieStore = defineStore('movies', () => {
     }
   }
 
+  function setMovieFolderSlug(movieId: string, slug: string, present: boolean): void {
+    const apply = (item: IMovie): IMovie => {
+      const slugs = new Set(item.folder_slugs ?? [])
+
+      if (present) {
+        slugs.add(slug)
+      } else {
+        slugs.delete(slug)
+      }
+
+      return {
+        ...item,
+        folder_slugs: [...slugs]
+      }
+    }
+
+    movies.value = movies.value.map(item => (
+      item.id === movieId ? apply(item) : item
+    ))
+
+    if (movie.value?.id === movieId) {
+      movie.value = apply(movie.value)
+    }
+  }
+
   return {
     movies,
     movie,
@@ -146,6 +171,7 @@ export const useMovieStore = defineStore('movies', () => {
     listType,
     getMovies,
     getMovie,
-    getMovieCredits
+    getMovieCredits,
+    setMovieFolderSlug
   }
 })

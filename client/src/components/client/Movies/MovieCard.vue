@@ -27,6 +27,8 @@
         <q-icon name="star" size="14px" />
         {{ ratingLabel }}
       </div>
+
+      <MovieFolderActions variant="overlay" :movie="movie" />
     </div>
 
     <div class="movie-card__meta">
@@ -70,6 +72,7 @@ import { computed } from 'vue'
 import { IMovie } from 'src/types/Movie'
 import { MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
+import MovieFolderActions from 'src/components/client/Movies/MovieFolderActions.vue'
 
 const props = defineProps<{
   movie: IMovie
@@ -110,6 +113,19 @@ const countriesLabel = computed(() => (
 
     .movie-card__title {
       color: $primary;
+    }
+  }
+
+  @media (hover: hover) {
+    .movie-folder-actions {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+
+    &:hover .movie-folder-actions {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 

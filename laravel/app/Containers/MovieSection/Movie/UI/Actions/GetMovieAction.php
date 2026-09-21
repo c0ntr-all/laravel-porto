@@ -16,7 +16,11 @@ class GetMovieAction extends BaseAction
 
     public function handle(Movie $movie): Movie
     {
-        $movie->load(['genres', 'countries']);
+        $movie->load([
+            'genres',
+            'countries',
+            'folders' => Movie::constrainFoldersToCurrentUser(),
+        ]);
         $movie->loadCount([
             'credits as actors_count' => function ($query): void {
                 $query->whereHas('profession', function ($profession): void {

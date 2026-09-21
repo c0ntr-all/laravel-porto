@@ -1,64 +1,68 @@
 <template>
-  <router-link
-    class="movie-card-row"
-    :to="{ name: 'movie', params: { id: movie.id } }"
-  >
-    <div class="movie-card-row__poster">
-      <q-img
-        v-if="poster"
-        :src="poster"
-        :alt="movie.title"
-        class="movie-card-row__image"
-        fit="cover"
-      >
-        <template #error>
-          <div class="movie-card-row__placeholder">
-            <q-icon name="movie" size="28px" />
-          </div>
-        </template>
-      </q-img>
-      <div v-else class="movie-card-row__placeholder">
-        <q-icon name="movie" size="28px" />
-      </div>
-    </div>
-
-    <div class="movie-card-row__body">
-      <div class="movie-card-row__head">
-        <div class="movie-card-row__title" :title="movie.title">{{ movie.title }}</div>
-        <div v-if="ratingLabel" class="movie-card-row__rating">
-          <q-icon name="star" size="16px" color="amber" />
-          {{ ratingLabel }}
+  <div class="movie-card-row">
+    <router-link
+      class="movie-card-row__main"
+      :to="{ name: 'movie', params: { id: movie.id } }"
+    >
+      <div class="movie-card-row__poster">
+        <q-img
+          v-if="poster"
+          :src="poster"
+          :alt="movie.title"
+          class="movie-card-row__image"
+          fit="cover"
+        >
+          <template #error>
+            <div class="movie-card-row__placeholder">
+              <q-icon name="movie" size="28px" />
+            </div>
+          </template>
+        </q-img>
+        <div v-else class="movie-card-row__placeholder">
+          <q-icon name="movie" size="28px" />
         </div>
       </div>
 
-      <div class="movie-card-row__subtitle">
-        <q-chip color="primary" text-color="white" size="sm" dense>
-          {{ typeLabel }}
-        </q-chip>
-        <span v-if="movie.year">{{ movie.year }}</span>
-        <span v-if="countriesLabel" class="movie-card-row__dot">·</span>
-        <span v-if="countriesLabel" :title="countriesLabel">{{ countriesLabel }}</span>
-      </div>
+      <div class="movie-card-row__body">
+        <div class="movie-card-row__head">
+          <div class="movie-card-row__title" :title="movie.title">{{ movie.title }}</div>
+          <div v-if="ratingLabel" class="movie-card-row__rating">
+            <q-icon name="star" size="16px" color="amber" />
+            {{ ratingLabel }}
+          </div>
+        </div>
 
-      <div v-if="movie.short_description" class="movie-card-row__description">
-        {{ movie.short_description }}
-      </div>
+        <div class="movie-card-row__subtitle">
+          <q-chip color="primary" text-color="white" size="sm" dense>
+            {{ typeLabel }}
+          </q-chip>
+          <span v-if="movie.year">{{ movie.year }}</span>
+          <span v-if="countriesLabel" class="movie-card-row__dot">·</span>
+          <span v-if="countriesLabel" :title="countriesLabel">{{ countriesLabel }}</span>
+        </div>
 
-      <div v-if="movie.genres.length" class="movie-card-row__genres">
-        <q-chip
-          v-for="genre in movie.genres"
-          :key="genre.id"
-          size="sm"
-          dense
-          outline
-          color="primary"
-          text-color="primary"
-        >
-          {{ genre.name }}
-        </q-chip>
+        <div v-if="movie.short_description" class="movie-card-row__description">
+          {{ movie.short_description }}
+        </div>
+
+        <div v-if="movie.genres.length" class="movie-card-row__genres">
+          <q-chip
+            v-for="genre in movie.genres"
+            :key="genre.id"
+            size="sm"
+            dense
+            outline
+            color="primary"
+            text-color="primary"
+          >
+            {{ genre.name }}
+          </q-chip>
+        </div>
       </div>
-    </div>
-  </router-link>
+    </router-link>
+
+    <MovieFolderActions variant="row" :movie="movie" />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -66,6 +70,7 @@ import { computed } from 'vue'
 import { IMovie } from 'src/types/Movie'
 import { MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
+import MovieFolderActions from 'src/components/client/Movies/MovieFolderActions.vue'
 
 const props = defineProps<{
   movie: IMovie
@@ -96,8 +101,6 @@ const countriesLabel = computed(() => (
   background: #fff;
   border: 1px solid rgba(40, 47, 83, 0.08);
   box-shadow: 0 6px 16px rgba(40, 47, 83, 0.06);
-  color: inherit;
-  text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
@@ -111,6 +114,16 @@ const countriesLabel = computed(() => (
     .movie-card-row__title {
       color: $primary;
     }
+  }
+
+  &__main {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    min-width: 0;
+    flex: 1;
+    color: inherit;
+    text-decoration: none;
   }
 
   &__poster {

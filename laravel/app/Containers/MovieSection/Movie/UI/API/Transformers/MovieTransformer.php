@@ -35,6 +35,7 @@ class MovieTransformer extends TransformerAbstract
             'created_at' => $movie->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $movie->updated_at?->format('Y-m-d H:i:s'),
             'actors_count' => (int) ($movie->actors_count ?? 0),
+            'folder_slugs' => $this->mapFolderSlugs($movie),
             'credits' => $this->mapCredits($movie),
         ];
     }
@@ -54,6 +55,22 @@ class MovieTransformer extends TransformerAbstract
         $movie->loadMissing('persons');
 
         return $this->collection($movie->persons, new PersonTransformer(), ContainerAliasEnum::MOVIE_PERSON->value);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function mapFolderSlugs(Movie $movie): array
+    {
+        if (!$movie->relationLoaded('folders')) {
+            return [];
+        }
+
+        return $movie->folders
+            ->pluck('slug')
+            ->filter(static fn ($slug) => is_string($slug) && $slug !== '')
+            ->values()
+            ->all();
     }
 
     /**

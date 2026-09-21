@@ -96,6 +96,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
+import { useMovieFolderStore } from 'src/stores/modules/movieFolderStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
@@ -105,6 +106,7 @@ import MoviesPageSkeleton from 'src/pages/client/Movies/MoviesPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const movieStore = useMovieStore()
+const folderStore = useMovieFolderStore()
 const searchText = ref(movieStore.listTitle)
 const typeFilter = ref<MovieTypeEnum | 'all'>(movieStore.listType ?? 'all')
 const viewMode = ref(MoviesViewModeEnum.TILE)
@@ -145,6 +147,8 @@ function onTypeChange(): void {
 }
 
 onMounted(() => {
+  void folderStore.getFolders()
+
   if (!movieStore.movies.length) {
     void movieStore.getMovies({
       title: searchText.value,

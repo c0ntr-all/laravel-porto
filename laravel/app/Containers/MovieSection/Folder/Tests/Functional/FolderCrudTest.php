@@ -88,6 +88,27 @@ class FolderCrudTest extends TestCase
         $this->assertDatabaseMissing('movie_folders', ['id' => $folderId]);
     }
 
+    public function test_movie_list_includes_current_user_folder_slugs(): void
+    {
+        $watchlist = Folder::query()
+            ->where('user_id', $this->user->id)
+            ->where('slug', SystemMovieFolderEnum::WATCHLIST->value)
+            ->firstOrFail();
+        $movie = Movie::factory()->create(['title' => 'Folder Marker']);
+
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/folders/'.$watchlist->id.'/movies', [
+                'movie_id' => $movie->id,
+            ])
+            ->assertOk();
+
+        $list = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/movies?filter[title]=Folder Marker');
+
+        $list->assertOk();
+        $this->assertSame(['watchlist'], $list->json('data.0.attributes.folder_slugs'));
+    }
+
     public function test_system_folders_cannot_be_renamed_or_deleted(): void
     {
         $folder = Folder::query()

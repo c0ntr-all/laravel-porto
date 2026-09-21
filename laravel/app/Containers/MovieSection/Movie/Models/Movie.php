@@ -6,6 +6,7 @@ use App\Containers\AppSection\Country\Models\Country;
 use App\Containers\MovieSection\Genre\Models\Genre;
 use App\Containers\MovieSection\Genre\Models\Traits\HasGenres;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
+use App\Containers\MovieSection\Person\Models\Person;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Genre> $genres
  * @property-read Collection<int, Country> $countries
+ * @property-read Collection<int, Person> $persons
  */
 class Movie extends Model
 {
@@ -66,6 +68,7 @@ class Movie extends Model
     {
         static::deleting(function (Movie $movie): void {
             $movie->countries()->detach();
+            $movie->persons()->detach();
 
             DB::table('lifelog_post_subjectables')
                 ->where('subjectable_type', $movie->getMorphClass())
@@ -82,5 +85,17 @@ class Movie extends Model
             'movie_id',
             'country_id',
         )->withTimestamps();
+    }
+
+    public function persons(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Person::class,
+            'movie_person',
+            'movie_id',
+            'person_id',
+        )
+            ->withPivot(['profession_id', 'description'])
+            ->withTimestamps();
     }
 }

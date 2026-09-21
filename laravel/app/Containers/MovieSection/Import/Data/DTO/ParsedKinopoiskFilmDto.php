@@ -10,6 +10,7 @@ class ParsedKinopoiskFilmDto extends Data
     /**
      * @param list<ParsedGenreDto> $genres
      * @param list<string> $countries
+     * @param list<ParsedPersonDto> $persons
      */
     public function __construct(
         public int $kp_id,
@@ -23,6 +24,7 @@ class ParsedKinopoiskFilmDto extends Data
         public ?float $kp_rating = null,
         public array $genres = [],
         public array $countries = [],
+        public array $persons = [],
         public string $source_url = '',
     ) {
     }

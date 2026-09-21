@@ -55,6 +55,10 @@ class MovieImportLogMeta
                 'short_description' => $parsed->short_description,
                 'genres' => array_map(static fn ($genre) => $genre->name, $parsed->genres),
                 'countries' => $parsed->countries,
+                'persons' => array_map(
+                    static fn ($person) => $person->name.' ('.$person->en_profession.')',
+                    $parsed->persons,
+                ),
             ] : null),
         ];
 

@@ -65,6 +65,8 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::MOVIE_GENRE->value => 'App\Containers\MovieSection\Genre\Models\Genre',
             ContainerAliasEnum::COUNTRY->value => 'App\Containers\AppSection\Country\Models\Country',
             ContainerAliasEnum::MOVIE_IMPORT->value => 'App\Containers\MovieSection\Import\Models\MovieImport',
+            ContainerAliasEnum::MOVIE_PERSON->value => 'App\Containers\MovieSection\Person\Models\Person',
+            ContainerAliasEnum::MOVIE_PROFESSION->value => 'App\Containers\MovieSection\Profession\Models\Profession',
             // JSON:API resource names that may have been stored as morph types
             'albums' => 'App\Containers\GallerySection\Album\Models\Album',
             'images' => 'App\Containers\GallerySection\Image\Models\Image',

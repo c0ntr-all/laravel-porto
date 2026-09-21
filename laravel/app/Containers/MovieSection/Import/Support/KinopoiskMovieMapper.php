@@ -4,8 +4,10 @@ namespace App\Containers\MovieSection\Import\Support;
 
 use App\Containers\MovieSection\Import\Data\DTO\ParsedGenreDto;
 use App\Containers\MovieSection\Import\Data\DTO\ParsedKinopoiskFilmDto;
+use App\Containers\MovieSection\Import\Data\DTO\ParsedPersonDto;
 use App\Containers\MovieSection\Import\Exceptions\KinopoiskParseException;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
+use Illuminate\Support\Str;
 
 class KinopoiskMovieMapper
 {
@@ -59,6 +61,7 @@ class KinopoiskMovieMapper
             kp_rating: $this->rating($rating),
             genres: $this->namedList($data['genres'] ?? []),
             countries: $this->namedValues($data['countries'] ?? []),
+            persons: $this->persons(is_array($data['persons'] ?? null) ? $data['persons'] : []),
             source_url: $sourceUrl,
         );
     }
@@ -125,5 +128,46 @@ class KinopoiskMovieMapper
         }
 
         return array_values(array_unique($names));
+    }
+
+    /**
+     * @param list<mixed> $items
+     * @return list<ParsedPersonDto>
+     */
+    private function persons(array $items): array
+    {
+        $persons = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $kpId = isset($item['id']) && is_numeric($item['id']) ? (int) $item['id'] : null;
+            $profession = $this->firstString([$item['profession'] ?? null]);
+            $enProfession = $this->firstString([$item['enProfession'] ?? null]);
+            if ($enProfession === null && $profession !== null) {
+                $enProfession = Str::slug($profession);
+            }
+            $name = $this->firstString([
+                $item['name'] ?? null,
+                $item['enName'] ?? null,
+            ]);
+
+            if ($kpId === null || $kpId < 1 || $name === null || $enProfession === null || $enProfession === '') {
+                continue;
+            }
+
+            $persons[] = new ParsedPersonDto(
+                kp_id: $kpId,
+                name: $name,
+                en_profession: $enProfession,
+                en_name: $this->firstString([$item['enName'] ?? null]),
+                photo: $this->firstString([$item['photo'] ?? null]),
+                profession: $profession,
+                description: $this->firstString([$item['description'] ?? null]),
+            );
+        }
+
+        return $persons;
     }
 }

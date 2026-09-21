@@ -5,6 +5,7 @@ namespace App\Containers\MovieSection\Movie\UI\API\Transformers;
 use App\Containers\AppSection\Country\UI\API\Transformers\CountryTransformer;
 use App\Containers\MovieSection\Genre\UI\API\Transformers\GenreTransformer;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\MovieSection\Person\UI\API\Transformers\PersonTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\TransformerAbstract;
@@ -14,6 +15,7 @@ class MovieTransformer extends TransformerAbstract
     protected array $availableIncludes = [
         'genres',
         'countries',
+        'persons',
     ];
 
     public function transform(Movie $movie): array
@@ -42,5 +44,12 @@ class MovieTransformer extends TransformerAbstract
     public function includeCountries(Movie $movie): Collection
     {
         return $this->collection($movie->countries, new CountryTransformer(), ContainerAliasEnum::COUNTRY->value);
+    }
+
+    public function includePersons(Movie $movie): Collection
+    {
+        $movie->loadMissing('persons');
+
+        return $this->collection($movie->persons, new PersonTransformer(), ContainerAliasEnum::MOVIE_PERSON->value);
     }
 }

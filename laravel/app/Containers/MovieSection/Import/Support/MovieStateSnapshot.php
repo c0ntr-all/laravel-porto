@@ -19,12 +19,13 @@ class MovieStateSnapshot
      *     kp_rating: float|null,
      *     kp_img: string|null,
      *     genres: list<string>,
-     *     countries: list<string>
+     *     countries: list<string>,
+     *     persons: list<string>
      * }
      */
     public static function fromMovie(Movie $movie): array
     {
-        $movie->loadMissing(['genres', 'countries']);
+        $movie->loadMissing(['genres', 'countries', 'persons']);
 
         return [
             'id' => (int) $movie->id,
@@ -39,6 +40,11 @@ class MovieStateSnapshot
             'kp_img' => $movie->kp_img,
             'genres' => $movie->genres->pluck('name')->sort()->values()->all(),
             'countries' => $movie->countries->pluck('name')->sort()->values()->all(),
+            'persons' => $movie->persons
+                ->map(static fn ($person) => $person->name.'|'.(string) $person->pivot->profession_id)
+                ->sort()
+                ->values()
+                ->all(),
         ];
     }
 
@@ -54,7 +60,7 @@ class MovieStateSnapshot
         }
 
         $changes = [];
-        foreach (['title', 'description', 'short_description', 'year', 'type', 'cover', 'kp_rating', 'kp_img', 'genres', 'countries'] as $key) {
+        foreach (['title', 'description', 'short_description', 'year', 'type', 'cover', 'kp_rating', 'kp_img', 'genres', 'countries', 'persons'] as $key) {
             $old = $before[$key] ?? null;
             $new = $after[$key] ?? null;
             if (self::same($old, $new)) {

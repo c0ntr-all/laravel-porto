@@ -8,6 +8,7 @@ use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 use Spatie\QueryBuilder\AllowedFilter;
 
@@ -18,7 +19,7 @@ class MovieRepository
         return QueryBuilder::for(Movie::class, request())
             ->allowedFilters($this->allowedFilters())
             ->allowedSorts(['title', 'year', 'kp_rating', 'created_at'])
-            ->allowedIncludes(['genres', 'countries'])
+            ->allowedIncludes(['genres', 'countries', 'persons'])
             ->with(['genres', 'countries'])
             ->defaultSort('-created_at')
             ->orderByDesc('id')
@@ -32,7 +33,7 @@ class MovieRepository
             $query->lockForUpdate();
         }
 
-        return $query->first()?->load(['genres', 'countries']);
+        return $query->first()?->load(['genres', 'countries', 'persons']);
     }
 
     public function create(MovieCreateData $dto): Movie
@@ -88,6 +89,26 @@ class MovieRepository
     public function syncCountries(Movie $movie, array $countryIds): array
     {
         return $movie->countries()->sync($countryIds);
+    }
+
+    /**
+     * @param list<array{person_id: int, profession_id: int, description: ?string}> $rows
+     */
+    public function syncPersons(Movie $movie, array $rows): void
+    {
+        DB::table('movie_person')->where('movie_id', $movie->id)->delete();
+
+        $now = now();
+        foreach ($rows as $row) {
+            DB::table('movie_person')->insert([
+                'movie_id' => $movie->id,
+                'person_id' => $row['person_id'],
+                'profession_id' => $row['profession_id'],
+                'description' => $row['description'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 
     /**

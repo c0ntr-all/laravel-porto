@@ -73,6 +73,16 @@ class ImportMovieFromKinopoiskTest extends TestCase
         $this->assertDatabaseHas('countries', ['name' => 'США']);
         $this->assertDatabaseCount('movie_genre', 2);
         $this->assertDatabaseCount('movie_country', 1);
+        $this->assertDatabaseHas('movie_persons', [
+            'kp_id' => 7987,
+            'name' => 'Аль Пачино',
+            'en_name' => 'Al Pacino',
+        ]);
+        $this->assertDatabaseHas('movie_professions', [
+            'en_name' => 'actor',
+            'name' => 'актеры',
+        ]);
+        $this->assertDatabaseCount('movie_person', 2);
         $this->assertDatabaseHas('movie_imports', [
             'user_id' => $this->user->id,
             'kp_id' => 325,
@@ -258,6 +268,25 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ],
             'countries' => [
                 ['id' => 1, 'name' => 'США'],
+            ],
+            'persons' => [
+                [
+                    'id' => 7987,
+                    'photo' => 'https://example.com/pacino.jpg',
+                    'name' => 'Аль Пачино',
+                    'enName' => 'Al Pacino',
+                    'description' => 'Michael Corleone',
+                    'profession' => 'актеры',
+                    'enProfession' => 'actor',
+                ],
+                [
+                    'id' => 24264,
+                    'photo' => 'https://example.com/coppola.jpg',
+                    'name' => 'Фрэнсис Форд Коппола',
+                    'enName' => 'Francis Ford Coppola',
+                    'profession' => 'режиссеры',
+                    'enProfession' => 'director',
+                ],
             ],
         ];
     }

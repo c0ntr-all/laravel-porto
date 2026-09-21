@@ -23,6 +23,14 @@ class KinopoiskMovieMapperTest extends TestCase
             'rating' => ['kp' => 8.709],
             'genres' => [['id' => 8, 'name' => 'драма']],
             'countries' => [['id' => 1, 'name' => 'США']],
+            'persons' => [[
+                'id' => 7987,
+                'name' => 'Аль Пачино',
+                'enName' => 'Al Pacino',
+                'photo' => 'https://example.com/pacino.jpg',
+                'profession' => 'актеры',
+                'enProfession' => 'actor',
+            ]],
         ], 325);
 
         $this->assertSame(325, $parsed->kp_id);
@@ -35,6 +43,10 @@ class KinopoiskMovieMapperTest extends TestCase
         $this->assertSame('драма', $parsed->genres[0]->name);
         $this->assertSame(8, $parsed->genres[0]->kp_id);
         $this->assertSame(['США'], $parsed->countries);
+        $this->assertCount(1, $parsed->persons);
+        $this->assertSame(7987, $parsed->persons[0]->kp_id);
+        $this->assertSame('actor', $parsed->persons[0]->en_profession);
+        $this->assertSame('актеры', $parsed->persons[0]->profession);
     }
 
     public function test_maps_tv_series_type(): void

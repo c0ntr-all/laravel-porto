@@ -15,6 +15,7 @@ use App\Containers\MovieSection\Import\Tasks\FetchKinopoiskMovieTask;
 use App\Containers\MovieSection\Import\Tasks\FinalizeMovieImportLogTask;
 use App\Containers\MovieSection\Import\Tasks\FindOrCreateCountriesFromParsedTask;
 use App\Containers\MovieSection\Import\Tasks\FindOrCreateGenresFromParsedTask;
+use App\Containers\MovieSection\Import\Tasks\FindOrCreatePersonsFromParsedTask;
 use App\Containers\MovieSection\Import\Tasks\MapKinopoiskMovieTask;
 use App\Containers\MovieSection\Import\Tasks\UpsertImportedMovieTask;
 use App\Containers\MovieSection\Import\UI\API\Requests\ImportRequest;
@@ -22,6 +23,7 @@ use App\Containers\MovieSection\Import\UI\API\Transformers\MovieImportTransforme
 use App\Containers\MovieSection\Movie\Data\Repositories\MovieRepository;
 use App\Containers\MovieSection\Movie\Tasks\SyncCountriesForMovieTask;
 use App\Containers\MovieSection\Movie\Tasks\SyncGenresForMovieTask;
+use App\Containers\MovieSection\Movie\Tasks\SyncPersonsForMovieTask;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
@@ -36,9 +38,11 @@ class ImportMovieFromKinopoiskAction extends BaseAction
         private readonly MapKinopoiskMovieTask $mapKinopoiskMovieTask,
         private readonly FindOrCreateGenresFromParsedTask $findOrCreateGenresFromParsedTask,
         private readonly FindOrCreateCountriesFromParsedTask $findOrCreateCountriesFromParsedTask,
+        private readonly FindOrCreatePersonsFromParsedTask $findOrCreatePersonsFromParsedTask,
         private readonly UpsertImportedMovieTask $upsertImportedMovieTask,
         private readonly SyncGenresForMovieTask $syncGenresForMovieTask,
         private readonly SyncCountriesForMovieTask $syncCountriesForMovieTask,
+        private readonly SyncPersonsForMovieTask $syncPersonsForMovieTask,
         private readonly FinalizeMovieImportLogTask $finalizeMovieImportLogTask,
         private readonly MovieRepository $movieRepository,
     ) {
@@ -65,6 +69,7 @@ class ImportMovieFromKinopoiskAction extends BaseAction
 
                 $genres = $this->findOrCreateGenresFromParsedTask->run($parsed->genres);
                 $countries = $this->findOrCreateCountriesFromParsedTask->run($parsed->countries);
+                $personRows = $this->findOrCreatePersonsFromParsedTask->run($parsed->persons);
                 $upserted = $this->upsertImportedMovieTask->run($parsed);
 
                 $this->syncGenresForMovieTask->run(
@@ -75,8 +80,9 @@ class ImportMovieFromKinopoiskAction extends BaseAction
                     $upserted['movie'],
                     array_map(static fn ($country) => (int) $country->id, $countries),
                 );
+                $this->syncPersonsForMovieTask->run($upserted['movie'], $personRows);
 
-                $movie = $upserted['movie']->load(['genres', 'countries']);
+                $movie = $upserted['movie']->load(['genres', 'countries', 'persons']);
                 $after = MovieStateSnapshot::fromMovie($movie);
 
                 return [
@@ -108,7 +114,7 @@ class ImportMovieFromKinopoiskAction extends BaseAction
                     $result['changes'],
                     $result['was_created'],
                 ),
-            )->load(['movie.genres', 'movie.countries']);
+            )->load(['movie.genres', 'movie.countries', 'movie.persons']);
         } catch (KinopoiskImportException $exception) {
             $failed = $this->finalizeMovieImportLogTask->run(
                 import: $import,
@@ -153,7 +159,7 @@ class ImportMovieFromKinopoiskAction extends BaseAction
         }
 
         return fractal($import, new MovieImportTransformer())
-            ->parseIncludes(['movie', 'movie.genres', 'movie.countries'])
+            ->parseIncludes(['movie', 'movie.genres', 'movie.countries', 'movie.persons'])
             ->withResourceName(ContainerAliasEnum::MOVIE_IMPORT->value)
             ->addMeta(['message' => $message])
             ->respond($status, [], JSON_PRETTY_PRINT);

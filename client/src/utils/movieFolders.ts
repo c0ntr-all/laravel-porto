@@ -25,9 +25,9 @@ export function sortedMovieFolders(folders: IMovieFolder[]): IMovieFolder[] {
 
   const rest = folders
     .filter(folder => (
-      folder.slug !== SystemMovieFolderEnum.WATCHLIST
-      && folder.slug !== SystemMovieFolderEnum.FAVORITES
-      && folder.slug !== SystemMovieFolderEnum.WATCHED
+      folder.slug !== SystemMovieFolderEnum.WATCHLIST &&
+      folder.slug !== SystemMovieFolderEnum.FAVORITES &&
+      folder.slug !== SystemMovieFolderEnum.WATCHED
     ))
     .slice()
     .sort((left, right) => left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' }))

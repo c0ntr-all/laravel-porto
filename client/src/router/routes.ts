@@ -158,6 +158,11 @@ const routes: RouteRecordRaw[] = [{
       name: 'movies',
       props: true
     }, {
+      path: '/movies/folders/:id',
+      component: () => import('pages/client/Movies/MovieFolderPage.vue'),
+      name: 'movie-folder',
+      props: true
+    }, {
       path: '/movies/persons/:id',
       component: () => import('pages/client/Movies/MoviePersonPage.vue'),
       name: 'movie-person',

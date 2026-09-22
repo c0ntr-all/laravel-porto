@@ -8,6 +8,28 @@ export const movieFolderApi = {
     return response.data
   },
 
+  async getFolder(id: string): Promise<IJsonApiResponse> {
+    const response = await api.get(`v1/movie/folders/${id}`)
+
+    return response.data
+  },
+
+  async getFolderMovies(
+    folderId: string,
+    query?: { page?: number, per_page?: number, sort?: string }
+  ): Promise<IJsonApiResponse> {
+    const response = await api.get(`v1/movie/folders/${folderId}/movies`, {
+      params: {
+        include: 'genres,countries',
+        per_page: query?.per_page ?? 24,
+        ...(query?.page ? { page: query.page } : {}),
+        ...(query?.sort ? { sort: query.sort } : {})
+      }
+    })
+
+    return response.data
+  },
+
   async attachMovie(folderId: string, movieId: string): Promise<IJsonApiResponse> {
     const response = await api.post(`v1/movie/folders/${folderId}/movies`, {
       movie_id: Number(movieId)

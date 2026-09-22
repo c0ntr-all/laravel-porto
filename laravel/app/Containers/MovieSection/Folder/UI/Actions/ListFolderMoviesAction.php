@@ -27,6 +27,7 @@ class ListFolderMoviesAction extends BaseAction
 
         return fractal($movies, new FolderMovieTransformer())
             ->withResourceName(ContainerAliasEnum::MOVIE->value)
+            ->parseIncludes(['genres', 'countries'])
             ->paginateWith(new IlluminatePaginatorAdapter($movies))
             ->addMeta($this->pageMeta($movies))
             ->respond(200, [], JSON_PRETTY_PRINT);

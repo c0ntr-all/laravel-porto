@@ -131,6 +131,11 @@ class FolderRepository
                 AllowedSort::field('year', 'movies.year'),
                 AllowedSort::field('kp_rating', 'movies.kp_rating'),
             ])
+            ->with([
+                'genres',
+                'countries',
+                'folders' => Movie::constrainFoldersToCurrentUser(),
+            ])
             ->defaultSort('-added_at')
             ->paginate($perPage)
             ->appends(request()->query());

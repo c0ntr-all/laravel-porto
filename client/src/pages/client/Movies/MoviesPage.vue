@@ -1,4 +1,5 @@
 <template>
+  <MoviesShell>
   <div class="movies-toolbar">
     <q-input
       v-model="searchText"
@@ -91,6 +92,7 @@
       body="Когда в каталоге появятся фильмы, они отобразятся здесь."
     />
   </q-card>
+  </MoviesShell>
 </template>
 
 <script lang="ts" setup>
@@ -102,6 +104,7 @@ import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
 import MovieCard from 'src/components/client/Movies/MovieCard.vue'
 import MovieCardRow from 'src/components/client/Movies/MovieCardRow.vue'
+import MoviesShell from 'src/components/client/Movies/MoviesShell.vue'
 import MoviesPageSkeleton from 'src/pages/client/Movies/MoviesPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 

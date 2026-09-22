@@ -90,6 +90,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           countries: [],
           actors_count: 0,
           folder_slugs: [],
+          folder_ids: [],
           credits: []
         }
       : null,

@@ -108,6 +108,7 @@ const displayMovie = computed((): IMovie => {
     countries: [],
     actors_count: 0,
     folder_slugs: [],
+    folder_ids: [],
     credits: []
   }
 })

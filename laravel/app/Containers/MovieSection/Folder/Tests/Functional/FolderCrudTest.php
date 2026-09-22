@@ -57,12 +57,12 @@ class FolderCrudTest extends TestCase
     {
         $created = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/movie/folders', [
-                'name' => 'Ночной просмотр',
+                'name' => 'НочнойПросмотр',
             ]);
 
         $created->assertCreated()
             ->assertJsonPath('data.type', 'movie_folders')
-            ->assertJsonPath('data.attributes.name', 'Ночной просмотр')
+            ->assertJsonPath('data.attributes.name', 'НочнойПросмотр')
             ->assertJsonPath('data.attributes.user_id', $this->user->id)
             ->assertJsonPath('data.attributes.is_system', false)
             ->assertJsonPath('data.attributes.movies_count', 0);
@@ -72,7 +72,7 @@ class FolderCrudTest extends TestCase
         $this->actingAs($this->user, 'api')
             ->getJson('/api/v1/movie/folders/'.$folderId)
             ->assertOk()
-            ->assertJsonPath('data.attributes.name', 'Ночной просмотр');
+            ->assertJsonPath('data.attributes.name', 'НочнойПросмотр');
 
         $this->actingAs($this->user, 'api')
             ->patchJson('/api/v1/movie/folders/'.$folderId, [
@@ -86,6 +86,28 @@ class FolderCrudTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('movie_folders', ['id' => $folderId]);
+    }
+
+    public function test_custom_folder_name_allows_only_letters_and_digits_up_to_30(): void
+    {
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/folders', [
+                'name' => 'Ночной просмотр',
+            ])
+            ->assertUnprocessable();
+
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/folders', [
+                'name' => str_repeat('а', 31),
+            ])
+            ->assertUnprocessable();
+
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/folders', [
+                'name' => 'Кино2024',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.attributes.name', 'Кино2024');
     }
 
     public function test_movie_list_includes_current_user_folder_slugs(): void
@@ -107,6 +129,7 @@ class FolderCrudTest extends TestCase
 
         $list->assertOk();
         $this->assertSame(['watchlist'], $list->json('data.0.attributes.folder_slugs'));
+        $this->assertContains($watchlist->id, $list->json('data.0.attributes.folder_ids'));
     }
 
     public function test_system_folders_cannot_be_renamed_or_deleted(): void

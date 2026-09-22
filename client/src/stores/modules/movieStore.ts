@@ -4,7 +4,8 @@ import { movieApi } from 'src/api/requests/movieApi'
 import { mapMovieCreditsResponse, mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { extractCursorFromResponse, handleApiError, hasMoreFromResponse } from 'src/utils/jsonapi'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
-import { IMovie, IMovieCredit } from 'src/types/Movie'
+import { IMovie, IMovieCredit, IMovieFolder } from 'src/types/Movie'
+import { withFolderMembership } from 'src/utils/movieFolders'
 
 function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
   const seen = new Set(current.map(item => item.id))
@@ -132,28 +133,13 @@ export const useMovieStore = defineStore('movies', () => {
     }
   }
 
-  function setMovieFolderSlug(movieId: string, slug: string, present: boolean): void {
-    const apply = (item: IMovie): IMovie => {
-      const slugs = new Set(item.folder_slugs ?? [])
-
-      if (present) {
-        slugs.add(slug)
-      } else {
-        slugs.delete(slug)
-      }
-
-      return {
-        ...item,
-        folder_slugs: [...slugs]
-      }
-    }
-
+  function setMovieFolderMembership(movieId: string, folder: IMovieFolder, present: boolean): void {
     movies.value = movies.value.map(item => (
-      item.id === movieId ? apply(item) : item
+      item.id === movieId ? withFolderMembership(item, folder, present) : item
     ))
 
     if (movie.value?.id === movieId) {
-      movie.value = apply(movie.value)
+      movie.value = withFolderMembership(movie.value, folder, present)
     }
   }
 
@@ -172,6 +158,6 @@ export const useMovieStore = defineStore('movies', () => {
     getMovies,
     getMovie,
     getMovieCredits,
-    setMovieFolderSlug
+    setMovieFolderMembership
   }
 })

@@ -13,7 +13,9 @@ class CreateRequest extends AuthenticatedRequest
             'name' => [
                 'required',
                 'string',
-                'max:150',
+                'min:1',
+                'max:30',
+                'regex:/^[\p{L}\p{N}]+$/u',
                 Rule::unique('movie_folders', 'name')->where('user_id', $this->user()?->id),
             ],
         ];

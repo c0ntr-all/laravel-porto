@@ -108,9 +108,9 @@ const viewModeOptions = [
 const { sentinel } = useScrollSentinel(
   () => { void folderStore.getFolderMovies(props.id, { append: true }) },
   () => (
-    folderStore.hasMoreFolderMovies
-    && !folderStore.isFolderMoviesLoading
-    && !folderStore.isFolderMoviesLoadingMore
+    folderStore.hasMoreFolderMovies &&
+    !folderStore.isFolderMoviesLoading &&
+    !folderStore.isFolderMoviesLoadingMore
   )
 )
 

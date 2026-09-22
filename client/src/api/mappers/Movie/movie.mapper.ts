@@ -104,6 +104,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     countries: asRecords(raw.countries).map(normalizeMovieCountry),
     actors_count: Number(raw.actors_count ?? 0),
     folder_slugs: asStrings(raw.folder_slugs),
+    folder_ids: asStrings(raw.folder_ids),
     credits: asRecords(raw.credits).map(normalizeMovieCredit)
   }
 }

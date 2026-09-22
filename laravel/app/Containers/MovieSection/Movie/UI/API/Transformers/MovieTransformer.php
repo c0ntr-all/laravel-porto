@@ -36,6 +36,7 @@ class MovieTransformer extends TransformerAbstract
             'updated_at' => $movie->updated_at?->format('Y-m-d H:i:s'),
             'actors_count' => (int) ($movie->actors_count ?? 0),
             'folder_slugs' => $this->mapFolderSlugs($movie),
+            'folder_ids' => $this->mapFolderIds($movie),
             'credits' => $this->mapCredits($movie),
         ];
     }
@@ -69,6 +70,22 @@ class MovieTransformer extends TransformerAbstract
         return $movie->folders
             ->pluck('slug')
             ->filter(static fn ($slug) => is_string($slug) && $slug !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function mapFolderIds(Movie $movie): array
+    {
+        if (!$movie->relationLoaded('folders')) {
+            return [];
+        }
+
+        return $movie->folders
+            ->pluck('id')
+            ->map(static fn ($id) => (int) $id)
             ->values()
             ->all();
     }

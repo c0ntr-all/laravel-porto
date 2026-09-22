@@ -30,6 +30,12 @@ export const movieFolderApi = {
     return response.data
   },
 
+  async createFolder(name: string): Promise<IJsonApiResponse> {
+    const response = await api.post('v1/movie/folders', { name })
+
+    return response.data
+  },
+
   async attachMovie(folderId: string, movieId: string): Promise<IJsonApiResponse> {
     const response = await api.post(`v1/movie/folders/${folderId}/movies`, {
       movie_id: Number(movieId)

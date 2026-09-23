@@ -8,10 +8,12 @@ use App\Containers\LifelogSection\Post\Data\Filters\MovieIdFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\PresetFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\TagsFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\TextFilter;
+use App\Containers\LifelogSection\Post\Data\Sorts\DatetimeSort;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Pagination\CursorPaginator;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 
 class PostRepository
 {
@@ -27,8 +29,13 @@ class PostRepository
     public function get(array $data): CursorPaginator
     {
         return QueryBuilder::for(Post::whereUserId($data['user_id']))
-                           ->allowedSorts(['date', 'id', 'created_at'])
-                           ->defaultSort('-date')
+                           ->allowedSorts([
+                               'date',
+                               'id',
+                               'created_at',
+                               AllowedSort::custom('datetime', new DatetimeSort()),
+                           ])
+                           ->defaultSort('-datetime')
                            ->allowedFilters([
                                AllowedFilter::custom('preset', $this->presetFilter),
                                AllowedFilter::custom('tags', new TagsFilter()),
@@ -41,8 +48,6 @@ class PostRepository
                                AllowedFilter::custom('text', $this->textFilter),
                            ])
                            ->with(['user', 'attachments.fileable', 'movies.genres', 'movies.countries'])
-                           ->orderByDesc('date')
-                           ->orderByDesc('id')
                            ->cursorPaginate(self::LIST_PER_PAGE);
     }
 

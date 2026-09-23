@@ -4,6 +4,7 @@ namespace App\Containers\LifelogSection\Post\Data\Repositories;
 
 use App\Containers\LifelogSection\Post\Data\Filters\DateFromFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\DateToFilter;
+use App\Containers\LifelogSection\Post\Data\Filters\MovieIdFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\PresetFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\TagsFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\TextFilter;
@@ -32,6 +33,7 @@ class PostRepository
                                // Filter exists only in tags scope
                                AllowedFilter::exact('tags_mode')->ignore(['or', 'and']),
                                AllowedFilter::exact('content_type'),
+                               AllowedFilter::custom('movie_id', new MovieIdFilter()),
                                AllowedFilter::custom('date_from', $this->dateFromFilter),
                                AllowedFilter::custom('date_to', $this->dateToFilter),
                                AllowedFilter::custom('text', $this->textFilter),

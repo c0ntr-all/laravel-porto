@@ -95,6 +95,8 @@
         :actors-count="movieStore.movie.actors_count"
       />
     </div>
+
+    <MovieWatchHistory :movie-id="movieStore.movie.id" />
   </template>
 
   <q-card v-else class="q-mb-md" flat>
@@ -116,6 +118,7 @@ import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import MovieActorsSidebar from 'src/components/client/Movies/MovieActorsSidebar.vue'
 import MovieCrewSection from 'src/components/client/Movies/MovieCrewSection.vue'
+import MovieWatchHistory from 'src/components/client/Movies/MovieWatchHistory.vue'
 
 const props = defineProps<{
   id: string

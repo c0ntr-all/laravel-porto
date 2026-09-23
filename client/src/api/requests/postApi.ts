@@ -10,7 +10,7 @@ export const postApi = {
     filters: IFilter = {},
     options?: { cursor?: string | null }
   ): Promise<IJsonApiResponse> {
-    const defaultSort: string = '-date'
+    const defaultSort: string = '-datetime'
     let url: string = `v1/lifelog/posts?sort=${defaultSort}`
     const spatieFilters = buildFilterForUrl(filters)
     if (spatieFilters) {

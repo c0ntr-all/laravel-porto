@@ -12,6 +12,7 @@ class CreateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         $isMovieContent = $this->isMovieContentType();
+        $isTvSeriesContent = $this->isTvSeriesContentType();
 
         return [
             'title' => 'sometimes|string|max:70',
@@ -45,6 +46,34 @@ class CreateRequest extends AuthenticatedRequest
                 'max:255',
                 'prohibits:movie_id',
             ],
+            'watch' => [
+                Rule::prohibitedIf(fn () => !$isTvSeriesContent),
+                'sometimes',
+                'nullable',
+                'array',
+            ],
+            'watch.season' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+            ],
+            'watch.episode_from' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+            ],
+            'watch.episode_to' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+                'gte:watch.episode_from',
+            ],
+            'watch.stopped_at' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
+            ],
         ];
     }
 
@@ -56,5 +85,12 @@ class CreateRequest extends AuthenticatedRequest
             PostContentTypeEnum::MOVIE->value,
             PostContentTypeEnum::TV_SERIES->value,
         ], true);
+    }
+
+    private function isTvSeriesContentType(): bool
+    {
+        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
+
+        return $contentType === PostContentTypeEnum::TV_SERIES->value;
     }
 }

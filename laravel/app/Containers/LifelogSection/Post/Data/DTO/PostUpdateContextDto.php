@@ -25,6 +25,7 @@ class PostUpdateContextDto extends Data
     public ?array $attachments = [];
     public int|Optional|null $movie_id;
     public string|Optional|null $movie_title;
+    public array|Optional|null $watch;
 
     public function __construct()
     {
@@ -34,8 +35,12 @@ class PostUpdateContextDto extends Data
     {
         $movieId = $this->movie_id instanceof Optional ? null : $this->movie_id;
         $movieTitle = $this->movie_title instanceof Optional ? null : $this->movie_title;
+        $watch = $this->watch instanceof Optional ? null : $this->watch;
 
-        if ($movieId === null && ($movieTitle === null || trim((string) $movieTitle) === '')) {
+        $hasMovie = $movieId !== null || ($movieTitle !== null && trim((string) $movieTitle) !== '');
+        $hasWatch = $watch !== null && $watch !== [];
+
+        if (!$hasMovie && !$hasWatch) {
             return null;
         }
 
@@ -47,6 +52,7 @@ class PostUpdateContextDto extends Data
             'content_type' => $contentType,
             'movie_id' => $movieId,
             'movie_title' => $movieTitle,
+            'watch' => $watch,
         ]);
     }
 }

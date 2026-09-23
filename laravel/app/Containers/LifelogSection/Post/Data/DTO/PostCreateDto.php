@@ -23,6 +23,7 @@ class PostCreateDto extends Data
     public ?array $attachments = [];
     public ?int $movie_id = null;
     public ?string $movie_title = null;
+    public ?array $watch = null;
 
     public function __construct(
     ) {
@@ -34,6 +35,7 @@ class PostCreateDto extends Data
             'content_type' => $this->content_type,
             'movie_id' => $this->movie_id,
             'movie_title' => $this->movie_title,
+            'watch' => $this->watch,
         ]);
     }
 }

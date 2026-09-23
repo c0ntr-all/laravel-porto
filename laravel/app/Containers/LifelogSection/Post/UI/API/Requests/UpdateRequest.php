@@ -3,6 +3,7 @@
 namespace App\Containers\LifelogSection\Post\UI\API\Requests;
 
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
+use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,7 @@ class UpdateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         $requiresMoviePayload = $this->requiresMoviePayload();
+        $allowsWatch = $this->allowsWatch();
 
         return [
             'title' => 'sometimes|string|max:70',
@@ -54,6 +56,34 @@ class UpdateRequest extends AuthenticatedRequest
                 'max:255',
                 'prohibits:movie_id',
             ],
+            'watch' => [
+                Rule::prohibitedIf(fn () => !$allowsWatch),
+                'sometimes',
+                'nullable',
+                'array',
+            ],
+            'watch.season' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+            ],
+            'watch.episode_from' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+            ],
+            'watch.episode_to' => [
+                Rule::requiredIf(fn () => $this->filled('watch')),
+                'integer',
+                'min:1',
+                'gte:watch.episode_from',
+            ],
+            'watch.stopped_at' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
+            ],
         ];
     }
 
@@ -83,5 +113,24 @@ class UpdateRequest extends AuthenticatedRequest
             PostContentTypeEnum::MOVIE->value,
             PostContentTypeEnum::TV_SERIES->value,
         ], true);
+    }
+
+    private function allowsWatch(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === PostContentTypeEnum::TV_SERIES->value) {
+            return true;
+        }
+
+        if ($contentType !== null) {
+            return false;
+        }
+
+        /** @var Post|null $post */
+        $post = $this->route('post');
+
+        return $post instanceof Post
+            && $post->content_type === PostContentTypeEnum::TV_SERIES;
     }
 }

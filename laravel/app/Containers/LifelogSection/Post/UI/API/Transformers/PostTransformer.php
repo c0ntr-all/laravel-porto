@@ -43,6 +43,7 @@ class PostTransformer extends TransformerAbstract
             'content_type' => $post->content_type->value,
             'date' => $post->date->format('Y-m-d'),
             'time' => $post->time?->format('H:i'),
+            'watch' => $post->watchProgress()?->toArray(),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
         ];
     }

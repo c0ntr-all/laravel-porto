@@ -6,7 +6,6 @@ use App\Containers\AppSection\Attachment\Data\DTO\AttachmentsDeleteDto;
 use App\Containers\AppSection\Attachment\Tasks\DeleteAttachmentsTask;
 use App\Containers\AppSection\Tag\Data\DTO\TagsCreateDto;
 use App\Containers\AppSection\Tag\Tasks\CreateTagsByNamesTask;
-use App\Containers\LifelogSection\Post\Data\DTO\PostTagsUpdateDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateContextDto;
 use App\Containers\LifelogSection\Post\Data\DTO\PostUpdateDto;
 use App\Containers\LifelogSection\Post\Models\Post;
@@ -22,6 +21,7 @@ use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelData\Optional;
 
 class UpdatePostAction extends UseCaseAction
 {
@@ -55,50 +55,63 @@ class UpdatePostAction extends UseCaseAction
             $updatedPost = $this->updatePostTask->run($post, $postUpdateDto);
 
             $tagsIdsForSync = [];
+            $newTags = $this->optionalArray($postUpdateContextDto->new_tags);
+            $existingTagIds = $this->optionalArray($postUpdateContextDto->tags);
+
             // Проверяем существуют ли теги из тех, что присланы как новые
-            if (!empty($postUpdateContextDto->new_tags)) {
-                $updateTagsDto = PostTagsUpdateDto::from($postUpdateContextDto->toArray());
+            if ($newTags !== []) {
                 $existingNewTags = $this->listTagsByNamesTask->run(
-                    $updateTagsDto->new_tags,
+                    $newTags,
                     $postUpdateContextDto->user_id
                 );
-                $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$updateTagsDto) {
+                $existingNewTags?->each(function ($existingTag) use (&$tagsIdsForSync, &$newTags) {
                     $tagsIdsForSync[] = $existingTag->id;
-                    unset($updateTagsDto->new_tags[array_search($existingTag->name, $updateTagsDto->new_tags)]);
+                    $index = array_search($existingTag->name, $newTags, true);
+                    if ($index !== false) {
+                        unset($newTags[$index]);
+                    }
                 });
 
-                // Остались еще теги посли проверки?
-                if (!empty($postUpdateContextDto->new_tags)) {
-                    $newTags = $this->createTagsByNamesTask->run(TagsCreateDto::from($postUpdateContextDto->toArray()));
+                // Остались еще теги после проверки?
+                if ($newTags !== []) {
+                    $newTags = array_values($newTags);
+                    $createdTags = $this->createTagsByNamesTask->run(TagsCreateDto::from([
+                        'user_id' => $postUpdateContextDto->user_id,
+                        'new_tags' => $newTags,
+                    ]));
 
-                    if ($newTags) {
-                        $tagsIdsForSync = array_merge($tagsIdsForSync, $newTags->pluck('id')->toArray());
+                    if ($createdTags) {
+                        $tagsIdsForSync = array_merge($tagsIdsForSync, $createdTags->pluck('id')->toArray());
                     }
                 }
             }
-            if (!empty($postUpdateContextDto->tags)) {
-                $tagsIdsForSync = array_merge($tagsIdsForSync, $postUpdateContextDto->tags);
+
+            if ($existingTagIds !== []) {
+                $tagsIdsForSync = array_merge($tagsIdsForSync, $existingTagIds);
             }
 
-            if (!empty($tagsIdsForSync)) {
+            if ($tagsIdsForSync !== []) {
                 $this->syncPostTagsTask->run($post, $postUpdateDto->user_id, $tagsIdsForSync);
             }
 
-            if (!empty($postUpdateContextDto->attachments)) {
+            $attachments = $this->optionalArray($postUpdateContextDto->attachments);
+            if ($attachments !== []) {
                 $this->createAttachmentsTask->run(
                     $post,
                     $postUpdateContextDto->user_id,
                     ContainerAliasEnum::LL_POST->value,
-                    $postUpdateContextDto->attachments
+                    $attachments
                 );
             }
 
-            if (!empty($postUpdateContextDto->deleted_attachments_ids)) {
-                $attachmentsDeleteDto = AttachmentsDeleteDto::from($postUpdateContextDto->toArray());
-
+            $deletedAttachmentIds = $this->optionalArray($postUpdateContextDto->deleted_attachments_ids);
+            if ($deletedAttachmentIds !== []) {
                 $this->deleteAttachmentsTask->run(
                     model: $updatedPost,
-                    dto: $attachmentsDeleteDto
+                    dto: AttachmentsDeleteDto::from([
+                        'user_id' => $postUpdateContextDto->user_id,
+                        'deleted_attachments_ids' => $deletedAttachmentIds,
+                    ])
                 );
             }
 
@@ -132,5 +145,17 @@ class UpdatePostAction extends UseCaseAction
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private function optionalArray(mixed $value): array
+    {
+        if ($value instanceof Optional || $value === null) {
+            return [];
+        }
+
+        return is_array($value) ? array_values($value) : [];
     }
 }

@@ -1,4 +1,15 @@
+import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
+import { IPost } from 'src/types'
 import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
+
+function formatStoppedAtTime (value: string): string {
+  if (value.length === 8) {
+    return value.slice(0, 5)
+  }
+
+  return value
+}
 
 export function emptySeriesWatchProgress (): ISeriesWatchProgress {
   return {
@@ -63,25 +74,31 @@ export function serializeSeriesWatchProgress (
   return payload
 }
 
+export function isSeriesWatchPost (post: IPost): boolean {
+  if (post.content_type === PostContentTypeEnum.TV_SERIES) {
+    return true
+  }
+
+  return post.movie?.type === MovieTypeEnum.TV_SERIES
+}
+
 export function formatSeriesWatchProgress (watch: ISeriesWatchProgress | null | undefined): string {
   const normalized = normalizeSeriesWatchProgress(watch)
   if (!normalized) {
     return ''
   }
 
-  const range = normalized.episode_from === normalized.episode_to
-    ? `S${normalized.season}E${normalized.episode_from}`
-    : `S${normalized.season}E${normalized.episode_from}–E${normalized.episode_to}`
+  const episodes = normalized.episode_from === normalized.episode_to
+    ? `эпизод ${normalized.episode_from}`
+    : `эпизоды ${normalized.episode_from}–${normalized.episode_to}`
+
+  let text = `Сезон ${normalized.season}, ${episodes}`
 
   if (normalized.stopped_at) {
-    const time = normalized.stopped_at.length === 8
-      ? normalized.stopped_at.slice(0, 5)
-      : normalized.stopped_at
-
-    return `${range} · стоп ${time}`
+    text += ` · останов на ${formatStoppedAtTime(normalized.stopped_at)}`
   }
 
-  return range
+  return text
 }
 
 export function isSeriesWatchValid (watch: ISeriesWatchProgress | null | undefined): boolean {

@@ -22,6 +22,6 @@ class UpdatePostTask extends ParentTask
      */
     public function run(Post $post, PostUpdateDto $dto): Post
     {
-        return $this->postRepository->update($post, $dto->toArray());
+        return $this->postRepository->update($post, $dto->attributesForUpdate());
     }
 }

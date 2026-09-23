@@ -7,6 +7,7 @@
         <tr>
           <th class="text-left">Название</th>
           <th class="text-left movie-watch-history__datetime">Дата</th>
+          <th v-if="isTvSeries" class="text-left">Прогресс</th>
           <th class="text-left">Заметка</th>
         </tr>
       </thead>
@@ -14,6 +15,9 @@
         <tr v-for="post in posts" :key="post.id">
           <td>{{ post.title || '—' }}</td>
           <td class="movie-watch-history__datetime">{{ formatPostDateTime(post) }}</td>
+          <td v-if="isTvSeries" class="movie-watch-history__progress">
+            {{ formatSeriesWatchProgress(post.watch) || '—' }}
+          </td>
           <td class="movie-watch-history__content">{{ post.content || '—' }}</td>
         </tr>
       </tbody>
@@ -28,18 +32,22 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { handleApiError } from 'src/utils/jsonapi'
 import { normalizePosts } from 'src/api/mappers/post.response.mapper'
 import { formatPostDateTime } from 'src/utils/LifeLog/post'
-import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import { formatSeriesWatchProgress } from 'src/utils/LifeLog/seriesWatch'
+import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { IPost } from 'src/types'
 
 const props = defineProps<{
   movieId: string
+  movieType?: MovieTypeEnum
 }>()
+
+const isTvSeries = computed(() => props.movieType === MovieTypeEnum.TV_SERIES)
 
 const posts = ref<IPost[]>([])
 const isLoading = ref(false)
@@ -54,8 +62,7 @@ async function loadWatchHistory(movieId: string): Promise<void> {
 
   try {
     const response = await postApi.getPosts({
-      movie_id: movieId,
-      content_type: PostContentTypeEnum.MOVIE
+      movie_id: movieId
     })
 
     if (currentRequest !== requestId) {
@@ -131,6 +138,11 @@ watch(
   &__content {
     white-space: pre-line;
     word-break: break-word;
+  }
+
+  &__progress {
+    min-width: 180px;
+    white-space: normal;
   }
 
   &__skeleton {

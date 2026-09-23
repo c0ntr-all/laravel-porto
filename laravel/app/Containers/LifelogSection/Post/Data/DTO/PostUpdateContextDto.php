@@ -16,13 +16,13 @@ class PostUpdateContextDto extends Data
     public string|Optional|null $content;
     public PostContentTypeEnum|Optional $content_type;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
-    public Carbon $date;
+    public Carbon|Optional $date;
     #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]
-    public Carbon $time;
-    public array|null $tags;
-    public array|null $new_tags;
-    public array $deleted_attachments_ids = [];
-    public ?array $attachments = [];
+    public Carbon|Optional|null $time;
+    public array|Optional|null $tags;
+    public array|Optional|null $new_tags;
+    public array|Optional|null $deleted_attachments_ids;
+    public array|Optional|null $attachments;
     public int|Optional|null $movie_id;
     public string|Optional|null $movie_title;
     public array|Optional|null $watch;

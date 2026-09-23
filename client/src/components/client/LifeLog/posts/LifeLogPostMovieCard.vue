@@ -20,12 +20,6 @@
         <div class="row items-start no-wrap">
           <div class="col">
             <h3 class="ll-post-card__title">{{ cardTitle }}</h3>
-            <div
-              v-if="watchLabel"
-              class="ll-post-movie-card__watch text-caption text-grey-7"
-            >
-              {{ watchLabel }}
-            </div>
           </div>
           <q-btn
             flat
@@ -56,6 +50,18 @@
 
     <section class="ll-post-card__section ll-post-movie-card__body">
       <MovieCardHorizontal :movie="displayMovie" />
+
+      <div
+        v-if="seriesWatchText"
+        class="ll-post-movie-card__watch"
+      >
+        <div class="ll-post-movie-card__watch-label text-caption text-grey-7">
+          Прогресс просмотра
+        </div>
+        <div class="ll-post-movie-card__watch-value">
+          {{ seriesWatchText }}
+        </div>
+      </div>
     </section>
 
     <footer class="ll-post-card__section ll-post-card__footer">
@@ -79,7 +85,10 @@ import { IMovie } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
 import { movieWatchPostTitle } from 'src/utils/LifeLog/post'
-import { formatSeriesWatchProgress } from 'src/utils/LifeLog/seriesWatch'
+import {
+  formatSeriesWatchProgress,
+  isSeriesWatchPost
+} from 'src/utils/LifeLog/seriesWatch'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormMovieUpdate from 'src/components/client/LifeLog/forms/PostFormMovieUpdate.vue'
 import MovieCardHorizontal from 'src/components/client/Movies/MovieCardHorizontal.vue'
@@ -97,7 +106,14 @@ const {
 } = useLifeLogPostActions(props.post)
 
 const cardTitle = computed(() => movieWatchPostTitle(props.post))
-const watchLabel = computed(() => formatSeriesWatchProgress(props.post.watch))
+
+const seriesWatchText = computed(() => {
+  if (!isSeriesWatchPost(props.post)) {
+    return ''
+  }
+
+  return formatSeriesWatchProgress(props.post.watch)
+})
 
 const displayMovie = computed((): IMovie => {
   if (props.post.movie) {
@@ -199,7 +215,21 @@ const displayMovie = computed((): IMovie => {
   }
 
   &__watch {
-    margin-top: 2px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e8ebf0;
+  }
+
+  &__watch-label {
+    margin-bottom: 4px;
+  }
+
+  &__watch-value {
+    font-size: 14px;
+    line-height: 1.45;
+    color: #334155;
   }
 }
 </style>

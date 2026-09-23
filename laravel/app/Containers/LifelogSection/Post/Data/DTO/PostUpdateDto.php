@@ -12,10 +12,28 @@ class PostUpdateDto extends Data
     public string|Optional|null $title;
     public string|Optional|null $content;
     public PostContentTypeEnum|Optional $content_type;
-    public string $date;
-    public string $time;
+    public string|Optional $date;
+    public string|Optional|null $time;
 
     public function __construct(
     ) {
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function attributesForUpdate(): array
+    {
+        $attributes = [];
+
+        foreach ($this->toArray() as $key => $value) {
+            if ($value instanceof Optional || $key === 'user_id') {
+                continue;
+            }
+
+            $attributes[$key] = $value;
+        }
+
+        return $attributes;
     }
 }

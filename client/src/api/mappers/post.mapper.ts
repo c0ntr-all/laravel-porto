@@ -98,6 +98,7 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
       if (JSON.stringify(nextWatch ?? null) !== JSON.stringify(prevWatch ?? null)) {
         if (nextWatch) {
           dto.watch = nextWatch
+          dto.content_type = PostContentTypeEnum.TV_SERIES
         }
       }
     }

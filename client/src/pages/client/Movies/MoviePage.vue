@@ -96,7 +96,10 @@
       />
     </div>
 
-    <MovieWatchHistory :movie-id="movieStore.movie.id" />
+    <MovieWatchHistory
+      :movie-id="movieStore.movie.id"
+      :movie-type="movieStore.movie.type"
+    />
   </template>
 
   <q-card v-else class="q-mb-md" flat>

@@ -57,7 +57,11 @@
     </footer>
 
     <q-dialog v-model="showEditPostModal">
-      <PostFormUpdate :post="post" />
+      <PostFormMovieUpdate
+        v-if="showEditPostModal"
+        :post="post"
+        @success="showEditPostModal = false"
+      />
     </q-dialog>
   </article>
 </template>
@@ -70,7 +74,7 @@ import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
 import { MOVIE_WATCH_POST_TITLE } from 'src/utils/LifeLog/post'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
-import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
+import PostFormMovieUpdate from 'src/components/client/LifeLog/forms/PostFormMovieUpdate.vue'
 import MovieCardHorizontal from 'src/components/client/Movies/MovieCardHorizontal.vue'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 

@@ -6,6 +6,7 @@ use App\Containers\AppSection\Country\UI\API\Transformers\CountryTransformer;
 use App\Containers\MovieSection\Genre\UI\API\Transformers\GenreTransformer;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Person\UI\API\Transformers\PersonTransformer;
+use App\Containers\MovieSection\Season\UI\API\Transformers\SeasonTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\TransformerAbstract;
@@ -16,6 +17,7 @@ class MovieTransformer extends TransformerAbstract
         'genres',
         'countries',
         'persons',
+        'seasons',
     ];
 
     public function transform(Movie $movie): array
@@ -56,6 +58,13 @@ class MovieTransformer extends TransformerAbstract
         $movie->loadMissing('persons');
 
         return $this->collection($movie->persons, new PersonTransformer(), ContainerAliasEnum::MOVIE_PERSON->value);
+    }
+
+    public function includeSeasons(Movie $movie): Collection
+    {
+        $movie->loadMissing('seasons.episodes');
+
+        return $this->collection($movie->seasons, new SeasonTransformer(), ContainerAliasEnum::MOVIE_SEASON->value);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Containers\MovieSection\Movie\UI\Actions;
 
+use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Movie\UI\API\Requests\GetRequest;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
@@ -21,6 +22,13 @@ class GetMovieAction extends BaseAction
             'countries',
             'folders' => Movie::constrainFoldersToCurrentUser(),
         ]);
+
+        if (
+            $movie->type === MovieTypeEnum::TV_SERIES
+            || $movie->type === MovieTypeEnum::SHOW
+        ) {
+            $movie->load(['seasons.episodes']);
+        }
         $movie->loadCount([
             'credits as actors_count' => function ($query): void {
                 $query->whereHas('profession', function ($profession): void {
@@ -63,10 +71,29 @@ class GetMovieAction extends BaseAction
     public function asController(Movie $movie, GetRequest $request): JsonResponse
     {
         $movie = $this->handle($movie);
+        $includes = (string) $request->query('include', $this->defaultIncludes($movie));
+
+        if (str_contains($includes, 'seasons')) {
+            $movie->loadMissing('seasons.episodes');
+        }
 
         return fractal($movie, new MovieTransformer())
             ->withResourceName(ContainerAliasEnum::MOVIE->value)
-            ->parseIncludes(['genres', 'countries'])
+            ->parseIncludes($includes)
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    private function defaultIncludes(Movie $movie): string
+    {
+        $includes = 'genres,countries';
+
+        if (
+            $movie->type === MovieTypeEnum::TV_SERIES
+            || $movie->type === MovieTypeEnum::SHOW
+        ) {
+            $includes .= ',seasons.episodes';
+        }
+
+        return $includes;
     }
 }

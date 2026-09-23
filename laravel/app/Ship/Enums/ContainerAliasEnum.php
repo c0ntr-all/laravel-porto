@@ -45,6 +45,8 @@ enum ContainerAliasEnum: string
     case MOVIE_PROFESSION = 'movie_professions';
     case MOVIE_CREDIT = 'movie_credits';
     case MOVIE_FOLDER = 'movie_folders';
+    case MOVIE_SEASON = 'movie_seasons';
+    case MOVIE_EPISODE = 'movie_episodes';
 
     public function getContainerMessage(): string
     {
@@ -77,6 +79,8 @@ enum ContainerAliasEnum: string
             self::MOVIE_PROFESSION => 'Профессия',
             self::MOVIE_CREDIT => 'Участие в фильме',
             self::MOVIE_FOLDER => 'Папка фильмов',
+            self::MOVIE_SEASON => 'Сезон сериала',
+            self::MOVIE_EPISODE => 'Эпизод сериала',
         };
     }
 

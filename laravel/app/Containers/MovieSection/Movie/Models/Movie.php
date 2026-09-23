@@ -3,17 +3,20 @@
 namespace App\Containers\MovieSection\Movie\Models;
 
 use App\Containers\AppSection\Country\Models\Country;
+use App\Containers\MovieSection\Episode\Models\Episode;
 use App\Containers\MovieSection\Folder\Models\Folder;
 use App\Containers\MovieSection\Folder\Support\FolderMoviesCountCache;
 use App\Containers\MovieSection\Genre\Models\Genre;
 use App\Containers\MovieSection\Genre\Models\Traits\HasGenres;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Person\Models\Person;
+use App\Containers\MovieSection\Season\Models\Season;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -35,6 +38,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Country> $countries
  * @property-read Collection<int, Person> $persons
  * @property-read Collection<int, Folder> $folders
+ * @property-read Collection<int, Season> $seasons
+ * @property-read Collection<int, Episode> $episodes
  * @property-read Collection<int, MoviePersonCredit> $credits
  * @property-read int $actors_count
  */
@@ -135,6 +140,21 @@ class Movie extends Model
         )
             ->withPivot(['added_at'])
             ->withTimestamps();
+    }
+
+    public function seasons(): HasMany
+    {
+        return $this->hasMany(Season::class, 'movie_id')->orderBy('number')->orderBy('id');
+    }
+
+    public function episodes(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Episode::class,
+            Season::class,
+            'movie_id',
+            'season_id',
+        )->orderBy('movie_episodes.number');
     }
 
     /**

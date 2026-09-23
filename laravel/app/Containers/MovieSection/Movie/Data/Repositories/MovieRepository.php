@@ -19,7 +19,7 @@ class MovieRepository
         return QueryBuilder::for(Movie::class, request())
             ->allowedFilters($this->allowedFilters())
             ->allowedSorts(['title', 'year', 'kp_rating', 'created_at'])
-            ->allowedIncludes(['genres', 'countries', 'persons'])
+            ->allowedIncludes(['genres', 'countries', 'persons', 'seasons'])
             ->with([
                 'genres',
                 'countries',

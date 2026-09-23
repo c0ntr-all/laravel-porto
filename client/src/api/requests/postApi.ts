@@ -6,14 +6,19 @@ import { buildFilterForUrl } from 'src/utils/jsonapi'
 import { buildCorrelationHeaders } from 'src/utils/correlation'
 
 export const postApi = {
-  async getPosts(filters: IFilter): Promise<IJsonApiResponse> {
+  async getPosts(
+    filters: IFilter = {},
+    options?: { cursor?: string | null }
+  ): Promise<IJsonApiResponse> {
     const defaultSort: string = '-date'
     let url: string = `v1/lifelog/posts?sort=${defaultSort}`
-    if (filters) {
-      const spatieFilters = buildFilterForUrl(filters)
+    const spatieFilters = buildFilterForUrl(filters)
+    if (spatieFilters) {
       url += `&${spatieFilters}`
     }
-    const response = await api.get(url)
+    const response = await api.get(url, {
+      params: options?.cursor ? { cursor: options.cursor } : {}
+    })
 
     return response.data
   },

@@ -1,10 +1,10 @@
 <template>
   <div class="ll-posts-list">
-    <q-inner-loading :showing="isLoading">
+    <q-inner-loading :showing="isLoading && !posts.length">
       <q-spinner color="primary" size="36px" />
     </q-inner-loading>
 
-    <template v-if="!isLoading">
+    <template v-if="!isLoading || posts.length">
       <AppNoResultsPlug
         v-if="!posts.length"
         title="Постов пока нет"
@@ -16,30 +16,46 @@
         ref="containerRef"
         class="ll-posts-list__layout"
       >
-        <div
-          class="ll-posts-list__items"
-          :class="`ll-posts-list__items--${viewMode}`"
-        >
+        <div class="ll-posts-list__main">
           <div
-            v-for="post in posts"
-            :key="post.id"
-            :ref="element => setPostRef(post.id, element)"
-            class="ll-posts-list__item"
+            ref="itemsRef"
+            class="ll-posts-list__items"
+            :class="`ll-posts-list__items--${viewMode}`"
           >
-            <LifeLogPostMovieCard
-              v-if="viewMode === 'expanded' && isMovieWatchPost(post)"
-              :post="post"
-            />
-            <LifeLogPostCard
-              v-else-if="viewMode === 'expanded'"
-              :post="post"
-            />
-            <LifeLogPostRow
-              v-else
-              :post="post"
-              :expanded="isPostExpanded(post.id)"
-              @toggle-expand="handleToggleExpand(post.id)"
-            />
+            <div
+              v-for="post in posts"
+              :key="post.id"
+              :ref="element => setPostRef(post.id, element)"
+              class="ll-posts-list__item"
+            >
+              <LifeLogPostMovieCard
+                v-if="viewMode === 'expanded' && isMovieWatchPost(post)"
+                :post="post"
+              />
+              <LifeLogPostCard
+                v-else-if="viewMode === 'expanded'"
+                :post="post"
+              />
+              <LifeLogPostRow
+                v-else
+                :post="post"
+                :expanded="isPostExpanded(post.id)"
+                @toggle-expand="handleToggleExpand(post.id)"
+              />
+            </div>
+          </div>
+
+          <div
+            v-if="hasMorePosts"
+            ref="sentinel"
+            class="ll-posts-list__sentinel"
+          />
+
+          <div
+            v-if="isLoadingMore"
+            class="ll-posts-list__loader flex justify-center q-py-md"
+          >
+            <q-spinner color="primary" size="2em" />
           </div>
         </div>
 
@@ -62,6 +78,7 @@
 <script setup lang="ts">
 import { computed, nextTick, watch } from 'vue'
 import { IPost, IPreset, LifeLogViewMode } from 'src/types'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { usePostRailAnchors } from 'src/composables/client/Lifelog/usePostRailAnchors'
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
 import LifeLogPostMovieCard from 'src/components/client/LifeLog/posts/LifeLogPostMovieCard.vue'
@@ -75,12 +92,23 @@ const props = defineProps<{
   presets: IPreset[]
   viewMode: LifeLogViewMode
   isLoading: boolean
+  isLoadingMore: boolean
+  hasMorePosts: boolean
   isPostExpanded: (postId: string) => boolean
   togglePostExpanded: (postId: string) => void
 }>()
 
+const emit = defineEmits<{
+  'load-more': []
+}>()
+
+const { sentinel } = useScrollSentinel(
+  () => emit('load-more'),
+  () => props.hasMorePosts && !props.isLoadingMore && !props.isLoading
+)
+
 const postsRef = computed(() => props.posts)
-const { containerRef, anchors, containerHeight, setPostRef, measure } = usePostRailAnchors(postsRef)
+const { containerRef, itemsRef, anchors, containerHeight, setPostRef, measure } = usePostRailAnchors(postsRef)
 
 function handleToggleExpand(postId: string) {
   props.togglePostExpanded(postId)
@@ -107,9 +135,13 @@ watch(
     align-items: start;
   }
 
+  &__main {
+    min-width: 0;
+  }
+
   &__rails {
     position: relative;
-    min-height: 100%;
+    align-self: start;
   }
 
   &__items {
@@ -125,6 +157,10 @@ watch(
 
   &__item {
     min-width: 0;
+  }
+
+  &__sentinel {
+    height: 1px;
   }
 }
 </style>

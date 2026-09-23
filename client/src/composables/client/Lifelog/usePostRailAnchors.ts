@@ -3,6 +3,7 @@ import { IPost } from 'src/types'
 
 export function usePostRailAnchors(posts: Ref<IPost[]>) {
   const containerRef = ref<HTMLElement | null>(null)
+  const itemsRef = ref<HTMLElement | null>(null)
   const anchors = ref<Record<string, number>>({})
   const containerHeight = ref(0)
   const postRefs = new Map<string, HTMLElement>()
@@ -24,7 +25,9 @@ export function usePostRailAnchors(posts: Ref<IPost[]>) {
 
   function measure() {
     const container = containerRef.value
-    if (!container) {
+    const items = itemsRef.value
+
+    if (!container || !items) {
       anchors.value = {}
       containerHeight.value = 0
       return
@@ -44,12 +47,13 @@ export function usePostRailAnchors(posts: Ref<IPost[]>) {
     })
 
     anchors.value = nextAnchors
-    containerHeight.value = container.offsetHeight
+    // Height of the posts column only — never the full grid (rails + sentinel), or rails stretch in a loop.
+    containerHeight.value = items.offsetHeight
   }
 
   watchEffect(onCleanup => {
-    const container = containerRef.value
-    if (!container) {
+    const items = itemsRef.value
+    if (!items) {
       return
     }
 
@@ -57,7 +61,7 @@ export function usePostRailAnchors(posts: Ref<IPost[]>) {
       measure()
     })
 
-    resizeObserver.observe(container)
+    resizeObserver.observe(items)
     measure()
 
     onCleanup(() => {
@@ -75,6 +79,7 @@ export function usePostRailAnchors(posts: Ref<IPost[]>) {
 
   return {
     containerRef,
+    itemsRef,
     anchors,
     containerHeight,
     setPostRef,

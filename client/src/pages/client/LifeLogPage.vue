@@ -30,8 +30,11 @@
           :presets="presets"
           :view-mode="viewMode"
           :is-loading="isLoading"
+          :is-loading-more="isLoadingMore"
+          :has-more-posts="hasMorePosts"
           :is-post-expanded="isPostExpanded"
           :toggle-post-expanded="togglePostExpanded"
+          @load-more="loadMorePosts"
         />
       </main>
     </div>
@@ -98,6 +101,9 @@ const {
   allTags,
   filteredPosts,
   isLoading,
+  isLoadingMore,
+  hasMorePosts,
+  loadMorePosts,
   initialize,
   applyFilter,
   resetFilter

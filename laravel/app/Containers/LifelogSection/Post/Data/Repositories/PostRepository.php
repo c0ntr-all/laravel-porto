@@ -10,11 +10,12 @@ use App\Containers\LifelogSection\Post\Data\Filters\TagsFilter;
 use App\Containers\LifelogSection\Post\Data\Filters\TextFilter;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\CursorPaginator;
 use Spatie\QueryBuilder\AllowedFilter;
 
 class PostRepository
 {
+    public const LIST_PER_PAGE = 20;
     public function __construct(
         private readonly PresetFilter $presetFilter,
         private readonly DateFromFilter $dateFromFilter,
@@ -23,10 +24,11 @@ class PostRepository
     ) {
     }
 
-    public function get(array $data): Collection
+    public function get(array $data): CursorPaginator
     {
         return QueryBuilder::for(Post::whereUserId($data['user_id']))
-                           ->allowedSorts('date')
+                           ->allowedSorts(['date', 'id', 'created_at'])
+                           ->defaultSort('-date')
                            ->allowedFilters([
                                AllowedFilter::custom('preset', $this->presetFilter),
                                AllowedFilter::custom('tags', new TagsFilter()),
@@ -39,7 +41,9 @@ class PostRepository
                                AllowedFilter::custom('text', $this->textFilter),
                            ])
                            ->with(['user', 'attachments.fileable', 'movies.genres', 'movies.countries'])
-                           ->get();
+                           ->orderByDesc('date')
+                           ->orderByDesc('id')
+                           ->cursorPaginate(self::LIST_PER_PAGE);
     }
 
     /**

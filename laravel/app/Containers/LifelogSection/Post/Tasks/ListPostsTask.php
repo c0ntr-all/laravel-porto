@@ -5,7 +5,7 @@ namespace App\Containers\LifelogSection\Post\Tasks;
 use App\Containers\LifelogSection\Post\Data\DTO\PostListDto;
 use App\Containers\LifelogSection\Post\Data\Repositories\PostRepository;
 use App\Ship\Parents\Tasks\Task;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\CursorPaginator;
 
 class ListPostsTask extends Task
 {
@@ -15,7 +15,7 @@ class ListPostsTask extends Task
     {
     }
 
-    public function run(PostListDto $dto): Collection
+    public function run(PostListDto $dto): CursorPaginator
     {
         return $this->postsRepository->get([
             'user_id' => $dto->user_id

@@ -28,7 +28,7 @@ export function useLifeLogFilters() {
   const tagStore = useTagStore()
   const presetStore = usePresetStore()
 
-  const { posts, isLoading } = storeToRefs(postStore)
+  const { posts, isLoading, isLoadingMore, hasMorePosts } = storeToRefs(postStore)
   const { presets } = storeToRefs(presetStore)
 
   const filter = ref<ILifeLogFilter>(createEmptyLifeLogFilter())
@@ -53,8 +53,15 @@ export function useLifeLogFilters() {
     await presetStore.getPresets()
   }
 
-  async function loadPosts() {
-    await postStore.getPosts(mapLifeLogFilterToApiFilter(filter.value))
+  async function loadPosts(append = false) {
+    await postStore.getPosts({
+      append,
+      filters: mapLifeLogFilterToApiFilter(filter.value)
+    })
+  }
+
+  async function loadMorePosts() {
+    await loadPosts(true)
   }
 
   async function applyFilter(
@@ -122,10 +129,13 @@ export function useLifeLogFilters() {
     filteredPosts,
     activePreset,
     isLoading,
+    isLoadingMore,
+    hasMorePosts,
     initialize,
     loadTags,
     loadPresets,
     loadPosts,
+    loadMorePosts,
     applyFilter,
     resetFilter,
     applyPreset,

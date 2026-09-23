@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import {
+  extractCursorFromResponse,
+  handleApiError,
+  handleApiSuccess,
+  hasMoreFromResponse
+} from 'src/utils/jsonapi'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { normalizePost, normalizePosts } from 'src/api/mappers/post.response.mapper'
 import {
@@ -21,24 +26,84 @@ import {
   IPostUpdateModel
 } from 'src/types'
 
+function mergePostsById(current: IPost[], incoming: IPost[]): IPost[] {
+  const seen = new Set(current.map(post => post.id))
+
+  return [...current, ...incoming.filter(post => !seen.has(post.id))]
+}
+
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
   const postsCount = ref<number>(0)
+  const postsCursor = ref<string | null>(null)
+  const hasMorePosts = ref(false)
   const isLoading = ref<boolean>(false)
+  const isLoadingMore = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  async function getPosts(filters: IFilter = {}) {
-    isLoading.value = true
+  let listRequestId = 0
+  let lastListFilters: IFilter = {}
+
+  async function getPosts(options?: {
+    append?: boolean
+    filters?: IFilter
+  }) {
+    const append = Boolean(options?.append)
+
+    if (options?.filters) {
+      lastListFilters = { ...options.filters }
+    }
+
+    if (append) {
+      if (!postsCursor.value || isLoadingMore.value || isLoading.value) {
+        return
+      }
+
+      isLoadingMore.value = true
+    } else {
+      listRequestId += 1
+      isLoading.value = true
+      isLoadingMore.value = false
+      posts.value = []
+      postsCursor.value = null
+      hasMorePosts.value = false
+    }
+
+    const requestId = listRequestId
     error.value = null
 
     try {
-      const response = await postApi.getPosts(filters)
-      posts.value = normalizePosts(mapResponse(response) as IPost[])
-      postsCount.value = response.meta?.count || 0
+      const response = await postApi.getPosts(lastListFilters, {
+        cursor: append ? postsCursor.value : null
+      })
+
+      if (requestId !== listRequestId) {
+        return
+      }
+
+      const mapped = normalizePosts(mapResponse(response) as IPost[])
+      const previousCount = posts.value.length
+
+      posts.value = append ? mergePostsById(posts.value, mapped) : mapped
+      postsCursor.value = extractCursorFromResponse(response)
+      hasMorePosts.value = hasMoreFromResponse(response)
+
+      if (append && posts.value.length === previousCount) {
+        hasMorePosts.value = false
+      }
+
+      postsCount.value = posts.value.length
     } catch (err: any) {
+      if (requestId !== listRequestId) {
+        return
+      }
+
       error.value = err.message ?? 'Ошибка загрузки'
     } finally {
-      isLoading.value = false
+      if (requestId === listRequestId) {
+        isLoading.value = false
+        isLoadingMore.value = false
+      }
     }
   }
 
@@ -105,7 +170,10 @@ export const usePostStore = defineStore('post', () => {
   return {
     posts,
     postsCount,
+    postsCursor,
+    hasMorePosts,
     isLoading,
+    isLoadingMore,
     getPosts,
     createPost,
     updatePost

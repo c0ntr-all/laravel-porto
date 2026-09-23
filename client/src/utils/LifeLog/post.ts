@@ -14,10 +14,18 @@ export function isOptimisticPostId(id: string): boolean {
 }
 
 export function isMovieWatchPost(post: IPost): boolean {
-  return post.content_type === PostContentTypeEnum.MOVIE
+  return post.content_type === PostContentTypeEnum.MOVIE ||
+    post.content_type === PostContentTypeEnum.TV_SERIES
 }
 
 export const MOVIE_WATCH_POST_TITLE = 'Просмотр фильма'
+export const TV_SERIES_WATCH_POST_TITLE = 'Просмотр сериала'
+
+export function movieWatchPostTitle(post: IPost): string {
+  return post.content_type === PostContentTypeEnum.TV_SERIES
+    ? TV_SERIES_WATCH_POST_TITLE
+    : MOVIE_WATCH_POST_TITLE
+}
 
 export function parsePostDate(post: IPost): Date {
   const time = post.time ?? '12:00:00'
@@ -64,22 +72,29 @@ function mapNewTagsToOptimisticTags(newTags: INewTag[]): ITag[] {
 export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
   const [datePart, timePart = ''] = model.datetime.split(' ')
   const contentType = model.content_type ?? PostContentTypeEnum.DEFAULT
-  const isMoviePost = contentType === PostContentTypeEnum.MOVIE
+  const isMoviePost =
+    contentType === PostContentTypeEnum.MOVIE ||
+    contentType === PostContentTypeEnum.TV_SERIES
+  const isSeriesPost = contentType === PostContentTypeEnum.TV_SERIES
   const movieTitle = model.title?.trim() ?? ''
 
   return {
     type: 'll_posts',
     id: `${OPTIMISTIC_POST_PREFIX}${nanoid()}`,
-    title: isMoviePost ? MOVIE_WATCH_POST_TITLE : model.title,
+    title: isMoviePost
+      ? (isSeriesPost ? TV_SERIES_WATCH_POST_TITLE : MOVIE_WATCH_POST_TITLE)
+      : model.title,
     movie: isMoviePost && movieTitle
       ? {
-          id: `${OPTIMISTIC_POST_PREFIX}movie`,
+          id: model.movie_id != null
+            ? String(model.movie_id)
+            : `${OPTIMISTIC_POST_PREFIX}movie`,
           kp_id: 0,
           title: movieTitle,
           description: null,
           short_description: null,
           year: 0,
-          type: MovieTypeEnum.MOVIE,
+          type: isSeriesPost ? MovieTypeEnum.TV_SERIES : MovieTypeEnum.MOVIE,
           cover: null,
           kp_rating: null,
           kp_img: null,
@@ -94,6 +109,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           credits: []
         }
       : null,
+    watch: isSeriesPost ? (model.watch ?? null) : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     date: datePart,

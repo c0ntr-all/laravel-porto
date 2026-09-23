@@ -1,4 +1,5 @@
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
 
 export interface IPostUpdateDto {
   title?: string
@@ -10,4 +11,7 @@ export interface IPostUpdateDto {
   new_tags?: string[]
   deleted_attachments_ids?: string[]
   attachments?: {id: string, type: string}[]
+  movie_id?: number
+  movie_title?: string
+  watch?: ISeriesWatchProgress | null
 }

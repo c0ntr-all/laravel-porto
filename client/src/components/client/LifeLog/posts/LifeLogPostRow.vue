@@ -50,7 +50,7 @@ import { humanDatetime } from 'src/utils/datetime'
 import {
   formatPostDateTime,
   isMovieWatchPost,
-  MOVIE_WATCH_POST_TITLE
+  movieWatchPostTitle
 } from 'src/utils/LifeLog/post'
 import LifeLogPostAttachmentsBadge from 'src/components/client/LifeLog/posts/LifeLogPostAttachmentsBadge.vue'
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
@@ -69,7 +69,7 @@ const emit = defineEmits<{
 const formattedDate = computed(() => humanDatetime(formatPostDateTime(props.post)))
 
 const rowTitle = computed(() =>
-  isMovieWatchPost(props.post) ? MOVIE_WATCH_POST_TITLE : props.post.title
+  isMovieWatchPost(props.post) ? movieWatchPostTitle(props.post) : props.post.title
 )
 </script>
 

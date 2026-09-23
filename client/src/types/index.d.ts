@@ -1,6 +1,7 @@
 export * from './jsonapi'
 export * from './api-context'
 export * from './LifeLog/post'
+export * from './LifeLog/watch'
 export * from './LifeLog/preset'
 export * from './LifeLog/filter'
 export * from './document'

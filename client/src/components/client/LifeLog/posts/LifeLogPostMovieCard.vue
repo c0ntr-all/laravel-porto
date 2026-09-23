@@ -19,7 +19,13 @@
       <div class="col q-pl-sm">
         <div class="row items-start no-wrap">
           <div class="col">
-            <h3 class="ll-post-card__title">{{ MOVIE_WATCH_POST_TITLE }}</h3>
+            <h3 class="ll-post-card__title">{{ cardTitle }}</h3>
+            <div
+              v-if="watchLabel"
+              class="ll-post-movie-card__watch text-caption text-grey-7"
+            >
+              {{ watchLabel }}
+            </div>
           </div>
           <q-btn
             flat
@@ -72,7 +78,8 @@ import { IPost } from 'src/types'
 import { IMovie } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
-import { MOVIE_WATCH_POST_TITLE } from 'src/utils/LifeLog/post'
+import { movieWatchPostTitle } from 'src/utils/LifeLog/post'
+import { formatSeriesWatchProgress } from 'src/utils/LifeLog/seriesWatch'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormMovieUpdate from 'src/components/client/LifeLog/forms/PostFormMovieUpdate.vue'
 import MovieCardHorizontal from 'src/components/client/Movies/MovieCardHorizontal.vue'
@@ -88,6 +95,9 @@ const {
   isPostEndPreset,
   actions
 } = useLifeLogPostActions(props.post)
+
+const cardTitle = computed(() => movieWatchPostTitle(props.post))
+const watchLabel = computed(() => formatSeriesWatchProgress(props.post.watch))
 
 const displayMovie = computed((): IMovie => {
   if (props.post.movie) {
@@ -186,6 +196,10 @@ const displayMovie = computed((): IMovie => {
 .ll-post-movie-card {
   &__body {
     padding-top: 10px;
+  }
+
+  &__watch {
+    margin-top: 2px;
   }
 }
 </style>

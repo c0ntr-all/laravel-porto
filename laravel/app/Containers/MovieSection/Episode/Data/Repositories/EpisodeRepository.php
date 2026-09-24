@@ -31,6 +31,19 @@ class EpisodeRepository
             ->get();
     }
 
+    public function findBySeasonIdAndNumber(int $seasonId, int $number, bool $forUpdate = false): ?Episode
+    {
+        $query = Episode::query()
+            ->where('season_id', $seasonId)
+            ->where('number', $number);
+
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
     public function create(EpisodeCreateData $dto): Episode
     {
         return Episode::create([

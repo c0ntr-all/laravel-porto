@@ -32,6 +32,19 @@ class SeasonRepository
             ->get();
     }
 
+    public function findByMovieIdAndNumber(int $movieId, int $number, bool $forUpdate = false): ?Season
+    {
+        $query = Season::query()
+            ->where('movie_id', $movieId)
+            ->where('number', $number);
+
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
     public function create(SeasonCreateData $dto): Season
     {
         return Season::create([

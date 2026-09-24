@@ -21,4 +21,28 @@ class KinopoiskApiUrl
 
         return $base.$path;
     }
+
+    /**
+     * @param array<string, scalar|null> $query
+     */
+    public static function season(array $query = []): string
+    {
+        $base = rtrim((string) config('movie_import.base_url'), '/');
+        $path = (string) config('movie_import.season_path', '/v1.5/season');
+
+        if (!str_starts_with($path, '/')) {
+            $path = '/'.$path;
+        }
+
+        $filtered = array_filter(
+            $query,
+            static fn (mixed $value): bool => $value !== null && $value !== '',
+        );
+
+        if ($filtered === []) {
+            return $base.$path;
+        }
+
+        return $base.$path.'?'.http_build_query($filtered);
+    }
 }

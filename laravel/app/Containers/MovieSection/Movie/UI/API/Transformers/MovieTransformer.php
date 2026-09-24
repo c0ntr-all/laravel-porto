@@ -3,9 +3,11 @@
 namespace App\Containers\MovieSection\Movie\UI\API\Transformers;
 
 use App\Containers\AppSection\Country\UI\API\Transformers\CountryTransformer;
+use App\Containers\MovieSection\Episode\Models\Episode;
 use App\Containers\MovieSection\Genre\UI\API\Transformers\GenreTransformer;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Person\UI\API\Transformers\PersonTransformer;
+use App\Containers\MovieSection\Season\Models\Season;
 use App\Containers\MovieSection\Season\UI\API\Transformers\SeasonTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
@@ -62,7 +64,10 @@ class MovieTransformer extends TransformerAbstract
 
     public function includeSeasons(Movie $movie): Collection
     {
-        $movie->loadMissing('seasons.episodes');
+        $movie->loadMissing([
+            'seasons.watches' => Season::constrainWatchesToCurrentUser(),
+            'seasons.episodes.watches' => Episode::constrainWatchesToCurrentUser(),
+        ]);
 
         return $this->collection($movie->seasons, new SeasonTransformer(), ContainerAliasEnum::MOVIE_SEASON->value);
     }

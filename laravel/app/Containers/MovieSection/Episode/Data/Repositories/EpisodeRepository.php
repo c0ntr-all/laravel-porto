@@ -26,6 +26,9 @@ class EpisodeRepository
             ->allowedIncludes([
                 AllowedInclude::relationship('season'),
             ])
+            ->with([
+                'watches' => Episode::constrainWatchesToCurrentUser(),
+            ])
             ->defaultSort('number')
             ->orderBy('id')
             ->get();

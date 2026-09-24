@@ -2,10 +2,12 @@
 
 namespace App\Containers\MovieSection\Movie\UI\Actions;
 
+use App\Containers\MovieSection\Episode\Models\Episode;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Movie\UI\API\Requests\GetRequest;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
+use App\Containers\MovieSection\Season\Models\Season;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +29,10 @@ class GetMovieAction extends BaseAction
             $movie->type === MovieTypeEnum::TV_SERIES
             || $movie->type === MovieTypeEnum::SHOW
         ) {
-            $movie->load(['seasons.episodes']);
+            $movie->load([
+                'seasons.watches' => Season::constrainWatchesToCurrentUser(),
+                'seasons.episodes.watches' => Episode::constrainWatchesToCurrentUser(),
+            ]);
         }
         $movie->loadCount([
             'credits as actors_count' => function ($query): void {

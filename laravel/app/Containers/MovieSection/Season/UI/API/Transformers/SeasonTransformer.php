@@ -2,9 +2,11 @@
 
 namespace App\Containers\MovieSection\Season\UI\API\Transformers;
 
+use App\Containers\MovieSection\Episode\Models\Episode;
 use App\Containers\MovieSection\Episode\UI\API\Transformers\EpisodeTransformer;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
 use App\Containers\MovieSection\Season\Models\Season;
+use App\Containers\MovieSection\Season\Models\SeasonWatch;
 use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
@@ -20,6 +22,8 @@ class SeasonTransformer extends TransformerAbstract
 
     public function transform(Season $season): array
     {
+        $watch = $this->currentUserWatch($season);
+
         return [
             'id' => $season->id,
             'movie_id' => $season->movie_id,
@@ -34,6 +38,8 @@ class SeasonTransformer extends TransformerAbstract
             'duration' => $season->duration,
             'poster' => $season->poster,
             'poster_preview' => $season->poster_preview,
+            'is_watched' => $watch !== null,
+            'watched_at' => $watch?->watched_at?->format('Y-m-d H:i:s'),
             'created_at' => $season->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $season->updated_at?->format('Y-m-d H:i:s'),
         ];
@@ -41,7 +47,9 @@ class SeasonTransformer extends TransformerAbstract
 
     public function includeEpisodes(Season $season): Collection
     {
-        $season->loadMissing('episodes');
+        $season->loadMissing([
+            'episodes.watches' => Episode::constrainWatchesToCurrentUser(),
+        ]);
 
         return $this->collection($season->episodes, new EpisodeTransformer(), ContainerAliasEnum::MOVIE_EPISODE->value);
     }
@@ -53,5 +61,14 @@ class SeasonTransformer extends TransformerAbstract
         }
 
         return $this->item($season->movie, new MovieTransformer(), ContainerAliasEnum::MOVIE->value);
+    }
+
+    private function currentUserWatch(Season $season): ?SeasonWatch
+    {
+        if (!$season->relationLoaded('watches')) {
+            return null;
+        }
+
+        return $season->watches->first();
     }
 }

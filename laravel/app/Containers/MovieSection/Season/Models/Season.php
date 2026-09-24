@@ -29,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Movie $movie
  * @property-read Collection<int, Episode> $episodes
+ * @property-read Collection<int, SeasonWatch> $watches
  */
 class Season extends Model
 {
@@ -73,5 +74,28 @@ class Season extends Model
     public function episodes(): HasMany
     {
         return $this->hasMany(Episode::class, 'season_id')->orderBy('number')->orderBy('id');
+    }
+
+    public function watches(): HasMany
+    {
+        return $this->hasMany(SeasonWatch::class, 'season_id');
+    }
+
+    /**
+     * @return \Closure(\Illuminate\Database\Eloquent\Relations\HasMany): void
+     */
+    public static function constrainWatchesToCurrentUser(): \Closure
+    {
+        $userId = auth()->id();
+
+        return static function ($query) use ($userId): void {
+            if ($userId === null) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $query->where('user_id', $userId);
+        };
     }
 }

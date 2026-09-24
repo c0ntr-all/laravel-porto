@@ -6,7 +6,7 @@
         :key="tag.id"
         :tag="tag"
         dense
-        color="primary"
+        :color="'secondary'"
         text-color="white"
       />
       <span v-if="!post.tags.length" class="text-caption text-grey-6">

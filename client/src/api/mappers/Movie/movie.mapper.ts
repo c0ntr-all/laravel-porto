@@ -167,12 +167,12 @@ export function mapMovieEpisodeResponse(response: IJsonApiResponse): IMovieEpiso
   return normalizeMovieEpisode(raw)
 }
 
-export function seasonPosterUrl(season: Pick<IMovieSeason, 'poster' | 'poster_preview'>): string | null {
-  return season.poster_preview || season.poster || null
+export function seasonPosterUrl(season: Pick<IMovieSeason, 'poster' | 'poster_preview'>): string | undefined {
+  return season.poster_preview || season.poster || undefined
 }
 
-export function episodeStillUrl(episode: Pick<IMovieEpisode, 'still' | 'still_preview'>): string | null {
-  return episode.still_preview || episode.still || null
+export function episodeStillUrl(episode: Pick<IMovieEpisode, 'still' | 'still_preview'>): string | undefined {
+  return episode.still_preview || episode.still || undefined
 }
 
 export function mapMoviesResponse(response: IJsonApiResponse): IMovie[] {

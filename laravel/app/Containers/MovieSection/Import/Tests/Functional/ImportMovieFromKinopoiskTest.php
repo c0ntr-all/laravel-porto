@@ -219,6 +219,49 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->assertJsonPath('data.meta.exception.class', 'App\\Containers\\MovieSection\\Import\\Exceptions\\KinopoiskParseException');
     }
 
+    public function test_imports_tv_series_with_seasons_and_episodes(): void
+    {
+        Http::fake([
+            'https://api.poiskkino.dev/v1.5/movie/404900' => Http::response($this->seriesPayload(), 200),
+            'https://api.poiskkino.dev/v1.5/season*' => Http::response($this->seasonsPayload(), 200),
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/imports', ['kp_id' => 404900]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.attributes.status', MovieImportStatusEnum::Completed->value)
+            ->assertJsonPath('data.attributes.was_created', true)
+            ->assertJsonPath('data.meta.seasons.seasons_total', 1)
+            ->assertJsonPath('data.meta.seasons.seasons_created', 1)
+            ->assertJsonPath('data.meta.seasons.episodes_total', 2)
+            ->assertJsonPath('data.meta.seasons.episodes_created', 2);
+
+        $this->assertDatabaseHas('movies', [
+            'kp_id' => 404900,
+            'title' => 'Во все тяжкие',
+            'type' => MovieTypeEnum::TV_SERIES->value,
+        ]);
+        $this->assertDatabaseHas('movie_seasons', [
+            'number' => 1,
+            'name' => 'Сезон 1',
+            'kp_movie_id' => 404900,
+        ]);
+        $this->assertDatabaseHas('movie_episodes', [
+            'number' => 1,
+            'name' => 'Пилот',
+        ]);
+        $this->assertDatabaseHas('movie_episodes', [
+            'number' => 2,
+            'name' => 'Кот в мешке…',
+        ]);
+
+        $includedTypes = collect($response->json('included'))->pluck('type')->unique()->values()->all();
+        $this->assertContains('movies', $includedTypes);
+        $this->assertContains('movie_seasons', $includedTypes);
+        $this->assertContains('movie_episodes', $includedTypes);
+    }
+
     public function test_user_can_list_and_get_own_import_history(): void
     {
         $drama = Genre::factory()->create(['name' => 'драма', 'slug' => 'drama']);
@@ -293,6 +336,84 @@ class ImportMovieFromKinopoiskTest extends TestCase
                     'enProfession' => 'director',
                 ],
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function seriesPayload(): array
+    {
+        return [
+            'id' => 404900,
+            'name' => 'Во все тяжкие',
+            'alternativeName' => 'Breaking Bad',
+            'year' => 2008,
+            'type' => 'tv-series',
+            'isSeries' => true,
+            'description' => 'Учитель химии начинает варить мет.',
+            'shortDescription' => 'Криминальная драма.',
+            'poster' => [
+                'url' => 'https://example.com/bb.jpg',
+            ],
+            'rating' => ['kp' => 9.0],
+            'genres' => [
+                ['id' => 8, 'name' => 'драма'],
+            ],
+            'countries' => [
+                ['id' => 1, 'name' => 'США'],
+            ],
+            'persons' => [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function seasonsPayload(): array
+    {
+        return [
+            'docs' => [
+                [
+                    'movieId' => 404900,
+                    'number' => 1,
+                    'name' => 'Сезон 1',
+                    'enName' => 'Season 1',
+                    'airDate' => '2008-01-20T00:00:00.000Z',
+                    'episodesCount' => 7,
+                    'duration' => 47,
+                    'poster' => [
+                        'url' => 'https://example.com/s1.jpg',
+                        'previewUrl' => 'https://example.com/s1-preview.jpg',
+                    ],
+                    'episodes' => [
+                        [
+                            'number' => 1,
+                            'name' => 'Пилот',
+                            'enName' => 'Pilot',
+                            'description' => 'Уолтер Уайт узнаёт диагноз.',
+                            'enDescription' => 'Walter White learns a diagnosis.',
+                            'duration' => 58,
+                            'airDate' => '2008-01-20',
+                            'still' => [
+                                'url' => 'https://example.com/e1.jpg',
+                                'previewUrl' => 'https://example.com/e1-preview.jpg',
+                            ],
+                        ],
+                        [
+                            'number' => 2,
+                            'name' => 'Кот в мешке…',
+                            'airDate' => '2008-01-27',
+                        ],
+                    ],
+                ],
+            ],
+            'total' => 1,
+            'limit' => 250,
+            'hasNext' => false,
+            'hasPrev' => false,
+            'next' => null,
+            'prev' => null,
         ];
     }
 }

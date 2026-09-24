@@ -96,6 +96,7 @@
       />
     </div>
 
+    <MovieSeasons />
     <MovieWatchHistory
       :movie-id="movieStore.movie.id"
       :movie-type="movieStore.movie.type"
@@ -121,6 +122,7 @@ import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import MovieActorsSidebar from 'src/components/client/Movies/MovieActorsSidebar.vue'
 import MovieCrewSection from 'src/components/client/Movies/MovieCrewSection.vue'
+import MovieSeasons from 'src/components/client/Movies/MovieSeasons.vue'
 import MovieWatchHistory from 'src/components/client/Movies/MovieWatchHistory.vue'
 
 const props = defineProps<{

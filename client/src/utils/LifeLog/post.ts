@@ -106,7 +106,8 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           actors_count: 0,
           folder_slugs: [],
           folder_ids: [],
-          credits: []
+          credits: [],
+          seasons: []
         }
       : null,
     watch: isSeriesPost ? (model.watch ?? null) : null,

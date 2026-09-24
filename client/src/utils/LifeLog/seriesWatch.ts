@@ -16,7 +16,8 @@ export function emptySeriesWatchProgress (): ISeriesWatchProgress {
     season: 1,
     episode_from: 1,
     episode_to: 1,
-    stopped_at: null
+    stopped_at: null,
+    episode_ids: []
   }
 }
 
@@ -45,11 +46,16 @@ export function normalizeSeriesWatchProgress (value: unknown): ISeriesWatchProgr
     ? raw.stopped_at.trim()
     : null
 
+  const episodeIds = Array.isArray(raw.episode_ids)
+    ? raw.episode_ids.map(id => String(id)).filter(Boolean)
+    : undefined
+
   return {
     season,
     episode_from: episodeFrom,
     episode_to: episodeTo,
-    stopped_at: stoppedAt
+    stopped_at: stoppedAt,
+    ...(episodeIds?.length ? { episode_ids: episodeIds } : {})
   }
 }
 
@@ -101,6 +107,18 @@ export function formatSeriesWatchProgress (watch: ISeriesWatchProgress | null | 
   return text
 }
 
-export function isSeriesWatchValid (watch: ISeriesWatchProgress | null | undefined): boolean {
-  return normalizeSeriesWatchProgress(watch) !== null
+export function isSeriesWatchValid (
+  watch: ISeriesWatchProgress | null | undefined,
+  options?: { requireEpisodeSelection?: boolean }
+): boolean {
+  if (!normalizeSeriesWatchProgress(watch)) {
+    return false
+  }
+
+  if (options?.requireEpisodeSelection) {
+    const ids = watch?.episode_ids
+    return Array.isArray(ids) && ids.length > 0
+  }
+
+  return true
 }

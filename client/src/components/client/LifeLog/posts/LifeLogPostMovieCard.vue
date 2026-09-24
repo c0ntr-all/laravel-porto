@@ -139,7 +139,8 @@ const displayMovie = computed((): IMovie => {
     actors_count: 0,
     folder_slugs: [],
     folder_ids: [],
-    credits: []
+    credits: [],
+    seasons: []
   }
 })
 </script>

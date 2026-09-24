@@ -15,6 +15,7 @@ export interface IMovieCountry {
 }
 
 import { IMovieCredit } from './person'
+import { IMovieSeason } from './season'
 
 export interface IMovie {
   id: string
@@ -36,6 +37,7 @@ export interface IMovie {
   folder_slugs: string[]
   folder_ids: string[]
   credits: IMovieCredit[]
+  seasons: IMovieSeason[]
 }
 
 export interface IMovieListQuery {

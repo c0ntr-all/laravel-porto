@@ -7,7 +7,9 @@ import {
   IMovieImport,
   IMovieFolder,
   IMoviePerson,
-  IMovieProfession
+  IMovieProfession,
+  IMovieEpisode,
+  IMovieSeason
 } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
@@ -105,8 +107,72 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     actors_count: Number(raw.actors_count ?? 0),
     folder_slugs: asStrings(raw.folder_slugs),
     folder_ids: asStrings(raw.folder_ids),
-    credits: asRecords(raw.credits).map(normalizeMovieCredit)
+    credits: asRecords(raw.credits).map(normalizeMovieCredit),
+    seasons: asRecords(raw.seasons)
+      .map(normalizeMovieSeason)
+      .sort((left, right) => left.number - right.number)
   }
+}
+
+export function normalizeMovieEpisode(raw: Record<string, unknown>): IMovieEpisode {
+  return {
+    id: String(raw.id),
+    season_id: String(raw.season_id ?? ''),
+    number: Number(raw.number ?? 0),
+    name: toNullableString(raw.name),
+    description: toNullableString(raw.description),
+    air_date: toNullableString(raw.air_date),
+    still: toNullableString(raw.still),
+    still_preview: toNullableString(raw.still_preview),
+    is_watched: Boolean(raw.is_watched),
+    watched_at: toNullableString(raw.watched_at)
+  }
+}
+
+export function normalizeMovieSeason(raw: Record<string, unknown>): IMovieSeason {
+  return {
+    id: String(raw.id),
+    movie_id: String(raw.movie_id ?? ''),
+    number: Number(raw.number ?? 0),
+    name: toNullableString(raw.name),
+    air_date: toNullableString(raw.air_date),
+    episodes_count: toNullableNumber(raw.episodes_count),
+    poster: toNullableString(raw.poster),
+    poster_preview: toNullableString(raw.poster_preview),
+    is_watched: Boolean(raw.is_watched),
+    watched_at: toNullableString(raw.watched_at),
+    episodes: asRecords(raw.episodes)
+      .map(normalizeMovieEpisode)
+      .sort((left, right) => left.number - right.number)
+  }
+}
+
+export function mapMovieSeasonResponse(response: IJsonApiResponse): IMovieSeason {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Season not found')
+  }
+
+  return normalizeMovieSeason(raw)
+}
+
+export function mapMovieEpisodeResponse(response: IJsonApiResponse): IMovieEpisode {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Episode not found')
+  }
+
+  return normalizeMovieEpisode(raw)
+}
+
+export function seasonPosterUrl(season: Pick<IMovieSeason, 'poster' | 'poster_preview'>): string | null {
+  return season.poster_preview || season.poster || null
+}
+
+export function episodeStillUrl(episode: Pick<IMovieEpisode, 'still' | 'still_preview'>): string | null {
+  return episode.still_preview || episode.still || null
 }
 
 export function mapMoviesResponse(response: IJsonApiResponse): IMovie[] {

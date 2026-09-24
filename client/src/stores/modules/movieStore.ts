@@ -1,11 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
-import { mapMovieCreditsResponse, mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
+import {
+  mapMovieCreditsResponse,
+  mapMovieEpisodeResponse,
+  mapMovieResponse,
+  mapMovieSeasonResponse,
+  mapMoviesResponse
+} from 'src/api/mappers/Movie/movie.mapper'
 import { extractCursorFromResponse, handleApiError, hasMoreFromResponse } from 'src/utils/jsonapi'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
-import { IMovie, IMovieCredit, IMovieFolder } from 'src/types/Movie'
+import { IMovie, IMovieCredit, IMovieFolder, IMovieSeason } from 'src/types/Movie'
 import { withFolderMembership } from 'src/utils/movieFolders'
+import {
+  replaceEpisode,
+  replaceSeason,
+  withEpisodeWatched,
+  withSeasonWatched
+} from 'src/utils/movieSeasons'
 
 function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
   const seen = new Set(current.map(item => item.id))
@@ -25,9 +37,25 @@ export const useMovieStore = defineStore('movies', () => {
   const isMovieCreditsLoading = ref(false)
   const listTitle = ref('')
   const listType = ref<MovieTypeEnum | null>(null)
+  const pendingWatchKeys = ref<string[]>([])
 
   let listRequestId = 0
   let creditsMovieId: string | null = null
+
+  function isWatchPending(key: string): boolean {
+    return pendingWatchKeys.value.includes(key)
+  }
+
+  function patchMovieSeasons(seasons: IMovieSeason[]): void {
+    if (!movie.value) {
+      return
+    }
+
+    movie.value = {
+      ...movie.value,
+      seasons
+    }
+  }
 
   async function getMovies(options?: {
     append?: boolean
@@ -143,6 +171,67 @@ export const useMovieStore = defineStore('movies', () => {
     }
   }
 
+  async function toggleSeasonWatched(season: IMovieSeason): Promise<void> {
+    const key = `season:${season.id}`
+
+    if (!movie.value || isWatchPending(key)) {
+      return
+    }
+
+    const watched = !season.is_watched
+    const previous = movie.value.seasons
+    pendingWatchKeys.value = [...pendingWatchKeys.value, key]
+    patchMovieSeasons(replaceSeason(previous, withSeasonWatched(season, watched)))
+
+    try {
+      const response = watched
+        ? await movieApi.markSeasonWatched(season.id)
+        : await movieApi.unmarkSeasonWatched(season.id)
+      const mapped = mapMovieSeasonResponse(response)
+
+      patchMovieSeasons(replaceSeason(
+        movie.value?.seasons ?? [],
+        withSeasonWatched(mapped, watched)
+      ))
+    } catch (error) {
+      patchMovieSeasons(previous)
+      handleApiError(error)
+    } finally {
+      pendingWatchKeys.value = pendingWatchKeys.value.filter(item => item !== key)
+    }
+  }
+
+  async function toggleEpisodeWatched(season: IMovieSeason, episodeId: string): Promise<void> {
+    const key = `episode:${episodeId}`
+    const episode = season.episodes.find(item => item.id === episodeId)
+
+    if (!movie.value || !episode || isWatchPending(key)) {
+      return
+    }
+
+    const watched = !episode.is_watched
+    const previous = movie.value.seasons
+    pendingWatchKeys.value = [...pendingWatchKeys.value, key]
+    patchMovieSeasons(replaceSeason(previous, withEpisodeWatched(season, episodeId, watched)))
+
+    try {
+      const response = watched
+        ? await movieApi.markEpisodeWatched(episodeId)
+        : await movieApi.unmarkEpisodeWatched(episodeId)
+      const mapped = mapMovieEpisodeResponse(response)
+
+      patchMovieSeasons(replaceEpisode(movie.value?.seasons ?? [], {
+        ...mapped,
+        is_watched: watched
+      }))
+    } catch (error) {
+      patchMovieSeasons(previous)
+      handleApiError(error)
+    } finally {
+      pendingWatchKeys.value = pendingWatchKeys.value.filter(item => item !== key)
+    }
+  }
+
   return {
     movies,
     movie,
@@ -155,9 +244,12 @@ export const useMovieStore = defineStore('movies', () => {
     isMovieCreditsLoading,
     listTitle,
     listType,
+    isWatchPending,
     getMovies,
     getMovie,
     getMovieCredits,
-    setMovieFolderMembership
+    setMovieFolderMembership,
+    toggleSeasonWatched,
+    toggleEpisodeWatched
   }
 })

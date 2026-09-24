@@ -40,8 +40,9 @@
       </q-select>
 
       <PostFormSeriesWatchFields
-        v-if="isTvSeriesSelected"
+        v-if="isTvSeriesSelected && selectedMovie"
         v-model="watchProgress"
+        :movie-id="selectedMovie.id"
         class="q-mt-md"
       />
     </div>
@@ -84,7 +85,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
-import { mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
+import { mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
@@ -95,6 +96,7 @@ import {
   emptySeriesWatchProgress,
   isSeriesWatchValid
 } from 'src/utils/LifeLog/seriesWatch'
+import { markEpisodesWatchedIfNeeded } from 'src/utils/Movie/markEpisodesWatched'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormSeriesWatchFields from 'src/components/client/LifeLog/forms/PostFormSeriesWatchFields.vue'
@@ -137,7 +139,7 @@ const canSubmit = computed(() => {
   }
 
   if (isTvSeriesSelected.value) {
-    return isSeriesWatchValid(watchProgress.value)
+    return isSeriesWatchValid(watchProgress.value, { requireEpisodeSelection: true })
   }
 
   return true
@@ -241,6 +243,10 @@ const submit = async () => {
   isSubmitting.value = true
 
   const isSeries = isTvSeriesSelected.value
+  const movieId = selectedMovie.value?.id ?? null
+  const episodeIdsToMark = isSeries
+    ? [...(watchProgress.value.episode_ids ?? [])]
+    : []
   const title = selectedMovie.value?.title ?? movieInput.value.trim()
   const postModel = {
     title,
@@ -263,6 +269,17 @@ const submit = async () => {
 
   try {
     await submission
+
+    if (isSeries && movieId && episodeIdsToMark.length) {
+      try {
+        const movieResponse = await movieApi.getMovie(movieId)
+        const movie = mapMovieResponse(movieResponse)
+        const episodes = (movie.seasons ?? []).flatMap(season => season.episodes)
+        await markEpisodesWatchedIfNeeded(episodes, episodeIdsToMark)
+      } catch {
+        // Пост уже создан; отметки эпизодов можно повторить на странице сериала
+      }
+    }
   } finally {
     isSubmitting.value = false
   }

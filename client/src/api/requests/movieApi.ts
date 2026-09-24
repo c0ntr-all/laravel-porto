@@ -30,9 +30,33 @@ export const movieApi = {
   async getMovie(id: string): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/movie/movies/${id}`, {
       params: {
-        include: 'genres,countries'
+        include: 'genres,countries,seasons.episodes'
       }
     })
+
+    return response.data
+  },
+
+  async markSeasonWatched(id: string): Promise<IJsonApiResponse> {
+    const response = await api.post(`v1/movie/seasons/${id}/watch`)
+
+    return response.data
+  },
+
+  async unmarkSeasonWatched(id: string): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/movie/seasons/${id}/watch`)
+
+    return response.data
+  },
+
+  async markEpisodeWatched(id: string): Promise<IJsonApiResponse> {
+    const response = await api.post(`v1/movie/episodes/${id}/watch`)
+
+    return response.data
+  },
+
+  async unmarkEpisodeWatched(id: string): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/movie/episodes/${id}/watch`)
 
     return response.data
   },

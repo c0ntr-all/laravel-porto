@@ -32,8 +32,9 @@
       </q-select>
 
       <PostFormSeriesWatchFields
-        v-if="isTvSeriesSelected"
+        v-if="isTvSeriesSelected && selectedMovie"
         v-model="watchModel"
+        :movie-id="selectedMovie.id"
         class="q-mt-md"
       />
     </div>
@@ -108,12 +109,13 @@ import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { movieApi } from 'src/api/requests/movieApi'
-import { mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
+import { mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
 import {
   emptySeriesWatchProgress,
   isSeriesWatchValid,
   normalizeSeriesWatchProgress
 } from 'src/utils/LifeLog/seriesWatch'
+import { markEpisodesWatchedIfNeeded } from 'src/utils/Movie/markEpisodesWatched'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormCreateTags from 'src/components/client/LifeLog/forms/PostFormCreateTags.vue'
@@ -179,7 +181,7 @@ const canSubmit = computed(() => {
   }
 
   if (isTvSeriesSelected.value) {
-    return isSeriesWatchValid(model.value.watch)
+    return isSeriesWatchValid(model.value.watch, { requireEpisodeSelection: true })
   }
 
   return true
@@ -324,6 +326,11 @@ async function submit () {
   syncMovieFieldsToModel()
   isSubmitting.value = true
 
+  const movieId = selectedMovie.value?.id ?? null
+  const episodeIdsToMark = isTvSeriesSelected.value
+    ? [...(model.value.watch?.episode_ids ?? [])]
+    : []
+
   try {
     const updatedPost = await postStore.updatePost(
       props.post.id,
@@ -340,6 +347,17 @@ async function submit () {
       movieInput.value = updatedPost.movie?.title ?? ''
       formTagsRef.value?.resetAvailableTags()
       emit('success')
+
+      if (movieId && episodeIdsToMark.length) {
+        try {
+          const movieResponse = await movieApi.getMovie(movieId)
+          const movie = mapMovieResponse(movieResponse)
+          const episodes = (movie.seasons ?? []).flatMap(season => season.episodes)
+          await markEpisodesWatchedIfNeeded(episodes, episodeIdsToMark)
+        } catch {
+          // ignore
+        }
+      }
     }
   } finally {
     isSubmitting.value = false

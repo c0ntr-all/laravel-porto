@@ -12,6 +12,8 @@ class PostContentAttachDto extends Data
     public ?int $movie_id = null;
     public ?string $movie_title = null;
     public ?array $watch = null;
+    public ?string $started_at = null;
+    public bool $has_started_at_input = false;
 
     public function __construct()
     {
@@ -28,6 +30,11 @@ class PostContentAttachDto extends Data
         return $this->watch !== null && $this->watch !== [];
     }
 
+    public function hasStartedAtInput(): bool
+    {
+        return $this->has_started_at_input;
+    }
+
     public function watchProgress(): ?SeriesWatchProgress
     {
         if (!$this->hasWatchPayload()) {
@@ -35,5 +42,14 @@ class PostContentAttachDto extends Data
         }
 
         return SeriesWatchProgress::fromArray($this->watch);
+    }
+
+    public function startedAt(): ?string
+    {
+        if ($this->started_at === null || trim($this->started_at) === '') {
+            return null;
+        }
+
+        return trim($this->started_at);
     }
 }

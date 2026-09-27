@@ -26,6 +26,7 @@ class PostUpdateContextDto extends Data
     public int|Optional|null $movie_id;
     public string|Optional|null $movie_title;
     public array|Optional|null $watch;
+    public string|Optional|null $started_at;
 
     public function __construct()
     {
@@ -36,11 +37,13 @@ class PostUpdateContextDto extends Data
         $movieId = $this->movie_id instanceof Optional ? null : $this->movie_id;
         $movieTitle = $this->movie_title instanceof Optional ? null : $this->movie_title;
         $watch = $this->watch instanceof Optional ? null : $this->watch;
+        $hasStartedAtInput = !($this->started_at instanceof Optional);
+        $startedAt = $hasStartedAtInput ? $this->started_at : null;
 
         $hasMovie = $movieId !== null || ($movieTitle !== null && trim((string) $movieTitle) !== '');
         $hasWatch = $watch !== null && $watch !== [];
 
-        if (!$hasMovie && !$hasWatch) {
+        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput) {
             return null;
         }
 
@@ -53,6 +56,8 @@ class PostUpdateContextDto extends Data
             'movie_id' => $movieId,
             'movie_title' => $movieTitle,
             'watch' => $watch,
+            'started_at' => $startedAt,
+            'has_started_at_input' => $hasStartedAtInput,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Containers\LifelogSection\Post\Models\Traits;
 
+use App\Containers\LifelogSection\Post\Data\ValueObjects\MovieSubjectPayload;
 use App\Containers\LifelogSection\Post\Data\ValueObjects\SeriesWatchProgress;
 use App\Containers\LifelogSection\Post\Models\PostSubjectable;
 use App\Containers\MovieSection\Movie\Models\Movie;
@@ -35,18 +36,43 @@ trait HasSubjects
         $this->movies()->sync($movieIds);
     }
 
-    public function attachMovie(Movie $movie, ?SeriesWatchProgress $watch = null): void
+    public function attachMovie(Movie $movie, ?MovieSubjectPayload $payload = null): void
     {
         // Pass a PHP array — PostSubjectable casts payload to JSON once.
         // Manual json_encode here would double-encode via the pivot cast.
         $this->movies()->sync([
             $movie->id => [
-                'payload' => $watch?->toArray(),
+                'payload' => $payload?->isEmpty() ? null : $payload?->toArray(),
             ],
         ]);
     }
 
+    public function movieSubjectPayload(): ?MovieSubjectPayload
+    {
+        $payload = $this->rawMovieSubjectPayload();
+        if ($payload === null) {
+            return null;
+        }
+
+        $subject = MovieSubjectPayload::fromArray($payload);
+
+        return $subject->isEmpty() ? null : $subject;
+    }
+
     public function watchProgress(): ?SeriesWatchProgress
+    {
+        return $this->movieSubjectPayload()?->watch;
+    }
+
+    public function startedAt(): ?string
+    {
+        return $this->movieSubjectPayload()?->startedAt;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function rawMovieSubjectPayload(): ?array
     {
         $movie = $this->relationLoaded('movies')
             ? $this->movies->first()
@@ -56,12 +82,7 @@ trait HasSubjects
             return null;
         }
 
-        $payload = $this->normalizePivotPayload($movie->pivot?->payload);
-        if ($payload === null) {
-            return null;
-        }
-
-        return SeriesWatchProgress::fromArray($payload);
+        return $this->normalizePivotPayload($movie->pivot?->payload);
     }
 
     /**
@@ -71,7 +92,11 @@ trait HasSubjects
     {
         if (is_array($payload)) {
             // Recover legacy double-encoded payloads: ["{\"season\":1}"] shape as assoc after one decode
-            if (isset($payload['season']) || isset($payload['episode_from'])) {
+            if (
+                isset($payload['season'])
+                || isset($payload['episode_from'])
+                || isset($payload['started_at'])
+            ) {
                 return $payload;
             }
 

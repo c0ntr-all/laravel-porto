@@ -4,6 +4,7 @@ namespace App\Containers\LifelogSection\Post\Handlers;
 
 use App\Containers\LifelogSection\Post\Contracts\PostContentHandlerInterface;
 use App\Containers\LifelogSection\Post\Data\DTO\PostContentAttachDto;
+use App\Containers\LifelogSection\Post\Data\ValueObjects\MovieSubjectPayload;
 use App\Containers\LifelogSection\Post\Data\ValueObjects\SeriesWatchProgress;
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Containers\LifelogSection\Post\Models\Post;
@@ -31,9 +32,9 @@ class MoviePostContentHandler implements PostContentHandlerInterface
     public function attach(Post $post, PostContentAttachDto $dto): void
     {
         $movie = $this->resolveMovie($post, $dto);
-        $watch = $this->resolveWatch($post, $movie, $dto);
+        $payload = $this->resolvePayload($post, $movie, $dto);
 
-        $post->attachMovie($movie, $watch);
+        $post->attachMovie($movie, $payload);
     }
 
     public function eagerLoadRelations(): array
@@ -64,6 +65,17 @@ class MoviePostContentHandler implements PostContentHandlerInterface
         throw new InvalidArgumentException('Movie post requires movie_id or movie_title.');
     }
 
+    private function resolvePayload(
+        Post $post,
+        Movie $movie,
+        PostContentAttachDto $dto,
+    ): ?MovieSubjectPayload {
+        $watch = $this->resolveWatch($post, $movie, $dto);
+        $startedAt = $this->resolveStartedAt($post, $movie, $dto);
+
+        return MovieSubjectPayload::make($watch, $startedAt);
+    }
+
     private function resolveWatch(Post $post, Movie $movie, PostContentAttachDto $dto): ?SeriesWatchProgress
     {
         if ($dto->hasWatchPayload()) {
@@ -82,10 +94,21 @@ class MoviePostContentHandler implements PostContentHandlerInterface
             && (int) $current->id === (int) $movie->id
             && $movie->type === MovieTypeEnum::TV_SERIES
         ) {
-            $payload = $current->pivot?->payload;
-            if (is_array($payload) && $payload !== []) {
-                return SeriesWatchProgress::fromArray($payload);
-            }
+            return $post->watchProgress();
+        }
+
+        return null;
+    }
+
+    private function resolveStartedAt(Post $post, Movie $movie, PostContentAttachDto $dto): ?string
+    {
+        if ($dto->hasStartedAtInput()) {
+            return $dto->startedAt();
+        }
+
+        $current = $this->currentMovie($post);
+        if ($current && (int) $current->id === (int) $movie->id) {
+            return $post->startedAt();
         }
 
         return null;

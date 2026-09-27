@@ -24,6 +24,7 @@ class PostCreateDto extends Data
     public ?int $movie_id = null;
     public ?string $movie_title = null;
     public ?array $watch = null;
+    public ?string $started_at = null;
 
     public function __construct(
     ) {
@@ -36,6 +37,8 @@ class PostCreateDto extends Data
             'movie_id' => $this->movie_id,
             'movie_title' => $this->movie_title,
             'watch' => $this->watch,
+            'started_at' => $this->started_at,
+            'has_started_at_input' => true,
         ]);
     }
 }

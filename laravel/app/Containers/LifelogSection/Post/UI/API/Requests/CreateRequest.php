@@ -6,6 +6,7 @@ use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class CreateRequest extends AuthenticatedRequest
 {
@@ -46,6 +47,13 @@ class CreateRequest extends AuthenticatedRequest
                 'max:255',
                 'prohibits:movie_id',
             ],
+            'started_at' => [
+                Rule::prohibitedIf(fn () => !$isMovieContent),
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^\d{4}-\d{2}-\d{2}( \d{1,2}:\d{2})?$/',
+            ],
             'watch' => [
                 Rule::prohibitedIf(fn () => !$isTvSeriesContent),
                 'sometimes',
@@ -75,6 +83,39 @@ class CreateRequest extends AuthenticatedRequest
                 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
             ],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $startedAt = $this->input('started_at');
+            if (!is_string($startedAt) || trim($startedAt) === '') {
+                return;
+            }
+
+            $endDate = $this->input('date');
+            if (!is_string($endDate) || $endDate === '') {
+                return;
+            }
+
+            $endTime = $this->input('time');
+            $end = is_string($endTime) && $endTime !== ''
+                ? "{$endDate} {$endTime}"
+                : $endDate;
+
+            $start = trim($startedAt);
+
+            if (strtotime($start) > strtotime($end)) {
+                $validator->errors()->add(
+                    'started_at',
+                    'Дата начала не может быть позже окончания.'
+                );
+            }
+        });
     }
 
     private function isMovieContentType(): bool

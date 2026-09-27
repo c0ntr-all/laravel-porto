@@ -64,8 +64,51 @@
       />
     </div>
 
+    <div class="lifelog-post-form__period q-px-md q-pb-sm">
+      <div class="text-subtitle2 text-grey-8 q-mb-sm">Начало просмотра</div>
+      <div class="flex items-center q-gutter-sm">
+        <AppDatetimeField
+          v-if="hasStartedAt && !isStartNullTime"
+          class="lifelog-post-form__datetime"
+          v-model="startDatetime"
+        />
+        <AppDateField
+          v-else-if="hasStartedAt"
+          class="lifelog-post-form__datetime"
+          v-model="startDatetime"
+        />
+        <q-btn
+          v-if="!hasStartedAt"
+          flat
+          dense
+          no-caps
+          color="primary"
+          icon="add"
+          label="Указать начало"
+          @click="enableStartedAt"
+        />
+        <template v-else>
+          <q-checkbox
+            v-model="isStartNullTime"
+            label="не учитывать время"
+          />
+          <q-btn
+            flat
+            dense
+            round
+            color="grey-7"
+            icon="close"
+            @click="clearStartedAt"
+          >
+            <q-tooltip>Убрать дату начала</q-tooltip>
+          </q-btn>
+        </template>
+      </div>
+    </div>
+
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
+        <div class="text-subtitle2 text-grey-8 q-mb-sm">Окончание</div>
         <div class="flex">
           <AppDatetimeField
             v-if="!model.isNullTime"
@@ -84,7 +127,7 @@
           />
         </div>
       </div>
-      <div class="lifelog-post-form-actions__right">
+      <div class="lifelog-post-form-actions__right self-end">
         <q-btn
           label="Сохранить"
           color="primary"
@@ -116,6 +159,10 @@ import {
   normalizeSeriesWatchProgress
 } from 'src/utils/LifeLog/seriesWatch'
 import { markEpisodesWatchedIfNeeded } from 'src/utils/Movie/markEpisodesWatched'
+import {
+  parseStartedAtToForm,
+  serializeStartedAt
+} from 'src/utils/LifeLog/startedAt'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormCreateTags from 'src/components/client/LifeLog/forms/PostFormCreateTags.vue'
@@ -146,8 +193,13 @@ const model = ref<IPostUpdateModel>({
   attachments: [],
   movie_id: null,
   movie_title: null,
-  watch: emptySeriesWatchProgress()
+  watch: emptySeriesWatchProgress(),
+  started_at: null
 })
+
+const hasStartedAt = ref(false)
+const startDatetime = ref('')
+const isStartNullTime = ref(true)
 
 const watchModel = computed({
   get (): ISeriesWatchProgress {
@@ -192,6 +244,41 @@ const movieOptionCaption = (movie: IMovie) => {
   return movie.year ? `${typeLabel} · ${movie.year}` : typeLabel
 }
 
+function applyStartedAtToForm (startedAt: string | null | undefined) {
+  const parsed = parseStartedAtToForm(startedAt)
+  if (!parsed.datetime) {
+    hasStartedAt.value = false
+    startDatetime.value = ''
+    isStartNullTime.value = true
+    model.value.started_at = null
+    return
+  }
+
+  hasStartedAt.value = true
+  startDatetime.value = parsed.datetime
+  isStartNullTime.value = parsed.isNullTime
+  model.value.started_at = startedAt ?? null
+}
+
+function enableStartedAt () {
+  hasStartedAt.value = true
+  startDatetime.value = model.value.datetime.split(' ')[0]
+  isStartNullTime.value = true
+}
+
+function clearStartedAt () {
+  hasStartedAt.value = false
+  startDatetime.value = ''
+  isStartNullTime.value = true
+  model.value.started_at = null
+}
+
+function syncStartedAtToModel () {
+  model.value.started_at = hasStartedAt.value
+    ? serializeStartedAt(startDatetime.value, isStartNullTime.value)
+    : null
+}
+
 function mapPostToModel (post: IPost): IPostUpdateModel {
   const rawPost = toRaw(post)
   const isSeries =
@@ -213,7 +300,8 @@ function mapPostToModel (post: IPost): IPostUpdateModel {
     movie_title: null,
     watch: isSeries
       ? (normalizeSeriesWatchProgress(rawPost.watch) ?? emptySeriesWatchProgress())
-      : null
+      : null,
+    started_at: rawPost.started_at ?? null
   }
 }
 
@@ -324,6 +412,7 @@ async function submit () {
   }
 
   syncMovieFieldsToModel()
+  syncStartedAtToModel()
   isSubmitting.value = true
 
   const movieId = selectedMovie.value?.id ?? null
@@ -343,6 +432,7 @@ async function submit () {
       const nextModel = mapPostToModel(updatedPost)
       model.value = nextModel
       originalPost.value = structuredClone(nextModel)
+      applyStartedAtToForm(nextModel.started_at)
       selectedMovie.value = updatedPost.movie ?? null
       movieInput.value = updatedPost.movie?.title ?? ''
       formTagsRef.value?.resetAvailableTags()
@@ -373,6 +463,19 @@ watch(() => model.value.isNullTime, newValue => {
   }
 })
 
+watch(isStartNullTime, newValue => {
+  if (!hasStartedAt.value || !startDatetime.value) {
+    return
+  }
+
+  const onlyDate = startDatetime.value.split(' ')[0]
+  if (newValue) {
+    startDatetime.value = onlyDate
+  } else {
+    startDatetime.value = `${onlyDate} 00:00`
+  }
+})
+
 watch(selectedMovie, () => {
   syncMovieFieldsToModel()
 })
@@ -381,6 +484,7 @@ onMounted(() => {
   const initial = mapPostToModel(props.post)
   model.value = initial
   originalPost.value = structuredClone(initial)
+  applyStartedAtToForm(initial.started_at)
   selectedMovie.value = props.post.movie ?? null
   movieInput.value = props.post.movie?.title ?? ''
 })
@@ -393,6 +497,10 @@ onMounted(() => {
 
   &__datetime {
     width: 240px;
+  }
+
+  &__period {
+    background-color: #ffffff;
   }
 
   &-actions {

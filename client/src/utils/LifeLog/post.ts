@@ -6,6 +6,7 @@ import { isGalleryVideo } from 'src/utils/gallery'
 import { isPostDocumentAttachment } from 'src/utils/document'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
+import { normalizeStartedAt } from 'src/utils/LifeLog/startedAt'
 
 const OPTIMISTIC_POST_PREFIX = 'optimistic-post-'
 
@@ -111,6 +112,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
         }
       : null,
     watch: isSeriesPost ? (model.watch ?? null) : null,
+    started_at: isMoviePost ? (normalizeStartedAt(model.started_at) ?? null) : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     date: datePart,

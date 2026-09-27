@@ -62,6 +62,18 @@
           {{ seriesWatchText }}
         </div>
       </div>
+
+      <div
+        v-if="watchPeriodText"
+        class="ll-post-movie-card__watch"
+      >
+        <div class="ll-post-movie-card__watch-label text-caption text-grey-7">
+          Период просмотра
+        </div>
+        <div class="ll-post-movie-card__watch-value">
+          {{ watchPeriodText }}
+        </div>
+      </div>
     </section>
 
     <footer class="ll-post-card__section ll-post-card__footer">
@@ -84,11 +96,12 @@ import { IPost } from 'src/types'
 import { IMovie } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
-import { movieWatchPostTitle } from 'src/utils/LifeLog/post'
+import { movieWatchPostTitle, formatPostDateTime } from 'src/utils/LifeLog/post'
 import {
   formatSeriesWatchProgress,
   isSeriesWatchPost
 } from 'src/utils/LifeLog/seriesWatch'
+import { formatStartedAtDisplay } from 'src/utils/LifeLog/startedAt'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormMovieUpdate from 'src/components/client/LifeLog/forms/PostFormMovieUpdate.vue'
 import MovieCardHorizontal from 'src/components/client/Movies/MovieCardHorizontal.vue'
@@ -113,6 +126,16 @@ const seriesWatchText = computed(() => {
   }
 
   return formatSeriesWatchProgress(props.post.watch)
+})
+
+const watchPeriodText = computed(() => {
+  const started = formatStartedAtDisplay(props.post.started_at)
+  if (!started) {
+    return ''
+  }
+
+  const ended = formatPostDateTime(props.post)
+  return `${started} — ${ended}`
 })
 
 const displayMovie = computed((): IMovie => {

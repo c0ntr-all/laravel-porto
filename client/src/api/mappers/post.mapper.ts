@@ -5,6 +5,7 @@ import { IPostUpdateDto } from 'src/api/DTO/PostUpdateDto'
 import { getPostAttachmentDeleteId } from 'src/utils/attachment'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { serializeSeriesWatchProgress } from 'src/utils/LifeLog/seriesWatch'
+import { normalizeStartedAt } from 'src/utils/LifeLog/startedAt'
 
 export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
   const data: IPostCreateDto = {
@@ -28,6 +29,13 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
       data.movie_id = postModel.movie_id
     } else if (postModel.movie_title?.trim()) {
       data.movie_title = postModel.movie_title.trim()
+    }
+
+    if (typeof postModel.started_at === 'string' && postModel.started_at.trim()) {
+      const normalized = normalizeStartedAt(postModel.started_at)
+      if (normalized) {
+        data.started_at = normalized
+      }
     }
   }
 
@@ -90,6 +98,15 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
       edited.movie_title.trim() !== (original.movie?.title ?? original.title ?? '')
     ) {
       dto.movie_title = edited.movie_title.trim()
+    }
+
+    const nextStartedAt = typeof edited.started_at === 'string' && edited.started_at.trim()
+      ? normalizeStartedAt(edited.started_at)
+      : null
+    const prevStartedAt = normalizeStartedAt(original.started_at)
+
+    if (nextStartedAt !== prevStartedAt) {
+      dto.started_at = nextStartedAt
     }
 
     if (contentType === PostContentTypeEnum.TV_SERIES) {

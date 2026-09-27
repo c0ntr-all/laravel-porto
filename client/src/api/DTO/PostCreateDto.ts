@@ -13,4 +13,5 @@ export interface IPostCreateDto {
   movie_id?: number
   movie_title?: string
   watch?: ISeriesWatchProgress
+  started_at?: string | null
 }

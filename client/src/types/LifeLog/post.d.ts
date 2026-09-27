@@ -41,6 +41,7 @@ export interface IPost {
   attachments: IPostAttachment[]
   movie?: IMovie | null
   watch?: ISeriesWatchProgress | null
+  started_at?: string | null
   is_pending?: boolean
 }
 
@@ -55,6 +56,7 @@ export interface IPostModel {
   movie_id?: number | null
   movie_title?: string | null
   watch?: ISeriesWatchProgress | null
+  started_at?: string | null
 }
 
 export interface IPostUpdateModel extends IPostModel {

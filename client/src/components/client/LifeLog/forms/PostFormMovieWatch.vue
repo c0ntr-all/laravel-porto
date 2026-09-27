@@ -47,8 +47,51 @@
       />
     </div>
 
+    <div class="lifelog-post-form__period q-px-md q-pb-sm">
+      <div class="text-subtitle2 text-grey-8 q-mb-sm">Начало просмотра</div>
+      <div class="flex items-center q-gutter-sm">
+        <AppDatetimeField
+          v-if="hasStartedAt && !isStartNullTime"
+          class="lifelog-post-form__datetime"
+          v-model="startDatetime"
+        />
+        <AppDateField
+          v-else-if="hasStartedAt"
+          class="lifelog-post-form__datetime"
+          v-model="startDatetime"
+        />
+        <q-btn
+          v-if="!hasStartedAt"
+          flat
+          dense
+          no-caps
+          color="primary"
+          icon="add"
+          label="Указать начало"
+          @click="enableStartedAt"
+        />
+        <template v-else>
+          <q-checkbox
+            v-model="isStartNullTime"
+            label="не учитывать время"
+          />
+          <q-btn
+            flat
+            dense
+            round
+            color="grey-7"
+            icon="close"
+            @click="clearStartedAt"
+          >
+            <q-tooltip>Убрать дату начала</q-tooltip>
+          </q-btn>
+        </template>
+      </div>
+    </div>
+
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
+        <div class="text-subtitle2 text-grey-8 q-mb-sm">Окончание</div>
         <div class="flex">
           <AppDatetimeField
             v-if="!isNullTime"
@@ -67,7 +110,7 @@
           />
         </div>
       </div>
-      <div class="lifelog-post-form-actions__right">
+      <div class="lifelog-post-form-actions__right self-end">
         <q-btn
           label="Отправить"
           color="primary"
@@ -96,6 +139,7 @@ import {
   emptySeriesWatchProgress,
   isSeriesWatchValid
 } from 'src/utils/LifeLog/seriesWatch'
+import { serializeStartedAt } from 'src/utils/LifeLog/startedAt'
 import { markEpisodesWatchedIfNeeded } from 'src/utils/Movie/markEpisodesWatched'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
@@ -109,6 +153,9 @@ const emit = defineEmits<{
 
 const datetime = ref(getCurrentDateTime())
 const isNullTime = ref(false)
+const hasStartedAt = ref(false)
+const startDatetime = ref('')
+const isStartNullTime = ref(true)
 const isSubmitting = ref(false)
 
 const selectedMovie = ref<IMovie | null>(null)
@@ -226,9 +273,22 @@ const onMoviePopupShow = () => {
   loadMovieOptions('')
 }
 
+const enableStartedAt = () => {
+  hasStartedAt.value = true
+  startDatetime.value = datetime.value.split(' ')[0]
+  isStartNullTime.value = true
+}
+
+const clearStartedAt = () => {
+  hasStartedAt.value = false
+  startDatetime.value = ''
+  isStartNullTime.value = true
+}
+
 const resetForm = () => {
   datetime.value = getCurrentDateTime()
   isNullTime.value = false
+  clearStartedAt()
   selectedMovie.value = null
   movieInput.value = ''
   movieOptions.value = []
@@ -248,6 +308,10 @@ const submit = async () => {
     ? [...(watchProgress.value.episode_ids ?? [])]
     : []
   const title = selectedMovie.value?.title ?? movieInput.value.trim()
+  const startedAt = hasStartedAt.value
+    ? serializeStartedAt(startDatetime.value, isStartNullTime.value)
+    : null
+
   const postModel = {
     title,
     content: '',
@@ -260,7 +324,8 @@ const submit = async () => {
     isNullTime: isNullTime.value,
     movie_id: selectedMovie.value ? Number(selectedMovie.value.id) : null,
     movie_title: selectedMovie.value ? null : movieInput.value.trim(),
-    watch: isSeries ? { ...watchProgress.value } : null
+    watch: isSeries ? { ...watchProgress.value } : null,
+    started_at: startedAt
   }
 
   const submission = postStore.createPost(postModel, [])
@@ -294,6 +359,19 @@ watch(isNullTime, newValue => {
   }
 })
 
+watch(isStartNullTime, newValue => {
+  if (!hasStartedAt.value || !startDatetime.value) {
+    return
+  }
+
+  const onlyDate = startDatetime.value.split(' ')[0]
+  if (newValue) {
+    startDatetime.value = onlyDate
+  } else {
+    startDatetime.value = `${onlyDate} 00:00`
+  }
+})
+
 watch(selectedMovie, movie => {
   if (movie?.type !== MovieTypeEnum.TV_SERIES) {
     watchProgress.value = emptySeriesWatchProgress()
@@ -312,6 +390,10 @@ onMounted(() => {
 
   &__datetime {
     width: 240px;
+  }
+
+  &__period {
+    background-color: #ffffff;
   }
 
   &-actions {

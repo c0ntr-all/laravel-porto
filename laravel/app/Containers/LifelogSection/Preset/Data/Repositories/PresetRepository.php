@@ -26,8 +26,6 @@ class PresetRepository
             'description' => $dto->description,
             'color' => $dto->color,
             'icon' => $dto->icon,
-            'start_date' => $dto->rules->dateFrom,
-            'end_date' => $dto->rules->dateTo,
             'rules' => $dto->rules,
         ]);
     }

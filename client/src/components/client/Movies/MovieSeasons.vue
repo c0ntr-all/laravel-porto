@@ -61,13 +61,8 @@
             v-for="episode in season.episodes"
             :key="episode.id"
             class="movie-episode"
-            :class="{ 'movie-episode--open': openedEpisodeId === episode.id }"
           >
-            <div
-              class="movie-episode__row"
-              :class="{ 'movie-episode__row--expandable': Boolean(episode.description) }"
-              @click="toggleEpisode(episode)"
-            >
+            <div class="movie-episode__left">
               <div class="movie-episode__still">
                 <q-img
                   v-if="episodeStillUrl(episode)"
@@ -90,32 +85,25 @@
                 <div class="movie-episode__name">{{ episodeTitle(episode) }}</div>
                 <div v-if="episode.air_date" class="movie-episode__date">{{ episode.air_date }}</div>
               </div>
+            </div>
 
-              <q-icon
-                v-if="episode.description"
-                class="movie-episode__chevron"
-                :name="openedEpisodeId === episode.id ? 'expand_less' : 'expand_more'"
-              />
+            <div class="movie-episode__right">
+              <div class="movie-episode__description">
+                {{ episode.description || 'Описание отсутствует' }}
+              </div>
 
               <q-btn
                 class="movie-episode__watch"
                 :class="{ 'movie-episode__watch--active': episode.is_watched }"
-                round
-                dense
                 unelevated
+                no-caps
+                dense
                 type="button"
                 :icon="episode.is_watched ? 'check_circle' : 'check_circle_outline'"
+                label="Просмотрено"
                 :loading="movieStore.isWatchPending(`episode:${episode.id}`)"
-                @click.stop="movieStore.toggleEpisodeWatched(season, episode.id)"
-              >
-                <q-tooltip>
-                  {{ episode.is_watched ? 'Снять отметку серии' : 'Отметить серию просмотренной' }}
-                </q-tooltip>
-              </q-btn>
-            </div>
-
-            <div v-if="openedEpisodeId === episode.id && episode.description" class="movie-episode__description">
-              {{ episode.description }}
+                @click="movieStore.toggleEpisodeWatched(season, episode.id)"
+              />
             </div>
           </div>
         </div>
@@ -125,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
 import {
   episodeStillUrl,
@@ -135,7 +123,6 @@ import { seasonEpisodesTotal, seasonWatchedCount } from 'src/utils/movieSeasons'
 import { IMovieEpisode, IMovieSeason } from 'src/types/Movie'
 
 const movieStore = useMovieStore()
-const openedEpisodeId = ref<string | null>(null)
 
 const seasons = computed(() => movieStore.movie?.seasons ?? [])
 
@@ -162,14 +149,6 @@ function episodeTitle(episode: IMovieEpisode): string {
   }
 
   return `Серия ${episode.number}`
-}
-
-function toggleEpisode(episode: IMovieEpisode): void {
-  if (!episode.description) {
-    return
-  }
-
-  openedEpisodeId.value = openedEpisodeId.value === episode.id ? null : episode.id
 }
 </script>
 
@@ -247,42 +226,45 @@ function toggleEpisode(episode: IMovieEpisode): void {
     font-size: 13px;
   }
 
-  &__watch,
-  .movie-episode__watch {
+  &__watch {
     flex-shrink: 0;
     background: rgba(40, 47, 83, 0.06);
     color: #777a8f;
   }
 
-  &__watch--active,
-  .movie-episode__watch--active {
+  &__watch--active {
     background: $primary;
     color: #fff;
   }
 
   &__episodes {
-    padding: 0 8px 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 8px 12px 12px;
   }
 }
 
 .movie-episode {
-  border-top: 1px solid rgba(40, 47, 83, 0.06);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid rgba(40, 47, 83, 0.08);
+  border-radius: 12px;
+  background: rgba(40, 47, 83, 0.02);
 
-  &__row {
+  &__left {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-    padding: 10px 4px;
-  }
-
-  &__row--expandable {
-    cursor: pointer;
+    min-width: 0;
   }
 
   &__still {
-    flex: 0 0 96px;
-    width: 96px;
-    height: 54px;
+    flex: 0 0 112px;
+    width: 112px;
+    height: 63px;
     overflow: hidden;
     border-radius: 8px;
     background: rgba(40, 47, 83, 0.06);
@@ -302,45 +284,57 @@ function toggleEpisode(episode: IMovieEpisode): void {
   }
 
   &__info {
-    flex: 1;
     min-width: 0;
   }
 
   &__name {
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.35;
     color: #282f53;
   }
 
   &__date {
-    margin-top: 2px;
+    margin-top: 4px;
     color: #777a8f;
     font-size: 13px;
   }
 
-  &__chevron {
-    color: #9aa0b8;
+  &__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
   }
 
   &__description {
-    padding: 0 4px 12px 112px;
-    color: #282f53;
+    flex: 1;
+    color: #55586d;
     font-size: 14px;
     line-height: 1.5;
     white-space: pre-line;
+  }
+
+  &__watch {
+    background: rgba(40, 47, 83, 0.06);
+    color: #777a8f;
+  }
+
+  &__watch--active {
+    background: $primary;
+    color: #fff;
   }
 }
 
 @media (max-width: 700px) {
   .movie-episode {
-    &__still {
-      flex-basis: 72px;
-      width: 72px;
-      height: 40px;
-    }
+    grid-template-columns: 1fr;
 
-    &__description {
-      padding-left: 4px;
+    &__still {
+      flex-basis: 96px;
+      width: 96px;
+      height: 54px;
     }
   }
 }

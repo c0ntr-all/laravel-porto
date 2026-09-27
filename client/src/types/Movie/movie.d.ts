@@ -38,6 +38,7 @@ export interface IMovie {
   folder_ids: string[]
   credits: IMovieCredit[]
   seasons: IMovieSeason[]
+  added_at?: string | null
 }
 
 export interface IMovieListQuery {

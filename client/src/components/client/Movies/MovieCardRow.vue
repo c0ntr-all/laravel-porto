@@ -26,8 +26,11 @@
       <div class="movie-card-row__body">
         <div class="movie-card-row__head">
           <div class="movie-card-row__title" :title="movie.title">{{ movie.title }}</div>
-          <div v-if="ratingLabel" class="movie-card-row__rating">
-            <q-icon name="star" size="16px" color="amber" />
+          <div
+            v-if="ratingLabel"
+            class="movie-card-row__rating"
+            :class="`movie-card-row__rating--${ratingTone}`"
+          >
             {{ ratingLabel }}
           </div>
         </div>
@@ -61,7 +64,14 @@
       </div>
     </router-link>
 
-    <MovieFolderActions variant="row" :movie="movie" />
+    <div class="movie-card-row__aside">
+      <div></div>
+      <MovieFolderActions variant="row" :movie="movie" />
+      <div v-if="addedAtLabel" class="movie-card-row__added">
+        {{ addedAtLabel }}
+      </div>
+      <div v-else></div>
+    </div>
   </div>
 </template>
 
@@ -70,6 +80,7 @@ import { computed } from 'vue'
 import { IMovie } from 'src/types/Movie'
 import { MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
+import { humanDatetime } from 'src/utils/datetime'
 import MovieFolderActions from 'src/components/client/Movies/MovieFolderActions.vue'
 
 const props = defineProps<{
@@ -85,8 +96,24 @@ const ratingLabel = computed(() => {
 
   return props.movie.kp_rating.toFixed(1)
 })
+const ratingTone = computed(() => {
+  const rating = Math.floor(props.movie.kp_rating ?? 0)
+
+  if (rating >= 7) {
+    return 'high'
+  }
+
+  if (rating >= 5) {
+    return 'mid'
+  }
+
+  return 'low'
+})
 const countriesLabel = computed(() => (
   props.movie.countries.map(country => country.name).filter(Boolean).join(', ')
+))
+const addedAtLabel = computed(() => (
+  props.movie.added_at ? humanDatetime(props.movie.added_at) : ''
 ))
 </script>
 
@@ -101,19 +128,10 @@ const countriesLabel = computed(() => (
   background: #fff;
   border: 1px solid rgba(40, 47, 83, 0.08);
   box-shadow: 0 6px 16px rgba(40, 47, 83, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(40, 47, 83, 0.14);
-
-    .movie-card-row__image {
-      transform: scale(1.04);
-    }
-
-    .movie-card-row__title {
-      color: $primary;
-    }
+    background: rgba(242, 242, 242, 0.6);
   }
 
   &__main {
@@ -138,11 +156,6 @@ const countriesLabel = computed(() => (
 
   &__image {
     height: 100%;
-    transition: transform 0.35s ease;
-
-    :deep(.q-img__image) {
-      transition: transform 0.35s ease;
-    }
   }
 
   &__placeholder {
@@ -178,17 +191,25 @@ const countriesLabel = computed(() => (
     font-weight: 600;
     line-height: 1.3;
     color: #282f53;
-    transition: color 0.15s ease;
   }
 
   &__rating {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 600;
-    color: #282f53;
+    line-height: 1;
+
+    &--low {
+      color: #e53935;
+    }
+
+    &--mid {
+      color: #9e9e9e;
+    }
+
+    &--high {
+      color: #43a047;
+    }
   }
 
   &__subtitle {
@@ -222,6 +243,23 @@ const countriesLabel = computed(() => (
     flex-wrap: wrap;
     gap: 4px;
     margin-top: auto;
+  }
+
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__added {
+    font-size: 12px;
+    line-height: 1.3;
+    color: #9aa0b8;
+    white-space: nowrap;
   }
 }
 

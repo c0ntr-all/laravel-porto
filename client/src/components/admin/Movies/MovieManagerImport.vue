@@ -56,15 +56,24 @@
           :key="item.id"
           class="import-row"
         >
-          <q-item-section avatar>
-            <q-avatar size="56px" rounded>
-              <img
+          <q-item-section avatar class="import-row__poster-wrap">
+            <div class="import-row__poster">
+              <q-img
                 v-if="item.movie && poster(item.movie)"
                 :src="poster(item.movie) ?? ''"
                 :alt="item.movie.title"
+                fit="cover"
               >
-              <q-icon v-else name="cloud_download" />
-            </q-avatar>
+                <template #error>
+                  <div class="import-row__poster-fallback">
+                    <q-icon name="cloud_download" />
+                  </div>
+                </template>
+              </q-img>
+              <div v-else class="import-row__poster-fallback">
+                <q-icon name="cloud_download" />
+              </div>
+            </div>
           </q-item-section>
           <q-item-section>
             <q-item-label class="text-subtitle1 text-weight-medium">
@@ -75,8 +84,12 @@
               <span v-if="item.movie?.year"> · {{ item.movie.year }}</span>
               <span v-if="durationLabel(item)"> · {{ durationLabel(item) }}</span>
             </q-item-label>
-            <q-item-label v-if="item.error_message" caption class="text-negative">
-              {{ item.error_message }}
+            <q-item-label
+              v-if="importErrorMessage(item)"
+              caption
+              class="text-negative"
+            >
+              {{ importErrorMessage(item) }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -97,14 +110,14 @@
                 {{ item.was_created ? 'Created' : 'Updated' }}
               </q-chip>
               <q-btn
-                v-if="item.source_url"
+                v-if="kinopoiskLink(item)"
                 dense
                 flat
                 no-caps
                 size="sm"
                 icon="open_in_new"
                 label="Kinopoisk"
-                :href="item.source_url"
+                :href="kinopoiskLink(item) ?? undefined"
                 target="_blank"
                 rel="noopener noreferrer"
               />
@@ -131,11 +144,12 @@ import type { QInput } from 'quasar'
 import { useMovieImportStore } from 'src/stores/modules/movieImportStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
-import { parseKinopoiskId } from 'src/utils/kinopoisk'
+import { kinopoiskMovieUrl, parseKinopoiskId } from 'src/utils/kinopoisk'
 import {
   MovieImportStatusEnum,
   MOVIE_IMPORT_STATUS_LABELS
 } from 'src/enums/Movie/MovieImportStatusEnum'
+import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { IMovie, IMovieImport } from 'src/types/Movie'
 
 const store = useMovieImportStore()
@@ -176,6 +190,35 @@ function durationLabel(item: IMovieImport): string {
   return seconds < 10 ? `${seconds.toFixed(1)}s` : `${Math.round(seconds)}s`
 }
 
+function kinopoiskLink(item: IMovieImport): string | null {
+  return kinopoiskMovieUrl(
+    item.kp_id,
+    item.movie?.type ?? MovieTypeEnum.MOVIE
+  )
+}
+
+function importErrorMessage(item: IMovieImport): string {
+  const kinopoisk = item.meta?.kinopoisk
+
+  if (kinopoisk && typeof kinopoisk === 'object' && !Array.isArray(kinopoisk)) {
+    const preview = (kinopoisk as Record<string, unknown>).body_preview
+
+    if (typeof preview === 'string' && preview.trim()) {
+      try {
+        const parsed = JSON.parse(preview) as { message?: unknown }
+
+        if (typeof parsed.message === 'string' && parsed.message.trim()) {
+          return parsed.message.trim()
+        }
+      } catch {
+        // body_preview is not JSON — fall through
+      }
+    }
+  }
+
+  return item.error_message?.trim() || ''
+}
+
 async function submit(): Promise<void> {
   const isValid = await kpInputRef.value?.validate()
   const kpId = parseKinopoiskId(kpInput.value)
@@ -206,7 +249,32 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .import-row {
-  min-height: 84px;
+  min-height: 96px;
+
+  &__poster-wrap {
+    min-width: 56px;
+  }
+
+  &__poster {
+    width: 56px;
+    height: 84px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(40, 47, 83, 0.06);
+
+    :deep(.q-img) {
+      height: 100%;
+    }
+  }
+
+  &__poster-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #9aa0b8;
+  }
 }
 
 .list-sentinel {

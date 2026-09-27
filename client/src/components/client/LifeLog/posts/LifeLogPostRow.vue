@@ -69,7 +69,7 @@ const emit = defineEmits<{
 const formattedDate = computed(() => humanDatetime(formatPostDateTime(props.post)))
 
 const rowTitle = computed(() =>
-  isMovieWatchPost(props.post) ? movieWatchPostTitle(props.post) : props.post.title
+  isMovieWatchPost(props.post) ? `${movieWatchPostTitle(props.post)} ${props.post.title}` : props.post.title
 )
 </script>
 

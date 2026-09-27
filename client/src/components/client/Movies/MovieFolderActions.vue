@@ -24,28 +24,32 @@
       <q-tooltip v-if="variant === 'overlay' || action.iconOnly">{{ action.label }}</q-tooltip>
     </q-btn>
 
-    <q-select
+    <q-btn
       v-if="variant === 'row'"
-      class="movie-folder-actions__select"
+      class="movie-folder-actions__more"
+      round
       dense
-      outlined
-      emit-value
-      map-options
-      :model-value="null"
-      :options="folderOptions"
-      label="Папки"
-      options-dense
-      @update:model-value="onPickFolder"
+      unelevated
+      type="button"
+      icon="more_vert"
     >
-      <template #option="scope">
-        <q-item v-bind="scope.itemProps">
-          <q-item-section>{{ scope.opt.label }}</q-item-section>
-          <q-item-section v-if="isSelected(scope.opt.value)" side>
-            <q-icon name="check" color="primary" />
-          </q-item-section>
-        </q-item>
-      </template>
-    </q-select>
+      <q-tooltip>Папки</q-tooltip>
+      <q-menu>
+        <q-list class="movie-folder-actions__menu" dense>
+          <q-item
+            v-for="folder in folderStore.sortedFolders"
+            :key="folder.id"
+            clickable
+            @click="onPickFolder(folder.id)"
+          >
+            <q-item-section>{{ folder.name }}</q-item-section>
+            <q-item-section v-if="isSelected(folder.id)" side>
+              <q-icon name="check" color="primary" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
   </div>
 </template>
 
@@ -68,11 +72,6 @@ const props = defineProps<{
 }>()
 
 const folderStore = useMovieFolderStore()
-
-const folderOptions = computed(() => folderStore.sortedFolders.map(folder => ({
-  label: folder.name,
-  value: folder.id
-})))
 
 function folderId(slug: SystemMovieFolderEnum): string {
   return folderStore.folderBySlug(slug)?.id ?? slug
@@ -165,13 +164,13 @@ const actions = computed(() => ([
     flex-shrink: 0;
     flex-wrap: wrap;
     justify-content: flex-end;
-    align-content: center;
+    align-content: flex-start;
     gap: 8px;
-    padding: 4px 4px 4px 0;
+    padding: 0;
   }
 
-  &__select {
-    width: 180px;
+  &__menu {
+    min-width: 220px;
   }
 }
 </style>

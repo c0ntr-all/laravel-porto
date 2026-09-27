@@ -110,7 +110,8 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     credits: asRecords(raw.credits).map(normalizeMovieCredit),
     seasons: asRecords(raw.seasons)
       .map(normalizeMovieSeason)
-      .sort((left, right) => left.number - right.number)
+      .sort((left, right) => left.number - right.number),
+    added_at: toNullableString(raw.added_at)
   }
 }
 

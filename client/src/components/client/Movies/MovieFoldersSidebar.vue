@@ -152,5 +152,9 @@ function folderIcon(slug: string | null): string {
     flex: 1;
     min-width: 0;
   }
+
+  .q-item__section--avatar {
+    min-width: auto;
+  }
 }
 </style>

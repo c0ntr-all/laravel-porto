@@ -1,5 +1,11 @@
 <template>
-  <q-input v-model="datetimeModel" dense filled>
+  <q-input
+    v-model="datetimeModel"
+    dense
+    filled
+    @paste="onPaste"
+    @blur="onBlur"
+  >
     <template v-slot:prepend>
       <q-icon name="event" class="cursor-pointer">
         <q-popup-proxy transition-show="scale" transition-hide="scale" cover>
@@ -27,7 +33,38 @@
 </template>
 
 <script lang="ts" setup>
+import { normalizeDatetimeInput } from 'src/utils/datetime'
+
 const datetimeModel = defineModel<string>({ required: true })
+
+function applyNormalized (raw: string): boolean {
+  const normalized = normalizeDatetimeInput(raw)
+  if (!normalized || normalized === datetimeModel.value) {
+    return false
+  }
+
+  datetimeModel.value = normalized
+  return true
+}
+
+function onPaste (event: ClipboardEvent) {
+  const text = event.clipboardData?.getData('text') ?? ''
+  if (!text.trim()) {
+    return
+  }
+
+  const normalized = normalizeDatetimeInput(text)
+  if (!normalized) {
+    return
+  }
+
+  event.preventDefault()
+  datetimeModel.value = normalized
+}
+
+function onBlur () {
+  applyNormalized(datetimeModel.value)
+}
 </script>
 
 <style lang="scss" scoped>

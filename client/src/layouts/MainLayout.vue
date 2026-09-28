@@ -64,7 +64,7 @@
       </q-scroll-area>
 
       <div class="logo-wrap q-px-md absolute-top">
-        <q-img class="logo" src="logo/logo-1.svg" fit="contain" />
+        <q-img class="logo" src="/logo/logo-1.svg" fit="contain" />
       </div>
     </q-drawer>
 

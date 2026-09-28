@@ -43,7 +43,7 @@ class RecentPostsWidget extends AbstractWidget
     public function resolve(WidgetContext $context): WidgetPayload
     {
         $posts = Post::query()
-            ->orderByDesc('date')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit($context->limit())
             ->get();

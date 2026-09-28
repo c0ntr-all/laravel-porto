@@ -6,6 +6,8 @@ use App\Containers\AppSection\Country\Models\Country;
 use App\Containers\MovieSection\Episode\Models\Episode;
 use App\Containers\MovieSection\Folder\Models\Folder;
 use App\Containers\MovieSection\Folder\Support\FolderMoviesCountCache;
+use App\Containers\MovieSection\Franchise\Models\Franchise;
+use App\Containers\MovieSection\Franchise\Models\Traits\HasFranchises;
 use App\Containers\MovieSection\Genre\Models\Genre;
 use App\Containers\MovieSection\Genre\Models\Traits\HasGenres;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
@@ -38,6 +40,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Country> $countries
  * @property-read Collection<int, Person> $persons
  * @property-read Collection<int, Folder> $folders
+ * @property-read Collection<int, Franchise> $franchises
  * @property-read Collection<int, Season> $seasons
  * @property-read Collection<int, Episode> $episodes
  * @property-read Collection<int, MoviePersonCredit> $credits
@@ -46,6 +49,7 @@ use Illuminate\Support\Facades\DB;
 class Movie extends Model
 {
     use HasFactory;
+    use HasFranchises;
     use HasGenres;
 
     protected $table = 'movies';

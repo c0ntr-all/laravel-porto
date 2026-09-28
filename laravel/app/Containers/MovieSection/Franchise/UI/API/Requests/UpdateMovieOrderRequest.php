@@ -1,0 +1,15 @@
+<?php declare(strict_types=1);
+
+namespace App\Containers\MovieSection\Franchise\UI\API\Requests;
+
+use App\Ship\Parents\Requests\AuthenticatedRequest;
+
+class UpdateMovieOrderRequest extends AuthenticatedRequest
+{
+    public function rules(): array
+    {
+        return [
+            'order' => 'required|integer|min:0',
+        ];
+    }
+}

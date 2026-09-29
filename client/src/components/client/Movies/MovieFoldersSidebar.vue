@@ -17,6 +17,19 @@
       </q-item>
 
       <q-item
+        clickable
+        exact
+        :active="isFranchises"
+        active-class="movie-folders-sidebar__item--active"
+        :to="{ name: 'movies-franchises' }"
+      >
+        <q-item-section avatar>
+          <q-icon name="collections_bookmark" />
+        </q-item-section>
+        <q-item-section>Франшизы</q-item-section>
+      </q-item>
+
+      <q-item
         v-for="folder in folderStore.sortedFolders"
         :key="folder.id"
         clickable
@@ -81,6 +94,7 @@ const folderStore = useMovieFolderStore()
 const folderName = ref('')
 
 const isCatalog = computed(() => route.name === 'movies')
+const isFranchises = computed(() => route.name === 'movies-franchises' || route.name === 'movie-franchise')
 const canCreate = computed(() => isValidMovieFolderName(folderName.value) && !folderStore.isSaving)
 
 function onFolderNameInput(value: string | number | null): void {

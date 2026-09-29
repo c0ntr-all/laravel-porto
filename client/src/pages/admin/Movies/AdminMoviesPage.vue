@@ -11,6 +11,7 @@
     <q-tab name="catalog" label="Catalog"/>
     <q-tab name="import" label="Import"/>
     <q-tab name="genres" label="Genres"/>
+    <q-tab name="franchises" label="Franchises"/>
   </q-tabs>
 
   <q-separator/>
@@ -25,6 +26,9 @@
     <q-tab-panel name="genres">
       <MovieManagerGenres/>
     </q-tab-panel>
+    <q-tab-panel name="franchises">
+      <MovieManagerFranchises/>
+    </q-tab-panel>
   </q-tab-panels>
 </template>
 
@@ -33,6 +37,7 @@ import { ref } from 'vue'
 import MovieManagerCatalog from 'src/components/admin/Movies/MovieManagerCatalog.vue'
 import MovieManagerImport from 'src/components/admin/Movies/MovieManagerImport.vue'
 import MovieManagerGenres from 'src/components/admin/Movies/MovieManagerGenres.vue'
+import MovieManagerFranchises from 'src/components/admin/Movies/MovieManagerFranchises.vue'
 
 const tabs = ref('catalog')
 </script>

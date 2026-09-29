@@ -9,7 +9,9 @@ import {
   IMoviePerson,
   IMovieProfession,
   IMovieEpisode,
-  IMovieSeason
+  IMovieSeason,
+  IMovieFranchise,
+  IMovieFranchiseMovie
 } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
@@ -355,4 +357,50 @@ export function mapMovieImportResponse(response: IJsonApiResponse): IMovieImport
   }
 
   return normalizeMovieImport(raw)
+}
+
+export function normalizeMovieFranchise(raw: Record<string, unknown>): IMovieFranchise {
+  return {
+    id: String(raw.id),
+    user_id: Number(raw.user_id ?? 0),
+    name: String(raw.name ?? ''),
+    description: toNullableString(raw.description),
+    image: toNullableString(raw.image),
+    order: Number(raw.order ?? 0),
+    created_at: toNullableString(raw.created_at),
+    updated_at: toNullableString(raw.updated_at)
+  }
+}
+
+export function normalizeMovieFranchiseMovie(raw: Record<string, unknown>): IMovieFranchiseMovie {
+  return {
+    ...normalizeMovie(raw),
+    order: Number(raw.order ?? 0)
+  }
+}
+
+export function mapMovieFranchisesResponse(response: IJsonApiResponse): IMovieFranchise[] {
+  return mapResponse(response)
+    .map(normalizeMovieFranchise)
+    .sort((left, right) => left.order - right.order || left.name.localeCompare(right.name, 'ru'))
+}
+
+export function mapMovieFranchiseResponse(response: IJsonApiResponse): IMovieFranchise {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Franchise not found')
+  }
+
+  return normalizeMovieFranchise(raw)
+}
+
+export function mapMovieFranchiseMoviesResponse(response: IJsonApiResponse): IMovieFranchiseMovie[] {
+  return mapResponse(response)
+    .map(normalizeMovieFranchiseMovie)
+    .sort((left, right) => left.order - right.order || Number(left.year) - Number(right.year))
+}
+
+export function franchiseImageUrl(franchise: Pick<IMovieFranchise, 'image'>): string | null {
+  return franchise.image || null
 }

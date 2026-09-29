@@ -64,13 +64,13 @@
       </div>
     </router-link>
 
-    <div class="movie-card-row__aside">
+    <div v-if="showFolderActions || addedAtLabel" class="movie-card-row__aside">
       <div></div>
-      <MovieFolderActions variant="row" :movie="movie" />
+      <MovieFolderActions v-if="showFolderActions" variant="row" :movie="movie" />
       <div v-if="addedAtLabel" class="movie-card-row__added">
         {{ addedAtLabel }}
       </div>
-      <div v-else></div>
+      <div v-else-if="showFolderActions"></div>
     </div>
   </div>
 </template>
@@ -83,9 +83,12 @@ import { moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
 import { humanDatetime } from 'src/utils/datetime'
 import MovieFolderActions from 'src/components/client/Movies/MovieFolderActions.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   movie: IMovie
-}>()
+  showFolderActions?: boolean
+}>(), {
+  showFolderActions: true
+})
 
 const poster = computed(() => moviePosterUrl(props.movie))
 const typeLabel = computed(() => MOVIE_TYPE_LABELS[props.movie.type])

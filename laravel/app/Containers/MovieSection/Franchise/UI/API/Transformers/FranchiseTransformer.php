@@ -14,6 +14,7 @@ class FranchiseTransformer extends TransformerAbstract
             'user_id' => $franchise->user_id,
             'name' => $franchise->name,
             'description' => $franchise->description,
+            'image' => $franchise->full_image,
             'order' => $franchise->order,
             'created_at' => $franchise->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $franchise->updated_at?->format('Y-m-d H:i:s'),

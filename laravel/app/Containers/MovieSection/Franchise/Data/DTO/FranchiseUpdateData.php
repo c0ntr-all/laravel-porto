@@ -9,6 +9,7 @@ class FranchiseUpdateData extends Data
 {
     public string|Optional $name;
     public string|Optional|null $description;
+    public string|Optional|null $image;
     public int|Optional $order;
 
     public function __construct()

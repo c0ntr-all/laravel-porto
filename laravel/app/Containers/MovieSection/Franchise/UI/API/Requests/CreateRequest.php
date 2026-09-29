@@ -17,6 +17,7 @@ class CreateRequest extends AuthenticatedRequest
                 Rule::unique('movie_franchises', 'name')->whereNull('deleted_at'),
             ],
             'description' => 'sometimes|nullable|string',
+            'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg,webp|max:8192|nullable',
             'order' => 'sometimes|integer|min:0',
         ];
     }

@@ -19,6 +19,7 @@ class FranchiseFactory extends Factory
             'user_id' => User::factory(),
             'name' => fake()->unique()->words(3, true),
             'description' => fake()->optional()->sentence(),
+            'image' => null,
             'order' => fake()->numberBetween(0, 100),
         ];
     }

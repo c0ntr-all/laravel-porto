@@ -6,6 +6,8 @@ use App\Containers\AppSection\User\Models\User;
 use App\Containers\MovieSection\Franchise\Models\Franchise;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FranchiseCrudTest extends TestCase
@@ -192,5 +194,45 @@ class FranchiseCrudTest extends TestCase
             ])
             ->assertCreated()
             ->assertJsonPath('data.attributes.order', 8);
+    }
+
+    public function test_user_can_upload_franchise_image_on_create_and_update(): void
+    {
+        Storage::fake('public');
+
+        $created = $this->actingAs($this->user, 'api')
+            ->post('/api/v1/movie/franchises', [
+                'name' => 'With Cover',
+                'image_file' => UploadedFile::fake()->image('franchise.jpg', 200, 300),
+            ], [
+                'Accept' => 'application/json',
+            ]);
+
+        $created->assertCreated();
+
+        $franchiseId = (int) $created->json('data.id');
+        $imagePath = Franchise::query()->findOrFail($franchiseId)->image;
+
+        $this->assertNotNull($imagePath);
+        $this->assertStringStartsWith("movies/franchises/{$franchiseId}/images/", $imagePath);
+        Storage::disk('public')->assertExists($imagePath);
+        $this->assertStringContainsString('/storage/'.$imagePath, (string) $created->json('data.attributes.image'));
+
+        $updated = $this->actingAs($this->user, 'api')
+            ->post('/api/v1/movie/franchises/'.$franchiseId, [
+                '_method' => 'PATCH',
+                'image_file' => UploadedFile::fake()->image('franchise-new.png', 100, 100),
+            ], [
+                'Accept' => 'application/json',
+            ]);
+
+        $updated->assertOk();
+
+        $newImagePath = Franchise::query()->findOrFail($franchiseId)->image;
+
+        $this->assertNotNull($newImagePath);
+        $this->assertNotSame($imagePath, $newImagePath);
+        Storage::disk('public')->assertExists($newImagePath);
+        $this->assertStringContainsString('/storage/'.$newImagePath, (string) $updated->json('data.attributes.image'));
     }
 }

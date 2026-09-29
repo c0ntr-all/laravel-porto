@@ -39,6 +39,7 @@ class FranchiseRepository
             'user_id' => $dto->user_id,
             'name' => $dto->name,
             'description' => $dto->description,
+            'image' => $dto->image,
             'order' => $order,
         ]);
     }

@@ -4,6 +4,7 @@ namespace App\Containers\MovieSection\Franchise\Models;
 
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Ship\Models\Traits\HasImage;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,16 +18,19 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $name
  * @property string|null $description
+ * @property string|null $image
  * @property int $order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read string $full_image
  * @property-read User $user
  * @property-read Collection<int, Movie> $movies
  */
 class Franchise extends Model
 {
     use HasFactory;
+    use HasImage;
     use SoftDeletes;
 
     protected $table = 'movie_franchises';
@@ -35,6 +39,7 @@ class Franchise extends Model
         'user_id',
         'name',
         'description',
+        'image',
         'order',
     ];
 

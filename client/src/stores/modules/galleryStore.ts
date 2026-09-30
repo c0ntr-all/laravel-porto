@@ -8,7 +8,8 @@ import {
   mapGalleryAlbumsResponse,
   mapGalleryMediaUploadResponse
 } from 'src/api/mappers/gallery.mapper'
-import { GalleryMediaKind, IGalleryAlbum, IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
+import { GalleryMediaKind, IGalleryAlbum, IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryMediaItem, IGalleryTagsSyncPayload, IUploadItem } from 'src/types/gallery'
+import { ITag } from 'src/types/tag'
 import {
   galleryUploadUrl,
   getMediaOriginId,
@@ -224,6 +225,142 @@ export const useGalleryStore = defineStore('gallery', () => {
     }
   }
 
+  function patchMediaItem(incoming: IGalleryMediaItem): void {
+    const apply = (current: IGalleryAlbum): IGalleryAlbum => ({
+      ...current,
+      media: current.media.map(item => (
+        item.id === incoming.id ? { ...item, ...incoming } : item
+      ))
+    })
+
+    if (album.value?.media.some(item => item.id === incoming.id)) {
+      album.value = apply(album.value)
+      upsertAlbum(album.value)
+    }
+
+    if (saveAlbum.value?.media.some(item => item.id === incoming.id)) {
+      saveAlbum.value = apply(saveAlbum.value)
+    }
+  }
+
+  async function syncMediaTags(
+    item: { id: string | number; type?: string; attachment_type?: string },
+    tags: ITag[],
+    newTagNames: string[] = []
+  ): Promise<ITag[]> {
+    const payload: IGalleryTagsSyncPayload = {
+      tags: tags
+        .map(tag => Number(tag.id))
+        .filter(id => Number.isInteger(id) && id > 0)
+    }
+
+    if (newTagNames.length) {
+      payload.new_tags = newTagNames
+    }
+
+    try {
+      const response = isGalleryVideo(item)
+        ? await galleryApi.syncVideoTags(String(item.id), payload)
+        : await galleryApi.syncImageTags(String(item.id), payload)
+      const mapped = mapGalleryMediaUploadResponse(response)[0]
+
+      if (mapped) {
+        patchMediaItem(mapped)
+
+        return mapped.tags
+      }
+
+      return []
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    }
+  }
+
+  function removeMedia(id: string): void {
+    const apply = (current: IGalleryAlbum): IGalleryAlbum => {
+      const next = current.media.filter(item => item.id !== id)
+
+      if (next.length === current.media.length) {
+        return current
+      }
+
+      return {
+        ...current,
+        media: next,
+        media_count: Math.max(0, current.media_count - (current.media.length - next.length))
+      }
+    }
+
+    if (album.value?.media.some(item => item.id === id)) {
+      album.value = apply(album.value)
+      upsertAlbum(album.value)
+    }
+
+    if (saveAlbum.value?.media.some(item => item.id === id)) {
+      saveAlbum.value = apply(saveAlbum.value)
+    }
+  }
+
+  async function updateMediaDescription(
+    item: { id: string | number; type?: string; attachment_type?: string },
+    description: string | null
+  ): Promise<void> {
+    const id = String(item.id)
+    const current = album.value?.media.find(mediaItem => mediaItem.id === id) ??
+      saveAlbum.value?.media.find(mediaItem => mediaItem.id === id)
+    const previous = current?.description ?? null
+
+    if (current) {
+      patchMediaItem({ ...current, description })
+    }
+
+    try {
+      const response = isGalleryVideo(item)
+        ? await galleryApi.updateVideo(id, { description })
+        : await galleryApi.updateImage(id, { description })
+      const mapped = mapGalleryMediaUploadResponse(response)[0]
+
+      if (current && mapped) {
+        patchMediaItem({
+          ...current,
+          ...mapped,
+          description: mapped.description ?? description,
+          tags: mapped.tags.length ? mapped.tags : current.tags
+        })
+      }
+    } catch (err) {
+      if (current) {
+        patchMediaItem({ ...current, description: previous })
+      }
+
+      handleApiError(err)
+      throw err
+    }
+  }
+
+  async function deleteMedia(item: {
+    id: string | number
+    type?: string
+    attachment_type?: string
+  }): Promise<boolean> {
+    const id = String(item.id)
+
+    try {
+      const response = isGalleryVideo(item)
+        ? await galleryApi.deleteVideo(id)
+        : await galleryApi.deleteImage(id)
+
+      removeMedia(id)
+      handleApiSuccess(response)
+
+      return true
+    } catch (err) {
+      handleApiError(err)
+      return false
+    }
+  }
+
   async function getAlbums(): Promise<void> {
     isAlbumsLoading.value = true
     error.value = null
@@ -431,26 +568,50 @@ export const useGalleryStore = defineStore('gallery', () => {
     }
   }
 
-  async function updateAlbum(payload: IGalleryAlbumUpdateDto): Promise<IGalleryAlbum | null> {
+  async function updateAlbum(
+    payload: IGalleryAlbumUpdateDto,
+    options?: { silent?: boolean }
+  ): Promise<IGalleryAlbum | null> {
     if (!album.value) {
       return null
     }
 
-    isSaving.value = true
+    if (!options?.silent) {
+      isSaving.value = true
+    }
+
+    const previous = album.value
+
+    album.value = {
+      ...previous,
+      name: payload.name ?? previous.name,
+      description: payload.description !== undefined
+        ? payload.description
+        : previous.description,
+      image: payload.image ?? previous.image,
+      media: previous.media,
+      media_count: previous.media_count
+    }
 
     try {
-      const response = await galleryApi.updateAlbum(album.value.id, payload)
+      const response = await galleryApi.updateAlbum(previous.id, payload)
       const updated = mapGalleryAlbumResponse(response)
 
       upsertAlbum(updated)
-      handleApiSuccess(response)
+
+      if (!options?.silent) {
+        handleApiSuccess(response)
+      }
 
       return updated
     } catch (err) {
+      album.value = previous
       handleApiError(err)
       throw err
     } finally {
-      isSaving.value = false
+      if (!options?.silent) {
+        isSaving.value = false
+      }
     }
   }
 
@@ -513,6 +674,9 @@ export const useGalleryStore = defineStore('gallery', () => {
     ensureSaveAlbum,
     isMediaSaved,
     saveMediaToSaveAlbum,
+    syncMediaTags,
+    updateMediaDescription,
+    deleteMedia,
     uploadFiles,
     uploadDeviceFiles,
     uploadFromWeb,

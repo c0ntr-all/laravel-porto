@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import { IJsonApiResponse } from 'src/types'
 import { GalleryMediaKind, IGalleryAlbum, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
+import { ITag } from 'src/types/tag'
 import { TagsModeEnum } from 'src/enums/upload/UploadStatusEnum'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { isGalleryVideo } from 'src/utils/gallery'
@@ -94,7 +95,20 @@ export function normalizeGalleryMedia(raw: Record<string, unknown>): IGalleryMed
     album_id: raw.album_id == null ? null : String(raw.album_id),
     saved_from_id: raw.saved_from_id == null || raw.saved_from_id === ''
       ? null
-      : String(raw.saved_from_id)
+      : String(raw.saved_from_id),
+    created_at: String(raw.created_at ?? ''),
+    tags: asRecords(raw.tags).map(normalizeGalleryTag)
+  }
+}
+
+export function normalizeGalleryTag(raw: Record<string, unknown>): ITag {
+  return {
+    id: String(raw.id),
+    name: String(raw.name ?? ''),
+    slug: String(raw.slug ?? ''),
+    content: String(raw.description ?? raw.content ?? ''),
+    created_at: String(raw.created_at ?? ''),
+    updated_at: String(raw.updated_at ?? '')
   }
 }
 

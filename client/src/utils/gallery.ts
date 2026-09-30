@@ -1,4 +1,5 @@
-import { GalleryMediaKind, GalleryUploadSource } from 'src/types/gallery'
+import { GalleryMediaKind, GalleryUploadSource, IGalleryMediaItem } from 'src/types/gallery'
+import { ITag } from 'src/types/tag'
 
 const VIDEO_EXTENSIONS = new Set([
   'mp4', 'webm', 'mov', 'avi', 'mkv', 'm4v', 'ogv', 'mpeg', 'mpg', 'wmv'
@@ -188,4 +189,104 @@ export function getAttachmentThumbSrc(attachment: {
   }
 
   return ''
+}
+
+export const GALLERY_MEDIA_PAGE_SIZE = 30
+
+export function mediaCreatedAt(item: { created_at?: string | null }): string {
+  return item.created_at?.trim() || ''
+}
+
+export function mediaDayKey(item: { created_at?: string | null }): string {
+  return mediaCreatedAt(item).slice(0, 10)
+}
+
+export function formatMediaDayLabel(dayKey: string): string {
+  if (!dayKey) {
+    return 'Без даты'
+  }
+
+  const parsed = new Date(`${dayKey}T00:00:00`)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return dayKey
+  }
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(parsed)
+}
+
+export function sortGalleryMedia<T extends { created_at?: string | null }>(
+  items: T[],
+  direction: 'asc' | 'desc'
+): T[] {
+  const sign = direction === 'asc' ? 1 : -1
+
+  return [...items].sort((left, right) => {
+    const leftDate = mediaCreatedAt(left)
+    const rightDate = mediaCreatedAt(right)
+
+    if (leftDate === rightDate) {
+      return 0
+    }
+
+    return leftDate < rightDate ? -sign : sign
+  })
+}
+
+export function uniqueMediaTags(items: IGalleryMediaItem[]): ITag[] {
+  const seen = new Set<string>()
+  const tags: ITag[] = []
+
+  for (const item of items) {
+    for (const tag of item.tags ?? []) {
+      const id = String(tag.id)
+
+      if (seen.has(id)) {
+        continue
+      }
+
+      seen.add(id)
+      tags.push(tag)
+    }
+  }
+
+  return tags.sort((left, right) => left.name.localeCompare(right.name, 'ru'))
+}
+
+export function mediaHasAnyTag(item: IGalleryMediaItem, tagIds: Set<string>): boolean {
+  if (!tagIds.size) {
+    return true
+  }
+
+  return (item.tags ?? []).some(tag => tagIds.has(String(tag.id)))
+}
+
+export function groupGalleryMediaByDay<T extends { created_at?: string | null }>(
+  items: T[]
+): Array<{ day: string; label: string; items: T[] }> {
+  const groups: Array<{ day: string; label: string; items: T[] }> = []
+  const indexByDay = new Map<string, number>()
+
+  for (const item of items) {
+    const day = mediaDayKey(item)
+    const existing = indexByDay.get(day)
+
+    if (existing === undefined) {
+      indexByDay.set(day, groups.length)
+      groups.push({
+        day,
+        label: formatMediaDayLabel(day),
+        items: [item]
+      })
+      continue
+    }
+
+    groups[existing]?.items.push(item)
+  }
+
+  return groups
 }

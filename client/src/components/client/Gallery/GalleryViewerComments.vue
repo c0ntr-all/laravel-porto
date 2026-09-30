@@ -1,12 +1,5 @@
 <template>
   <div class="viewer-comments">
-    <div v-if="description" class="viewer-comments__description">
-      {{ description }}
-    </div>
-    <div v-else class="viewer-comments__description viewer-comments__description--empty">
-      Нет описания
-    </div>
-
     <div class="viewer-comments__list">
       <div v-if="isLoading" class="viewer-comments__state">
         <q-spinner color="primary" size="24px" />
@@ -64,7 +57,6 @@ import { humanDatetime } from 'src/utils/datetime'
 const props = defineProps<{
   commentableId?: string
   commentableType?: string
-  description?: string | null
 }>()
 
 const comments = ref<IGalleryComment[]>([])
@@ -141,21 +133,6 @@ watch(
   flex-direction: column;
   height: 100%;
   min-height: 0;
-
-  &__description {
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #ececf4;
-    color: #282f53;
-    font-size: 14px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    word-break: break-word;
-
-    &--empty {
-      color: #9aa0b8;
-    }
-  }
 
   &__list {
     flex: 1;

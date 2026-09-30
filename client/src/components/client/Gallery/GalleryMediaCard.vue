@@ -1,7 +1,6 @@
 <template>
-  <button
+  <div
     class="media-card"
-    type="button"
     :class="{ 'media-card--selected': selected }"
     @click="emit('click')"
   >
@@ -26,28 +25,77 @@
       </template>
     </q-img>
 
+    <div v-if="visibleTags.length" class="media-card__tags">
+      <span
+        v-for="tag in visibleTags"
+        :key="tag.id"
+        class="media-card__tag"
+      >
+        {{ tag.name }}
+      </span>
+      <span v-if="extraTagCount" class="media-card__tag media-card__tag--more">
+        +{{ extraTagCount }}
+      </span>
+    </div>
+
+    <div
+      v-if="showMenu"
+      class="media-card__menu"
+      @click.stop
+    >
+      <AppActionsButton :actions="actions" icon="more_vert" />
+    </div>
+
     <q-tooltip v-if="media.name" anchor="bottom middle" self="top middle">
       {{ media.name }}
     </q-tooltip>
-  </button>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { IGalleryMediaItem } from 'src/types/gallery'
+import { IAction } from 'src/components/types'
 import { formatMediaDuration, isGalleryVideo } from 'src/utils/gallery'
+import AppActionsButton from 'src/components/default/AppActionsButton.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   media: IGalleryMediaItem
   selected?: boolean
-}>()
+  showMenu?: boolean
+}>(), {
+  selected: false,
+  showMenu: false
+})
 
 const emit = defineEmits<{
   click: []
+  addTag: []
+  delete: []
 }>()
 
 const isVideo = computed(() => isGalleryVideo(props.media))
 const duration = computed(() => formatMediaDuration(props.media.duration))
+const visibleTags = computed(() => (props.media.tags ?? []).slice(0, 2))
+const extraTagCount = computed(() => Math.max(0, (props.media.tags ?? []).length - visibleTags.value.length))
+
+const actions = computed<IAction[]>(() => [
+  {
+    name: 'add-tag',
+    label: 'Добавить тег',
+    icon: 'sell',
+    is_active: true,
+    func: () => emit('addTag')
+  },
+  {
+    name: 'delete',
+    label: 'Удалить',
+    icon: 'delete',
+    color: 'negative',
+    is_active: true,
+    func: () => emit('delete')
+  }
+])
 </script>
 
 <style lang="scss" scoped>
@@ -70,6 +118,11 @@ const duration = computed(() => formatMediaDuration(props.media.duration))
 
     .media-card__overlay {
       background: rgba(18, 18, 18, 0.38);
+    }
+
+    .media-card__menu {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 
@@ -117,6 +170,57 @@ const duration = computed(() => formatMediaDuration(props.media.duration))
     line-height: 1.2;
   }
 
+  &__tags {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  &__tag {
+    max-width: 72px;
+    padding: 1px 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(18, 18, 18, 0.72);
+    color: #fff;
+    font-size: 10px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--more {
+      max-width: none;
+      background: rgba(108, 95, 252, 0.85);
+    }
+  }
+
+  &__menu {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+
+    :deep(.actions-button) {
+      width: 32px;
+      min-height: 32px;
+      color: #fff;
+      background: rgba(18, 18, 18, 0.55);
+
+      &:hover {
+        background: rgba(18, 18, 18, 0.78);
+      }
+    }
+  }
+
   &__fallback {
     display: flex;
     align-items: center;
@@ -124,6 +228,13 @@ const duration = computed(() => formatMediaDuration(props.media.duration))
     width: 100%;
     height: 100%;
     color: #9aa0b8;
+  }
+}
+
+@media (hover: none) {
+  .media-card__menu {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 </style>

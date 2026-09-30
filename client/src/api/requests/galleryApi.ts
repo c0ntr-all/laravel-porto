@@ -2,7 +2,7 @@ import { api } from 'src/boot/axios'
 import { ApiRequestContext, IJsonApiResponse } from 'src/types'
 import { mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
 import { buildCorrelationHeaders } from 'src/utils/correlation'
-import { IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto } from 'src/types/gallery'
+import { IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryTagsSyncPayload } from 'src/types/gallery'
 
 export const galleryApi = {
   async getAlbums(): Promise<IJsonApiResponse> {
@@ -12,7 +12,9 @@ export const galleryApi = {
   },
 
   async getAlbum(id: string): Promise<IJsonApiResponse> {
-    const response = await api.get(`v1/gallery/albums/${id}`)
+    const response = await api.get(`v1/gallery/albums/${id}`, {
+      params: { include: 'images.tags,videos.tags,user' }
+    })
 
     return response.data
   },
@@ -50,6 +52,70 @@ export const galleryApi = {
 
   async saveVideo(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
     const response = await api.post(`v1/gallery/videos/${id}/save`, {}, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async updateImage(
+    id: string,
+    payload: { description?: string | null },
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.patch(`v1/gallery/images/${id}`, payload, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async updateVideo(
+    id: string,
+    payload: { description?: string | null },
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.patch(`v1/gallery/videos/${id}`, payload, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async deleteImage(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/gallery/images/${id}`, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async deleteVideo(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
+    const response = await api.delete(`v1/gallery/videos/${id}`, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async syncImageTags(
+    id: string,
+    payload: IGalleryTagsSyncPayload,
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.put(`v1/gallery/images/${id}/tags`, payload, {
+      headers: buildCorrelationHeaders(ctx)
+    })
+
+    return response.data
+  },
+
+  async syncVideoTags(
+    id: string,
+    payload: IGalleryTagsSyncPayload,
+    ctx?: ApiRequestContext
+  ): Promise<IJsonApiResponse> {
+    const response = await api.put(`v1/gallery/videos/${id}/tags`, payload, {
       headers: buildCorrelationHeaders(ctx)
     })
 

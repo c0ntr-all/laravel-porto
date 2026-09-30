@@ -76,7 +76,9 @@ async function save(): Promise<void> {
     height: props.item.height,
     duration: null,
     album_id: 'album_id' in props.item ? (props.item.album_id ?? null) : null,
-    saved_from_id: props.item.saved_from_id ?? null
+    saved_from_id: props.item.saved_from_id ?? null,
+    created_at: props.item.created_at ?? '',
+    tags: 'tags' in props.item && Array.isArray(props.item.tags) ? props.item.tags : []
   })
 }
 </script>

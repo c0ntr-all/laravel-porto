@@ -1,3 +1,5 @@
+import { ITag } from './tag'
+
 export interface IImageSource {
   id: string | number
   attachment_type: string
@@ -12,4 +14,6 @@ export interface IImageSource {
   album_id?: string | null
   saved_from_id?: string | null
   duration?: string | null
+  created_at?: string
+  tags?: ITag[]
 }

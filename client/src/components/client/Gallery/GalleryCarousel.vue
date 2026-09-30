@@ -89,10 +89,15 @@
       </div>
 
       <q-card-section class="photo-viewer__metadata" :horizontal="false">
+        <GalleryInlineDescription
+          class="photo-viewer__description"
+          :text="currentSlide?.description"
+          @save="saveDescription"
+        />
+        <GalleryViewerTags :item="currentSlide" />
         <GalleryViewerComments
           :commentable-id="currentCommentableId"
           :commentable-type="currentCommentableType"
-          :description="currentSlide?.description"
         />
       </q-card-section>
     </q-card>
@@ -102,9 +107,12 @@
 <script lang="ts" setup generic="T extends IImageSource">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IImageSource } from 'src/types/carousel'
+import { useGalleryStore } from 'src/stores/modules/galleryStore'
 import AppVideo from 'src/components/default/AppVideo.vue'
 import GalleryViewerComments from 'src/components/client/Gallery/GalleryViewerComments.vue'
 import GalleryViewerActions from 'src/components/client/Gallery/GalleryViewerActions.vue'
+import GalleryViewerTags from 'src/components/client/Gallery/GalleryViewerTags.vue'
+import GalleryInlineDescription from 'src/components/client/Gallery/GalleryInlineDescription.vue'
 import {
   galleryCommentableType,
   isGalleryVideo,
@@ -115,6 +123,7 @@ const props = defineProps<{
   slides: T[]
 }>()
 
+const galleryStore = useGalleryStore()
 const show = defineModel<boolean>()
 const currentSlideId = defineModel<string>('currentSlideId')
 
@@ -244,6 +253,14 @@ function goNext(): void {
   if (canGoNext.value) {
     goTo(currentIndex.value + 1)
   }
+}
+
+async function saveDescription(value: string | null): Promise<void> {
+  if (!currentSlide.value) {
+    return
+  }
+
+  await galleryStore.updateMediaDescription(currentSlide.value, value)
 }
 
 function updateViewport(): void {
@@ -385,6 +402,17 @@ onUnmounted(() => {
     overflow: hidden;
     padding: 16px;
     background: #fff;
+
+    .photo-viewer__description {
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #ececf4;
+    }
+
+    :deep(.viewer-comments) {
+      flex: 1;
+      min-height: 0;
+    }
   }
 }
 

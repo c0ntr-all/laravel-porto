@@ -1,3 +1,5 @@
+import { ITag } from './tag'
+
 export type GalleryMediaKind = 'photo' | 'video'
 export type GalleryMediaFilter = 'all' | GalleryMediaKind
 export type GalleryUploadSource = 'device' | 'web' | 'windows'
@@ -12,6 +14,11 @@ export interface IGalleryAlbumUpdateDto {
   name?: string
   description?: string | null
   image?: string | null
+}
+
+export interface IGalleryTagsSyncPayload {
+  tags?: number[]
+  new_tags?: string[]
 }
 
 export type GalleryUploadItemStatus =
@@ -64,6 +71,8 @@ export interface IGalleryMediaItem {
   duration: string | null
   album_id: string | null
   saved_from_id: string | null
+  created_at: string
+  tags: ITag[]
 }
 
 export interface IGalleryCommentAuthor {

@@ -52,7 +52,7 @@
         icon="add_link"
         label="Add from link"
         :loading="galleryStore.isUploading"
-        :disable="!link.trim()"
+        :disable="!link.trim() || galleryStore.isUploading"
         @click="submit"
       />
     </div>
@@ -64,10 +64,6 @@ import { computed, ref } from 'vue'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
 import { GalleryMediaKind } from 'src/types/gallery'
 import { isHttpUrl, resolveMediaKind } from 'src/utils/gallery'
-
-const emit = defineEmits<{
-  done: []
-}>()
 
 const galleryStore = useGalleryStore()
 const link = ref('')
@@ -98,7 +94,6 @@ async function submit(): Promise<void> {
     await galleryStore.uploadFromWeb(value, resolvedKind.value)
     link.value = ''
     kind.value = 'auto'
-    emit('done')
   } catch {
     error.value = 'Could not add this link'
   }

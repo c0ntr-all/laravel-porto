@@ -25,13 +25,13 @@
 
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="device" class="q-pa-none">
-          <GalleryUploadDialogTabDevice @done="show = false" />
+          <GalleryUploadDialogTabDevice />
         </q-tab-panel>
         <q-tab-panel name="web" class="q-pa-none">
-          <GalleryUploadDialogTabWeb @done="show = false" />
+          <GalleryUploadDialogTabWeb />
         </q-tab-panel>
         <q-tab-panel name="windows" class="q-pa-none">
-          <GalleryUploadDialogTabWindows @done="show = false" />
+          <GalleryUploadDialogTabWindows />
         </q-tab-panel>
       </q-tab-panels>
     </q-card>

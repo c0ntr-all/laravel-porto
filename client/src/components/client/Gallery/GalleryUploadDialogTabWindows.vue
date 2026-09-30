@@ -58,26 +58,48 @@
     <div v-if="paths.length" class="upload-path__list">
       <div
         v-for="item in paths"
-        :key="item"
+        :key="item.path"
         class="upload-path__item"
+        :class="{ 'upload-path__item--finished': item.status === 'finished' }"
       >
         <q-icon
-          :name="resolveMediaKind(item) === 'video' ? 'movie' : 'image'"
+          :name="resolveMediaKind(item.path) === 'video' ? 'movie' : 'image'"
           color="primary"
         />
         <div class="upload-path__item-body">
-          <div class="upload-path__item-name">{{ fileName(item) }}</div>
-          <div class="upload-path__item-path" :title="item">{{ item }}</div>
+          <div class="upload-path__item-name">{{ fileName(item.path) }}</div>
+          <div class="upload-path__item-path" :title="item.path">{{ item.path }}</div>
+          <div v-if="item.status === 'finished'" class="upload-path__status">Finished</div>
+          <div v-else-if="item.status === 'error'" class="text-negative text-caption">
+            {{ item.error || 'Upload failed' }}
+          </div>
         </div>
         <q-chip
           size="sm"
           dense
-          :color="resolveMediaKind(item) === 'video' ? 'deep-purple-1' : 'grey-3'"
+          :color="resolveMediaKind(item.path) === 'video' ? 'deep-purple-1' : 'grey-3'"
           text-color="dark"
         >
-          {{ resolveMediaKind(item) === 'video' ? 'Video' : 'Photo' }}
+          {{ resolveMediaKind(item.path) === 'video' ? 'Video' : 'Photo' }}
         </q-chip>
-        <q-btn icon="close" flat round dense @click="removePath(item)" />
+        <q-btn
+          v-if="item.status === 'finished'"
+          icon="check"
+          flat
+          round
+          dense
+          color="positive"
+          disable
+        />
+        <q-btn
+          v-else
+          icon="close"
+          flat
+          round
+          dense
+          :disable="galleryStore.isUploading"
+          @click="removePath(item.path)"
+        />
       </div>
     </div>
 
@@ -100,7 +122,7 @@
         icon="input"
         :label="submitLabel"
         :loading="galleryStore.isUploading"
-        :disable="!paths.length"
+        :disable="!pendingCount"
         @click="submit"
       />
     </div>
@@ -113,32 +135,41 @@ import { Notify } from 'quasar'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
 import { GALLERY_MEDIA_ACCEPT, joinLocalPath, resolveMediaKind } from 'src/utils/gallery'
 
-const emit = defineEmits<{
-  done: []
-}>()
+interface IUploadPathItem {
+  path: string
+  status: 'pending' | 'uploading' | 'finished' | 'error'
+  error?: string
+}
 
 const galleryStore = useGalleryStore()
 const folderPath = ref('')
 const pickedFiles = ref<File[] | null>(null)
 const manualPath = ref('')
-const paths = ref<string[]>([])
+const paths = ref<IUploadPathItem[]>([])
+
+const pendingCount = computed(() => (
+  paths.value.filter(item => item.status === 'pending' || item.status === 'error').length
+))
 
 const submitLabel = computed(() => {
-  if (!paths.value.length) {
+  if (!pendingCount.value) {
     return 'Send paths'
   }
 
-  return `Send ${paths.value.length} ${paths.value.length === 1 ? 'path' : 'paths'}`
+  return `Send ${pendingCount.value} ${pendingCount.value === 1 ? 'path' : 'paths'}`
 })
 
 function addPath(path: string): void {
   const value = path.trim()
 
-  if (!value || paths.value.includes(value)) {
+  if (!value || paths.value.some(item => item.path === value)) {
     return
   }
 
-  paths.value.push(value)
+  paths.value.push({
+    path: value,
+    status: 'pending'
+  })
 }
 
 function onFilesPicked(files: File[] | null): void {
@@ -168,7 +199,7 @@ function addManualPath(): void {
 }
 
 function removePath(path: string): void {
-  paths.value = paths.value.filter(item => item !== path)
+  paths.value = paths.value.filter(item => item.path !== path)
 }
 
 function clearAll(): void {
@@ -182,16 +213,28 @@ function fileName(path: string): string {
 }
 
 async function submit(): Promise<void> {
-  if (!paths.value.length) {
+  const queue = paths.value.filter(item => item.status === 'pending' || item.status === 'error')
+
+  if (!queue.length) {
     return
   }
 
+  for (const item of queue) {
+    item.status = 'uploading'
+    item.error = undefined
+  }
+
   try {
-    await galleryStore.uploadFromWindows(paths.value)
-    clearAll()
-    emit('done')
+    await galleryStore.uploadFromWindows(queue.map(item => item.path))
+
+    for (const item of queue) {
+      item.status = 'finished'
+    }
   } catch {
-    // Notification is handled in the store
+    for (const item of queue) {
+      item.status = 'error'
+      item.error = 'Upload failed'
+    }
   }
 }
 </script>
@@ -246,6 +289,17 @@ async function submit(): Promise<void> {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__status {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #21ba45;
+  }
+
+  &__item--finished {
+    background: #eefaf1;
   }
 
   &__empty {

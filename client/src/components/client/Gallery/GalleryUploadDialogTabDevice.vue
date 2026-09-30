@@ -31,6 +31,7 @@
         v-for="item in items"
         :key="item.id"
         class="upload-device__item"
+        :class="{ 'upload-device__item--finished': isFinished(item) }"
       >
         <div class="upload-device__preview">
           <video
@@ -52,18 +53,31 @@
             · {{ formatSize(item.file.size) }}
           </div>
           <q-linear-progress
-            v-if="item.status === 'uploading' || item.status === 'done'"
+            v-if="item.status === 'uploading' || isFinished(item)"
             class="q-mt-xs"
             :value="item.progress / 100"
-            :color="item.status === 'done' ? 'positive' : 'primary'"
+            :color="isFinished(item) ? 'positive' : 'primary'"
             rounded
           />
+          <div v-if="isFinished(item)" class="upload-device__status text-positive">
+            Finished
+          </div>
           <div v-if="item.status === 'error'" class="text-negative text-caption">
             {{ item.error || 'Upload failed' }}
           </div>
         </div>
 
         <q-btn
+          v-if="isFinished(item)"
+          icon="check"
+          flat
+          round
+          dense
+          color="positive"
+          disable
+        />
+        <q-btn
+          v-else
           icon="close"
           flat
           round
@@ -103,12 +117,7 @@ import { mapFileToUploadItem } from 'src/api/mappers/gallery.mapper'
 import { IUploadItem } from 'src/types/gallery'
 import { GALLERY_MEDIA_ACCEPT, isMediaFile, isVideoFile } from 'src/utils/gallery'
 
-const emit = defineEmits<{
-  done: []
-}>()
-
 const galleryStore = useGalleryStore()
-
 const fileInput = ref<HTMLInputElement | null>(null)
 const items = ref<IUploadItem[]>([])
 const isDragging = ref(false)
@@ -211,12 +220,17 @@ function formatSize(bytes: number): string {
 }
 
 async function upload(): Promise<void> {
-  const uploaded = await galleryStore.uploadDeviceFiles(items.value)
+  const queue = items.value.filter(item => item.status === 'pending' || item.status === 'error')
 
-  if (uploaded.length && items.value.every(item => item.status === 'done' || item.status === 'canceled')) {
-    clearItems()
-    emit('done')
+  if (!queue.length) {
+    return
   }
+
+  await galleryStore.uploadDeviceFiles(queue)
+}
+
+function isFinished(item: IUploadItem): boolean {
+  return item.status === 'finished' || item.status === 'done'
 }
 
 onUnmounted(() => {
@@ -317,6 +331,16 @@ onUnmounted(() => {
   &__meta {
     font-size: 12px;
     color: #777a8f;
+  }
+
+  &__status {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__item--finished {
+    background: #eefaf1;
   }
 
   &__actions {

@@ -266,6 +266,10 @@ export const useGalleryStore = defineStore('gallery', () => {
     try {
       const result = []
       for (const item of items) {
+        if (item.status === 'done' || item.status === 'finished' || item.status === 'canceled') {
+          continue
+        }
+
         const responseData: IJsonApiResponse = await galleryApi.upload(
           url,
           item.file,
@@ -296,7 +300,7 @@ export const useGalleryStore = defineStore('gallery', () => {
 
     try {
       for (const item of items) {
-        if (item.status === 'done' || item.status === 'canceled') {
+        if (item.status === 'done' || item.status === 'finished' || item.status === 'canceled') {
           continue
         }
 
@@ -312,7 +316,7 @@ export const useGalleryStore = defineStore('gallery', () => {
           )
           const mapped = mapGalleryMediaUploadResponse(response)
 
-          item.status = 'done'
+          item.status = 'finished'
           item.progress = 100
           uploaded.push(...mapped)
           handleApiSuccess(response)

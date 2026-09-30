@@ -14,11 +14,19 @@ export interface IGalleryAlbumUpdateDto {
   image?: string | null
 }
 
+export type GalleryUploadItemStatus =
+  | 'pending'
+  | 'uploading'
+  | 'done'
+  | 'finished'
+  | 'error'
+  | 'canceled'
+
 export interface IUploadItem {
   id: string
   file: File
   progress: number
-  status: 'pending' | 'uploading' | 'done' | 'error' | 'canceled'
+  status: GalleryUploadItemStatus
   error?: string
 }
 

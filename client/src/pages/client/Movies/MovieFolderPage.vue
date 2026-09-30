@@ -85,6 +85,7 @@ import { computed, ref, watch } from 'vue'
 import { useMovieFolderStore } from 'src/stores/modules/movieFolderStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
+import { useMoviesViewMode } from 'src/composables/client/Movies/useMoviesViewMode'
 import MovieCard from 'src/components/client/Movies/MovieCard.vue'
 import MovieCardRow from 'src/components/client/Movies/MovieCardRow.vue'
 import MoviesShell from 'src/components/client/Movies/MoviesShell.vue'
@@ -96,7 +97,7 @@ const props = defineProps<{
 }>()
 
 const folderStore = useMovieFolderStore()
-const viewMode = ref(MoviesViewModeEnum.TILE)
+const { viewMode } = useMoviesViewMode()
 const isResolving = ref(true)
 const folder = computed(() => folderStore.folderById(props.id))
 

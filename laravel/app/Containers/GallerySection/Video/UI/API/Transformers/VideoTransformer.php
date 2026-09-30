@@ -3,6 +3,7 @@
 namespace App\Containers\GallerySection\Video\UI\API\Transformers;
 
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
+use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\GallerySection\Album\UI\API\Transformers\AlbumTransformer;
 use App\Containers\GallerySection\Video\Models\Video;
 use App\Ship\Helpers\DateHelper;
@@ -12,9 +13,15 @@ use League\Fractal\TransformerAbstract;
 
 class VideoTransformer extends TransformerAbstract
 {
+    public function __construct(
+        private readonly ?int $userId = null,
+    ) {
+    }
+
     protected array $availableIncludes = [
         'album',
         'comments',
+        'tags',
     ];
 
     public function transform(Video $video): array
@@ -54,5 +61,14 @@ class VideoTransformer extends TransformerAbstract
 
         return $this->collection($comments, new CommentTransformer(), 'comments')
                     ->setMeta(['count' => $comments->count()]);
+    }
+
+    public function includeTags(Video $video): Collection
+    {
+        $userId = $this->userId ?? (int) auth()->id();
+        $tags = $video->tagsForUser($userId)->get();
+
+        return $this->collection($tags, new TagTransformer(), 'tags')
+                    ->setMeta(['count' => $tags->count()]);
     }
 }

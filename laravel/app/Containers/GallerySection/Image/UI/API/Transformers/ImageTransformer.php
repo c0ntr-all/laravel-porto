@@ -3,6 +3,7 @@
 namespace App\Containers\GallerySection\Image\UI\API\Transformers;
 
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
+use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\GallerySection\Album\UI\API\Transformers\AlbumTransformer;
 use App\Containers\GallerySection\Image\Models\Image;
 use League\Fractal\Resource\Collection;
@@ -11,9 +12,15 @@ use League\Fractal\TransformerAbstract;
 
 class ImageTransformer extends TransformerAbstract
 {
+    public function __construct(
+        private readonly ?int $userId = null,
+    ) {
+    }
+
     protected array $availableIncludes = [
         'album',
         'comments',
+        'tags',
     ];
 
     public function transform(Image $image): array
@@ -52,5 +59,14 @@ class ImageTransformer extends TransformerAbstract
 
         return $this->collection($comments, new CommentTransformer(), 'comments')
                     ->setMeta(['count' => $comments->count()]);
+    }
+
+    public function includeTags(Image $image): Collection
+    {
+        $userId = $this->userId ?? (int) auth()->id();
+        $tags = $image->tagsForUser($userId)->get();
+
+        return $this->collection($tags, new TagTransformer(), 'tags')
+                    ->setMeta(['count' => $tags->count()]);
     }
 }

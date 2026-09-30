@@ -20,24 +20,26 @@
       />
     </div>
 
-    <TransitionGroup
+    <div
       v-if="displayMovies.length"
       ref="listRef"
-      tag="div"
-      name="franchise-movies"
       class="franchise-movies__list"
       :class="{ 'franchise-movies__list--sorting': Boolean(draggingId) }"
     >
       <div
-        v-for="movie in displayMovies"
+        v-for="(movie, index) in displayMovies"
         :key="movie.id"
         class="franchise-movies__row"
-        :class="{ 'franchise-movies__row--dragging': draggingId === movie.id }"
+        :class="{
+          'franchise-movies__row--lifted': draggingId === movie.id,
+          'franchise-movies__row--active': draggingId === movie.id && dragActive
+        }"
+        :style="rowStyle(index)"
       >
         <q-icon
           class="franchise-movies__handle"
           name="drag_indicator"
-          @pointerdown="onPointerDown($event, movie.id)"
+          @pointerdown="onPointerDown($event, movie.id, index)"
         />
 
         <router-link
@@ -76,7 +78,7 @@
           @pointerdown.stop
         />
       </div>
-    </TransitionGroup>
+    </div>
 
     <div v-else class="text-grey-6 q-py-md">
       No movies in this franchise yet.
@@ -85,14 +87,19 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
-import type { ComponentPublicInstance } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
 import { mapMoviesResponse, moviePosterUrl } from 'src/api/mappers/Movie/movie.mapper'
 import { useMovieFranchiseStore } from 'src/stores/modules/movieFranchiseStore'
 import { IMovieFranchiseMovie } from 'src/types/Movie'
 
-const DRAG_ACTIVATION_PX = 8
+const LIST_GAP_PX = 8
+const MOVE_MS = 220
+
+interface RowMetric {
+  top: number
+  height: number
+}
 
 const props = defineProps<{
   franchiseId: string
@@ -103,108 +110,210 @@ const store = useMovieFranchiseStore()
 const pickedMovieId = ref<string | null>(null)
 const movieOptions = ref<Array<{ label: string, value: string }>>([])
 const isSearching = ref(false)
-const listRef = ref<ComponentPublicInstance | HTMLElement | null>(null)
+const listRef = ref<HTMLElement | null>(null)
 const draggingId = ref<string | null>(null)
-const draftMovies = ref<IMovieFranchiseMovie[] | null>(null)
 const originMovies = ref<IMovieFranchiseMovie[]>([])
-const dragStartY = ref(0)
-const dragActivated = ref(false)
+const orderedPreview = ref<IMovieFranchiseMovie[] | null>(null)
+const originIndex = ref(-1)
+const insertIndex = ref(-1)
+const pointerDelta = ref(0)
+const dragActive = ref(false)
+const settling = ref(false)
+const rowMetrics = ref<RowMetric[]>([])
+const rowGap = ref(LIST_GAP_PX)
+const pointerOriginY = ref(0)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
+let dragSession = 0
 
-const displayMovies = computed(() => draftMovies.value ?? props.movies)
-
-function getListEl(): HTMLElement | null {
-  const value = listRef.value
-
-  if (!value) {
-    return null
+const displayMovies = computed(() => {
+  if (orderedPreview.value) {
+    return orderedPreview.value
   }
 
-  if (value instanceof HTMLElement) {
-    return value
+  if (draggingId.value && originMovies.value.length) {
+    return originMovies.value
   }
 
-  return (value.$el as HTMLElement | undefined) ?? null
+  return props.movies
+})
+
+function shiftY(index: number): number {
+  const from = originIndex.value
+  const to = insertIndex.value
+
+  if (!draggingId.value || from < 0 || !rowMetrics.value[from]) {
+    return 0
+  }
+
+  if (index === from) {
+    return pointerDelta.value
+  }
+
+  const slot = rowMetrics.value[from].height + rowGap.value
+
+  if (to > from && index > from && index <= to) {
+    return -slot
+  }
+
+  if (to < from && index >= to && index < from) {
+    return slot
+  }
+
+  return 0
 }
 
-function sameOrder(left: IMovieFranchiseMovie[], right: IMovieFranchiseMovie[]): boolean {
-  if (left.length !== right.length) {
-    return false
+function rowStyle(index: number): Record<string, string> | undefined {
+  if (!draggingId.value) {
+    return undefined
   }
 
-  return left.every((item, index) => item.id === right[index]?.id)
+  const isDragged = index === originIndex.value
+
+  return {
+    transform: `translateY(${shiftY(index)}px)`,
+    transition: isDragged && !settling.value ? 'none' : `transform ${MOVE_MS}ms ease`,
+    zIndex: isDragged ? '3' : '1'
+  }
 }
 
-function moveDraftItem(fromIndex: number, toIndex: number): void {
-  if (!draftMovies.value || fromIndex === toIndex || fromIndex < 0 || toIndex < 0) {
+function measureRows(): void {
+  const list = listRef.value
+
+  if (!list) {
+    rowMetrics.value = []
     return
   }
 
-  const next = [...draftMovies.value]
-  const [item] = next.splice(fromIndex, 1)
+  const styles = getComputedStyle(list)
+  const parsedGap = Number.parseFloat(styles.rowGap || styles.gap)
+
+  rowGap.value = Number.isFinite(parsedGap) ? parsedGap : LIST_GAP_PX
+
+  const listTop = list.getBoundingClientRect().top
+
+  rowMetrics.value = Array.from(list.querySelectorAll<HTMLElement>('.franchise-movies__row')).map((row) => {
+    const rect = row.getBoundingClientRect()
+
+    return {
+      top: rect.top - listTop,
+      height: rect.height
+    }
+  })
+}
+
+function resolveInsertIndex(delta: number): number {
+  const from = originIndex.value
+  const metrics = rowMetrics.value
+  const current = metrics[from]
+
+  if (!current) {
+    return from
+  }
+
+  const center = current.top + delta + current.height / 2
+  let index = from
+
+  if (delta > 0) {
+    for (let i = from + 1; i < metrics.length; i += 1) {
+      const row = metrics[i]
+
+      if (!row) {
+        continue
+      }
+
+      const midpoint = row.top + row.height / 2
+
+      if (center > midpoint) {
+        index = i
+      } else {
+        break
+      }
+    }
+  } else if (delta < 0) {
+    for (let i = from - 1; i >= 0; i -= 1) {
+      const row = metrics[i]
+
+      if (!row) {
+        continue
+      }
+
+      const midpoint = row.top + row.height / 2
+
+      if (center < midpoint) {
+        index = i
+      } else {
+        break
+      }
+    }
+  }
+
+  return index
+}
+
+function targetDelta(from: number, to: number): number {
+  const metrics = rowMetrics.value
+  const origin = metrics[from]
+  const target = metrics[to]
+
+  if (!origin || !target || from === to) {
+    return 0
+  }
+
+  if (to > from) {
+    return (target.top + target.height) - (origin.top + origin.height)
+  }
+
+  return target.top - origin.top
+}
+
+function reorderList(
+  items: IMovieFranchiseMovie[],
+  from: number,
+  to: number
+): IMovieFranchiseMovie[] {
+  const next = items.map(item => ({ ...item }))
+  const [item] = next.splice(from, 1)
 
   if (!item) {
-    return
+    return next
   }
 
-  next.splice(toIndex, 0, item)
-  draftMovies.value = next
+  next.splice(to, 0, item)
+
+  return next
 }
 
-/**
- * Directional midpoint check: only move up past items above, or down past items below.
- * Staying over the dragged row keeps the current index — no oscillation.
- */
-function resolveTargetIndex(clientY: number, fromIndex: number): number {
-  const list = getListEl()
-
-  if (!list || !draftMovies.value?.length) {
-    return fromIndex
-  }
-
-  const rows = Array.from(list.querySelectorAll<HTMLElement>('.franchise-movies__row'))
-  let targetIndex = fromIndex
-
-  for (let index = 0; index < rows.length; index += 1) {
-    if (index === fromIndex) {
-      continue
-    }
-
-    const row = rows[index]
-
-    if (!row) {
-      continue
-    }
-
-    const rect = row.getBoundingClientRect()
-    const midpoint = rect.top + rect.height / 2
-
-    if (index < fromIndex && clientY < midpoint) {
-      targetIndex = index
-      break
-    }
-
-    if (index > fromIndex && clientY > midpoint) {
-      targetIndex = index
-    }
-  }
-
-  return targetIndex
+function resetDragVisual(): void {
+  draggingId.value = null
+  originIndex.value = -1
+  insertIndex.value = -1
+  pointerDelta.value = 0
+  dragActive.value = false
+  settling.value = false
+  rowMetrics.value = []
+  originMovies.value = []
+  pointerOriginY.value = 0
 }
 
-function onPointerDown(event: PointerEvent, movieId: string): void {
-  if (event.button !== 0 || store.isMoviesSaving) {
+function onPointerDown(event: PointerEvent, movieId: string, index: number): void {
+  if (event.button !== 0 || store.isMoviesSaving || settling.value) {
     return
   }
 
   event.preventDefault()
   event.stopPropagation()
 
-  draggingId.value = movieId
-  dragStartY.value = event.clientY
-  dragActivated.value = false
+  dragSession += 1
+  pointerOriginY.value = event.clientY
   originMovies.value = props.movies.map(item => ({ ...item }))
-  draftMovies.value = props.movies.map(item => ({ ...item }))
+  draggingId.value = movieId
+  originIndex.value = index
+  insertIndex.value = index
+  pointerDelta.value = 0
+  dragActive.value = false
+  settling.value = false
+
+  measureRows()
 
   const handle = event.currentTarget as HTMLElement | null
   handle?.setPointerCapture?.(event.pointerId)
@@ -215,63 +324,72 @@ function onPointerDown(event: PointerEvent, movieId: string): void {
 }
 
 function onPointerMove(event: PointerEvent): void {
-  if (!draggingId.value || !draftMovies.value) {
+  if (!draggingId.value || settling.value || originIndex.value < 0) {
     return
   }
 
   event.preventDefault()
-
-  if (!dragActivated.value) {
-    if (Math.abs(event.clientY - dragStartY.value) < DRAG_ACTIVATION_PX) {
-      return
-    }
-
-    dragActivated.value = true
-  }
-
-  const fromIndex = draftMovies.value.findIndex(item => item.id === draggingId.value)
-
-  if (fromIndex === -1) {
-    return
-  }
-
-  const toIndex = resolveTargetIndex(event.clientY, fromIndex)
-
-  if (fromIndex === toIndex) {
-    return
-  }
-
-  moveDraftItem(fromIndex, toIndex)
+  dragActive.value = true
+  pointerDelta.value = event.clientY - pointerOriginY.value
+  insertIndex.value = resolveInsertIndex(pointerDelta.value)
 }
 
-async function onPointerUp(): Promise<void> {
-  if (!draggingId.value || !draftMovies.value) {
-    cleanupDrag()
-    return
-  }
+async function finishDrag(session: number): Promise<void> {
+  const from = originIndex.value
+  const to = insertIndex.value
+  const changed = from >= 0 && to >= 0 && from !== to
+  const snapshot = originMovies.value.map(item => ({ ...item }))
 
-  const orderedIds = draftMovies.value.map(item => item.id)
-  const changed = dragActivated.value && !sameOrder(draftMovies.value, originMovies.value)
-
-  draggingId.value = null
-  dragActivated.value = false
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
   window.removeEventListener('pointercancel', onPointerUp)
 
-  if (changed) {
-    await store.reorderFranchiseMovies(props.franchiseId, orderedIds)
+  if (draggingId.value && (changed || pointerDelta.value !== 0)) {
+    settling.value = true
+    await nextTick()
+    await new Promise<void>(resolve => { requestAnimationFrame(() => resolve()) })
+
+    if (session !== dragSession) {
+      return
+    }
+
+    pointerDelta.value = changed ? targetDelta(from, to) : 0
+    await new Promise<void>(resolve => { window.setTimeout(resolve, MOVE_MS) })
   }
 
-  draftMovies.value = null
-  originMovies.value = []
+  if (session !== dragSession) {
+    return
+  }
+
+  if (changed) {
+    orderedPreview.value = reorderList(snapshot, from, to)
+  }
+
+  resetDragVisual()
+
+  if (!changed) {
+    return
+  }
+
+  try {
+    await store.reorderFranchiseMovies(
+      props.franchiseId,
+      (orderedPreview.value ?? snapshot).map(item => item.id)
+    )
+  } finally {
+    orderedPreview.value = null
+  }
+}
+
+function onPointerUp(): void {
+  const session = dragSession
+  void finishDrag(session)
 }
 
 function cleanupDrag(): void {
-  draggingId.value = null
-  draftMovies.value = null
-  originMovies.value = []
-  dragActivated.value = false
+  dragSession += 1
+  orderedPreview.value = null
+  resetDragVisual()
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
   window.removeEventListener('pointercancel', onPointerUp)
@@ -362,13 +480,16 @@ onBeforeUnmount(() => {
     border: 1px solid rgba(40, 47, 83, 0.08);
     border-radius: 12px;
     background: #fff;
-    transition: background-color 0.15s ease, box-shadow 0.15s ease;
 
-    &--dragging {
+    &--lifted {
       position: relative;
-      z-index: 1;
-      background: rgba(108, 95, 252, 0.06);
-      box-shadow: 0 8px 20px rgba(40, 47, 83, 0.12);
+      z-index: 3;
+      background: #fff;
+    }
+
+    &--active {
+      box-shadow: 0 14px 28px rgba(40, 47, 83, 0.18);
+      cursor: grabbing;
     }
   }
 
@@ -420,13 +541,5 @@ onBeforeUnmount(() => {
     font-size: 13px;
     color: #777a8f;
   }
-}
-
-.franchise-movies-move {
-  transition: transform 0.22s ease;
-}
-
-.franchise-movies__row--dragging.franchise-movies-move {
-  transition: none;
 }
 </style>

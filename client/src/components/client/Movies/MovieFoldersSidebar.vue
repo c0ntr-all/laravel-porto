@@ -14,6 +14,9 @@
           <q-icon name="movie" />
         </q-item-section>
         <q-item-section>Все фильмы</q-item-section>
+        <q-item-section v-if="movieStore.moviesTotal != null" side>
+          <span class="movie-folders-sidebar__count">{{ movieStore.moviesTotal }}</span>
+        </q-item-section>
       </q-item>
 
       <q-item
@@ -83,6 +86,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMovieFolderStore } from 'src/stores/modules/movieFolderStore'
+import { useMovieStore } from 'src/stores/modules/movieStore'
 import { SystemMovieFolderEnum } from 'src/enums/Movie/SystemMovieFolderEnum'
 import {
   isValidMovieFolderName,
@@ -91,6 +95,7 @@ import {
 
 const route = useRoute()
 const folderStore = useMovieFolderStore()
+const movieStore = useMovieStore()
 const folderName = ref('')
 
 const isCatalog = computed(() => route.name === 'movies')

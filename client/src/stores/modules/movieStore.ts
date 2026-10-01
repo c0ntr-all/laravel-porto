@@ -30,6 +30,7 @@ export const useMovieStore = defineStore('movies', () => {
   const movie = ref<IMovie | null>(null)
   const movieCredits = ref<IMovieCredit[]>([])
   const moviesCursor = ref<string | null>(null)
+  const moviesTotal = ref<number | null>(null)
   const hasMoreMovies = ref(false)
   const isMoviesLoading = ref(false)
   const isMoviesLoadingMore = ref(false)
@@ -104,6 +105,10 @@ export const useMovieStore = defineStore('movies', () => {
       movies.value = append ? mergeById(movies.value, mapped) : mapped
       moviesCursor.value = extractCursorFromResponse(response)
       hasMoreMovies.value = hasMoreFromResponse(response)
+
+      if (typeof response.meta?.total === 'number') {
+        moviesTotal.value = response.meta.total
+      }
     } catch (error) {
       if (requestId !== listRequestId) {
         return
@@ -237,6 +242,7 @@ export const useMovieStore = defineStore('movies', () => {
     movie,
     movieCredits,
     moviesCursor,
+    moviesTotal,
     hasMoreMovies,
     isMoviesLoading,
     isMoviesLoadingMore,

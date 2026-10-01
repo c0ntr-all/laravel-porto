@@ -1,5 +1,17 @@
 <template>
   <MoviesShell>
+  <header class="movies-page__head">
+    <div class="movies-page__intro">
+      <h1 class="movies-page__title">Все фильмы</h1>
+      <p v-if="totalLabel" class="movies-page__total">
+        {{ totalLabel }}
+      </p>
+      <p v-else-if="movieStore.isMoviesLoading" class="movies-page__total movies-page__total--muted">
+        Считаем каталог…
+      </p>
+    </div>
+  </header>
+
   <div class="movies-toolbar">
     <q-input
       v-model="searchText"
@@ -96,13 +108,14 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
 import { useMovieFolderStore } from 'src/stores/modules/movieFolderStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
 import { useMoviesViewMode } from 'src/composables/client/Movies/useMoviesViewMode'
+import { formatMoviesCount } from 'src/utils/movieLabels'
 import MovieCard from 'src/components/client/Movies/MovieCard.vue'
 import MovieCardRow from 'src/components/client/Movies/MovieCardRow.vue'
 import MoviesShell from 'src/components/client/Movies/MoviesShell.vue'
@@ -126,6 +139,14 @@ const viewModeOptions = [
   { value: MoviesViewModeEnum.TILE, slot: 'tile' },
   { value: MoviesViewModeEnum.LIST, slot: 'list' }
 ]
+
+const totalLabel = computed(() => {
+  if (movieStore.moviesTotal == null) {
+    return ''
+  }
+
+  return `${formatMoviesCount(movieStore.moviesTotal)} в каталоге`
+})
 
 const { sentinel } = useScrollSentinel(
   () => { void movieStore.getMovies({ append: true }) },
@@ -163,6 +184,31 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.movies-page {
+  &__head {
+    margin-bottom: 1.25rem;
+  }
+
+  &__title {
+    margin: 0 0 4px;
+    font-size: 2rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #282f53;
+  }
+
+  &__total {
+    margin: 0;
+    color: #777a8f;
+    font-size: 15px;
+    line-height: 1.4;
+
+    &--muted {
+      opacity: 0.75;
+    }
+  }
+}
+
 .movies-toolbar {
   display: flex;
   align-items: center;

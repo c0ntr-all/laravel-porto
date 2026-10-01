@@ -2,6 +2,7 @@
 
 namespace App\Containers\MovieSection\Movie\UI\Actions;
 
+use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Movie\Tasks\ListMoviesTask;
 use App\Containers\MovieSection\Movie\UI\API\Requests\IndexRequest;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
@@ -47,6 +48,7 @@ class ListMoviesAction extends BaseAction
 
     /**
      * @return array{
+     *     total: int,
      *     per_page: int,
      *     has_more: bool,
      *     next_cursor: string|null,
@@ -58,6 +60,7 @@ class ListMoviesAction extends BaseAction
     private function cursorMeta(CursorPaginator $paginator): array
     {
         return [
+            'total' => Movie::query()->count(),
             'per_page' => $paginator->perPage(),
             'has_more' => $paginator->hasMorePages(),
             'next_cursor' => $paginator->nextCursor()?->encode(),

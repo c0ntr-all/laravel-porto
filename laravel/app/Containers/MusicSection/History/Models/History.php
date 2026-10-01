@@ -21,7 +21,7 @@ class History extends Model
 
     public function track(): BelongsTo
     {
-        return $this->belongsTo(Track::class);
+        return $this->belongsTo(Track::class)->withTrashed();
     }
 
     public function user(): BelongsTo

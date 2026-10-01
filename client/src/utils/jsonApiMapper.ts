@@ -25,7 +25,9 @@ export function mapEntity(
       const rels = Array.isArray(rel.data) ? rel.data : [rel.data]
 
       entity[key] = rels
-        .map((r: IRelationshipItem) => included.find((i: IJsonApiResource) => i.type === r.type && i.id === r.id))
+        .map((r: IRelationshipItem) => included.find((i: IJsonApiResource) => (
+          i.type === r.type && String(i.id) === String(r.id)
+        )))
         .filter(Boolean)
         .map((r: IJsonApiResource | undefined) => mapEntity(r!, included))
 

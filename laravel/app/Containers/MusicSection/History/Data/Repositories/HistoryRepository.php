@@ -19,8 +19,17 @@ class HistoryRepository
                                AllowedFilter::exact('track_id'),
                            ])
                            ->allowedSorts(['created_at', 'updated_at'])
-                           ->allowedIncludes(['track'])
-                           ->with(['track.artists', 'track.rate', 'track.album.albumType'])
+                           ->allowedIncludes([
+                               'track',
+                               'track.artists',
+                               'track.album',
+                               'track.rate',
+                           ])
+                           ->with(['track' => fn ($query) => $query->withTrashed()->with([
+                               'artists',
+                               'rate',
+                               'album.albumType',
+                           ])])
                            ->orderByDesc('created_at')
                            ->orderByDesc('id')
                            ->cursorPaginate(50);

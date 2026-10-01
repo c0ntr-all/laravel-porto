@@ -5,7 +5,7 @@ export const historyApi = {
   async listHistory(query?: IHistoryListQuery): Promise<IJsonApiResponse> {
     const response = await api.get('v1/music/history', {
       params: {
-        include: 'track,track.artists,track.album',
+        include: 'track',
         ...(query?.cursor ? { cursor: query.cursor } : {})
       }
     })

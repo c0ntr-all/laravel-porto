@@ -2,6 +2,7 @@
 
 namespace App\Containers\MusicSection\Upload\Helpers;
 
+use App\Ship\Helpers\WindowsDiskRoot;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 
@@ -30,6 +31,10 @@ class PathHelper
 
         if ($drive !== $configuredDrive) {
             throw new InvalidArgumentException("Only {$configuredDrive}: drive is mounted for the music library.");
+        }
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            return $windowsPath;
         }
 
         $relative = str_replace('\\', '/', substr($windowsPath, 3));
@@ -109,10 +114,7 @@ class PathHelper
             throw new InvalidArgumentException('The chosen catalog does not exist.');
         }
 
-        $normalizedReal = rtrim(str_replace('\\', '/', $realPath), '/');
-        $normalizedRoot = rtrim(str_replace('\\', '/', $rootReal), '/');
-
-        if ($normalizedReal !== $normalizedRoot && !str_starts_with($normalizedReal, $normalizedRoot . '/')) {
+        if (!WindowsDiskRoot::contains($rootReal, $realPath)) {
             throw new InvalidArgumentException('Path must be inside the music library root.');
         }
 

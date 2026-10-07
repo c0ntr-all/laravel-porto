@@ -48,8 +48,8 @@ return [
         ],
         'windows_f' => [
             'driver' => 'local',
-            'root'   => storage_path('mnt/f'),
-            'url'    => env('APP_URL').'/storage/mnt/f',
+            'root' => \App\Ship\Helpers\WindowsDiskRoot::fromEnv(),
+            'url' => env('APP_URL').'/storage/mnt/f',
         ],
         's3' => [
             'driver' => 's3',

@@ -52,6 +52,22 @@ class PathHelperTest extends TestCase
         $this->assertSame($windows, PathHelper::toWindows($linux));
     }
 
+    public function test_it_maps_from_a_native_windows_drive_root(): void
+    {
+        $driveRoot = $this->libraryRoot;
+        config(['filesystems.disks.windows_f.root' => $driveRoot]);
+        Storage::forgetDisk('windows_f');
+
+        $artist = $driveRoot.DIRECTORY_SEPARATOR.'Music'.DIRECTORY_SEPARATOR.'Metallica';
+        mkdir($artist, 0777, true);
+
+        $linux = PathHelper::toLinux('F:\\Music\\Metallica');
+
+        $this->assertSame(realpath($artist), realpath($linux));
+        $this->assertSame('F:\\Music\\Metallica', PathHelper::toWindows($linux));
+        $this->assertSame(realpath($artist), PathHelper::resolveLibraryDirectory('F:\\Music\\Metallica'));
+    }
+
     public function test_it_rejects_relative_paths(): void
     {
         $this->expectException(InvalidArgumentException::class);

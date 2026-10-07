@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Track\Tasks;
 
 use App\Containers\MusicSection\Track\Models\Track;
 use App\Containers\MusicSection\Upload\Helpers\PathHelper;
+use App\Ship\Helpers\WindowsDiskRoot;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -30,7 +31,7 @@ class ResolveTrackAudioPathTask extends ParentTask
             $realFile === false
             || $libraryRoot === false
             || !is_file($realFile)
-            || !str_starts_with($realFile, rtrim($libraryRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)
+            || !WindowsDiskRoot::contains($libraryRoot, $realFile)
         ) {
             throw new NotFoundHttpException('Audio file was not found on disk.');
         }
@@ -40,6 +41,10 @@ class ResolveTrackAudioPathTask extends ParentTask
 
     private function libraryRoot(): string
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return WindowsDiskRoot::driveRoot((string) config('music_upload.drive', 'F'));
+        }
+
         $disk = (string) config('music_upload.disk', 'windows_f');
 
         return Storage::disk($disk)->path('');

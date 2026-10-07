@@ -25,6 +25,11 @@ class WindowsPathHelper
     public static function toLinux(string $windowsPath, string $disk): string
     {
         $windowsPath = self::normalizeWindows($windowsPath);
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            return $windowsPath;
+        }
+
         $relative = str_replace('\\', '/', substr($windowsPath, 3));
 
         return Storage::disk($disk)->path($relative);
@@ -57,14 +62,23 @@ class WindowsPathHelper
 
         $absolutePath = self::toLinux($windowsPath, $disk);
         $realFile = realpath($absolutePath);
+
+        if ($realFile === false || !is_file($realFile)) {
+            throw new InvalidArgumentException('File was not found on disk.');
+        }
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $rootReal = realpath(rtrim(self::normalizeWindows($rootFolder), '\\'));
+            if ($rootReal === false || !WindowsDiskRoot::contains($rootReal, $realFile)) {
+                throw new InvalidArgumentException('File was not found on disk.');
+            }
+
+            return $realFile;
+        }
+
         $libraryRoot = realpath(Storage::disk($disk)->path(''));
 
-        if (
-            $realFile === false
-            || $libraryRoot === false
-            || !is_file($realFile)
-            || !str_starts_with($realFile, rtrim($libraryRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)
-        ) {
+        if ($libraryRoot === false || !WindowsDiskRoot::contains($libraryRoot, $realFile)) {
             throw new InvalidArgumentException('File was not found on disk.');
         }
 

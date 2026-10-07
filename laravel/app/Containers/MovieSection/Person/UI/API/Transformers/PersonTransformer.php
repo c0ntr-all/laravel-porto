@@ -17,6 +17,7 @@ class PersonTransformer extends TransformerAbstract
         'profession',
         'professions',
         'movies',
+        'credits',
     ];
 
     public function transform(Person $person): array
@@ -54,5 +55,16 @@ class PersonTransformer extends TransformerAbstract
         $person->loadMissing('movies');
 
         return $this->collection($person->movies, new MovieTransformer(), ContainerAliasEnum::MOVIE->value);
+    }
+
+    public function includeCredits(Person $person): Collection
+    {
+        $person->loadMissing(['credits.movie', 'credits.profession']);
+
+        return $this->collection(
+            $person->credits,
+            new PersonCreditTransformer(),
+            ContainerAliasEnum::MOVIE_CREDIT->value,
+        );
     }
 }

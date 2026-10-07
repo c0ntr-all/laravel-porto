@@ -3,12 +3,14 @@
 namespace App\Containers\MovieSection\Person\Models;
 
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\MovieSection\Movie\Models\MoviePersonCredit;
 use App\Containers\MovieSection\Profession\Models\Profession;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property-read Profession|null $profession
  * @property-read Collection<int, Profession> $professions
  * @property-read Collection<int, Movie> $movies
+ * @property-read Collection<int, MoviePersonCredit> $credits
  */
 class Person extends Model
 {
@@ -79,5 +82,10 @@ class Person extends Model
         )
             ->withPivot(['profession_id', 'description'])
             ->withTimestamps();
+    }
+
+    public function credits(): HasMany
+    {
+        return $this->hasMany(MoviePersonCredit::class, 'person_id')->orderBy('id');
     }
 }

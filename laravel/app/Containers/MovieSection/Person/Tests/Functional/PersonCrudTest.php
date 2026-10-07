@@ -108,7 +108,7 @@ class PersonCrudTest extends TestCase
         ]);
 
         $this->actingAs($this->user, 'api')
-            ->getJson('/api/v1/movie/persons/'.$person->id)
+            ->getJson('/api/v1/movie/persons/'.$person->id.'?include=profession')
             ->assertOk()
             ->assertJsonPath('data.attributes.name', 'Old Name');
 
@@ -124,5 +124,48 @@ class PersonCrudTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('movie_persons', ['id' => $person->id]);
+    }
+
+    public function test_person_credits_include_distinguishes_roles_in_same_movie(): void
+    {
+        $actor = Profession::factory()->create(['en_name' => 'actor', 'name' => 'актеры']);
+        $producer = Profession::factory()->create(['en_name' => 'producer', 'name' => 'продюсеры']);
+        $movie = Movie::factory()->create(['title' => 'The Godfather', 'year' => 1972]);
+
+        $person = Person::factory()->create([
+            'name' => 'Francis Ford Coppola',
+            'profession_id' => $producer->id,
+        ]);
+        $person->professions()->attach([$actor->id, $producer->id]);
+
+        $movie->persons()->attach($person->id, [
+            'profession_id' => $producer->id,
+            'description' => null,
+        ]);
+        $movie->persons()->attach($person->id, [
+            'profession_id' => $actor->id,
+            'description' => 'Cameo',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/persons/'.$person->id.'?include=profession,professions,credits');
+
+        $response->assertOk();
+
+        $credits = collect($response->json('included'))
+            ->where('type', 'movie_credits')
+            ->values();
+
+        $this->assertCount(2, $credits);
+
+        $byProfession = $credits->keyBy('attributes.profession.en_name');
+
+        $this->assertSame($movie->id, (int) $byProfession['producer']['attributes']['movie']['id']);
+        $this->assertSame('The Godfather', $byProfession['producer']['attributes']['movie']['title']);
+        $this->assertSame($producer->id, (int) $byProfession['producer']['attributes']['profession']['id']);
+
+        $this->assertSame($movie->id, (int) $byProfession['actor']['attributes']['movie']['id']);
+        $this->assertSame('Cameo', $byProfession['actor']['attributes']['description']);
+        $this->assertSame($actor->id, (int) $byProfession['actor']['attributes']['profession']['id']);
     }
 }

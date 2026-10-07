@@ -13,17 +13,32 @@ class GetPersonAction extends BaseAction
 {
     public function handle(Person $person): Person
     {
-        return $person->load([
+        $person->load([
             'profession',
             'professions',
             'movies' => static fn ($query) => $query->orderByDesc('year')->orderByDesc('id'),
+            'credits.movie',
+            'credits.profession',
         ]);
+
+        $person->setRelation(
+            'credits',
+            $person->credits
+                ->sortByDesc(static fn ($credit) => [
+                    $credit->movie?->year ?? 0,
+                    $credit->movie?->id ?? 0,
+                    $credit->id,
+                ])
+                ->values(),
+        );
+
+        return $person;
     }
 
     public function asController(Person $person, GetRequest $request): JsonResponse
     {
         $person = $this->handle($person);
-        $includes = (string) $request->query('include', 'profession,professions,movies');
+        $includes = (string) $request->query('include', 'profession,professions,credits');
 
         return fractal($person, new PersonTransformer())
             ->withResourceName(ContainerAliasEnum::MOVIE_PERSON->value)

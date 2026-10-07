@@ -4,6 +4,15 @@ export interface IMovieProfession {
   name: string | null
 }
 
+export interface IPersonCreditMovie {
+  id: string
+  title: string
+  year: number
+  type: string
+  cover: string | null
+  kp_rating: number | null
+}
+
 export interface IMoviePerson {
   id: string
   kp_id: number
@@ -13,6 +22,7 @@ export interface IMoviePerson {
   profession: IMovieProfession | null
   professions: IMovieProfession[]
   movies: import('./movie').IMovie[]
+  credits: IPersonMovieCredit[]
 }
 
 export interface IMovieCredit {
@@ -22,7 +32,19 @@ export interface IMovieCredit {
   profession: IMovieProfession
 }
 
+export interface IPersonMovieCredit {
+  id: string
+  description: string | null
+  movie: IPersonCreditMovie
+  profession: IMovieProfession
+}
+
 export interface IMovieCreditGroup {
   profession: IMovieProfession
   credits: IMovieCredit[]
+}
+
+export interface IPersonCreditGroup {
+  profession: IMovieProfession
+  credits: IPersonMovieCredit[]
 }

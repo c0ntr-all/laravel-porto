@@ -23,6 +23,7 @@ class PersonRepository
                 AllowedInclude::relationship('profession'),
                 AllowedInclude::relationship('professions'),
                 AllowedInclude::relationship('movies'),
+                AllowedInclude::relationship('credits'),
             ])
             ->with(['profession'])
             ->defaultSort('name')

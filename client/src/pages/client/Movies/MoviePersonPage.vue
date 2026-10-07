@@ -44,24 +44,42 @@
       </div>
     </div>
 
-    <section v-if="personStore.person.movies.length" class="person-movies">
-      <h2 class="person-movies__title">Фильмография</h2>
-      <ul class="person-movies__list">
-        <li
-          v-for="movie in personStore.person.movies"
-          :key="movie.id"
-          class="person-movies__item"
-        >
-          <span class="person-movies__year">{{ movie.year || '—' }}</span>
-          <router-link
-            class="person-movies__link"
-            :to="{ name: 'movie', params: { id: movie.id } }"
+    <template v-if="creditGroups.length">
+      <section
+        v-for="group in creditGroups"
+        :key="group.profession.id"
+        class="person-movies"
+      >
+        <h2 class="person-movies__title">{{ professionLabel(group.profession) }}</h2>
+        <ul class="person-movies__list">
+          <li
+            v-for="credit in group.credits"
+            :key="credit.id"
+            class="person-movies__item"
           >
-            {{ movie.title }}
-          </router-link>
-        </li>
-      </ul>
-    </section>
+            <span class="person-movies__year">{{ credit.movie.year || '—' }}</span>
+            <div class="person-movies__body">
+              <router-link
+                class="person-movies__link"
+                :to="{ name: 'movie', params: { id: credit.movie.id } }"
+              >
+                {{ credit.movie.title }}
+              </router-link>
+              <span v-if="credit.description" class="person-movies__role">
+                {{ credit.description }}
+              </span>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </template>
+
+    <q-card v-else class="q-mb-md" flat>
+      <AppNoResultsPlug
+        title="Фильмография пуста"
+        body="У этой персоны пока нет связанных фильмов."
+      />
+    </q-card>
   </template>
 
   <q-card v-else class="q-mb-md" flat>
@@ -76,7 +94,7 @@
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMoviePersonStore } from 'src/stores/modules/moviePersonStore'
-import { professionLabel } from 'src/utils/movieCredits'
+import { groupPersonCredits, professionLabel } from 'src/utils/movieCredits'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
@@ -112,6 +130,10 @@ const professionsLabel = computed(() => {
 
   return professions.map(professionLabel).filter(Boolean).join(', ')
 })
+
+const creditGroups = computed(() => (
+  groupPersonCredits(personStore.person?.credits ?? [])
+))
 
 watch(
   () => props.id,
@@ -177,6 +199,8 @@ watch(
 }
 
 .person-movies {
+  margin-bottom: 1.75rem;
+
   &__title {
     margin: 0 0 12px;
     font-size: 18px;
@@ -203,6 +227,10 @@ watch(
     color: #777a8f;
   }
 
+  &__body {
+    min-width: 0;
+  }
+
   &__link {
     color: $primary;
     text-decoration: none;
@@ -210,6 +238,13 @@ watch(
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  &__role {
+    display: block;
+    margin-top: 2px;
+    color: #777a8f;
+    font-size: 13px;
   }
 }
 </style>

@@ -11,7 +11,9 @@ import {
   IMovieEpisode,
   IMovieSeason,
   IMovieFranchise,
-  IMovieFranchiseMovie
+  IMovieFranchiseMovie,
+  IPersonCreditMovie,
+  IPersonMovieCredit
 } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
@@ -260,6 +262,33 @@ export function normalizeMovieCredit(raw: Record<string, unknown>): IMovieCredit
   }
 }
 
+export function normalizePersonCreditMovie(raw: Record<string, unknown>): IPersonCreditMovie {
+  return {
+    id: String(raw.id),
+    title: String(raw.title ?? ''),
+    year: Number(raw.year ?? 0),
+    type: String(raw.type ?? ''),
+    cover: toNullableString(raw.cover),
+    kp_rating: toNullableNumber(raw.kp_rating)
+  }
+}
+
+export function normalizePersonMovieCredit(raw: Record<string, unknown>): IPersonMovieCredit | null {
+  const movieRaw = asRecord(raw.movie)
+  const professionRaw = asRecord(raw.profession)
+
+  if (!movieRaw || !professionRaw) {
+    return null
+  }
+
+  return {
+    id: String(raw.id),
+    description: toNullableString(raw.description),
+    movie: normalizePersonCreditMovie(movieRaw),
+    profession: normalizeMovieProfession(professionRaw)
+  }
+}
+
 export function normalizeMoviePerson(raw: Record<string, unknown>): IMoviePerson {
   const professionRaw = asRecord(raw.profession)
 
@@ -271,7 +300,10 @@ export function normalizeMoviePerson(raw: Record<string, unknown>): IMoviePerson
     photo: toNullableString(raw.photo),
     profession: professionRaw ? normalizeMovieProfession(professionRaw) : null,
     professions: asRecords(raw.professions).map(normalizeMovieProfession),
-    movies: asRecords(raw.movies).map(normalizeMovie)
+    movies: asRecords(raw.movies).map(normalizeMovie),
+    credits: asRecords(raw.credits)
+      .map(normalizePersonMovieCredit)
+      .filter((item): item is IPersonMovieCredit => Boolean(item))
   }
 }
 

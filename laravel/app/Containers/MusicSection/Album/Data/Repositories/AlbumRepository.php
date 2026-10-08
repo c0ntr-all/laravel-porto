@@ -53,9 +53,11 @@ class AlbumRepository
                                $this->hasMultipleDiscsFilter(),
                            ])
                            ->allowedSorts(['name', 'date', 'created_at'])
+                           ->defaultSort('-date')
                            ->with(['versions.albumType', 'albumType', 'artists', 'tags', 'discs' => fn ($query) => $query->withCount('tracks')])
                            ->withCount('discs')
                            ->whereNull('parent_id')
+                           ->orderByDesc('id')
                            ->get();
     }
 

@@ -68,5 +68,28 @@ export const artistApi = {
     })
 
     return response.data
+  },
+
+  async getArtistAlbums(
+    id: string,
+    query?: {
+      album_type_id?: string | number | null
+      sort?: string
+    }
+  ): Promise<IJsonApiResponse> {
+    const filters = buildFilterForUrl({
+      album_type_id: query?.album_type_id ?? undefined
+    })
+    const response = await api.get(
+      filters ? `v1/music/artists/${id}/albums?${filters}` : `v1/music/artists/${id}/albums`,
+      {
+        params: {
+          include: 'artists,tags,versions,discs',
+          sort: query?.sort ?? '-date'
+        }
+      }
+    )
+
+    return response.data
   }
 }

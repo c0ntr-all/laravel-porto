@@ -86,7 +86,7 @@ class PersistLibraryTask extends ParentTask
             $artistCache = [];
             $folderPath = (string) $tree['path'];
             $folderArtistName = trim((string) $tree['name']);
-            $cover = $this->firstAlbumCover($tree);
+            $cover = $this->latestAlbumCover($tree);
             $processed = 0;
             $total = $this->countTracks($tree);
             $albumsTotal = count($tree['albums']);
@@ -657,15 +657,48 @@ class PersistLibraryTask extends ParentTask
         ];
     }
 
-    private function firstAlbumCover(array $tree): ?string
+    /**
+     * Prefer the most recent album (by date) that has a cover file on disk.
+     * Ties keep the later album in the import list.
+     */
+    private function latestAlbumCover(array $tree): ?string
     {
-        foreach ($tree['albums'] as $album) {
-            if (!empty($album['image'])) {
-                return $album['image'];
+        $bestImage = null;
+        $bestDate = null;
+
+        foreach ($tree['albums'] ?? [] as $album) {
+            $image = $album['image'] ?? null;
+            if (!is_string($image) || $image === '' || !is_file($image)) {
+                continue;
+            }
+
+            $date = $this->albumCoverSortDate($album['date'] ?? null);
+
+            if ($bestImage === null || $date >= $bestDate) {
+                $bestImage = $image;
+                $bestDate = $date;
             }
         }
 
-        return null;
+        return $bestImage;
+    }
+
+    private function albumCoverSortDate(mixed $date): string
+    {
+        $date = trim((string) $date);
+        if ($date === '') {
+            return '0000-00-00';
+        }
+
+        if (preg_match('/^\d{4}$/', $date) === 1) {
+            return $date.'-12-31';
+        }
+
+        if (preg_match('/^\d{4}-\d{2}$/', $date) === 1) {
+            return $date.'-28';
+        }
+
+        return $date;
     }
 
     private function countTracks(array $tree): int

@@ -4,12 +4,16 @@ namespace App\Containers\MusicSection\Upload\Tests\Unit;
 
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Tasks\UploadAlbumCoverTask;
+use App\Containers\MusicSection\Artist\Models\Artist;
+use App\Containers\MusicSection\Artist\Tasks\UploadArtistCoverTask;
 use App\Containers\MusicSection\Upload\Data\DTO\ParsedTrackDto;
 use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
 use App\Containers\MusicSection\Upload\Enums\UploadTrackStatusEnum;
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
 use App\Containers\MusicSection\Upload\Tasks\PersistLibraryTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
@@ -556,6 +560,111 @@ class PersistLibraryTaskTest extends TestCase
         $this->assertSame('primary', $roles['Drake'] ?? null);
         $this->assertSame('featured', $roles['Majid Jordan'] ?? null);
         $this->assertDatabaseHas('music_artists', ['name' => 'Majid Jordan']);
+    }
+
+    public function test_it_assigns_artist_cover_from_the_latest_album_with_cover(): void
+    {
+        Event::fake();
+
+        $oldCover = sys_get_temp_dir().DIRECTORY_SEPARATOR.'old-cover-'.uniqid('', true).'.jpg';
+        $newCover = sys_get_temp_dir().DIRECTORY_SEPARATOR.'new-cover-'.uniqid('', true).'.jpg';
+        file_put_contents($oldCover, 'old-bytes');
+        file_put_contents($newCover, 'new-bytes');
+
+        try {
+            $this->mock(UploadAlbumCoverTask::class, function ($mock): void {
+                $mock->shouldReceive('run')->andReturnUsing(
+                    static fn (): string => 'music/artists/1/covers/'.uniqid('', true).'.jpg',
+                );
+            });
+
+            $this->mock(UploadArtistCoverTask::class, function ($mock) use ($newCover): void {
+                $mock->shouldReceive('run')
+                    ->once()
+                    ->withArgs(static function ($file) use ($newCover): bool {
+                        return $file instanceof File
+                            && realpath($file->getPathname()) === realpath($newCover);
+                    })
+                    ->andReturn('music/artists/1/images/artist.jpg');
+            });
+
+            $user = User::factory()->create();
+            $upload = $this->makeSession($user);
+
+            app(PersistLibraryTask::class)->run($upload, [
+                'name' => 'Metallica',
+                'path' => 'F:\\Music\\Metallica',
+                'albums' => [
+                    [
+                        'name' => 'Kill \'Em All',
+                        'date' => '1983-07-25',
+                        'path' => 'F:\\Music\\Metallica\\Kill Em All',
+                        'album_type_id' => 1,
+                        'original_album' => null,
+                        'edition' => null,
+                        'image' => $oldCover,
+                        'artists' => ['Metallica'],
+                        'tracks' => [
+                            $this->makeTrackDto(
+                                title: 'Hit The Lights',
+                                album: 'Kill \'Em All',
+                                artist: 'Metallica',
+                                windowsPath: 'F:\\Music\\Metallica\\Kill Em All\\01.mp3',
+                                albumPath: 'F:\\Music\\Metallica\\Kill Em All',
+                                number: 1,
+                            ),
+                        ],
+                    ],
+                    [
+                        'name' => 'Load',
+                        'date' => '1996-06-04',
+                        'path' => 'F:\\Music\\Metallica\\Load',
+                        'album_type_id' => 1,
+                        'original_album' => null,
+                        'edition' => null,
+                        'image' => null,
+                        'artists' => ['Metallica'],
+                        'tracks' => [
+                            $this->makeTrackDto(
+                                title: 'Until It Sleeps',
+                                album: 'Load',
+                                artist: 'Metallica',
+                                windowsPath: 'F:\\Music\\Metallica\\Load\\01.mp3',
+                                albumPath: 'F:\\Music\\Metallica\\Load',
+                                number: 1,
+                            ),
+                        ],
+                    ],
+                    [
+                        'name' => '72 Seasons',
+                        'date' => '2023-04-14',
+                        'path' => 'F:\\Music\\Metallica\\72 Seasons',
+                        'album_type_id' => 1,
+                        'original_album' => null,
+                        'edition' => null,
+                        'image' => $newCover,
+                        'artists' => ['Metallica'],
+                        'tracks' => [
+                            $this->makeTrackDto(
+                                title: 'Lux Aeterna',
+                                album: '72 Seasons',
+                                artist: 'Metallica',
+                                windowsPath: 'F:\\Music\\Metallica\\72 Seasons\\01.mp3',
+                                albumPath: 'F:\\Music\\Metallica\\72 Seasons',
+                                number: 1,
+                            ),
+                        ],
+                    ],
+                ],
+            ], $user->id);
+
+            $artist = Artist::query()->where('name', 'Metallica')->first();
+            $this->assertNotNull($artist);
+            $this->assertSame('music/artists/1/images/artist.jpg', $artist->image);
+        } finally {
+            @unlink($oldCover);
+            @unlink($newCover);
+        }
     }
 
     private function makeSession(User $user, string $sourcePath = 'F:\\Music\\Metallica'): MusicUpload

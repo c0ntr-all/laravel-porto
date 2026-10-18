@@ -83,6 +83,14 @@
           :rules="[validateUrl]"
         />
         <q-input
+          v-model="model.embed_link"
+          label="Embed link"
+          filled
+          dense
+          hint="Optional player URL, up to 2048 characters"
+          :rules="[validateUrl]"
+        />
+        <q-input
           v-model="model.kp_img"
           label="Kinopoisk image URL"
           filled
@@ -146,6 +154,7 @@ const model = reactive({
   kp_id: null as number | null,
   kp_rating: null as number | null,
   cover: '',
+  embed_link: '',
   kp_img: '',
   genre_ids: [] as string[]
 })
@@ -224,6 +233,7 @@ const canSubmit = computed(() => (
   validateKpId(model.kp_id) === true &&
   validateRating(model.kp_rating) === true &&
   validateUrl(model.cover) === true &&
+  validateUrl(model.embed_link) === true &&
   validateUrl(model.kp_img) === true
 ))
 
@@ -240,6 +250,7 @@ function payload(): IMovieWriteDto {
     year: Number(model.year),
     type: model.type,
     cover: model.cover.trim() || null,
+    embed_link: model.embed_link.trim() || null,
     kp_rating: emptyRating(model.kp_rating) ? null : Number(model.kp_rating),
     kp_img: model.kp_img.trim() || null,
     genre_ids: model.genre_ids.map(id => Number(id))
@@ -269,6 +280,7 @@ watch(() => [props.modelValue, props.movie] as const, ([open]) => {
   model.kp_id = props.movie?.kp_id ?? null
   model.kp_rating = props.movie?.kp_rating ?? null
   model.cover = props.movie?.cover ?? ''
+  model.embed_link = props.movie?.embed_link ?? ''
   model.kp_img = props.movie?.kp_img ?? ''
   model.genre_ids = props.movie?.genres.map(genre => genre.id) ?? []
 })

@@ -97,6 +97,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
           year: 0,
           type: isSeriesPost ? MovieTypeEnum.TV_SERIES : MovieTypeEnum.MOVIE,
           cover: null,
+          embed_link: null,
           kp_rating: null,
           kp_img: null,
           kp_imported_at: null,

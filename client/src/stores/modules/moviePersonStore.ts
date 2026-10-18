@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import { moviePersonApi } from 'src/api/requests/moviePersonApi'
 import { mapMoviePersonResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { handleApiError } from 'src/utils/jsonapi'
-import { IMoviePerson } from 'src/types/Movie'
+import { withFolderMembership } from 'src/utils/movieFolders'
+import { IMovieFolder, IMoviePerson } from 'src/types/Movie'
 
 export const useMoviePersonStore = defineStore('moviePerson', () => {
   const person = ref<IMoviePerson | null>(null)
@@ -29,9 +30,30 @@ export const useMoviePersonStore = defineStore('moviePerson', () => {
     }
   }
 
+  function setMovieFolderMembership(movieId: string, folder: IMovieFolder, present: boolean): void {
+    const current = person.value
+
+    if (!current) {
+      return
+    }
+
+    person.value = {
+      ...current,
+      movies: current.movies.map(item => (
+        item.id === movieId ? withFolderMembership(item, folder, present) : item
+      )),
+      credits: current.credits.map(credit => (
+        credit.movie.id === movieId
+          ? { ...credit, movie: withFolderMembership(credit.movie, folder, present) }
+          : credit
+      ))
+    }
+  }
+
   return {
     person,
     isPersonLoading,
-    getPerson
+    getPerson,
+    setMovieFolderMembership
   }
 })

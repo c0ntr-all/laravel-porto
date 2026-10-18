@@ -84,6 +84,17 @@
           <p v-else class="text-grey-5">Описание отсутствует</p>
         </div>
 
+        <div v-if="embedUrl" class="movie-page__embed">
+          <iframe
+            :src="embedUrl"
+            title="Плеер"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+
         <MovieCrewSection :credits="movieStore.movie.credits" :movie-id="movieStore.movie.id" />
       </div>
 
@@ -161,6 +172,27 @@ const kinopoiskUrl = computed(() => (
     ? kinopoiskMovieUrl(movieStore.movie.kp_id, movieStore.movie.type)
     : null
 ))
+const embedUrl = computed(() => httpUrl(movieStore.movie?.embed_link))
+
+function httpUrl(value: string | null | undefined): string | null {
+  const trimmed = value?.trim()
+
+  if (!trimmed) {
+    return null
+  }
+
+  try {
+    const url = new URL(trimmed)
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null
+    }
+
+    return url.toString()
+  } catch {
+    return null
+  }
+}
 
 watch(
   () => props.id,
@@ -255,6 +287,21 @@ watch(
 
     p {
       margin: 0;
+    }
+  }
+
+  &__embed {
+    margin-top: 1.5rem;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    background: #111;
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
     }
   }
 

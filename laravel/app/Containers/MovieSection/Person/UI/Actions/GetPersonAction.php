@@ -2,6 +2,7 @@
 
 namespace App\Containers\MovieSection\Person\UI\Actions;
 
+use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Person\Models\Person;
 use App\Containers\MovieSection\Person\UI\API\Requests\GetRequest;
 use App\Containers\MovieSection\Person\UI\API\Transformers\PersonTransformer;
@@ -17,7 +18,9 @@ class GetPersonAction extends BaseAction
             'profession',
             'professions',
             'movies' => static fn ($query) => $query->orderByDesc('year')->orderByDesc('id'),
-            'credits.movie',
+            'credits.movie.genres',
+            'credits.movie.countries',
+            'credits.movie.folders' => Movie::constrainFoldersToCurrentUser(),
             'credits.profession',
         ]);
 

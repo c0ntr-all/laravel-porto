@@ -13,7 +13,7 @@ import {
   IPersonMovieCredit
 } from 'src/types/Movie'
 
-const PROFESSION_ORDER_INDEX = new Map(
+const PROFESSION_ORDER_INDEX = new Map<string, number>(
   MOVIE_PROFESSION_GROUP_ORDER.map((enName, index) => [enName, index])
 )
 

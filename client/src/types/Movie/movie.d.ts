@@ -26,6 +26,7 @@ export interface IMovie {
   year: number
   type: MovieTypeEnum
   cover: string | null
+  embed_link: string | null
   kp_rating: number | null
   kp_img: string | null
   kp_imported_at: string | null
@@ -60,6 +61,7 @@ export interface IMovieWriteDto {
   description?: string | null
   short_description?: string | null
   cover?: string | null
+  embed_link?: string | null
   kp_rating?: number | null
   kp_img?: string | null
   genre_ids?: number[]

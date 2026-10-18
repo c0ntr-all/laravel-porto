@@ -44,6 +44,10 @@
           <span v-if="countriesLabel" :title="countriesLabel">{{ countriesLabel }}</span>
         </div>
 
+        <div v-if="note" class="movie-card-row__note">
+          {{ note }}
+        </div>
+
         <div v-if="movie.short_description" class="movie-card-row__description">
           {{ movie.short_description }}
         </div>
@@ -86,8 +90,10 @@ import MovieFolderActions from 'src/components/client/Movies/MovieFolderActions.
 const props = withDefaults(defineProps<{
   movie: IMovie
   showFolderActions?: boolean
+  note?: string | null
 }>(), {
-  showFolderActions: true
+  showFolderActions: true,
+  note: null
 })
 
 const poster = computed(() => moviePosterUrl(props.movie))
@@ -227,6 +233,13 @@ const addedAtLabel = computed(() => (
 
   &__dot {
     margin: 0;
+  }
+
+  &__note {
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #777a8f;
   }
 
   &__description {

@@ -11,6 +11,7 @@ import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
 import { SystemMovieFolderEnum } from 'src/enums/Movie/SystemMovieFolderEnum'
 import { IMovie, IMovieFolder } from 'src/types/Movie'
 import { useMovieStore } from 'src/stores/modules/movieStore'
+import { useMoviePersonStore } from 'src/stores/modules/moviePersonStore'
 import {
   isMovieInFolderRecord,
   isValidMovieFolderName,
@@ -81,6 +82,7 @@ export const useMovieFolderStore = defineStore('movieFolders', () => {
   function patchMovieMembership(movie: IMovie, folder: IMovieFolder, present: boolean): void {
     const next = withFolderMembership(movie, folder, present)
     useMovieStore().setMovieFolderMembership(movie.id, folder, present)
+    useMoviePersonStore().setMovieFolderMembership(movie.id, folder, present)
     folderMovies.value = folderMovies.value.map(item => (
       item.id === movie.id ? next : item
     ))

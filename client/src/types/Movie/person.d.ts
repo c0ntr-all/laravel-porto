@@ -4,13 +4,11 @@ export interface IMovieProfession {
   name: string | null
 }
 
-export interface IPersonCreditMovie {
+export interface IPersonMovieCredit {
   id: string
-  title: string
-  year: number
-  type: string
-  cover: string | null
-  kp_rating: number | null
+  description: string | null
+  movie: import('./movie').IMovie
+  profession: IMovieProfession
 }
 
 export interface IMoviePerson {
@@ -29,13 +27,6 @@ export interface IMovieCredit {
   id: string
   description: string | null
   person: Pick<IMoviePerson, 'id' | 'name' | 'en_name' | 'photo'>
-  profession: IMovieProfession
-}
-
-export interface IPersonMovieCredit {
-  id: string
-  description: string | null
-  movie: IPersonCreditMovie
   profession: IMovieProfession
 }
 

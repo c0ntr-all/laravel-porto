@@ -12,7 +12,6 @@ import {
   IMovieSeason,
   IMovieFranchise,
   IMovieFranchiseMovie,
-  IPersonCreditMovie,
   IPersonMovieCredit
 } from 'src/types/Movie'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
@@ -101,6 +100,7 @@ export function normalizeMovie(raw: Record<string, unknown>): IMovie {
     year: Number(raw.year ?? 0),
     type: normalizeMovieType(raw.type),
     cover: toNullableString(raw.cover),
+    embed_link: toNullableString(raw.embed_link),
     kp_rating: toNullableNumber(raw.kp_rating),
     kp_img: toNullableString(raw.kp_img),
     kp_imported_at: toNullableString(raw.kp_imported_at),
@@ -262,15 +262,8 @@ export function normalizeMovieCredit(raw: Record<string, unknown>): IMovieCredit
   }
 }
 
-export function normalizePersonCreditMovie(raw: Record<string, unknown>): IPersonCreditMovie {
-  return {
-    id: String(raw.id),
-    title: String(raw.title ?? ''),
-    year: Number(raw.year ?? 0),
-    type: String(raw.type ?? ''),
-    cover: toNullableString(raw.cover),
-    kp_rating: toNullableNumber(raw.kp_rating)
-  }
+export function normalizePersonCreditMovie(raw: Record<string, unknown>): IMovie {
+  return normalizeMovie(raw)
 }
 
 export function normalizePersonMovieCredit(raw: Record<string, unknown>): IPersonMovieCredit | null {

@@ -51,26 +51,14 @@
         class="person-movies"
       >
         <h2 class="person-movies__title">{{ professionLabel(group.profession) }}</h2>
-        <ul class="person-movies__list">
-          <li
+        <div class="person-movies__list">
+          <MovieCardRow
             v-for="credit in group.credits"
             :key="credit.id"
-            class="person-movies__item"
-          >
-            <span class="person-movies__year">{{ credit.movie.year || '—' }}</span>
-            <div class="person-movies__body">
-              <router-link
-                class="person-movies__link"
-                :to="{ name: 'movie', params: { id: credit.movie.id } }"
-              >
-                {{ credit.movie.title }}
-              </router-link>
-              <span v-if="credit.description" class="person-movies__role">
-                {{ credit.description }}
-              </span>
-            </div>
-          </li>
-        </ul>
+            :movie="credit.movie"
+            :note="credit.description"
+          />
+        </div>
       </section>
     </template>
 
@@ -97,6 +85,7 @@ import { useMoviePersonStore } from 'src/stores/modules/moviePersonStore'
 import { groupPersonCredits, professionLabel } from 'src/utils/movieCredits'
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
+import MovieCardRow from 'src/components/client/Movies/MovieCardRow.vue'
 
 const props = defineProps<{
   id: string
@@ -209,42 +198,9 @@ watch(
   }
 
   &__list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  &__item {
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(40, 47, 83, 0.08);
-    font-size: 15px;
-  }
-
-  &__year {
-    color: #777a8f;
-  }
-
-  &__body {
-    min-width: 0;
-  }
-
-  &__link {
-    color: $primary;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  &__role {
-    display: block;
-    margin-top: 2px;
-    color: #777a8f;
-    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 }
 </style>

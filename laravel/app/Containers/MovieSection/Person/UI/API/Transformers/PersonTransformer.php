@@ -2,6 +2,7 @@
 
 namespace App\Containers\MovieSection\Person\UI\API\Transformers;
 
+use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
 use App\Containers\MovieSection\Person\Models\Person;
 use App\Containers\MovieSection\Profession\UI\API\Transformers\ProfessionTransformer;
@@ -59,7 +60,12 @@ class PersonTransformer extends TransformerAbstract
 
     public function includeCredits(Person $person): Collection
     {
-        $person->loadMissing(['credits.movie', 'credits.profession']);
+        $person->loadMissing([
+            'credits.movie.genres',
+            'credits.movie.countries',
+            'credits.movie.folders' => Movie::constrainFoldersToCurrentUser(),
+            'credits.profession',
+        ]);
 
         return $this->collection(
             $person->credits,

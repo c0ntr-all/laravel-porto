@@ -152,6 +152,7 @@ const displayMovie = computed((): IMovie => {
     year: 0,
     type: MovieTypeEnum.MOVIE,
     cover: null,
+    embed_link: null,
     kp_rating: null,
     kp_img: null,
     kp_imported_at: null,

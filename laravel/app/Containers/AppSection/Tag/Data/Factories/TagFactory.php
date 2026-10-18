@@ -15,7 +15,7 @@ class TagFactory extends Factory
 
     public function definition(): array
     {
-        $name = fake()->unique()->words(2, true);
+        $name = $this->uniqueShortWord();
 
         return [
             'user_id' => User::factory(),
@@ -24,5 +24,10 @@ class TagFactory extends Factory
             'description' => fake()->optional()->sentence(),
             'color' => fake()->optional()->hexColor(),
         ];
+    }
+
+    private function uniqueShortWord(): string
+    {
+        return mb_substr(fake()->unique()->word(), 0, 10);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Containers\LifelogSection\Post\Data\Seeders\LifelogPostSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -11,6 +12,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        //todo: Сбор сидеров из контейнеров
+        $this->call([
+            LifelogPostSeeder::class,
+        ]);
     }
 }

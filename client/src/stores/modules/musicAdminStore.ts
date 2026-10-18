@@ -4,15 +4,15 @@ import { artistApi } from 'src/api/requests/artistApi'
 import { albumApi } from 'src/api/requests/albumApi'
 import { trackApi } from 'src/api/requests/trackApi'
 import { mapArtistResponse, mapArtistsResponse } from 'src/api/mappers/Music/artist.mapper'
-import { mapAlbumResponse, mapAlbumsResponse, mapAlbumTypesResponse } from 'src/api/mappers/Music/album.mapper'
-import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
+import { mapAlbumResponse, mapAlbumsResponse, mapAlbumTypesResponse, normalizeAlbumVersion } from 'src/api/mappers/Music/album.mapper'
+import { mapTrackResponse, mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
 import {
   extractCursorFromResponse,
   handleApiError,
   handleApiSuccess,
   hasMoreFromResponse
 } from 'src/utils/jsonapi'
-import { IAlbum, IAlbumType, IAlbumWriteDto, IArtist, ITrack } from 'src/types'
+import { IAlbum, IAlbumType, IAlbumWriteDto, IArtist, ITrack, ITrackWriteDto } from 'src/types'
 
 function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
   const seen = new Set(current.map(item => item.id))
@@ -45,6 +45,7 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
   const hasMoreTracks = ref(false)
   const isTracksLoading = ref(false)
   const isTracksLoadingMore = ref(false)
+  const isTrackSaving = ref(false)
   const trackNameSearch = ref('')
   const trackArtistSearch = ref('')
   const trackAlbumSearch = ref('')
@@ -52,6 +53,54 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
   let artistsRequestId = 0
   let albumsRequestId = 0
   let tracksRequestId = 0
+
+  function albumToVersionSummary(album: IAlbum) {
+    return normalizeAlbumVersion({
+      id: album.id,
+      parent_id: album.parent_id,
+      name: album.name,
+      edition: album.edition,
+      album_type_id: album.album_type_id,
+      album_type: album.album_type,
+      date: album.date,
+      image: album.image
+    })
+  }
+
+  function patchAlbumInList(album: IAlbum, previousParentId: string | null): void {
+    const structuralChange = previousParentId !== album.parent_id
+    if (structuralChange) {
+      void getAlbums()
+      return
+    }
+
+    const existsAsRoot = albums.value.some(item => item.id === album.id)
+    if (existsAsRoot) {
+      albums.value = albums.value.map(item => (
+        item.id === album.id
+          ? {
+              ...album,
+              versions: album.versions.length ? album.versions : item.versions,
+              discs: album.discs.length ? album.discs : item.discs
+            }
+          : item
+      ))
+      return
+    }
+
+    albums.value = albums.value.map(item => {
+      if (!item.versions.some(version => version.id === album.id)) {
+        return item
+      }
+
+      return {
+        ...item,
+        versions: item.versions.map(version => (
+          version.id === album.id ? albumToVersionSummary(album) : version
+        ))
+      }
+    })
+  }
 
   async function getArtists(options?: { append?: boolean; name?: string }): Promise<void> {
     const append = Boolean(options?.append)
@@ -200,10 +249,18 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     isAlbumSaving.value = true
 
     try {
+      const previous = albums.value.find(item => item.id === id) ??
+        albums.value
+          .flatMap(item => item.versions.map(version => ({
+            id: version.id,
+            parent_id: version.parent_id
+          })))
+          .find(item => item.id === id)
+      const previousParentId = previous?.parent_id ?? null
       const response = await albumApi.updateAlbum(id, payload)
       const album = mapAlbumResponse(response)
       handleApiSuccess(response)
-      await getAlbums()
+      patchAlbumInList(album, previousParentId)
 
       return album
     } catch (error) {
@@ -298,6 +355,33 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     }
   }
 
+  async function updateTrack(id: string, payload: ITrackWriteDto): Promise<ITrack | null> {
+    isTrackSaving.value = true
+
+    try {
+      const response = await trackApi.updateTrack(id, payload)
+      const track = mapTrackResponse(response)
+      const previous = tracks.value.find(item => item.id === id)
+      const merged: ITrack = {
+        ...previous,
+        ...track,
+        album: track.album ?? previous?.album ?? null,
+        tags: track.tags ?? previous?.tags ?? [],
+        artists: track.artists ?? previous?.artists ?? [],
+        artist: track.artist || previous?.artist || ''
+      }
+      tracks.value = tracks.value.map(item => item.id === merged.id ? merged : item)
+      handleApiSuccess(response)
+
+      return merged
+    } catch (error) {
+      handleApiError(error)
+      return null
+    } finally {
+      isTrackSaving.value = false
+    }
+  }
+
   async function loadAlbumTypes(): Promise<IAlbumType[]> {
     if (albumTypes.value.length) {
       return albumTypes.value
@@ -375,6 +459,7 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     hasMoreTracks,
     isTracksLoading,
     isTracksLoadingMore,
+    isTrackSaving,
     trackNameSearch,
     trackArtistSearch,
     trackAlbumSearch,
@@ -385,6 +470,7 @@ export const useMusicAdminStore = defineStore('musicAdmin', () => {
     updateAlbum,
     deleteAlbum,
     getTracks,
+    updateTrack,
     loadAlbumTypes,
     searchArtistOptions,
     searchAlbumOptions

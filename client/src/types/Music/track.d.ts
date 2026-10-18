@@ -20,9 +20,31 @@ export interface ITrack {
   rate: number
   artist: string
   number?: number
+  cd?: string | null
+  disc_id?: string | null
   artists?: IArtistShort[]
   tags?: IMusicTag[]
   album?: ITrackAlbum | null
+}
+
+export interface ITrackWriteDto {
+  name?: string
+  number?: number | null
+  cd?: string | null
+  credits?: string | null
+  artist_ids?: number[]
+  tags?: number[]
+  image_file?: File | null
+}
+
+export interface ITrackFormState {
+  name: string
+  number: string
+  cd: string
+  credits: string
+  artist_ids: Array<string | number>
+  tag_ids: Array<string | number>
+  image_file?: File | null
 }
 
 export interface ITrackListQuery {

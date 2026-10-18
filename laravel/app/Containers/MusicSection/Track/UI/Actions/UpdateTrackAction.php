@@ -54,7 +54,7 @@ class UpdateTrackAction extends BaseAction
                 $this->syncTagsTask->run($track, SyncTagsDto::from(['tags' => $requestData['tags']]));
             }
 
-            return $track->load(['tags', 'artists', 'rate']);
+            return $track->load(['tags', 'artists', 'rate', 'album.albumType']);
         });
     }
 
@@ -63,7 +63,7 @@ class UpdateTrackAction extends BaseAction
         $track = $this->handle($track, $request->validated());
 
         return fractal($track, new TrackTransformer())
-            ->parseIncludes(['tags', 'artists'])
+            ->parseIncludes(['tags', 'artists', 'album'])
             ->withResourceName('tracks')
             ->addMeta(['message' => 'Track updated successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

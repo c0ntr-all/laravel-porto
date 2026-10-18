@@ -4,6 +4,7 @@ namespace App\Containers\MusicSection\Album\UI\Actions;
 
 use App\Containers\MusicSection\Album\Data\DTO\UpdateAlbumDto;
 use App\Containers\MusicSection\Album\Models\Album;
+use App\Containers\MusicSection\Album\Models\AlbumDisc;
 use App\Containers\MusicSection\Album\Tasks\AssertAlbumCanBeGroupedUnderTask;
 use App\Containers\MusicSection\Album\Tasks\SyncArtistsForAlbumTask;
 use App\Containers\MusicSection\Album\Tasks\UpdateAlbumTask;
@@ -67,7 +68,18 @@ class UpdateAlbumAction extends BaseAction
                 $this->syncTagsTask->run($album, SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]));
             }
 
-            return $album->load(['artists', 'tags', 'versions.albumType', 'parent.albumType', 'albumType']);
+            if (array_key_exists('discs', $requestData)) {
+                $this->syncDiscNames($album, $requestData['discs'] ?? []);
+            }
+
+            return $album->load([
+                'artists',
+                'tags',
+                'versions.albumType',
+                'parent.albumType',
+                'albumType',
+                'discs' => fn ($query) => $query->withCount('tracks'),
+            ]);
         });
     }
 
@@ -76,9 +88,29 @@ class UpdateAlbumAction extends BaseAction
         $album = $this->handle($album, $request->validated());
 
         return fractal($album, new AlbumTransformer())
-            ->parseIncludes(['artists', 'tags', 'versions', 'parent'])
+            ->parseIncludes(['artists', 'tags', 'versions', 'parent', 'discs'])
             ->withResourceName('albums')
             ->addMeta(['message' => 'Album updated successfully!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * @param list<array{id?: int|string, name?: string}> $discs
+     */
+    private function syncDiscNames(Album $album, array $discs): void
+    {
+        foreach ($discs as $discData) {
+            $discId = isset($discData['id']) ? (int) $discData['id'] : 0;
+            $name = isset($discData['name']) ? trim((string) $discData['name']) : '';
+
+            if ($discId <= 0 || $name === '') {
+                continue;
+            }
+
+            AlbumDisc::query()
+                ->where('album_id', $album->id)
+                ->whereKey($discId)
+                ->update(['name' => $name]);
+        }
     }
 }

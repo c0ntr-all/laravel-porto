@@ -18,11 +18,17 @@ interface PlayerPreferences {
 }
 
 const PREFERENCES_KEY = 'home-portal.music-player'
+const QUEUE_KEY = 'home-portal.music-player.queue'
 const DEFAULT_VOLUME = 0.7
 const SEEK_STEP_SECONDS = 10
 const PREVIOUS_RESTART_SECONDS = 3
 const SCROBBLE_MAX_SECONDS = 240
 const REPEAT_ORDER: RepeatMode[] = ['off', 'all', 'one']
+
+interface PersistedQueue {
+  tracks: ITrack[]
+  currentTrackId: string | null
+}
 
 function getTrackAudioSrc(track: ITrack): string {
   const withLink = track as ITrack & { link?: string }
@@ -123,6 +129,78 @@ function writePreferences(preferences: PlayerPreferences): void {
   localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences))
 }
 
+function readPersistedQueue(): PersistedQueue | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const raw = localStorage.getItem(QUEUE_KEY)
+    if (!raw) {
+      return null
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PersistedQueue>
+    if (!Array.isArray(parsed.tracks) || !parsed.tracks.length) {
+      return null
+    }
+
+    const tracks = parsed.tracks
+      .filter((track): track is ITrack => (
+        Boolean(track) &&
+        typeof track === 'object' &&
+        typeof track.id === 'string' &&
+        typeof track.name === 'string'
+      ))
+      .map(track => enrichTrack(track))
+
+    if (!tracks.length) {
+      return null
+    }
+
+    const currentTrackId = typeof parsed.currentTrackId === 'string'
+      ? parsed.currentTrackId
+      : null
+
+    return {
+      tracks,
+      currentTrackId: currentTrackId && tracks.some(track => track.id === currentTrackId)
+        ? currentTrackId
+        : tracks[0]?.id ?? null
+    }
+  } catch {
+    return null
+  }
+}
+
+function writePersistedQueue(queueState: PersistedQueue | null): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (!queueState || !queueState.tracks.length) {
+    localStorage.removeItem(QUEUE_KEY)
+    return
+  }
+
+  localStorage.setItem(QUEUE_KEY, JSON.stringify({
+    tracks: queueState.tracks.map(track => ({
+      id: track.id,
+      name: track.name,
+      credits: track.credits ?? null,
+      image: track.image,
+      duration: track.duration,
+      rate: track.rate ?? 0,
+      artist: track.artist,
+      number: track.number,
+      cd: track.cd ?? null,
+      artists: track.artists,
+      album: track.album ?? null
+    })),
+    currentTrackId: queueState.currentTrackId
+  }))
+}
+
 function getScrobbleThreshold(duration: number): number {
   if (!Number.isFinite(duration) || duration <= 0) {
     return 30
@@ -152,6 +230,45 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
   let scrobbleInFlight = false
   let listenedSeconds = 0
   let lastTimeUpdate = 0
+  let persistQueueEnabled = true
+
+  function persistQueue(): void {
+    if (!persistQueueEnabled) {
+      return
+    }
+
+    writePersistedQueue(
+      originalPlaylist.value.length
+        ? {
+            tracks: originalPlaylist.value,
+            currentTrackId: currentTrack.value?.id ?? null
+          }
+        : null
+    )
+  }
+
+  function restorePersistedQueue(): void {
+    const saved = readPersistedQueue()
+    if (!saved) {
+      return
+    }
+
+    persistQueueEnabled = false
+    applyQueue(saved.tracks, saved.currentTrackId)
+
+    const restored = saved.currentTrackId
+      ? saved.tracks.find(track => track.id === saved.currentTrackId) ?? saved.tracks[0]
+      : saved.tracks[0]
+
+    if (restored) {
+      currentTrack.value = enrichTrack(restored)
+      resetProgress(restored)
+      status.value = 'paused'
+      updateMediaSession()
+    }
+
+    persistQueueEnabled = true
+  }
 
   const playlist = computed(() => queue.value)
   const hasTrack = computed(() => currentTrack.value !== null)
@@ -328,6 +445,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       ? shuffleTracks(originalPlaylist.value, currentId)
       : cloneTracks(tracks)
     syncIndex(currentId)
+    persistQueue()
   }
 
   async function loadAndPlay(track: ITrack): Promise<void> {
@@ -338,6 +456,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     bufferedRanges.value = []
     status.value = 'loading'
     syncIndex(track.id)
+    persistQueue()
     updateMediaSession()
     audioEngine.load(getTrackAudioSrc(track))
 
@@ -551,6 +670,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     originalPlaylist.value = []
     queue.value = []
     currentIndex.value = -1
+    persistQueue()
   }
 
   async function playTrack(track: ITrack, sourcePlaylist?: ITrack[]): Promise<void> {
@@ -670,6 +790,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
 
   if (typeof window !== 'undefined') {
     init()
+    restorePersistedQueue()
   }
 
   return {

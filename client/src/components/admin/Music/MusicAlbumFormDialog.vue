@@ -106,6 +106,40 @@
           </div>
         </div>
 
+        <div v-if="discs.length" class="q-mt-lg">
+          <div class="text-subtitle2 q-mb-xs">Discs / CDs</div>
+          <div class="text-caption text-grey-7 q-mb-sm">
+            Rename physical discs of this release. Track assignment stays unchanged.
+          </div>
+          <div class="q-gutter-sm">
+            <div
+              v-for="(disc, index) in discs"
+              :key="disc.id"
+              class="row q-col-gutter-sm items-start album-dialog__disc"
+            >
+              <div class="col-auto">
+                <q-badge color="grey-8" class="album-dialog__disc-badge">
+                  CD {{ disc.number }}
+                </q-badge>
+              </div>
+              <div class="col">
+                <q-input
+                  v-model="discs[index].name"
+                  :label="`Disc ${disc.number} name`"
+                  outlined
+                  dense
+                  hide-bottom-space
+                />
+              </div>
+              <div v-if="disc.tracks_count != null" class="col-auto self-center">
+                <span class="text-caption text-grey-6">
+                  {{ disc.tracks_count }} {{ disc.tracks_count === 1 ? 'track' : 'tracks' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="album.versions.length" class="q-mt-lg">
           <div class="text-subtitle2 q-mb-sm">Versions of this album</div>
           <q-list bordered separator dense>
@@ -145,7 +179,7 @@ import { useMusicTagStore } from 'src/stores/modules/musicTagStore'
 import MusicTagGroupSelect from 'src/components/admin/Music/MusicTagGroupSelect.vue'
 import { albumYear } from 'src/utils/albumDate'
 import { hasAlbumWritePatch, mapAlbumWritePatch } from 'src/api/mappers/Music/album.mapper'
-import { IAlbum, IAlbumFormState, IArtistShort } from 'src/types'
+import { IAlbum, IAlbumDiscFormState, IAlbumFormState, IArtistShort } from 'src/types'
 
 const props = defineProps<{
   modelValue: boolean
@@ -172,6 +206,14 @@ const date = ref(props.album.date ?? '')
 const parentId = ref(props.album.parent_id)
 const artistIds = ref(props.album.artists.map(artist => artist.id))
 const tagIds = ref(props.album.tags.map(tag => tag.id))
+const discs = ref<IAlbumDiscFormState[]>(
+  props.album.discs.map(disc => ({
+    id: disc.id,
+    number: disc.number,
+    name: disc.name,
+    tracks_count: disc.tracks_count
+  }))
+)
 const imageFile = ref<File | null>(null)
 const artistOptions = ref<IArtistShort[]>([...props.album.artists])
 const extraParents = ref<IAlbum[]>([])
@@ -214,6 +256,12 @@ const hydrate = (album: IAlbum) => {
   parentId.value = album.parent_id
   artistIds.value = album.artists.map(artist => artist.id)
   tagIds.value = album.tags.map(tag => tag.id)
+  discs.value = album.discs.map(disc => ({
+    id: disc.id,
+    number: disc.number,
+    name: disc.name,
+    tracks_count: disc.tracks_count
+  }))
   imageFile.value = null
   artistOptions.value = [...album.artists]
   extraParents.value = []
@@ -230,6 +278,11 @@ const formState = computed((): IAlbumFormState => ({
   parent_id: parentId.value,
   artist_ids: artistIds.value,
   tag_ids: tagIds.value,
+  discs: discs.value.map(disc => ({
+    id: disc.id,
+    number: disc.number,
+    name: disc.name
+  })),
   image_file: imageFile.value
 }))
 
@@ -303,6 +356,18 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;
+  }
+
+  &__disc {
+    padding: 8px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  &__disc-badge {
+    min-width: 52px;
+    justify-content: center;
   }
 }
 </style>

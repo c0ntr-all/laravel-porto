@@ -21,6 +21,9 @@ class UpdateRequest extends AdminRequest
             'artist_ids.*' => 'integer|exists:music_artists,id',
             'tags' => 'sometimes|nullable|array',
             'tags.*' => 'integer|exists:music_tags,id',
+            'discs' => 'sometimes|array',
+            'discs.*.id' => 'required|integer|exists:music_album_discs,id',
+            'discs.*.name' => 'required|string|max:255',
             'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];
     }

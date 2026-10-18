@@ -1,4 +1,12 @@
-import { IAlbum, IAlbumFormState, IAlbumType, IAlbumVersion, IAlbumWriteDto, IJsonApiResponse } from 'src/types'
+import {
+  IAlbum,
+  IAlbumDisc,
+  IAlbumFormState,
+  IAlbumType,
+  IAlbumVersion,
+  IAlbumWriteDto,
+  IJsonApiResponse
+} from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeArtistsShort } from 'src/api/mappers/Music/artist.mapper'
@@ -18,8 +26,21 @@ export function normalizeAlbumVersion(raw: Record<string, unknown>): IAlbumVersi
   }
 }
 
+export function normalizeAlbumDisc(raw: Record<string, unknown>): IAlbumDisc {
+  return {
+    id: String(raw.id),
+    album_id: raw.album_id == null ? undefined : String(raw.album_id),
+    number: Number(raw.number ?? 1),
+    name: String(raw.name ?? ''),
+    tracks_count: raw.tracks_count == null ? undefined : Number(raw.tracks_count)
+  }
+}
+
 export function normalizeAlbum(raw: Record<string, unknown>): IAlbum {
   const parentRaw = asRecord(raw.parent)
+  const discs = asRecords(raw.discs)
+    .map(normalizeAlbumDisc)
+    .sort((left, right) => left.number - right.number)
 
   return {
     id: String(raw.id),
@@ -33,9 +54,11 @@ export function normalizeAlbum(raw: Record<string, unknown>): IAlbum {
     image: String(raw.image ?? ''),
     is_version: Boolean(raw.is_version ?? raw.parent_id),
     versions_count: raw.versions_count == null ? undefined : Number(raw.versions_count),
+    discs_count: raw.discs_count == null ? discs.length : Number(raw.discs_count),
     artists: normalizeArtistsShort(raw.artists),
     tags: normalizeMusicTags(raw.tags),
     versions: asRecords(raw.versions).map(normalizeAlbumVersion),
+    discs,
     parent: parentRaw ? normalizeAlbumVersion(parentRaw) : null
   }
 }
@@ -91,6 +114,23 @@ function toNullableText (value: string): string | null {
   return trimmed === '' ? null : trimmed
 }
 
+function discsEqual (
+  left: Array<{ id: string; name: string }>,
+  right: Array<{ id: string; name: string }>
+): boolean {
+  if (left.length !== right.length) {
+    return false
+  }
+
+  const sortedLeft = [...left].sort((a, b) => a.id.localeCompare(b.id))
+  const sortedRight = [...right].sort((a, b) => a.id.localeCompare(b.id))
+
+  return sortedLeft.every((disc, index) => (
+    disc.id === sortedRight[index]?.id &&
+    disc.name.trim() === (sortedRight[index]?.name ?? '').trim()
+  ))
+}
+
 export function mapAlbumWritePatch (original: IAlbum, form: IAlbumFormState): IAlbumWriteDto {
   const payload: IAlbumWriteDto = {}
   const nextName = form.name.trim()
@@ -132,6 +172,15 @@ export function mapAlbumWritePatch (original: IAlbum, form: IAlbumFormState): IA
 
   if (!idsEqual(form.tag_ids, original.tags.map(tag => tag.id))) {
     payload.tags = form.tag_ids.map(Number)
+  }
+
+  const originalDiscs = original.discs.map(disc => ({ id: disc.id, name: disc.name }))
+  const nextDiscs = form.discs.map(disc => ({ id: disc.id, name: disc.name.trim() || `CD ${disc.number}` }))
+  if (!discsEqual(originalDiscs, nextDiscs)) {
+    payload.discs = nextDiscs.map(disc => ({
+      id: Number(disc.id),
+      name: disc.name
+    }))
   }
 
   if (form.image_file) {

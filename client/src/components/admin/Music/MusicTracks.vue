@@ -62,6 +62,7 @@
           v-for="track in admin.tracks"
           :key="track.id"
           clickable
+          class="track-row"
           @click="playTrack(track)"
         >
           <q-item-section avatar>
@@ -72,6 +73,7 @@
           </q-item-section>
           <q-item-section>
             <q-item-label class="text-weight-medium">
+              <span v-if="track.cd" class="text-grey-6 q-mr-xs">CD {{ track.cd }}</span>
               <span v-if="track.number" class="text-grey-6 q-mr-xs">{{ track.number }}.</span>
               <MusicTrackName :name="track.name" :credits="track.credits" />
             </q-item-label>
@@ -98,7 +100,19 @@
             </div>
           </q-item-section>
           <q-item-section side>
-            <div class="text-caption text-grey-7">{{ track.duration }}</div>
+            <div class="row no-wrap q-gutter-xs items-center">
+              <div class="text-caption text-grey-7">{{ track.duration }}</div>
+              <q-btn
+                icon="edit"
+                color="primary"
+                flat
+                round
+                dense
+                @click.stop="openEdit(track)"
+              >
+                <q-tooltip>Edit track</q-tooltip>
+              </q-btn>
+            </div>
           </q-item-section>
         </q-item>
       </q-list>
@@ -112,6 +126,13 @@
         <q-spinner color="primary" />
       </div>
     </q-card>
+
+    <MusicTrackFormDialog
+      v-if="editing"
+      v-model="showDialog"
+      :track="editing"
+      @saved="onSaved"
+    />
   </div>
 </template>
 
@@ -122,6 +143,7 @@ import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { ITrack } from 'src/types'
 import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
+import MusicTrackFormDialog from 'src/components/admin/Music/MusicTrackFormDialog.vue'
 import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 const admin = useMusicAdminStore()
@@ -129,6 +151,8 @@ const musicPlayer = useMusicPlayer()
 const artistSearch = ref(admin.trackArtistSearch)
 const albumSearch = ref(admin.trackAlbumSearch)
 const trackSearch = ref(admin.trackNameSearch)
+const showDialog = ref(false)
+const editing = ref<ITrack | null>(null)
 
 const onArtistSearch = (value: string | number | null) => {
   void admin.getTracks({ artist: String(value ?? '') })
@@ -146,6 +170,16 @@ const playTrack = (track: ITrack) => {
   musicPlayer.toggleTrack(track, admin.tracks)
 }
 
+const openEdit = (track: ITrack) => {
+  editing.value = track
+  showDialog.value = true
+}
+
+const onSaved = () => {
+  showDialog.value = false
+  editing.value = null
+}
+
 const { sentinel } = useScrollSentinel(
   () => { void admin.getTracks({ append: true }) },
   () => admin.hasMoreTracks && !admin.isTracksLoading && !admin.isTracksLoadingMore
@@ -157,6 +191,10 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.track-row {
+  min-height: 72px;
+}
+
 .list-sentinel {
   height: 1px;
 }

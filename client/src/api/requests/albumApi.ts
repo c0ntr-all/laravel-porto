@@ -36,6 +36,10 @@ function toFormData(payload: IAlbumWriteDto): FormData {
       })
     }
   }
+  payload.discs?.forEach((disc, index) => {
+    formData.append(`discs[${index}][id]`, String(disc.id))
+    formData.append(`discs[${index}][name]`, disc.name)
+  })
   if (payload.image_file) {
     formData.append('image_file', payload.image_file)
   }
@@ -60,7 +64,7 @@ export const albumApi = {
       filters ? `v1/music/albums?${filters}` : 'v1/music/albums',
       {
         params: {
-          include: 'artists,tags,versions',
+          include: 'artists,tags,versions,discs',
           ...(query?.cursor ? { cursor: query.cursor } : {})
         }
       }
@@ -71,7 +75,7 @@ export const albumApi = {
 
   async getAlbum(id: string): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/music/albums/${id}`, {
-      params: { include: 'artists,tags,versions,parent,tracks,tracks.artists' }
+      params: { include: 'artists,tags,versions,parent,discs,tracks,tracks.artists' }
     })
 
     return response.data

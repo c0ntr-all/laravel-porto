@@ -1,4 +1,4 @@
-import { IArtistShort, IJsonApiResponse, ITrack } from 'src/types'
+import { IArtistShort, IJsonApiResponse, ITrack, ITrackFormState, ITrackWriteDto } from 'src/types'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { normalizeArtistShort } from 'src/api/mappers/Music/artist.mapper'
 import { asRecord, asRecords } from 'src/api/mappers/Music/helpers'
@@ -91,6 +91,8 @@ export function normalizeTrack(
     duration: String(raw.duration ?? ''),
     rate: Number(raw.rate ?? 0),
     number: raw.number == null ? undefined : Number(raw.number),
+    cd: raw.cd == null || raw.cd === '' ? null : String(raw.cd),
+    disc_id: raw.disc_id == null ? null : String(raw.disc_id),
     artists,
     tags: normalizeMusicTags(raw.tags),
     artist: formatTrackArtist({ ...raw, artists }, fallbackArtist),
@@ -107,9 +109,87 @@ export function normalizeTrack(
   }
 }
 
+export function mapTrackResponse(
+  response: IJsonApiResponse,
+  fallbackArtist = ''
+): ITrack {
+  const [raw] = mapResponse(response)
+
+  if (!raw) {
+    throw new Error('Track not found')
+  }
+
+  return normalizeTrack(raw, fallbackArtist)
+}
+
 export function mapTracksResponse(
   response: IJsonApiResponse,
   fallbackArtist = ''
 ): ITrack[] {
   return mapResponse(response).map(item => normalizeTrack(item, fallbackArtist))
+}
+
+function idsEqual (left: Array<string | number>, right: Array<string | number>): boolean {
+  if (left.length !== right.length) {
+    return false
+  }
+
+  const a = [...left].map(String).sort()
+  const b = [...right].map(String).sort()
+
+  return a.every((id, index) => id === b[index])
+}
+
+function toNullableText (value: string): string | null {
+  const trimmed = value.trim()
+
+  return trimmed === '' ? null : trimmed
+}
+
+export function mapTrackWritePatch (original: ITrack, form: ITrackFormState): ITrackWriteDto {
+  const payload: ITrackWriteDto = {}
+  const nextName = form.name.trim()
+
+  if (nextName !== original.name) {
+    payload.name = nextName
+  }
+
+  const nextNumberRaw = form.number.trim()
+  const nextNumber = nextNumberRaw === '' ? null : Number(nextNumberRaw)
+  const currentNumber = original.number ?? null
+  if (nextNumberRaw !== '' && !Number.isFinite(nextNumber)) {
+    // Keep invalid number out of the patch; the form should validate before save.
+  } else if (nextNumber !== currentNumber) {
+    payload.number = nextNumber
+  }
+
+  const nextCd = toNullableText(form.cd)
+  if (nextCd !== (original.cd ?? null)) {
+    payload.cd = nextCd
+  }
+
+  const nextCredits = toNullableText(form.credits)
+  if (nextCredits !== (original.credits ?? null)) {
+    payload.credits = nextCredits
+  }
+
+  const currentArtistIds = (original.artists ?? []).map(artist => artist.id)
+  if (!idsEqual(form.artist_ids, currentArtistIds)) {
+    payload.artist_ids = form.artist_ids.map(Number)
+  }
+
+  const currentTagIds = (original.tags ?? []).map(tag => tag.id)
+  if (!idsEqual(form.tag_ids, currentTagIds)) {
+    payload.tags = form.tag_ids.map(Number)
+  }
+
+  if (form.image_file) {
+    payload.image_file = form.image_file
+  }
+
+  return payload
+}
+
+export function hasTrackWritePatch (payload: ITrackWriteDto): boolean {
+  return Object.keys(payload).length > 0
 }

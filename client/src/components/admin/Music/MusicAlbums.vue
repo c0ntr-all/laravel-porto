@@ -209,9 +209,15 @@ const toggleExpanded = (id: string) => {
   expanded[id] = !expanded[id]
 }
 
-const openEdit = (album: IAlbum) => {
+const openEdit = async (album: IAlbum) => {
   editing.value = album
   showDialog.value = true
+
+  // Refresh so discs/versions match the latest server state.
+  const fresh = await admin.getAlbum(album.id)
+  if (fresh && showDialog.value && editing.value?.id === album.id) {
+    editing.value = fresh
+  }
 }
 
 const openEditById = async (id: string) => {

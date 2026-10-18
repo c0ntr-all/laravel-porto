@@ -17,7 +17,7 @@ class ListTasksAction extends BaseAction
     }
 
     /**
-     * @param array{task_list_id?: int|null, unlisted?: bool} $filters
+     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool} $filters
      * @param list<string> $with
      */
     public function handle(array $filters = [], array $with = []): Collection
@@ -36,6 +36,11 @@ class ListTasksAction extends BaseAction
 
         if (($validated['unlisted'] ?? false) === true || ($validated['unlisted'] ?? null) === '1') {
             $filters['unlisted'] = true;
+        }
+
+        if (array_key_exists('parent_id', $validated) && $validated['parent_id'] !== null) {
+            $filters['parent_id'] = $validated['parent_id'];
+            $filters['roots_only'] = false;
         }
 
         $with = $this->relationsFromInclude((string) $request->query('include', ''));
@@ -71,6 +76,12 @@ class ListTasksAction extends BaseAction
         }
         if (str_contains($include, 'customFields')) {
             $with[] = 'customFields';
+        }
+        if (str_contains($include, 'subtasks')) {
+            $with[] = 'subtasks';
+        }
+        if (str_contains($include, 'parent')) {
+            $with[] = 'parent';
         }
 
         return $with;

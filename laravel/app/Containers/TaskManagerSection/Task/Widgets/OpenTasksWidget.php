@@ -43,6 +43,7 @@ class OpenTasksWidget extends AbstractWidget
     public function resolve(WidgetContext $context): WidgetPayload
     {
         $tasks = Task::query()
+            ->whereNull('parent_id')
             ->whereNull('finished_at')
             ->where('is_declined', false)
             ->orderByDesc('id')
@@ -58,7 +59,11 @@ class OpenTasksWidget extends AbstractWidget
 
         return $this->listPayload($context, $items, [
             'href' => '/task-manager',
-            'total' => Task::query()->whereNull('finished_at')->where('is_declined', false)->count(),
+            'total' => Task::query()
+                ->whereNull('parent_id')
+                ->whereNull('finished_at')
+                ->where('is_declined', false)
+                ->count(),
         ]);
     }
 }

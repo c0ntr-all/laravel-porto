@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $checklist_id
+ * @property int|null $converted_task_id
  * @property boolean $is_declined
  * @property string|null $decline_reason
  * @property string $title
@@ -36,6 +37,7 @@ class ChecklistItem extends Model
         'position',
         'is_declined',
         'decline_reason',
+        'converted_task_id',
         'finished_at',
         'created_at',
         'updated_at'
@@ -49,5 +51,10 @@ class ChecklistItem extends Model
     public function checklist(): BelongsTo
     {
         return $this->belongsTo(Checklist::class);
+    }
+
+    public function convertedTask(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'converted_task_id');
     }
 }

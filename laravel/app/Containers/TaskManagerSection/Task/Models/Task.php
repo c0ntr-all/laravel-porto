@@ -7,6 +7,7 @@ use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\CustomField\Models\Traits\HasCustomFields;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
+use App\Containers\TaskManagerSection\Checklist\Models\ChecklistItem;
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $user_id
  * @property int|null $task_list_id
+ * @property int|null $parent_id
  * @property string $title
  * @property string|null $content
  * @property bool $is_declined
@@ -47,6 +49,7 @@ class Task extends ActivityLoggableModel
     protected $fillable = [
         'user_id',
         'task_list_id',
+        'parent_id',
         'title',
         'content',
         'finished_at',
@@ -61,6 +64,21 @@ class Task extends ActivityLoggableModel
     public function taskList(): BelongsTo
     {
         return $this->belongsTo(TaskList::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function subtasks(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
+    public function sourceChecklistItem(): HasOne
+    {
+        return $this->hasOne(ChecklistItem::class, 'converted_task_id');
     }
 
     public function checklists(): HasMany

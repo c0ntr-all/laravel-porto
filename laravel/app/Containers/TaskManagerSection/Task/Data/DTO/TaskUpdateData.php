@@ -11,6 +11,7 @@ use Spatie\LaravelData\Optional;
 class TaskUpdateData extends Data
 {
     public int|Optional|null $task_list_id;
+    public int|Optional|null $parent_id;
     public string|Optional|null $title;
     public string|Optional|null $content;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]

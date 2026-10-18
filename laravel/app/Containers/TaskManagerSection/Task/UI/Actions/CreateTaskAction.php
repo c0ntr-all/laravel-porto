@@ -72,6 +72,13 @@ class CreateTaskAction extends UseCaseAction
                 : $template->content;
         }
 
+        if (!empty($validated['parent_id']) && empty($validated['task_list_id'])) {
+            $parent = Task::query()->find($validated['parent_id']);
+            if ($parent !== null) {
+                $validated['task_list_id'] = $parent->task_list_id;
+            }
+        }
+
         $dto = TaskCreateData::from($validated);
         $dto->user_id = auth()->user()->id;
 

@@ -62,6 +62,7 @@ class TaskListWidget extends AbstractWidget
 
         $tasks = Task::query()
             ->where('task_list_id', $list->id)
+            ->whereNull('parent_id')
             ->whereNull('finished_at')
             ->where('is_declined', false)
             ->orderByDesc('id')

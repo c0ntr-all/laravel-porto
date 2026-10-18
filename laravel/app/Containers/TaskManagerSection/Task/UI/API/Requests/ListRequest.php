@@ -10,6 +10,7 @@ class ListRequest extends AuthenticatedRequest
     {
         return [
             'task_list_id' => 'sometimes|nullable|integer|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
+            'parent_id' => 'sometimes|nullable|integer|exists:App\Containers\TaskManagerSection\Task\Models\Task,id',
             'unlisted' => 'sometimes|boolean',
         ];
     }

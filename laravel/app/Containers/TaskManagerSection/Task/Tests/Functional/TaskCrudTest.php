@@ -172,4 +172,94 @@ class TaskCrudTest extends TestCase
 
         $this->assertSoftDeleted('tm_tasks', ['id' => $task->id]);
     }
+
+    public function test_user_can_create_subtask(): void
+    {
+        $parent = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Parent Task',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks', [
+                'title' => 'Subtask',
+                'parent_id' => $parent->id,
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.attributes.parent_id', (string) $parent->id);
+
+        $this->assertDatabaseHas('tm_tasks', [
+            'title' => 'Subtask',
+            'parent_id' => $parent->id,
+        ]);
+    }
+
+    public function test_list_excludes_subtasks_by_default(): void
+    {
+        $parent = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Parent',
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'parent_id' => $parent->id,
+            'title' => 'Child',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/task-manager/tasks');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.count', 1)
+            ->assertJsonPath('data.0.attributes.title', 'Parent');
+    }
+
+    public function test_user_can_list_subtasks_by_parent_id(): void
+    {
+        $parent = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Parent',
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'parent_id' => $parent->id,
+            'title' => 'Child',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson("/api/v1/task-manager/tasks?parent_id={$parent->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.count', 1)
+            ->assertJsonPath('data.0.attributes.title', 'Child');
+    }
+
+    public function test_user_can_include_subtasks_and_parent(): void
+    {
+        $parent = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Parent',
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'parent_id' => $parent->id,
+            'title' => 'Child',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson("/api/v1/task-manager/tasks/{$parent->id}?include=subtasks");
+
+        $response->assertOk()
+            ->assertJsonPath('data.attributes.subtasks_count', 1);
+
+        $childResponse = $this->actingAs($this->user, 'api')
+            ->getJson("/api/v1/task-manager/tasks/" . $parent->subtasks()->first()->id . "?include=parent");
+
+        $childResponse->assertOk()
+            ->assertJsonPath('data.attributes.parent_id', (string) $parent->id);
+    }
 }

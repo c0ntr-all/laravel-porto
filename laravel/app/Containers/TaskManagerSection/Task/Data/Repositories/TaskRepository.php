@@ -11,7 +11,7 @@ use Spatie\LaravelData\Optional;
 class TaskRepository
 {
     /**
-     * @param array{task_list_id?: int|null, unlisted?: bool} $filters
+     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool} $filters
      * @param list<string> $with
      */
     public function list(array $filters = [], array $with = []): Collection
@@ -24,6 +24,12 @@ class TaskRepository
 
         if (($filters['unlisted'] ?? false) === true) {
             $query->whereNull('task_list_id');
+        }
+
+        if (array_key_exists('parent_id', $filters) && $filters['parent_id'] !== null) {
+            $query->where('parent_id', $filters['parent_id']);
+        } elseif (($filters['roots_only'] ?? true) === true) {
+            $query->whereNull('parent_id');
         }
 
         if ($with !== []) {
@@ -42,7 +48,7 @@ class TaskRepository
     {
         $attributes = [];
 
-        foreach (['task_list_id', 'title', 'content', 'finished_at', 'is_declined'] as $field) {
+        foreach (['task_list_id', 'parent_id', 'title', 'content', 'finished_at', 'is_declined'] as $field) {
             if (!($dto->{$field} instanceof Optional)) {
                 $attributes[$field] = $dto->{$field};
             }

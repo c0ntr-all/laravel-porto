@@ -41,4 +41,24 @@ class DeleteTaskTaskTest extends TestCase
 
         $this->assertTrue($result);
     }
+
+    public function test_it_soft_deletes_subtasks_with_parent(): void
+    {
+        $user = User::factory()->create();
+        $parent = Task::create([
+            'user_id' => $user->id,
+            'title' => 'Parent',
+        ]);
+        $subtask = Task::create([
+            'user_id' => $user->id,
+            'parent_id' => $parent->id,
+            'title' => 'Child',
+        ]);
+
+        $deleteTask = app(DeleteTaskTask::class);
+        $deleteTask->run($parent);
+
+        $this->assertSoftDeleted('tm_tasks', ['id' => $parent->id]);
+        $this->assertSoftDeleted('tm_tasks', ['id' => $subtask->id]);
+    }
 }

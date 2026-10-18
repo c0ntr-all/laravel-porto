@@ -13,6 +13,12 @@ class UpdateRequest extends AuthenticatedRequest
     {
         return [
             'task_list_id' => 'sometimes|nullable|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
+            'parent_id' => [
+                'sometimes',
+                'nullable',
+                'exists:App\Containers\TaskManagerSection\Task\Models\Task,id',
+                Rule::notIn([(string) $this->route('task')?->id]),
+            ],
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|nullable|max:3000',
             'is_finished' => 'sometimes|boolean',

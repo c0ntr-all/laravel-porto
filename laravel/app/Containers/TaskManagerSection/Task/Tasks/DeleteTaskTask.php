@@ -15,6 +15,10 @@ class DeleteTaskTask extends ParentTask
 
     public function run(Task $task): bool
     {
+        $task->subtasks()->each(function (Task $subtask): void {
+            $this->taskRepository->delete($subtask);
+        });
+
         return $this->taskRepository->delete($task);
     }
 }

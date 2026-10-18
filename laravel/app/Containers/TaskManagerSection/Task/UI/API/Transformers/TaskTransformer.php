@@ -5,6 +5,7 @@ namespace App\Containers\TaskManagerSection\Task\UI\API\Transformers;
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
+use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistItemTransformer;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
@@ -12,12 +13,16 @@ use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTrans
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Transformers\TaskProgressTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
+use League\Fractal\Resource\NullResource;
 use League\Fractal\TransformerAbstract;
 
 class TaskTransformer extends TransformerAbstract
 {
     protected array $availableIncludes = [
         'taskList',
+        'parent',
+        'subtasks',
+        'sourceChecklistItem',
         'comments',
         'checklists',
         'progress',
@@ -32,6 +37,7 @@ class TaskTransformer extends TransformerAbstract
             'id' => (string) $task->id,
             'uuid' => (string) $task->uuid,
             'task_list_id' => $task->task_list_id !== null ? (string) $task->task_list_id : null,
+            'parent_id' => $task->parent_id !== null ? (string) $task->parent_id : null,
             'title' => $task->title,
             'content' => $task->content,
             'finished_at' => $task->finished_at?->format('Y-m-d H:i:s'),
@@ -42,6 +48,9 @@ class TaskTransformer extends TransformerAbstract
             'checklists_count' => $task->relationLoaded('checklists')
                 ? $task->checklists->count()
                 : $task->checklists()->count(),
+            'subtasks_count' => $task->relationLoaded('subtasks')
+                ? $task->subtasks->count()
+                : $task->subtasks()->count(),
             'progresses_count' => $task->relationLoaded('progress')
                 ? $task->progress->count()
                 : $task->progress()->count(),
@@ -64,6 +73,45 @@ class TaskTransformer extends TransformerAbstract
         }
 
         return $this->item($task->taskList, new TaskListTransformer(), 'task-lists');
+    }
+
+    public function includeParent(Task $task): Item|NullResource
+    {
+        if (!$task->relationLoaded('parent') || $task->parent === null) {
+            if ($task->parent_id === null) {
+                return $this->null();
+            }
+            $task->loadMissing('parent');
+        }
+
+        if ($task->parent === null) {
+            return $this->null();
+        }
+
+        return $this->item($task->parent, new self(), 'tasks');
+    }
+
+    public function includeSubtasks(Task $task): Collection
+    {
+        $subtasks = $task->relationLoaded('subtasks')
+            ? $task->subtasks
+            : $task->subtasks()->get();
+
+        return $this->collection($subtasks, new self(), 'tasks')
+                    ->setMeta(['count' => $subtasks->count()]);
+    }
+
+    public function includeSourceChecklistItem(Task $task): Item|NullResource
+    {
+        $item = $task->relationLoaded('sourceChecklistItem')
+            ? $task->sourceChecklistItem
+            : $task->sourceChecklistItem()->first();
+
+        if ($item === null) {
+            return $this->null();
+        }
+
+        return $this->item($item, new ChecklistItemTransformer(), 'checklist_items');
     }
 
     public function includeComments(Task $task): Collection

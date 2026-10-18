@@ -14,6 +14,7 @@ class PostCreateDto extends Data
     public ?string $title = null;
     public ?string $content = null;
     public PostContentTypeEnum $content_type = PostContentTypeEnum::DEFAULT;
+    public bool $is_draft = false;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
     public Carbon $date;
     #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]

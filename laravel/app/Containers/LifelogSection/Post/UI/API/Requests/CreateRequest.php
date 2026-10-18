@@ -19,6 +19,7 @@ class CreateRequest extends AuthenticatedRequest
             'title' => 'sometimes|string|max:70',
             'content' => 'sometimes|max:3000',
             'content_type' => ['sometimes', Rule::enum(PostContentTypeEnum::class)],
+            'is_draft' => 'sometimes|boolean',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'sometimes|date_format:H:i|nullable',
             'tags' => 'sometimes|array',

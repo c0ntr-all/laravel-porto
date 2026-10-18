@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string|null $content
  * @property PostContentTypeEnum $content_type
+ * @property bool $is_draft
  * @property Carbon $date
  * @property Carbon|null $time
  * @property Carbon $created_at
@@ -67,6 +68,7 @@ class Post extends ActivityLoggableModel
 
     protected $attributes = [
         'content_type' => PostContentTypeEnum::DEFAULT->value,
+        'is_draft' => false,
     ];
 
     protected $fillable = [
@@ -74,12 +76,14 @@ class Post extends ActivityLoggableModel
         'title',
         'content',
         'content_type',
+        'is_draft',
         'date',
         'time',
     ];
     protected $casts = [
         'id' => 'string',
         'content_type' => PostContentTypeEnum::class,
+        'is_draft' => 'boolean',
         'date' => 'datetime',
         'time' => 'datetime',
     ];

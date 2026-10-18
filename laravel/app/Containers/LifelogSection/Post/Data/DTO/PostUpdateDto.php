@@ -12,6 +12,7 @@ class PostUpdateDto extends Data
     public string|Optional|null $title;
     public string|Optional|null $content;
     public PostContentTypeEnum|Optional $content_type;
+    public bool|Optional $is_draft;
     public string|Optional $date;
     public string|Optional|null $time;
 

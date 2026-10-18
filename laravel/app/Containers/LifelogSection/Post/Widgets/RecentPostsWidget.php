@@ -43,6 +43,7 @@ class RecentPostsWidget extends AbstractWidget
     public function resolve(WidgetContext $context): WidgetPayload
     {
         $posts = Post::query()
+            ->where('is_draft', false)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit($context->limit())

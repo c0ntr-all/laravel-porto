@@ -50,7 +50,7 @@ class PostsCountWidget extends AbstractWidget
     {
         return $this->countPayload(
             $context,
-            Post::query()->count(),
+            Post::query()->where('is_draft', false)->count(),
             'записей',
             ['href' => '/lifelog'],
         );

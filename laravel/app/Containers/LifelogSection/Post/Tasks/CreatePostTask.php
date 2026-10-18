@@ -26,6 +26,7 @@ class CreatePostTask extends ParentTask
             'title' => $postCreateDto->title,
             'content' => $postCreateDto->content,
             'content_type' => $postCreateDto->content_type,
+            'is_draft' => $postCreateDto->is_draft,
             'date' => $postCreateDto->date,
             'time' => $postCreateDto->time,
         ]);

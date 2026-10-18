@@ -15,6 +15,7 @@ class PostUpdateContextDto extends Data
     public string|Optional|null $title;
     public string|Optional|null $content;
     public PostContentTypeEnum|Optional $content_type;
+    public bool|Optional $is_draft;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d')]
     public Carbon|Optional $date;
     #[WithCast(DateTimeInterfaceCast::class, format: 'H:i')]

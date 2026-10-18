@@ -42,6 +42,7 @@ class PostRepository
                                // Filter exists only in tags scope
                                AllowedFilter::exact('tags_mode')->ignore(['or', 'and']),
                                AllowedFilter::exact('content_type'),
+                               AllowedFilter::exact('is_draft'),
                                AllowedFilter::custom('movie_id', new MovieIdFilter()),
                                AllowedFilter::custom('date_from', $this->dateFromFilter),
                                AllowedFilter::custom('date_to', $this->dateToFilter),

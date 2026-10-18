@@ -30,6 +30,7 @@ class PostFactory extends Factory
             'title' => fake()->unique()->sentence(fake()->numberBetween(3, 8)),
             'content' => fake()->paragraphs(fake()->numberBetween(1, 3), true),
             'content_type' => PostContentTypeEnum::DEFAULT,
+            'is_draft' => false,
             'date' => $datetime->format('Y-m-d'),
             'time' => fake()->boolean(70) ? $datetime->format('H:i:s') : null,
         ];
@@ -39,6 +40,13 @@ class PostFactory extends Factory
     {
         return $this->state(fn () => [
             'content_type' => $contentType,
+        ]);
+    }
+
+    public function draft(bool $isDraft = true): static
+    {
+        return $this->state(fn () => [
+            'is_draft' => $isDraft,
         ]);
     }
 

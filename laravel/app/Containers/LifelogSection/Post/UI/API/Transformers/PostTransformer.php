@@ -41,6 +41,7 @@ class PostTransformer extends TransformerAbstract
             'title' => $post->title,
             'content' => $post->content,
             'content_type' => $post->content_type->value,
+            'is_draft' => $post->is_draft,
             'date' => $post->date->format('Y-m-d'),
             'time' => $post->time?->format('H:i'),
             'watch' => $post->watchProgress()?->toArray(),

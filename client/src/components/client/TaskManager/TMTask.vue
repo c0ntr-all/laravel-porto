@@ -55,6 +55,10 @@
           />
         </q-card-section>
 
+        <q-card-section v-if="hasRelatedTasks">
+          <TMTaskRelatedTasks :task="task" />
+        </q-card-section>
+
         <q-card-section>
           <q-tabs
             v-model="footerTabs"
@@ -92,6 +96,9 @@
           <TMChecklistAddButton
             :task-id="task.id"
           />
+          <TMSubtaskAddButton
+            :task-id="task.id"
+          />
           <TMProgressAddButton
             :task-id="task.id"
             :is-progress-available="isProgressAvailable"
@@ -123,12 +130,14 @@ import TMReminder from 'src/components/client/TaskManager/TMReminder.vue'
 import TMTaskComments from 'src/components/client/TaskManager/TMTaskComments.vue'
 import TMTaskUseCaseLogs from 'src/components/client/TaskManager/TMTaskUseCaseLogs.vue'
 import TMChecklistAddButton from 'src/components/client/TaskManager/TMChecklistAddButton.vue'
+import TMSubtaskAddButton from 'src/components/client/TaskManager/TMSubtaskAddButton.vue'
 import TMProgressAddButton from 'src/components/client/TaskManager/TMProgressAddButton.vue'
 import TMReminderAddButton from 'src/components/client/TaskManager/TMReminderAddButton.vue'
 import TMTaskContent from 'src/components/client/TaskManager/TMTaskContent.vue'
 import TMTaskTitle from 'src/components/client/TaskManager/TMTaskTitle.vue'
 import TMTaskSkeleton from 'src/components/client/TaskManager/TMTaskSkeleton.vue'
 import TMTaskAttachments from 'src/components/client/TaskManager/TMTaskAttachments.vue'
+import TMTaskRelatedTasks from 'src/components/client/TaskManager/TMTaskRelatedTasks.vue'
 import { IChecklist, IProgress, IReminderItem, ITask } from 'src/types/TaskManager/task'
 
 interface ITaskPartsRef {
@@ -162,6 +171,14 @@ const reminder = computed<IReminderItem | null>(() => {
 
 const isProgressAvailable = computed(() => progresses?.value?.filter(item => item.is_final).length === 0)
 const isReminderAvailable = computed(() => !reminder.value)
+const hasRelatedTasks = computed(() => {
+  if (!task.value) return false
+
+  const hasParent = Boolean(task.value.parent_id && taskStore.tasks.byId[task.value.parent_id])
+  const hasSubtasks = (task.value.subtasksIds || []).some(id => Boolean(taskStore.tasks.byId[id]))
+
+  return hasParent || hasSubtasks
+})
 
 const taskTitleRef = ref<ITaskPartsRef | null>(null)
 const taskContentRef = ref<ITaskPartsRef | null>(null)

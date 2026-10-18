@@ -116,9 +116,10 @@ const emit = defineEmits<{
 const isFinished = computed(() => props.task.finished_at !== null)
 const isDeclined = computed(() => props.task.is_declined)
 
-const listTitle = computed(() =>
-  taskStore.taskLists.byId[props.task.task_list_id]?.title ?? ''
-)
+const listTitle = computed(() => {
+  if (!props.task.task_list_id) return ''
+  return taskStore.taskLists.byId[props.task.task_list_id]?.title ?? ''
+})
 
 const createdAtLabel = computed(() =>
   props.task.created_at ? humanDatetime(props.task.created_at) : 'Без даты'

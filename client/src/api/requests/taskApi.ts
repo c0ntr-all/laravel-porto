@@ -42,7 +42,11 @@ export const taskApi = {
     return response.data
   },
   async getTask(id: string): Promise<ITaskGetResponse> {
-    const response = await api.get(`v1/task-manager/tasks/${id}`)
+    const response = await api.get(`v1/task-manager/tasks/${id}`, {
+      params: {
+        include: 'checklists.checklistItems,progress,reminder,attachments,subtasks,parent'
+      }
+    })
 
     return response.data
   },
@@ -110,6 +114,17 @@ export const taskApi = {
   ): Promise<IChecklistItemDeleteResponse> {
     const url = `v1/task-manager/tasks/${taskId}/checklists/${checklistId}/items/${checklistItemId}`
     const response = await api.delete(url)
+
+    return response.data
+  },
+
+  async convertChecklistItemToTask(
+    taskId: string,
+    checklistId: string,
+    checklistItemId: string
+  ): Promise<ITaskCreateResponse> {
+    const url = `v1/task-manager/tasks/${taskId}/checklists/${checklistId}/items/${checklistItemId}/convert-to-task`
+    const response = await api.post(url)
 
     return response.data
   },

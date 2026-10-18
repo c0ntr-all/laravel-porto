@@ -113,6 +113,40 @@ export const useTaskStore = defineStore('task', () => {
     attachments.allIds = attachments.allIds.filter(id => id !== attachmentId)
   }
 
+  function prepareEmptyTaskRelations(entity: ITask) {
+    entity.checklistsIds = entity.checklistsIds || []
+    entity.progressIds = entity.progressIds || []
+    entity.reminderIds = entity.reminderIds || []
+    entity.commentsIds = entity.commentsIds || []
+    entity.attachmentsIds = entity.attachmentsIds || []
+    entity.subtasksIds = entity.subtasksIds || []
+  }
+
+  function upsertRelatedTask(relatedTask: ITask) {
+    const existing = tasks.byId[relatedTask.id]
+    if (existing?.isHydrated) {
+      return
+    }
+
+    prepareEmptyTaskRelations(relatedTask)
+    relatedTask.isHydrated = false
+    upsertEntity(tasks, relatedTask)
+  }
+
+  function linkSubtaskToParent(parentId: string, subtaskId: string) {
+    const parent = tasks.byId[parentId]
+    if (!parent) return
+
+    if (!parent.subtasksIds) {
+      parent.subtasksIds = []
+    }
+
+    if (!parent.subtasksIds.includes(subtaskId)) {
+      parent.subtasksIds.push(subtaskId)
+      parent.subtasks_count = (parent.subtasks_count || 0) + 1
+    }
+  }
+
   async function getTaskLists(): Promise<void> {
     const responseData = await taskApi.getTaskLists()
 
@@ -215,8 +249,10 @@ export const useTaskStore = defineStore('task', () => {
             }
             break
           case 'tasks':
+          case 'subtasks':
+          case 'parent':
             for (const id in related[type]) {
-              upsertEntity(tasks, related[type][id] as unknown as ITask)
+              upsertRelatedTask(related[type][id] as unknown as ITask)
             }
             break
           case 'checklists':
@@ -225,6 +261,7 @@ export const useTaskStore = defineStore('task', () => {
             }
             break
           case 'checklistItems':
+          case 'sourceChecklistItem':
             for (const id in related[type]) {
               upsertEntity(checklistItems, related[type][id] as unknown as IChecklistItem)
             }
@@ -256,6 +293,7 @@ export const useTaskStore = defineStore('task', () => {
         }
       }
 
+      prepareEmptyTaskRelations(entity)
       entity.isHydrated = true
 
       upsertEntity(tasks, entity)
@@ -264,26 +302,26 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  async function createTask(payload: ITaskCreatePayload): Promise<void> {
+  async function createTask(payload: ITaskCreatePayload): Promise<ITask | undefined> {
     try {
       const responseData = await taskApi.createTask(payload)
       const { entity } = normalizeEntity<ITask>(responseData.data, responseData.included)
 
-      // TODO: prepare empty Task
-      entity.checklistsIds = []
-      entity.progressIds = []
-      entity.reminderIds = []
-      entity.commentsIds = []
-      entity.attachmentsIds = []
-      entity.isHydrated = true
+      prepareEmptyTaskRelations(entity)
+      entity.isHydrated = !entity.parent_id
 
       upsertEntity(tasks, entity)
 
-      // Add task to the taskIds of list
-      const list = taskLists.byId[entity.task_list_id]
-      if (!list.tasksIds.includes(entity.id)) {
-        list.tasksIds.push(entity.id)
+      if (entity.parent_id) {
+        linkSubtaskToParent(entity.parent_id, entity.id)
+      } else if (entity.task_list_id) {
+        const list = taskLists.byId[entity.task_list_id]
+        if (list && !list.tasksIds.includes(entity.id)) {
+          list.tasksIds.push(entity.id)
+        }
       }
+
+      return entity
     } catch (error: unknown) {
       handleApiError(error)
     }
@@ -323,9 +361,11 @@ export const useTaskStore = defineStore('task', () => {
 
       const responseData = await taskApi.deleteTask(taskId)
 
-      const list = taskLists.byId[task.task_list_id]
-      if (list) {
-        list.tasksIds = list.tasksIds.filter(id => id !== taskId)
+      if (task.task_list_id) {
+        const list = taskLists.byId[task.task_list_id]
+        if (list) {
+          list.tasksIds = list.tasksIds.filter(id => id !== taskId)
+        }
       }
 
       delete tasks.byId[taskId]
@@ -492,6 +532,51 @@ export const useTaskStore = defineStore('task', () => {
       checklistItems.allIds = checklistItems.allIds.filter(id => id !== checklistItemId)
 
       handleApiSuccess(responseData)
+    } catch (error: unknown) {
+      handleApiError(error)
+    }
+  }
+
+  async function convertChecklistItemToTask(
+    taskId: string,
+    checklistId: string,
+    checklistItemId: string
+  ): Promise<ITask | undefined> {
+    try {
+      const responseData = await taskApi.convertChecklistItemToTask(taskId, checklistId, checklistItemId)
+      const { entity, related } = normalizeEntity<ITask>(responseData.data, responseData.included)
+
+      prepareEmptyTaskRelations(entity)
+      entity.isHydrated = false
+      upsertEntity(tasks, entity)
+
+      if (entity.parent_id) {
+        linkSubtaskToParent(entity.parent_id, entity.id)
+      } else {
+        linkSubtaskToParent(taskId, entity.id)
+      }
+
+      for (const type in related) {
+        if (type === 'parent') {
+          for (const id in related[type]) {
+            upsertRelatedTask(related[type][id] as unknown as ITask)
+          }
+        }
+
+        if (type === 'sourceChecklistItem') {
+          for (const id in related[type]) {
+            upsertEntity(checklistItems, related[type][id] as unknown as IChecklistItem)
+          }
+        }
+      }
+
+      const sourceItem = checklistItems.byId[checklistItemId]
+      if (sourceItem) {
+        sourceItem.converted_task_id = entity.id
+      }
+
+      handleApiSuccess(responseData)
+      return entity
     } catch (error: unknown) {
       handleApiError(error)
     }
@@ -826,6 +911,7 @@ export const useTaskStore = defineStore('task', () => {
     finishChecklistItem,
     unfinishChecklistItem,
     deleteChecklistItem,
+    convertChecklistItemToTask,
     createProgress,
     createReminder,
     updateReminder,

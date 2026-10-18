@@ -60,7 +60,12 @@ import { computed, ref, provide } from 'vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import TMChecklistItemAddButton from 'src/components/client/TaskManager/TMChecklistItemAddButton.vue'
 import { IChecklist, IChecklistItem, ITask } from 'src/types/TaskManager/task'
-import { createChecklistItemKey, updateChecklistItemKey, deleteChecklistItemKey } from 'src/symbols/task-manager.keys'
+import {
+  createChecklistItemKey,
+  updateChecklistItemKey,
+  deleteChecklistItemKey,
+  convertChecklistItemToTaskKey
+} from 'src/symbols/task-manager.keys'
 import TMChecklistItem from 'src/components/client/TaskManager/TMChecklistItem.vue'
 import TMChecklistItemDeclineDialog from 'src/components/client/TaskManager/TMChecklistItemDeclineDialog.vue'
 
@@ -79,7 +84,9 @@ const props = defineProps<{
 
 // --- Computed ---
 const checklistItems = computed(() =>
-  (props.checklist.checklistItemsIds || []).map(id => taskStore.checklistItems.byId[id])
+  (props.checklist.checklistItemsIds || [])
+    .map(id => taskStore.checklistItems.byId[id])
+    .filter((item): item is IChecklistItem => Boolean(item) && !item.converted_task_id)
 )
 const progress = computed(() => {
   if (checklistItems.value.length === 0) {
@@ -165,9 +172,14 @@ const deleteChecklistItem = async (itemId: string) => {
   await taskStore.deleteChecklistItem(props.task.id, props.checklist.id, itemId)
 }
 
+const convertChecklistItemToTask = async (itemId: string) => {
+  await taskStore.convertChecklistItemToTask(props.task.id, props.checklist.id, itemId)
+}
+
 provide(createChecklistItemKey, createChecklistItem)
 provide(updateChecklistItemKey, updateChecklistItem)
 provide(deleteChecklistItemKey, deleteChecklistItem)
+provide(convertChecklistItemToTaskKey, convertChecklistItemToTask)
 </script>
 
 <style scoped>

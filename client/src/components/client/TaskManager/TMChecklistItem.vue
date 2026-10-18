@@ -28,6 +28,27 @@
         </div>
       </q-popup-edit>
     </q-item-section>
+    <q-item-section
+      v-if="item.is_declined && item.decline_reason"
+      side
+    >
+      <q-icon
+        class="checklist-item__decline-icon"
+        name="error_outline"
+        color="orange"
+        size="20px"
+      >
+        <q-tooltip
+          anchor="top middle"
+          self="bottom middle"
+          :offset="[0, 8]"
+          class="bg-grey-9 text-body2"
+          max-width="280px"
+        >
+          {{ item.decline_reason }}
+        </q-tooltip>
+      </q-icon>
+    </q-item-section>
     <q-item-section side>
       <AppActionsButton
         :actions="actions"
@@ -41,7 +62,11 @@
 import { computed, ref } from 'vue'
 import { IChecklistItem } from 'src/types/TaskManager/task'
 import AppActionsButton from 'src/components/default/AppActionsButton.vue'
-import { deleteChecklistItemKey, updateChecklistItemKey } from 'src/symbols/task-manager.keys'
+import {
+  convertChecklistItemToTaskKey,
+  deleteChecklistItemKey,
+  updateChecklistItemKey
+} from 'src/symbols/task-manager.keys'
 import { injectStrict } from 'src/utils/injection'
 
 const props = defineProps<{
@@ -55,6 +80,7 @@ const emit = defineEmits<{
 
 const updateChecklistItem = injectStrict(updateChecklistItemKey)
 const deleteChecklistItem = injectStrict(deleteChecklistItemKey)
+const convertChecklistItemToTask = injectStrict(convertChecklistItemToTaskKey)
 
 const declineItem = () => {
   emit('decline', props.item)
@@ -67,6 +93,9 @@ const activateItem = () => {
     is_declined: false,
     decline_reason: ''
   })
+}
+const transformToTask = () => {
+  convertChecklistItemToTask(props.item.id)
 }
 
 const actions = computed(() => [{
@@ -83,6 +112,12 @@ const actions = computed(() => [{
   color: 'red',
   is_active: !props.item.is_declined,
   func: declineItem
+}, {
+  name: 'transform',
+  label: 'Transform to task',
+  icon: 'subdirectory_arrow_right',
+  is_active: !props.item.converted_task_id,
+  func: transformToTask
 }, {
   name: 'delete',
   label: 'Delete item',
@@ -122,6 +157,12 @@ const updateTitle = async (title: string) => {
     align-items: center;
   }
 
+  &__decline-icon {
+    position: relative;
+    z-index: 1;
+    cursor: help;
+  }
+
   &--declined {
     position: relative;
     &:after {
@@ -131,6 +172,7 @@ const updateTitle = async (title: string) => {
       left: 0;
       border-bottom: 1px solid #111;
       width: 100%;
+      pointer-events: none;
     }
   }
 }

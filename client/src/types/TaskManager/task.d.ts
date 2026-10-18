@@ -10,6 +10,7 @@ export interface IChecklistItemFields {
   finished_at: string | null
   is_declined: boolean
   decline_reason: string | null
+  converted_task_id: string | null
 }
 export interface IChecklistItem extends IChecklistItemFields {
   id: string
@@ -187,6 +188,14 @@ export interface IReminderOccurrenceListResponse extends IJsonApiResponse<IRemin
   data: IReminderOccurrenceResource[]
 }
 
+export type TaskRelationType = 'parent' | 'subtask'
+
+export interface IRelatedTaskItem {
+  id: string
+  title: string
+  relationType: TaskRelationType
+}
+
 /**
  * Only backend fields
  */
@@ -197,25 +206,29 @@ export interface ITaskFields {
   is_finished: boolean // Not field, it's for simpler finishing tasks
   is_declined: boolean
   decline_reason: string | null
+  parent_id: string | null
   reminders_count: number
   checklists_count: number
+  subtasks_count: number
   progresses_count: number
   created_at: string
 }
 export interface ITask extends ITaskFields {
   id: string
-  task_list_id: string
+  task_list_id: string | null
   isHydrated: boolean // If full Task loaded
   checklistsIds?: string[],
   progressIds?: string[],
   reminderIds?: string[],
   commentsIds: string[]
   attachmentsIds?: string[]
+  subtasksIds?: string[]
 }
 export interface ITaskCreatePayload {
   title: string
   content?: string
-  task_list_id: string
+  task_list_id?: string
+  parent_id?: string
 }
 export interface ITaskUpdatePayload extends Partial<ITaskFields> {
   deleted_attachments_ids?: string[]

@@ -7,14 +7,49 @@ import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { serializeSeriesWatchProgress } from 'src/utils/LifeLog/seriesWatch'
 import { normalizeStartedAt } from 'src/utils/LifeLog/startedAt'
 
+function resolvePostFormTime (model: Pick<IPostModel, 'datetime' | 'isNullTime'>): string | null {
+  if (model.isNullTime) {
+    return null
+  }
+
+  const timePart = model.datetime.trim().split(/\s+/)[1]
+  if (!timePart) {
+    return null
+  }
+
+  const match = timePart.match(/^(\d{1,2}):(\d{2})/)
+  if (!match) {
+    return null
+  }
+
+  return `${match[1].padStart(2, '0')}:${match[2]}`
+}
+
+function resolvePostFormDate (datetime: string): string {
+  return datetime.trim().split(/\s+/)[0] ?? ''
+}
+
+function normalizeApiTime (time: string | null | undefined): string | null {
+  if (!time) {
+    return null
+  }
+
+  const match = time.trim().match(/^(\d{1,2}):(\d{2})/)
+  if (!match) {
+    return null
+  }
+
+  return `${match[1].padStart(2, '0')}:${match[2]}`
+}
+
 export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
   const data: IPostCreateDto = {
     title: postModel.title,
     content: postModel.content,
     content_type: postModel.content_type ?? PostContentTypeEnum.DEFAULT,
     tags: postModel.tags.map((t: ITag) => t.id),
-    date: postModel.datetime.split(' ')[0],
-    time: postModel.isNullTime ? null : postModel.datetime.split(' ')[1]
+    date: resolvePostFormDate(postModel.datetime),
+    time: resolvePostFormTime(postModel)
   }
   if (postModel.newTags) {
     data.new_tags = postModel.newTags.map((t: INewTag) => t.name)
@@ -61,14 +96,13 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
     dto.content_type = edited.content_type
   }
 
-  // Reconstructing datetime for compare
-  let originalDateTime = original.date
-  if (original.time) {
-    originalDateTime += ' ' + original.time
-  }
-  if (edited.datetime !== originalDateTime) {
-    dto.date = edited.datetime?.split(' ')[0]
-    dto.time = edited.isNullTime ? null : edited.datetime?.split(' ')[1]
+  const editedDate = resolvePostFormDate(edited.datetime ?? '')
+  const editedTime = resolvePostFormTime(edited)
+  const originalTime = normalizeApiTime(original.time)
+
+  if (editedDate !== original.date || editedTime !== originalTime) {
+    dto.date = editedDate
+    dto.time = editedTime
   }
 
   const existingAttachments: IPostAttachmentWithState[] = edited.attachments.filter(

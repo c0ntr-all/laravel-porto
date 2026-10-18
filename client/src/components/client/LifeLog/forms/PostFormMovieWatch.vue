@@ -107,6 +107,7 @@
             v-model="isNullTime"
             name="не учитывать время"
             label="не учитывать время"
+            @update:model-value="onNullTimeChange"
           />
         </div>
       </div>
@@ -129,7 +130,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
 import { mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
-import { getCurrentDateTime } from 'src/utils/datetime'
+import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
@@ -350,26 +351,16 @@ const submit = async () => {
   }
 }
 
-watch(isNullTime, newValue => {
-  const onlyDate = datetime.value.split(' ')[0]
-  if (newValue) {
-    datetime.value = onlyDate
-  } else {
-    datetime.value = `${onlyDate} 00:00`
-  }
-})
+const onNullTimeChange = (isNullTime: boolean | null) => {
+  datetime.value = applyIsNullTimeToDatetime(datetime.value, Boolean(isNullTime))
+}
 
 watch(isStartNullTime, newValue => {
   if (!hasStartedAt.value || !startDatetime.value) {
     return
   }
 
-  const onlyDate = startDatetime.value.split(' ')[0]
-  if (newValue) {
-    startDatetime.value = onlyDate
-  } else {
-    startDatetime.value = `${onlyDate} 00:00`
-  }
+  startDatetime.value = applyIsNullTimeToDatetime(startDatetime.value, newValue)
 })
 
 watch(selectedMovie, movie => {

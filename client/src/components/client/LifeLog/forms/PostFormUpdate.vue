@@ -75,6 +75,7 @@
             v-model="model.isNullTime"
             name="не учитывать время"
             label="не учитывать время"
+            @update:model-value="onNullTimeChange"
           />
         </div>
       </div>
@@ -93,10 +94,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, ref, toRaw } from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
-import { getCurrentDateTime } from 'src/utils/datetime'
+import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
@@ -129,10 +130,9 @@ const model = ref<IPostUpdateModel>({
   newTags: [],
   datetime: getCurrentDateTime(),
   attachments: [],
-  isNullTime: true
+  isNullTime: false
 })
 const newAttachmentsModel = ref<File[]>([])
-const originalPost = ref()
 const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
@@ -148,7 +148,7 @@ const updatePost = async () => {
   await postStore.updatePost(
     props.post.id,
     model.value,
-    originalPost.value,
+    props.post,
     newAttachmentsModel.value
   ).then(updatedPost => {
     if (updatedPost) {
@@ -156,6 +156,13 @@ const updatePost = async () => {
       clearAttachmentModel()
     }
   })
+}
+
+const onNullTimeChange = (isNullTime: boolean | null) => {
+  model.value.datetime = applyIsNullTimeToDatetime(
+    model.value.datetime,
+    Boolean(isNullTime)
+  )
 }
 
 const getTagKey = (tag: ITag | INewTag) => {
@@ -208,37 +215,25 @@ const mapPostToModel = (post: IPost) => {
   const rawPost = toRaw(post)
 
   const preparedPost: IPostUpdateModel = {
-    ...rawPost,
+    title: rawPost.title,
+    content: rawPost.content,
     content_type: rawPost.content_type ?? PostContentTypeEnum.DEFAULT,
+    tags: [...(rawPost.tags ?? [])],
     newTags: [],
-    datetime: rawPost.time ? rawPost.date + ' ' + rawPost.time : rawPost.date,
-    isNullTime: !rawPost.time
+    datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
+    isNullTime: !rawPost.time,
+    attachments: (rawPost.attachments ?? []).map((item: IPostAttachmentWithState) => ({
+      ...toRaw(item),
+      is_deleted: false
+    }))
   }
 
   model.value = preparedPost
-  if (model.value.attachments.length) {
-    model.value.attachments = toRaw(model.value.attachments.map((item: IPostAttachmentWithState) => {
-      item.is_deleted = false
-      return toRaw(item)
-    }))
-  }
-  originalPost.value = structuredClone(preparedPost)
 }
 
 const clearAttachmentModel = () => {
   newAttachmentsModel.value = []
 }
-
-watch(() => model.value.isNullTime, newValue => {
-  const onlyDate = model.value.datetime.split(' ')[0]
-  if (newValue) {
-    // Delete time for no time input
-    model.value.datetime = onlyDate
-  } else {
-    // Restore time for preventing date clearing in calendar
-    model.value.datetime = `${onlyDate} 00:00`
-  }
-})
 
 onMounted(() => {
   tagStore.getTags().then(() => {
@@ -258,7 +253,7 @@ onUnmounted(() => {
     tags: rawPost.tags,
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
-    isNullTime: !!rawPost.time,
+    isNullTime: !rawPost.time,
     attachments: []
   }
 

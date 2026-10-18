@@ -38,6 +38,7 @@
             v-model="model.isNullTime"
             name="не учитывать время"
             label="не учитывать время"
+            @update:model-value="onNullTimeChange"
           />
         </div>
       </div>
@@ -58,8 +59,8 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
-import { getCurrentDateTime } from 'src/utils/datetime'
+import { nextTick, ref } from 'vue'
+import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { IPost, IPostModel } from 'src/types'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
@@ -104,9 +105,6 @@ const model = ref<IPostModel>(getEmptyPostModel())
 const attachmentModel = ref<File[]>([])
 const isSubmitting = ref(false)
 
-// --- State ---
-const originalPost = ref({})
-
 // --- Refs ---
 const titleRef = ref<IInputRef | null>(null)
 const formTagsRef = ref<ITagsRef | null>(null)
@@ -150,22 +148,12 @@ const resetAvailableTags = () => {
   }
 }
 
-watch(() => model.value.isNullTime, newValue => {
-  const onlyDate = model.value.datetime.split(' ')[0]
-  if (newValue) {
-    // Delete time for no time input
-    model.value.datetime = onlyDate
-  } else {
-    // Restore time for preventing date clearing in calendar
-    model.value.datetime = `${onlyDate} 00:00`
-  }
-})
-
-// --- Lifecycle ---
-onMounted(() => {
-  model.value = getEmptyPostModel()
-  originalPost.value = structuredClone(toRaw(model.value))
-})
+const onNullTimeChange = (isNullTime: boolean | null) => {
+  model.value.datetime = applyIsNullTimeToDatetime(
+    model.value.datetime,
+    Boolean(isNullTime)
+  )
+}
 </script>
 
 <style lang="scss" scoped>

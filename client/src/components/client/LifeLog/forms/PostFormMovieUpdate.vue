@@ -124,6 +124,7 @@
             v-model="model.isNullTime"
             name="не учитывать время"
             label="не учитывать время"
+            @update:model-value="onNullTimeChange"
           />
         </div>
       </div>
@@ -144,7 +145,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref, toRaw, watch } from 'vue'
-import { getCurrentDateTime } from 'src/utils/datetime'
+import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { IPost, IPostUpdateModel } from 'src/types'
 import { IMovie } from 'src/types/Movie'
@@ -454,26 +455,19 @@ async function submit () {
   }
 }
 
-watch(() => model.value.isNullTime, newValue => {
-  const onlyDate = model.value.datetime.split(' ')[0]
-  if (newValue) {
-    model.value.datetime = onlyDate
-  } else {
-    model.value.datetime = `${onlyDate} 00:00`
-  }
-})
+const onNullTimeChange = (isNullTime: boolean | null) => {
+  model.value.datetime = applyIsNullTimeToDatetime(
+    model.value.datetime,
+    Boolean(isNullTime)
+  )
+}
 
 watch(isStartNullTime, newValue => {
   if (!hasStartedAt.value || !startDatetime.value) {
     return
   }
 
-  const onlyDate = startDatetime.value.split(' ')[0]
-  if (newValue) {
-    startDatetime.value = onlyDate
-  } else {
-    startDatetime.value = `${onlyDate} 00:00`
-  }
+  startDatetime.value = applyIsNullTimeToDatetime(startDatetime.value, newValue)
 })
 
 watch(selectedMovie, () => {

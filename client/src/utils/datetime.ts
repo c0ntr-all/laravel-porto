@@ -142,14 +142,43 @@ function getCurrentDateTime() {
   return `${datePart} ${timePart}`
 }
 
-const humanDatetime = (datetime: string) => {
-  const year = date.formatDate(datetime, 'YYYY')
-  const currentYear = date.formatDate(new Date(), 'YYYY')
-  let format = 'D MMM, HH:mm'
-  if (year < currentYear || year > currentYear) {
-    format = 'D MMM YYYY, HH:mm'
+/**
+ * Подставляет/убирает время в строке модели формы (YYYY-MM-DD[ HH:mm]).
+ * При возврате времени не использует 00:00 — из‑за TZ это превращается в 03:00.
+ */
+function applyIsNullTimeToDatetime (datetime: string, isNullTime: boolean): string {
+  const onlyDate = datetime.trim().split(/\s+/)[0] ?? ''
+  if (!onlyDate) {
+    return datetime
   }
-  return date.formatDate(datetime, format)
+
+  if (isNullTime) {
+    return onlyDate
+  }
+
+  if (/\s\d{1,2}:\d{2}/.test(datetime.trim())) {
+    return datetime.trim()
+  }
+
+  const timePart = getCurrentDateTime().split(' ')[1] ?? '12:00'
+  return `${onlyDate} ${timePart}`
+}
+
+const humanDatetime = (datetime: string) => {
+  const trimmed = datetime.trim()
+  const hasTime = /\d{1,2}:\d{2}/.test(trimmed)
+  const year = date.formatDate(trimmed, 'YYYY')
+  const currentYear = date.formatDate(new Date(), 'YYYY')
+  const otherYear = year < currentYear || year > currentYear
+
+  let format: string
+  if (hasTime) {
+    format = otherYear ? 'D MMM YYYY, HH:mm' : 'D MMM, HH:mm'
+  } else {
+    format = otherYear ? 'D MMM YYYY' : 'D MMM'
+  }
+
+  return date.formatDate(trimmed, format)
 }
 
 const formatPresetDateRange = (
@@ -173,6 +202,7 @@ const formatPresetDateRange = (
 
 export {
   getCurrentDateTime,
+  applyIsNullTimeToDatetime,
   humanDatetime,
   formatPresetDateRange,
   normalizeDatetimeInput,

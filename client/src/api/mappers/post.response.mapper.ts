@@ -32,6 +32,7 @@ export function normalizePost (post: IPost): IPost {
   return {
     ...post,
     content_type: post.content_type ?? PostContentTypeEnum.DEFAULT,
+    is_draft: Boolean(post.is_draft),
     attachments: mapPostAttachmentsResponse(post.attachments ?? []),
     movie: extractPostMovie(withRelations),
     watch: normalizeSeriesWatchProgress(rawWatch),

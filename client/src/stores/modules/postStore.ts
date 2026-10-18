@@ -18,6 +18,7 @@ import {
   insertPostByDate,
   replaceOptimisticPost
 } from 'src/utils/LifeLog/post'
+import { postMatchesApiListFilter } from 'src/utils/LifeLog/filter.mapper'
 import { useUserStore } from 'src/stores/modules/userStore'
 import {
   IFilter,
@@ -43,6 +44,26 @@ export const usePostStore = defineStore('post', () => {
 
   let listRequestId = 0
   let lastListFilters: IFilter = {}
+
+  function syncPostWithListFilters(post: IPost): void {
+    const matches = postMatchesApiListFilter(post, lastListFilters)
+    const index = posts.value.findIndex(item => item.id === post.id)
+
+    if (!matches) {
+      if (index !== -1) {
+        posts.value.splice(index, 1)
+        postsCount.value = Math.max(0, postsCount.value - 1)
+      }
+      return
+    }
+
+    if (index !== -1) {
+      posts.value.splice(index, 1)
+    }
+
+    insertPostByDate(posts.value, post)
+    postsCount.value = posts.value.length
+  }
 
   async function getPosts(options?: {
     append?: boolean
@@ -111,24 +132,41 @@ export const usePostStore = defineStore('post', () => {
     const userStore = useUserStore()
     const optimisticPost = buildOptimisticPost(postModel, userStore.user)
     const optimisticId = optimisticPost.id
+    const shouldShowOptimistic = postMatchesApiListFilter(optimisticPost, lastListFilters)
 
-    insertPostByDate(posts.value, optimisticPost)
-    postsCount.value += 1
+    if (shouldShowOptimistic) {
+      insertPostByDate(posts.value, optimisticPost)
+      postsCount.value += 1
+    }
 
     try {
       const { post, response } = await createPostWithAttachments(postModel, attachmentModel)
       const normalizedPost = normalizePost(post)
 
-      replaceOptimisticPost(posts.value, optimisticId, normalizedPost)
+      if (shouldShowOptimistic) {
+        replaceOptimisticPost(posts.value, optimisticId, normalizedPost)
+        if (!postMatchesApiListFilter(normalizedPost, lastListFilters)) {
+          const index = posts.value.findIndex(item => item.id === normalizedPost.id)
+          if (index !== -1) {
+            posts.value.splice(index, 1)
+          }
+          postsCount.value = posts.value.length
+        }
+      } else {
+        syncPostWithListFilters(normalizedPost)
+      }
+
       handleApiSuccess(response)
 
       return normalizedPost
     } catch (err: any) {
-      const optimisticIndex = posts.value.findIndex(post => post.id === optimisticId)
+      if (shouldShowOptimistic) {
+        const optimisticIndex = posts.value.findIndex(post => post.id === optimisticId)
 
-      if (optimisticIndex !== -1) {
-        posts.value.splice(optimisticIndex, 1)
-        postsCount.value = Math.max(0, postsCount.value - 1)
+        if (optimisticIndex !== -1) {
+          posts.value.splice(optimisticIndex, 1)
+          postsCount.value = Math.max(0, postsCount.value - 1)
+        }
       }
 
       handleApiError(err.message || 'Не удалось создать пост')
@@ -152,12 +190,7 @@ export const usePostStore = defineStore('post', () => {
         attachmentModel
       )
 
-      const index = posts.value.findIndex(p => p.id === post.id)
-
-      if (index !== -1) {
-        posts.value.splice(index, 1, normalizePost(post))
-      }
-
+      syncPostWithListFilters(normalizePost(post))
       handleApiSuccess(response)
 
       return post

@@ -8,6 +8,10 @@ import {
   IPreset
 } from 'src/types'
 import {
+  LIFELOG_POSTS_TAB_ALL,
+  LifeLogPostsTabId
+} from 'src/constants/LifeLog/postsTabs'
+import {
   cloneLifeLogFilter,
   createEmptyLifeLogFilter
 } from 'src/utils/LifeLog/filter'
@@ -32,6 +36,7 @@ export function useLifeLogFilters() {
   const { presets } = storeToRefs(presetStore)
 
   const filter = ref<ILifeLogFilter>(createEmptyLifeLogFilter())
+  const postsTab = ref<LifeLogPostsTabId>(LIFELOG_POSTS_TAB_ALL)
   const allTags = ref<Awaited<ReturnType<typeof tagStore.getTags>>>([])
 
   const filteredPosts = computed(() =>
@@ -56,7 +61,7 @@ export function useLifeLogFilters() {
   async function loadPosts(append = false) {
     await postStore.getPosts({
       append,
-      filters: mapLifeLogFilterToApiFilter(filter.value)
+      filters: mapLifeLogFilterToApiFilter(filter.value, postsTab.value)
     })
   }
 
@@ -100,6 +105,15 @@ export function useLifeLogFilters() {
     })
   }
 
+  async function setPostsTab(tab: LifeLogPostsTabId) {
+    if (postsTab.value === tab) {
+      return
+    }
+
+    postsTab.value = tab
+    await loadPosts()
+  }
+
   const filterRoute = useLifeLogFilterRoute({
     allTags,
     presets,
@@ -125,6 +139,7 @@ export function useLifeLogFilters() {
 
   return {
     filter,
+    postsTab,
     allTags,
     filteredPosts,
     activePreset,
@@ -139,6 +154,7 @@ export function useLifeLogFilters() {
     applyFilter,
     resetFilter,
     applyPreset,
-    clearPreset
+    clearPreset,
+    setPostsTab
   }
 }

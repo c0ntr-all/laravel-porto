@@ -115,6 +115,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
     started_at: isMoviePost ? (normalizeStartedAt(model.started_at) ?? null) : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
+    is_draft: Boolean(model.is_draft),
     date: datePart,
     time: model.isNullTime ? null : (timePart || null),
     created_at: null,

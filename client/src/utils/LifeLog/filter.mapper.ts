@@ -1,12 +1,37 @@
 import { IFilter, ILifeLogFilter, IPost, IPreset } from 'src/types'
 import { ITag } from 'src/types/tag'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
+import {
+  LIFELOG_POSTS_TAB_ALL,
+  LIFELOG_POSTS_TAB_DRAFTS,
+  LifeLogPostsTabId
+} from 'src/constants/LifeLog/postsTabs'
 import { createEmptyLifeLogFilter } from 'src/utils/LifeLog/filter'
 import { normalizePresetContentTypes } from 'src/api/mappers/LifeLog/preset.mapper'
 import { parsePostDate, toDateOnly } from 'src/utils/LifeLog/post'
 
-export function mapLifeLogFilterToApiFilter(filter: ILifeLogFilter): IFilter {
-  const apiFilter: IFilter = {}
+export function mapPostsTabToApiFilter (tab: LifeLogPostsTabId): IFilter {
+  if (tab === LIFELOG_POSTS_TAB_DRAFTS) {
+    return { is_draft: 1 }
+  }
+
+  if (tab === LIFELOG_POSTS_TAB_ALL) {
+    return { is_draft: 0 }
+  }
+
+  return {
+    is_draft: 0,
+    content_type: tab
+  }
+}
+
+export function mapLifeLogFilterToApiFilter (
+  filter: ILifeLogFilter,
+  postsTab: LifeLogPostsTabId = LIFELOG_POSTS_TAB_ALL
+): IFilter {
+  const apiFilter: IFilter = {
+    ...mapPostsTabToApiFilter(postsTab)
+  }
 
   if (filter.activePresetId) {
     apiFilter.preset = filter.activePresetId
@@ -17,7 +42,47 @@ export function mapLifeLogFilterToApiFilter(filter: ILifeLogFilter): IFilter {
     apiFilter.tags_mode = filter.tags_mode
   }
 
+  const search = filter.search.trim()
+  if (search) {
+    apiFilter.text = search
+  }
+
+  if (filter.date_from) {
+    apiFilter.date_from = filter.date_from
+  }
+
+  if (filter.date_to) {
+    apiFilter.date_to = filter.date_to
+  }
+
   return apiFilter
+}
+
+export function postMatchesApiListFilter (post: IPost, filters: IFilter): boolean {
+  if (filters.is_draft !== undefined && filters.is_draft !== null) {
+    const wantDraft = filters.is_draft === 1 ||
+      filters.is_draft === true ||
+      filters.is_draft === '1' ||
+      filters.is_draft === 'true'
+
+    if (Boolean(post.is_draft) !== wantDraft) {
+      return false
+    }
+  }
+
+  if (filters.content_type !== undefined && filters.content_type !== null && filters.content_type !== '') {
+    const raw = Array.isArray(filters.content_type)
+      ? filters.content_type.map(String)
+      : String(filters.content_type).split(',')
+    const allowed = raw.map(item => item.trim()).filter(Boolean)
+    const contentType = post.content_type ?? PostContentTypeEnum.DEFAULT
+
+    if (allowed.length && !allowed.includes(contentType)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 export function resolvePresetTags(preset: IPreset, allTags: ITag[]): ITag[] {

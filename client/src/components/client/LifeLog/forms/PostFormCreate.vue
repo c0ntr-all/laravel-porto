@@ -31,14 +31,22 @@
 
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div v-if="model.datetime" class="flex">
-          <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
-          <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+        <div v-if="model.datetime" class="flex column">
+          <div class="flex">
+            <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
+            <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+            <q-checkbox
+              v-model="model.isNullTime"
+              name="не учитывать время"
+              label="не учитывать время"
+              @update:model-value="onNullTimeChange"
+            />
+          </div>
           <q-checkbox
-            v-model="model.isNullTime"
-            name="не учитывать время"
-            label="не учитывать время"
-            @update:model-value="onNullTimeChange"
+            v-model="model.is_draft"
+            class="q-mt-xs"
+            name="Черновик"
+            label="Черновик"
           />
         </div>
       </div>
@@ -62,7 +70,7 @@
 import { nextTick, ref } from 'vue'
 import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
-import { IPost, IPostModel } from 'src/types'
+import { IPostModel } from 'src/types'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
@@ -79,11 +87,6 @@ interface ITagsRef {
 // --- Store ---
 const postStore = usePostStore()
 
-// --- Props ---
-defineProps<{
-  post?: IPost
-}>()
-
 const emit = defineEmits<{
   success: []
 }>()
@@ -93,6 +96,7 @@ const getEmptyPostModel = (): IPostModel => {
     title: '',
     content: '',
     content_type: PostContentTypeEnum.DEFAULT,
+    is_draft: false,
     tags: [],
     newTags: [],
     datetime: getCurrentDateTime(),

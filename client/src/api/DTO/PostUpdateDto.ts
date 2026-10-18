@@ -5,6 +5,7 @@ export interface IPostUpdateDto {
   title?: string
   content?: string
   content_type?: PostContentTypeEnum
+  is_draft?: boolean
   date?: string
   time?: string | null
   tags?: string[]

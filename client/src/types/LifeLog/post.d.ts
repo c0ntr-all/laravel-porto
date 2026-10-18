@@ -33,6 +33,7 @@ export interface IPost {
   title?: string
   content: string
   content_type: PostContentTypeEnum
+  is_draft: boolean
   date: string
   time: string | null
   created_at: string | null
@@ -49,6 +50,7 @@ export interface IPostModel {
   title?: string
   content: string
   content_type?: PostContentTypeEnum
+  is_draft: boolean
   tags: ITag[]
   newTags: INewTag[]
   datetime: string

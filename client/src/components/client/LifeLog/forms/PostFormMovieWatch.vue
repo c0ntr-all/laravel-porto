@@ -110,6 +110,12 @@
             @update:model-value="onNullTimeChange"
           />
         </div>
+        <q-checkbox
+          v-model="isDraft"
+          class="q-mt-xs"
+          name="Черновик"
+          label="Черновик"
+        />
       </div>
       <div class="lifelog-post-form-actions__right self-end">
         <q-btn
@@ -154,6 +160,7 @@ const emit = defineEmits<{
 
 const datetime = ref(getCurrentDateTime())
 const isNullTime = ref(false)
+const isDraft = ref(false)
 const hasStartedAt = ref(false)
 const startDatetime = ref('')
 const isStartNullTime = ref(true)
@@ -289,6 +296,7 @@ const clearStartedAt = () => {
 const resetForm = () => {
   datetime.value = getCurrentDateTime()
   isNullTime.value = false
+  isDraft.value = false
   clearStartedAt()
   selectedMovie.value = null
   movieInput.value = ''
@@ -319,6 +327,7 @@ const submit = async () => {
     content_type: isSeries
       ? PostContentTypeEnum.TV_SERIES
       : PostContentTypeEnum.MOVIE,
+    is_draft: isDraft.value,
     tags: [],
     newTags: [],
     datetime: datetime.value,

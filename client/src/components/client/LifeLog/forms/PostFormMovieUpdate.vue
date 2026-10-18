@@ -127,6 +127,12 @@
             @update:model-value="onNullTimeChange"
           />
         </div>
+        <q-checkbox
+          v-model="model.is_draft"
+          class="q-mt-xs"
+          name="Черновик"
+          label="Черновик"
+        />
       </div>
       <div class="lifelog-post-form-actions__right self-end">
         <q-btn
@@ -187,6 +193,7 @@ const model = ref<IPostUpdateModel>({
   title: '',
   content: '',
   content_type: PostContentTypeEnum.MOVIE,
+  is_draft: false,
   tags: [],
   newTags: [],
   datetime: getCurrentDateTime(),
@@ -292,6 +299,7 @@ function mapPostToModel (post: IPost): IPostUpdateModel {
     content_type: isSeries
       ? PostContentTypeEnum.TV_SERIES
       : (rawPost.content_type ?? PostContentTypeEnum.MOVIE),
+    is_draft: Boolean(rawPost.is_draft),
     tags: [...(rawPost.tags ?? [])],
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,

@@ -68,14 +68,22 @@
 
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div v-if="model.datetime" class="lifelog-post-form__action">
-          <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
-          <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+        <div v-if="model.datetime" class="lifelog-post-form__action column">
+          <div class="flex">
+            <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
+            <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+            <q-checkbox
+              v-model="model.isNullTime"
+              name="не учитывать время"
+              label="не учитывать время"
+              @update:model-value="onNullTimeChange"
+            />
+          </div>
           <q-checkbox
-            v-model="model.isNullTime"
-            name="не учитывать время"
-            label="не учитывать время"
-            @update:model-value="onNullTimeChange"
+            v-model="model.is_draft"
+            class="q-mt-xs"
+            name="Черновик"
+            label="Черновик"
           />
         </div>
       </div>
@@ -126,6 +134,7 @@ const model = ref<IPostUpdateModel>({
   title: '',
   content: '',
   content_type: PostContentTypeEnum.DEFAULT,
+  is_draft: false,
   tags: [],
   newTags: [],
   datetime: getCurrentDateTime(),
@@ -218,6 +227,7 @@ const mapPostToModel = (post: IPost) => {
     title: rawPost.title,
     content: rawPost.content,
     content_type: rawPost.content_type ?? PostContentTypeEnum.DEFAULT,
+    is_draft: Boolean(rawPost.is_draft),
     tags: [...(rawPost.tags ?? [])],
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
@@ -250,6 +260,7 @@ onUnmounted(() => {
     title: rawPost.title,
     content: rawPost.content,
     content_type: rawPost.content_type ?? PostContentTypeEnum.DEFAULT,
+    is_draft: Boolean(rawPost.is_draft),
     tags: rawPost.tags,
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,

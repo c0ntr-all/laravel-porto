@@ -25,6 +25,11 @@
       </aside>
 
       <main ref="contentRef" class="lifelog-page__content">
+        <LifeLogPostsTabs
+          :model-value="postsTab"
+          @update:model-value="onPostsTabChange"
+        />
+
         <LifeLogPostsList
           :posts="filteredPosts"
           :presets="presets"
@@ -84,10 +89,12 @@ import { mapPresetToLifeLogFilter } from 'src/utils/LifeLog/filter.mapper'
 import LifeLogToolbar from 'src/components/client/LifeLog/layout/LifeLogToolbar.vue'
 import LifeLogFilterPanel from 'src/components/client/LifeLog/layout/LifeLogFilterPanel.vue'
 import LifeLogPostsList from 'src/components/client/LifeLog/posts/LifeLogPostsList.vue'
+import LifeLogPostsTabs from 'src/components/client/LifeLog/posts/LifeLogPostsTabs.vue'
 import LifeLogPresetsSection from 'src/components/client/LifeLog/LifeLogPresetsSection.vue'
 import PostFormCreate from 'src/components/client/LifeLog/forms/PostFormCreate.vue'
 import PostFormMovieWatch from 'src/components/client/LifeLog/forms/PostFormMovieWatch.vue'
 import AppModal from 'src/components/default/AppModal.vue'
+import { LifeLogPostsTabId } from 'src/constants/LifeLog/postsTabs'
 import { ILifeLogFilter, IPreset } from 'src/types'
 
 const presetStore = usePresetStore()
@@ -98,6 +105,7 @@ const contentRef = ref<HTMLElement | null>(null)
 
 const {
   filter,
+  postsTab,
   allTags,
   filteredPosts,
   isLoading,
@@ -106,7 +114,8 @@ const {
   loadMorePosts,
   initialize,
   applyFilter,
-  resetFilter
+  resetFilter,
+  setPostsTab
 } = useLifeLogFilters()
 
 const {
@@ -127,6 +136,11 @@ const openCreatePostModal = () => {
 
 const openMovieWatchModal = () => {
   isMovieWatchModalOpen.value = true
+}
+
+const onPostsTabChange = async (tab: LifeLogPostsTabId) => {
+  await setPostsTab(tab)
+  void nextTick(syncSidebarScroll)
 }
 
 const onPostCreated = () => {

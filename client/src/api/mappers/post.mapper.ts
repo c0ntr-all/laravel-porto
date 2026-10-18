@@ -47,6 +47,7 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
     title: postModel.title,
     content: postModel.content,
     content_type: postModel.content_type ?? PostContentTypeEnum.DEFAULT,
+    is_draft: Boolean(postModel.is_draft),
     tags: postModel.tags.map((t: ITag) => t.id),
     date: resolvePostFormDate(postModel.datetime),
     time: resolvePostFormTime(postModel)
@@ -94,6 +95,9 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
     edited.content_type !== (original.content_type ?? PostContentTypeEnum.DEFAULT)
   ) {
     dto.content_type = edited.content_type
+  }
+  if (Boolean(edited.is_draft) !== Boolean(original.is_draft)) {
+    dto.is_draft = Boolean(edited.is_draft)
   }
 
   const editedDate = resolvePostFormDate(edited.datetime ?? '')

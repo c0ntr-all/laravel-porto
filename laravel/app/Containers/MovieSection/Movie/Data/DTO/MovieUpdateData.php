@@ -15,6 +15,7 @@ class MovieUpdateData extends Data
     public int|Optional $year;
     public MovieTypeEnum|Optional $type;
     public string|Optional|null $cover;
+    public string|Optional|null $embed_link;
     public float|Optional|null $kp_rating;
     public string|Optional|null $kp_img;
 

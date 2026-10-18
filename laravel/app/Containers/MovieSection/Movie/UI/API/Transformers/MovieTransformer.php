@@ -33,6 +33,7 @@ class MovieTransformer extends TransformerAbstract
             'year' => $movie->year,
             'type' => $movie->type->value,
             'cover' => $movie->cover,
+            'embed_link' => $movie->embed_link,
             'kp_rating' => $movie->kp_rating !== null ? (float) $movie->kp_rating : null,
             'kp_img' => $movie->kp_img,
             'kp_imported_at' => $movie->kp_imported_at?->format('Y-m-d H:i:s'),

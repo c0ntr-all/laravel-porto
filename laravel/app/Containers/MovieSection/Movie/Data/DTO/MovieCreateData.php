@@ -14,6 +14,7 @@ class MovieCreateData extends Data
     public ?int $year = null;
     public MovieTypeEnum $type = MovieTypeEnum::MOVIE;
     public ?string $cover = null;
+    public ?string $embed_link = null;
     public ?float $kp_rating = null;
     public ?string $kp_img = null;
 

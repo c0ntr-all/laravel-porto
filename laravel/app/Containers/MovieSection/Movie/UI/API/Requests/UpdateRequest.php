@@ -25,6 +25,7 @@ class UpdateRequest extends AuthenticatedRequest
             'year' => 'sometimes|integer|min:1888|max:2100',
             'type' => ['sometimes', Rule::enum(MovieTypeEnum::class)],
             'cover' => 'sometimes|nullable|url|max:2048',
+            'embed_link' => 'sometimes|nullable|url|max:2048',
             'kp_rating' => 'sometimes|nullable|numeric|between:0,10',
             'kp_img' => 'sometimes|nullable|url|max:2048',
             'genre_ids' => 'sometimes|array',

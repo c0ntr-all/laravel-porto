@@ -43,6 +43,7 @@ class MovieCrudTest extends TestCase
                 'year' => 1994,
                 'type' => MovieTypeEnum::MOVIE->value,
                 'cover' => 'https://example.com/cover.jpg',
+                'embed_link' => 'https://example.com/embed/pulp-fiction',
                 'kp_rating' => 8.6,
                 'kp_img' => 'https://kinopoisk.ru/pulp.jpg',
                 'description' => 'Криминальная история из Лос-Анджелеса.',
@@ -58,6 +59,7 @@ class MovieCrudTest extends TestCase
             ->assertJsonPath('data.attributes.year', 1994)
             ->assertJsonPath('data.attributes.type', 'movie')
             ->assertJsonPath('data.attributes.cover', 'https://example.com/cover.jpg')
+            ->assertJsonPath('data.attributes.embed_link', 'https://example.com/embed/pulp-fiction')
             ->assertJsonPath('data.attributes.kp_rating', 8.6)
             ->assertJsonPath('data.attributes.kp_img', 'https://kinopoisk.ru/pulp.jpg')
             ->assertJsonPath('data.attributes.description', 'Криминальная история из Лос-Анджелеса.')
@@ -121,11 +123,13 @@ class MovieCrudTest extends TestCase
         $this->actingAs($this->user, 'api')
             ->patchJson('/api/v1/movie/movies/'.$movie->id, [
                 'title' => 'The Matrix Reloaded',
+                'embed_link' => 'https://example.com/embed/matrix',
                 'genre_ids' => [],
                 'country_ids' => [$usa->id],
             ])
             ->assertOk()
-            ->assertJsonPath('data.attributes.title', 'The Matrix Reloaded');
+            ->assertJsonPath('data.attributes.title', 'The Matrix Reloaded')
+            ->assertJsonPath('data.attributes.embed_link', 'https://example.com/embed/matrix');
 
         $this->assertDatabaseCount('movie_genre', 0);
         $this->assertDatabaseCount('movie_country', 1);

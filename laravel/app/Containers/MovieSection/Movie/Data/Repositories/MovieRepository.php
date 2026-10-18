@@ -50,6 +50,7 @@ class MovieRepository
             'year' => $dto->year,
             'type' => $dto->type,
             'cover' => $dto->cover,
+            'embed_link' => $dto->embed_link,
             'kp_rating' => $dto->kp_rating,
             'kp_img' => $dto->kp_img,
         ]);

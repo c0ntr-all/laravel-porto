@@ -23,6 +23,7 @@ class MovieFactory extends Factory
             'year' => fake()->numberBetween(1950, (int) date('Y')),
             'type' => fake()->randomElement(MovieTypeEnum::cases()),
             'cover' => fake()->optional()->url(),
+            'embed_link' => fake()->optional()->url(),
             'kp_rating' => fake()->optional()->randomFloat(1, 1, 10),
             'kp_img' => fake()->optional()->url(),
         ];

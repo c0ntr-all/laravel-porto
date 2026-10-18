@@ -1,18 +1,12 @@
 <template>
   <div class="ll-posts-list">
-    <q-inner-loading :showing="isLoading && !posts.length">
-      <q-spinner color="primary" size="36px" />
-    </q-inner-loading>
+    <LifeLogPostsListSkeleton
+      v-if="!posts.length"
+      :view-mode="viewMode"
+    />
 
-    <template v-if="!isLoading || posts.length">
-      <AppNoResultsPlug
-        v-if="!posts.length"
-        title="Постов пока нет"
-        body="Создайте первый пост или измените фильтры"
-      />
-
+    <template v-else>
       <div
-        v-else
         ref="containerRef"
         class="ll-posts-list__layout"
       >
@@ -83,9 +77,9 @@ import { usePostRailAnchors } from 'src/composables/client/Lifelog/usePostRailAn
 import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard.vue'
 import LifeLogPostMovieCard from 'src/components/client/LifeLog/posts/LifeLogPostMovieCard.vue'
 import LifeLogPostRow from 'src/components/client/LifeLog/posts/LifeLogPostRow.vue'
+import LifeLogPostsListSkeleton from 'src/components/client/LifeLog/posts/LifeLogPostsListSkeleton.vue'
 import { isMovieWatchPost } from 'src/utils/LifeLog/post'
 import LifeLogPresetRails from 'src/components/client/LifeLog/posts/LifeLogPresetRails.vue'
-import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const props = defineProps<{
   posts: IPost[]

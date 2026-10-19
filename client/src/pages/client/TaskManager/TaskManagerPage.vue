@@ -30,7 +30,6 @@
   <q-dialog v-model="isDialogOpen">
     <TMTask
       v-if="selectedTaskId"
-      :key="selectedTaskId"
       :task-id="selectedTaskId"
       @closed="closeTask"
     />

@@ -1,128 +1,130 @@
 <template>
-  <TMTaskSkeleton v-if="!task?.isHydrated" />
-  <q-card v-else class="task">
-    <q-card-section class="task__header">
-      <TMTaskTitle
-        ref="taskTitleRef"
-        v-model:title="title"
-        @saved="handleUpdateTitle"
-      />
-      <q-btn @click="closeTask" class="task__close" icon="close" size="md" flat rounded dense/>
-    </q-card-section>
+  <div class="task-dialog">
+    <TMTaskSkeleton v-if="!task?.isHydrated" />
+    <q-card v-else class="task">
+      <q-card-section class="task__header">
+        <TMTaskTitle
+          ref="taskTitleRef"
+          v-model:title="title"
+          @saved="handleUpdateTitle"
+        />
+        <q-btn @click="closeTask" class="task__close" icon="close" size="md" flat rounded dense/>
+      </q-card-section>
 
-    <q-separator/>
+      <q-separator/>
 
-    <div class="row">
-      <div class="col-9">
-        <q-card-section class="task__body">
-          <TMTaskContent
-            ref="taskContentRef"
-            v-model:content="content"
-            @updated="handleUpdateContent"
-          />
-        </q-card-section>
+      <div class="row">
+        <div class="col-9">
+          <q-card-section class="task__body">
+            <TMTaskContent
+              ref="taskContentRef"
+              v-model:content="content"
+              @updated="handleUpdateContent"
+            />
+          </q-card-section>
 
-        <q-card-section>
-          <TMTaskAttachments
-            ref="taskAttachmentsRef"
-            :task-id="task.id"
-          />
-        </q-card-section>
+          <q-card-section>
+            <TMTaskAttachments
+              ref="taskAttachmentsRef"
+              :task-id="task.id"
+            />
+          </q-card-section>
 
-        <q-card-section v-if="reminder">
-          <TMReminder
-            :reminder="reminder"
-            :task-id="task.id"
-          />
-        </q-card-section>
+          <q-card-section v-if="reminder">
+            <TMReminder
+              :reminder="reminder"
+              :task-id="task.id"
+            />
+          </q-card-section>
 
-        <template v-if="checklists.length">
-          <q-card-section
-            v-for="checklist in checklists"
-            :key="checklist.id"
-          >
-            <TMChecklist
-              :checklist="checklist"
+          <template v-if="checklists.length">
+            <q-card-section
+              v-for="checklist in checklists"
+              :key="checklist.id"
+            >
+              <TMChecklist
+                :checklist="checklist"
+                :task="task"
+              />
+            </q-card-section>
+          </template>
+
+          <q-card-section v-if="progresses?.length">
+            <TMTaskProgress
+              :progress="progresses"
               :task="task"
             />
           </q-card-section>
-        </template>
 
-        <q-card-section v-if="progresses?.length">
-          <TMTaskProgress
-            :progress="progresses"
-            :task="task"
-          />
-        </q-card-section>
+          <q-card-section v-if="hasRelatedTasks">
+            <TMTaskRelatedTasks :task="task" />
+          </q-card-section>
 
-        <q-card-section v-if="hasRelatedTasks">
-          <TMTaskRelatedTasks :task="task" />
-        </q-card-section>
+          <q-card-section>
+            <q-tabs
+              v-model="footerTabs"
+              class="text-grey"
+              :breakpoint="0"
+              active-color="primary"
+              indicator-color="primary"
+              align="left"
+              narrow-indicator
+              dense
+            >
+              <q-tab name="comments" label="Comments" />
+              <q-tab name="history" label="History" />
+            </q-tabs>
 
-        <q-card-section>
-          <q-tabs
-            v-model="footerTabs"
-            class="text-grey"
-            :breakpoint="0"
-            active-color="primary"
-            indicator-color="primary"
-            align="left"
-            narrow-indicator
-            dense
-          >
-            <q-tab name="comments" label="Comments" />
-            <q-tab name="history" label="History" />
-          </q-tabs>
+            <q-separator />
 
-          <q-separator />
+            <q-tab-panels v-model="footerTabs" animated>
+              <q-tab-panel name="comments">
+                <TMTaskComments
+                  :task-id="task.id"
+                />
+              </q-tab-panel>
 
-          <q-tab-panels v-model="footerTabs" animated>
-            <q-tab-panel name="comments">
-              <TMTaskComments
-                :task-id="task.id"
-              />
-            </q-tab-panel>
-
-            <q-tab-panel name="history">
-              <TMTaskUseCaseLogs
-                :task-id="task.id"
-              />
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-card-section>
+              <q-tab-panel name="history">
+                <TMTaskUseCaseLogs
+                  :task-id="task.id"
+                />
+              </q-tab-panel>
+            </q-tab-panels>
+          </q-card-section>
+        </div>
+        <div class="col-3">
+          <q-card-section class="column q-gutter-sm">
+            <TMChecklistAddButton
+              :task-id="task.id"
+            />
+            <TMSubtaskAddButton
+              :task-id="task.id"
+            />
+            <TMProgressAddButton
+              :task-id="task.id"
+              :is-progress-available="isProgressAvailable"
+            />
+            <TMReminderAddButton
+              :task-id="task.id"
+              :is-reminder-available="isReminderAvailable"
+            />
+            <q-btn
+              icon="attach_file"
+              label="Вложение"
+              color="secondary"
+              dense
+              unelevated
+              @click="taskAttachmentsRef?.openFilePicker()"
+            />
+          </q-card-section>
+        </div>
       </div>
-      <div class="col-3">
-        <q-card-section class="column q-gutter-sm">
-          <TMChecklistAddButton
-            :task-id="task.id"
-          />
-          <TMSubtaskAddButton
-            :task-id="task.id"
-          />
-          <TMProgressAddButton
-            :task-id="task.id"
-            :is-progress-available="isProgressAvailable"
-          />
-          <TMReminderAddButton
-            :task-id="task.id"
-            :is-reminder-available="isReminderAvailable"
-          />
-          <q-btn
-            icon="attach_file"
-            label="Вложение"
-            color="secondary"
-            dense
-            unelevated
-            @click="taskAttachmentsRef?.openFilePicker()"
-          />
-        </q-card-section>
-      </div>
-    </div>
-  </q-card>
+    </q-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, provide, ref, onMounted } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import TMChecklist from 'src/components/client/TaskManager/TMChecklist.vue'
 import TMTaskProgress from 'src/components/client/TaskManager/TMTaskProgress.vue'
@@ -188,9 +190,14 @@ const activeChecklistFormId = ref<string | null>(null)
 provide('activeFormId', activeChecklistFormId)
 
 async function loadTask() {
+  const requestedTaskId = props.taskId
+
   if (!task.value?.isHydrated) {
-    await taskStore.getTask(props.taskId)
+    await taskStore.getTask(requestedTaskId)
   }
+
+  // Task id may have changed while the request was in flight
+  if (props.taskId !== requestedTaskId) return
 
   if (!task.value) {
     emit('closed')
@@ -235,12 +242,19 @@ const closeTask = () => {
   emit('closed')
 }
 
-onMounted(() => {
-  loadTask()
-})
+watch(() => props.taskId, () => {
+  title.value = ''
+  content.value = ''
+  footerTabs.value = 'comments'
+  void loadTask()
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
+.task-dialog {
+  max-width: 80vw;
+}
+
 .task {
   width: 768px;
   max-width: 80vw;

@@ -7,7 +7,7 @@
         :key="`${item.relationType}-${item.id}`"
         class="related-tasks__item"
         clickable
-        @click="openRelatedTask(item.id)"
+        @click.stop="openRelatedTask(item.id)"
       >
         <q-item-section>
           <q-item-label>{{ item.title }}</q-item-label>

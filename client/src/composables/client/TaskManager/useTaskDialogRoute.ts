@@ -1,6 +1,22 @@
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ITask } from 'src/types/TaskManager/task'
+
+// Shared across composable instances: q-dialog hide during in-dialog
+// navigation must be ignored by the page-level closeTask handler.
+let ignoreDialogClose = false
+let ignoreDialogCloseTimer: ReturnType<typeof setTimeout> | null = null
+
+function armIgnoreDialogClose() {
+  ignoreDialogClose = true
+  if (ignoreDialogCloseTimer) {
+    clearTimeout(ignoreDialogCloseTimer)
+  }
+  ignoreDialogCloseTimer = setTimeout(() => {
+    ignoreDialogClose = false
+    ignoreDialogCloseTimer = null
+  }, 100)
+}
 
 export function useTaskDialogRoute() {
   const route = useRoute()
@@ -22,7 +38,7 @@ export function useTaskDialogRoute() {
     }
   })
 
-  function openTask(task: ITask | string) {
+  async function openTask(task: ITask | string) {
     const taskId = typeof task === 'string' ? task : task.id
     if (!taskId || taskId === selectedTaskId.value) return
 
@@ -32,7 +48,9 @@ export function useTaskDialogRoute() {
     }
 
     if (route.name === 'task-manager-task') {
-      void router.replace(location)
+      armIgnoreDialogClose()
+      await router.replace(location)
+      await nextTick()
       return
     }
 
@@ -40,6 +58,7 @@ export function useTaskDialogRoute() {
   }
 
   function closeTask() {
+    if (ignoreDialogClose) return
     if (route.name !== 'task-manager-task') return
 
     const previous = window.history.state?.back

@@ -63,6 +63,84 @@
     </div>
   </div>
 
+  <div class="movies-filters">
+    <q-select
+      v-model="genreFilter"
+      class="movies-filters__field"
+      label="Жанры"
+      outlined
+      dense
+      multiple
+      use-chips
+      use-input
+      input-debounce="0"
+      emit-value
+      map-options
+      clearable
+      options-dense
+      :options="filteredGenreOptions"
+      :loading="genreStore.isLoading"
+      @filter="filterGenres"
+      @update:model-value="onFiltersChange"
+    >
+      <template #prepend>
+        <q-icon name="category" />
+      </template>
+    </q-select>
+
+    <q-select
+      v-model="yearFilter"
+      class="movies-filters__field"
+      label="Годы"
+      outlined
+      dense
+      multiple
+      use-chips
+      use-input
+      input-debounce="0"
+      emit-value
+      map-options
+      clearable
+      options-dense
+      :options="filteredYearOptions"
+      @filter="filterYears"
+      @update:model-value="onFiltersChange"
+    >
+      <template #prepend>
+        <q-icon name="calendar_month" />
+      </template>
+    </q-select>
+
+    <q-select
+      v-model="sortFilter"
+      class="movies-filters__sort"
+      label="Сортировка"
+      outlined
+      dense
+      emit-value
+      map-options
+      options-dense
+      :options="sortOptions"
+      @update:model-value="onFiltersChange"
+    >
+      <template #prepend>
+        <q-icon name="sort" />
+      </template>
+    </q-select>
+
+    <q-btn
+      v-if="hasActiveFilters"
+      class="movies-filters__clear"
+      flat
+      dense
+      no-caps
+      color="primary"
+      icon="filter_alt_off"
+      label="Сбросить"
+      @click="clearFilters"
+    />
+  </div>
+
   <MoviesPageSkeleton
     v-if="movieStore.isMoviesLoading && !movieStore.movies.length"
     :view-mode="viewMode"
@@ -100,8 +178,8 @@
 
   <q-card v-else class="q-mb-md" flat>
     <AppNoResultsPlug
-      title="Фильмов пока нет"
-      body="Когда в каталоге появятся фильмы, они отобразятся здесь."
+      :title="emptyTitle"
+      :body="emptyBody"
     />
   </q-card>
   </MoviesShell>
@@ -111,6 +189,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useMovieStore } from 'src/stores/modules/movieStore'
 import { useMovieFolderStore } from 'src/stores/modules/movieFolderStore'
+import { useMovieGenreStore } from 'src/stores/modules/movieGenreStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
 import { MovieTypeEnum, MOVIE_TYPE_LABELS } from 'src/enums/Movie/MovieTypeEnum'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
@@ -122,10 +201,24 @@ import MoviesShell from 'src/components/client/Movies/MoviesShell.vue'
 import MoviesPageSkeleton from 'src/pages/client/Movies/MoviesPageSkeleton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
+const SORT_NEWEST = '-created_at'
+const SORT_RATING_DESC = '-kp_rating'
+const SORT_RATING_ASC = 'kp_rating'
+const YEAR_FROM = 1888
+
+type SelectOption = {
+  label: string
+  value: string | number
+}
+
 const movieStore = useMovieStore()
 const folderStore = useMovieFolderStore()
+const genreStore = useMovieGenreStore()
 const searchText = ref(movieStore.listTitle)
 const typeFilter = ref<MovieTypeEnum | 'all'>(movieStore.listType ?? 'all')
+const genreFilter = ref<string[]>([...movieStore.listGenreIds])
+const yearFilter = ref<number[]>([...movieStore.listYears])
+const sortFilter = ref(movieStore.listSort || SORT_NEWEST)
 const { viewMode } = useMoviesViewMode()
 
 const typeOptions = [
@@ -140,6 +233,32 @@ const viewModeOptions = [
   { value: MoviesViewModeEnum.LIST, slot: 'list' }
 ]
 
+const sortOptions = [
+  { label: 'По дате добавления', value: SORT_NEWEST },
+  { label: 'По рейтингу: выше', value: SORT_RATING_DESC },
+  { label: 'По рейтингу: ниже', value: SORT_RATING_ASC }
+]
+
+const yearOptions = computed<SelectOption[]>(() => {
+  const current = new Date().getFullYear()
+
+  return Array.from({ length: current - YEAR_FROM + 1 }, (_, index) => {
+    const year = current - index
+
+    return { label: String(year), value: year }
+  })
+})
+
+const genreOptions = computed<SelectOption[]>(() => (
+  genreStore.genres.map(genre => ({
+    label: genre.name,
+    value: genre.id
+  }))
+))
+
+const filteredGenreOptions = ref<SelectOption[]>([])
+const filteredYearOptions = ref<SelectOption[]>([])
+
 const totalLabel = computed(() => {
   if (movieStore.moviesTotal == null) {
     return ''
@@ -147,6 +266,29 @@ const totalLabel = computed(() => {
 
   return `${formatMoviesCount(movieStore.moviesTotal)} в каталоге`
 })
+
+const hasQuery = computed(() => (
+  Boolean(searchText.value.trim()) ||
+  typeFilter.value !== 'all' ||
+  genreFilter.value.length > 0 ||
+  yearFilter.value.length > 0
+))
+
+const hasActiveFilters = computed(() => (
+  genreFilter.value.length > 0 ||
+  yearFilter.value.length > 0 ||
+  sortFilter.value !== SORT_NEWEST
+))
+
+const emptyTitle = computed(() => (
+  hasQuery.value ? 'Ничего не найдено' : 'Фильмов пока нет'
+))
+
+const emptyBody = computed(() => (
+  hasQuery.value
+    ? 'Попробуйте изменить поиск или сбросить фильтры.'
+    : 'Когда в каталоге появятся фильмы, они отобразятся здесь.'
+))
 
 const { sentinel } = useScrollSentinel(
   () => { void movieStore.getMovies({ append: true }) },
@@ -157,28 +299,93 @@ function resolvedType(): MovieTypeEnum | null {
   return typeFilter.value === 'all' ? null : typeFilter.value
 }
 
-function onSearch(value: string | number | null): void {
-  void movieStore.getMovies({
-    title: value == null ? '' : String(value),
-    type: resolvedType()
+function resolvedSort(): string | null {
+  return sortFilter.value === SORT_NEWEST ? null : sortFilter.value
+}
+
+function normalizeFilters(): void {
+  if (!Array.isArray(genreFilter.value)) {
+    genreFilter.value = []
+  }
+
+  if (!Array.isArray(yearFilter.value)) {
+    yearFilter.value = []
+  }
+
+  if (!sortFilter.value) {
+    sortFilter.value = SORT_NEWEST
+  }
+}
+
+function listParams() {
+  normalizeFilters()
+
+  return {
+    title: searchText.value,
+    type: resolvedType(),
+    genre_ids: genreFilter.value,
+    years: yearFilter.value,
+    sort: resolvedSort()
+  }
+}
+
+function filterSelectOptions(
+  needle: string,
+  options: SelectOption[],
+  update: (callback: () => void) => void,
+  target: { value: SelectOption[] }
+): void {
+  update(() => {
+    const query = needle.trim().toLowerCase()
+
+    target.value = query
+      ? options.filter(option => option.label.toLowerCase().includes(query))
+      : options
   })
+}
+
+function filterGenres(val: string, update: (callback: () => void) => void): void {
+  filterSelectOptions(val, genreOptions.value, update, filteredGenreOptions)
+}
+
+function filterYears(val: string, update: (callback: () => void) => void): void {
+  filterSelectOptions(val, yearOptions.value, update, filteredYearOptions)
+}
+
+function onSearch(value: string | number | null): void {
+  searchText.value = value == null ? '' : String(value)
+  void movieStore.getMovies(listParams())
 }
 
 function onTypeChange(): void {
-  void movieStore.getMovies({
-    title: searchText.value,
-    type: resolvedType()
-  })
+  void movieStore.getMovies(listParams())
+}
+
+function onFiltersChange(): void {
+  void movieStore.getMovies(listParams())
+}
+
+function clearFilters(): void {
+  genreFilter.value = []
+  yearFilter.value = []
+  sortFilter.value = SORT_NEWEST
+  void movieStore.getMovies(listParams())
 }
 
 onMounted(() => {
+  filteredGenreOptions.value = genreOptions.value
+  filteredYearOptions.value = yearOptions.value
+
   void folderStore.getFolders()
 
-  if (!movieStore.movies.length) {
-    void movieStore.getMovies({
-      title: searchText.value,
-      type: resolvedType()
+  if (!genreStore.genres.length) {
+    void genreStore.getGenres().then(() => {
+      filteredGenreOptions.value = genreOptions.value
     })
+  }
+
+  if (!movieStore.movies.length) {
+    void movieStore.getMovies(listParams())
   }
 })
 </script>
@@ -215,7 +422,7 @@ onMounted(() => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 1.25rem;
+  margin-bottom: 12px;
 
   &__search {
     flex: 1 1 260px;
@@ -227,6 +434,29 @@ onMounted(() => {
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
+  }
+}
+
+.movies-filters {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+
+  &__field {
+    flex: 1 1 220px;
+    min-width: 200px;
+    max-width: 360px;
+  }
+
+  &__sort {
+    flex: 0 1 240px;
+    min-width: 200px;
+  }
+
+  &__clear {
+    margin-top: 2px;
   }
 }
 

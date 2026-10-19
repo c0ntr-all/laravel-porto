@@ -38,6 +38,9 @@ export const useMovieStore = defineStore('movies', () => {
   const isMovieCreditsLoading = ref(false)
   const listTitle = ref('')
   const listType = ref<MovieTypeEnum | null>(null)
+  const listGenreIds = ref<string[]>([])
+  const listYears = ref<number[]>([])
+  const listSort = ref<string | null>(null)
   const pendingWatchKeys = ref<string[]>([])
 
   let listRequestId = 0
@@ -62,6 +65,9 @@ export const useMovieStore = defineStore('movies', () => {
     append?: boolean
     title?: string
     type?: MovieTypeEnum | null
+    genre_ids?: string[]
+    years?: number[]
+    sort?: string | null
   }): Promise<void> {
     const append = Boolean(options?.append)
 
@@ -71,6 +77,18 @@ export const useMovieStore = defineStore('movies', () => {
 
     if (options && 'type' in options) {
       listType.value = options.type ?? null
+    }
+
+    if (options && 'genre_ids' in options) {
+      listGenreIds.value = [...(options.genre_ids ?? [])]
+    }
+
+    if (options && 'years' in options) {
+      listYears.value = [...(options.years ?? [])]
+    }
+
+    if (options && 'sort' in options) {
+      listSort.value = options.sort || null
     }
 
     if (append) {
@@ -94,6 +112,9 @@ export const useMovieStore = defineStore('movies', () => {
       const response = await movieApi.getMovies({
         title: listTitle.value || undefined,
         type: listType.value ?? undefined,
+        genre_id: listGenreIds.value.length ? listGenreIds.value : undefined,
+        year: listYears.value.length ? listYears.value : undefined,
+        sort: listSort.value || undefined,
         cursor: append ? moviesCursor.value : null
       })
 
@@ -250,6 +271,9 @@ export const useMovieStore = defineStore('movies', () => {
     isMovieCreditsLoading,
     listTitle,
     listType,
+    listGenreIds,
+    listYears,
+    listSort,
     isWatchPending,
     getMovies,
     getMovie,

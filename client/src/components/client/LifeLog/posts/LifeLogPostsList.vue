@@ -1,9 +1,19 @@
 <template>
   <div class="ll-posts-list">
     <LifeLogPostsListSkeleton
-      v-if="!posts.length"
+      v-if="isLoading && !posts.length"
       :view-mode="viewMode"
     />
+
+    <q-card
+      v-else-if="!posts.length"
+      flat
+    >
+      <AppNoResultsPlug
+        title="Постов пока нет"
+        body="Когда появятся посты, они отобразятся здесь."
+      />
+    </q-card>
 
     <template v-else>
       <div
@@ -78,6 +88,7 @@ import LifeLogPostCard from 'src/components/client/LifeLog/posts/LifeLogPostCard
 import LifeLogPostMovieCard from 'src/components/client/LifeLog/posts/LifeLogPostMovieCard.vue'
 import LifeLogPostRow from 'src/components/client/LifeLog/posts/LifeLogPostRow.vue'
 import LifeLogPostsListSkeleton from 'src/components/client/LifeLog/posts/LifeLogPostsListSkeleton.vue'
+import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import { isMovieWatchPost } from 'src/utils/LifeLog/post'
 import LifeLogPresetRails from 'src/components/client/LifeLog/posts/LifeLogPresetRails.vue'
 

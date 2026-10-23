@@ -38,6 +38,9 @@ export function useLifeLogFilters() {
   const filter = ref<ILifeLogFilter>(createEmptyLifeLogFilter())
   const postsTab = ref<LifeLogPostsTabId>(LIFELOG_POSTS_TAB_ALL)
   const allTags = ref<Awaited<ReturnType<typeof tagStore.getTags>>>([])
+  const isBooting = ref(true)
+
+  const isListLoading = computed(() => isBooting.value || isLoading.value)
 
   const filteredPosts = computed(() =>
     applyClientSidePostFilter(posts.value, filter.value)
@@ -122,19 +125,25 @@ export function useLifeLogFilters() {
   })
 
   async function initialize() {
-    await Promise.all([
-      loadTags(),
-      loadPresets()
-    ])
+    isBooting.value = true
 
-    const fromRoute = filterRoute.parseFromRoute()
+    try {
+      await Promise.all([
+        loadTags(),
+        loadPresets()
+      ])
 
-    if (fromRoute && hasActiveLifeLogFilter(fromRoute)) {
-      await applyFilter(fromRoute, { syncRoute: false })
-      return
+      const fromRoute = filterRoute.parseFromRoute()
+
+      if (fromRoute && hasActiveLifeLogFilter(fromRoute)) {
+        await applyFilter(fromRoute, { syncRoute: false })
+        return
+      }
+
+      await loadPosts()
+    } finally {
+      isBooting.value = false
     }
-
-    await loadPosts()
   }
 
   return {
@@ -143,7 +152,7 @@ export function useLifeLogFilters() {
     allTags,
     filteredPosts,
     activePreset,
-    isLoading,
+    isLoading: isListLoading,
     isLoadingMore,
     hasMorePosts,
     initialize,

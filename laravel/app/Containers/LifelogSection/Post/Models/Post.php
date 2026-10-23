@@ -39,6 +39,8 @@ use Illuminate\Support\Carbon;
  * @property User $user
  * @property Tag[] $tags
  * @property-read EloquentCollection<int, Movie> $movies
+ * @property-read EloquentCollection<int, \App\Containers\TaskManagerSection\Task\Models\Task> $tasks
+ * @property-read EloquentCollection<int, \App\Containers\GallerySection\Album\Models\Album> $albums
  * @method static Builder|Post newModelQuery()
  * @method static Builder|Post newQuery()
  * @method static Builder|Post onlyTrashed()

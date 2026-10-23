@@ -6,8 +6,10 @@ use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransform
 use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
+use App\Containers\GallerySection\Album\UI\API\Transformers\AlbumTransformer;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\MovieSection\Movie\UI\API\Transformers\MovieTransformer;
+use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
@@ -31,6 +33,10 @@ class PostTransformer extends TransformerAbstract
         'customFields',
         'movies',
         'movie',
+        'tasks',
+        'task',
+        'albums',
+        'album',
     ];
 
     public function transform(Post $post): array
@@ -99,5 +105,49 @@ class PostTransformer extends TransformerAbstract
         }
 
         return $this->item($movie, new MovieTransformer(), ContainerAliasEnum::MOVIE->value);
+    }
+
+    public function includeTasks(Post $post): Collection
+    {
+        $tasks = $post->relationLoaded('tasks')
+            ? $post->tasks
+            : $post->tasks()->get();
+
+        return $this->collection($tasks, new TaskTransformer(), ContainerAliasEnum::TM_TASK->value);
+    }
+
+    public function includeTask(Post $post): Item|NullResource
+    {
+        $task = $post->relationLoaded('tasks')
+            ? $post->tasks->first()
+            : $post->tasks()->first();
+
+        if (!$task) {
+            return $this->null();
+        }
+
+        return $this->item($task, new TaskTransformer(), ContainerAliasEnum::TM_TASK->value);
+    }
+
+    public function includeAlbums(Post $post): Collection
+    {
+        $albums = $post->relationLoaded('albums')
+            ? $post->albums
+            : $post->albums()->get();
+
+        return $this->collection($albums, new AlbumTransformer(), ContainerAliasEnum::GALLERY_ALBUM->value);
+    }
+
+    public function includeAlbum(Post $post): Item|NullResource
+    {
+        $album = $post->relationLoaded('albums')
+            ? $post->albums->first()
+            : $post->albums()->first();
+
+        if (!$album) {
+            return $this->null();
+        }
+
+        return $this->item($album, new AlbumTransformer(), ContainerAliasEnum::GALLERY_ALBUM->value);
     }
 }

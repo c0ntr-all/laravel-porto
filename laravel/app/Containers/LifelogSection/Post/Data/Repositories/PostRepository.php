@@ -48,7 +48,14 @@ class PostRepository
                                AllowedFilter::custom('date_to', $this->dateToFilter),
                                AllowedFilter::custom('text', $this->textFilter),
                            ])
-                           ->with(['user', 'attachments.fileable', 'movies.genres', 'movies.countries'])
+                           ->with([
+                               'user',
+                               'attachments.fileable',
+                               'movies.genres',
+                               'movies.countries',
+                               'tasks',
+                               'albums',
+                           ])
                            ->cursorPaginate(self::LIST_PER_PAGE);
     }
 

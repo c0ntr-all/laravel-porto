@@ -2,10 +2,13 @@
 
 namespace App\Containers\LifelogSection\Post\Models\Traits;
 
+use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\LifelogSection\Post\Data\ValueObjects\MovieSubjectPayload;
 use App\Containers\LifelogSection\Post\Data\ValueObjects\SeriesWatchProgress;
 use App\Containers\LifelogSection\Post\Models\PostSubjectable;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait HasSubjects
@@ -13,7 +16,7 @@ trait HasSubjects
     protected static function bootHasSubjects(): void
     {
         static::deleting(function ($post): void {
-            $post->movies()->detach();
+            $post->detachAllSubjects();
         });
     }
 
@@ -21,6 +24,34 @@ trait HasSubjects
     {
         return $this->morphedByMany(
             Movie::class,
+            'subjectable',
+            'lifelog_post_subjectables',
+            'post_id',
+            'subjectable_id'
+        )
+            ->using(PostSubjectable::class)
+            ->withPivot('payload')
+            ->withTimestamps();
+    }
+
+    public function tasks(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Task::class,
+            'subjectable',
+            'lifelog_post_subjectables',
+            'post_id',
+            'subjectable_id'
+        )
+            ->using(PostSubjectable::class)
+            ->withPivot('payload')
+            ->withTimestamps();
+    }
+
+    public function albums(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Album::class,
             'subjectable',
             'lifelog_post_subjectables',
             'post_id',
@@ -45,6 +76,38 @@ trait HasSubjects
                 'payload' => $payload?->isEmpty() ? null : $payload?->toArray(),
             ],
         ]);
+    }
+
+    public function attachTask(Task $task): void
+    {
+        $this->tasks()->sync([$task->getKey()]);
+    }
+
+    public function attachAlbum(Album $album): void
+    {
+        $this->albums()->sync([$album->getKey()]);
+    }
+
+    public function detachAllSubjects(): void
+    {
+        $this->movies()->detach();
+        $this->tasks()->detach();
+        $this->albums()->detach();
+    }
+
+    public function detachSubjectsExcept(ContainerAliasEnum $keepType): void
+    {
+        if ($keepType !== ContainerAliasEnum::MOVIE) {
+            $this->movies()->detach();
+        }
+
+        if ($keepType !== ContainerAliasEnum::TM_TASK) {
+            $this->tasks()->detach();
+        }
+
+        if ($keepType !== ContainerAliasEnum::GALLERY_ALBUM) {
+            $this->albums()->detach();
+        }
     }
 
     public function movieSubjectPayload(): ?MovieSubjectPayload

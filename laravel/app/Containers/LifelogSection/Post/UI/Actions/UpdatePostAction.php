@@ -14,6 +14,7 @@ use App\Containers\LifelogSection\Post\Tasks\ListTagsByNamesTask;
 use App\Containers\AppSection\Attachment\Tasks\CreateAttachmentsTask;
 use App\Containers\LifelogSection\Post\Tasks\SyncPostTagsTask;
 use App\Containers\LifelogSection\Post\Tasks\UpdatePostTask;
+use App\Containers\LifelogSection\Post\Support\PostContentHandlerRegistry;
 use App\Containers\LifelogSection\Post\UI\API\Requests\UpdateRequest;
 use App\Containers\LifelogSection\Post\UI\API\Transformers\PostTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
@@ -36,6 +37,7 @@ class UpdatePostAction extends UseCaseAction
         private readonly DeleteAttachmentsTask     $deleteAttachmentsTask,
         private readonly CreateAttachmentsTask $createAttachmentsTask,
         private readonly AttachPostContentTask $attachPostContentTask,
+        private readonly PostContentHandlerRegistry $postContentHandlerRegistry,
     )
     {
         parent::__construct();
@@ -120,7 +122,7 @@ class UpdatePostAction extends UseCaseAction
                 $this->attachPostContentTask->run($updatedPost, $contentAttachDto);
             }
 
-            return $updatedPost->load(['movies.genres', 'movies.countries']);
+            return $updatedPost->load($this->postContentHandlerRegistry->eagerLoadRelationsFor());
         });
 
         $this->recordUseCase($updatedPost);
@@ -141,7 +143,7 @@ class UpdatePostAction extends UseCaseAction
         $post = $this->handle($post, $postUpdateContextDto);
 
         return fractal($post, new PostTransformer($postUpdateContextDto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task', 'album'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

@@ -13,6 +13,7 @@ use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * App\Containers\GallerySection\Album\Models
@@ -52,6 +53,16 @@ class Album extends ActivityLoggableModel
     protected $casts = [
         'id' => 'string',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Album $album): void {
+            DB::table('lifelog_post_subjectables')
+                ->where('subjectable_type', $album->getMorphClass())
+                ->where('subjectable_id', $album->getKey())
+                ->delete();
+        });
+    }
 
     public function isSystem(): bool
     {

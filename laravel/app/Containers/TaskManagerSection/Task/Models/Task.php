@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -60,6 +61,18 @@ class Task extends ActivityLoggableModel
         'finished_at' => 'datetime',
         'is_declined' => 'bool',
     ];
+
+    protected static function booted(): void
+    {
+        // Use deleted (halt=false): HasAttachments/HasCustomFields deleting callbacks
+        // return non-null and stop the until() chain before later deleting listeners.
+        static::deleted(function (Task $task): void {
+            DB::table('lifelog_post_subjectables')
+                ->where('subjectable_type', $task->getMorphClass())
+                ->where('subjectable_id', $task->getKey())
+                ->delete();
+        });
+    }
 
     public function taskList(): BelongsTo
     {

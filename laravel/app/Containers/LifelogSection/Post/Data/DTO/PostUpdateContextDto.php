@@ -28,6 +28,8 @@ class PostUpdateContextDto extends Data
     public string|Optional|null $movie_title;
     public array|Optional|null $watch;
     public string|Optional|null $started_at;
+    public int|Optional|null $task_id;
+    public int|Optional|null $album_id;
 
     public function __construct()
     {
@@ -40,17 +42,22 @@ class PostUpdateContextDto extends Data
         $watch = $this->watch instanceof Optional ? null : $this->watch;
         $hasStartedAtInput = !($this->started_at instanceof Optional);
         $startedAt = $hasStartedAtInput ? $this->started_at : null;
+        $taskId = $this->task_id instanceof Optional ? null : $this->task_id;
+        $albumId = $this->album_id instanceof Optional ? null : $this->album_id;
 
         $hasMovie = $movieId !== null || ($movieTitle !== null && trim((string) $movieTitle) !== '');
         $hasWatch = $watch !== null && $watch !== [];
+        $hasTask = $taskId !== null;
+        $hasAlbum = $albumId !== null;
+        $hasContentTypeChange = $this->content_type instanceof PostContentTypeEnum;
 
-        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput) {
+        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput && !$hasTask && !$hasAlbum && !$hasContentTypeChange) {
             return null;
         }
 
         $contentType = $this->content_type instanceof PostContentTypeEnum
             ? $this->content_type
-            : ($fallbackContentType ?? PostContentTypeEnum::MOVIE);
+            : ($fallbackContentType ?? PostContentTypeEnum::DEFAULT);
 
         return PostContentAttachDto::from([
             'content_type' => $contentType,
@@ -59,6 +66,8 @@ class PostUpdateContextDto extends Data
             'watch' => $watch,
             'started_at' => $startedAt,
             'has_started_at_input' => $hasStartedAtInput,
+            'task_id' => $taskId,
+            'album_id' => $albumId,
         ]);
     }
 }

@@ -39,7 +39,7 @@ class ListPostsAction extends BaseAction
         }
 
         return fractal($posts, new PostTransformer($dto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task', 'album'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->withCursor($this->cursorFromPaginator($posts))
             ->addMeta($this->cursorMeta($posts))

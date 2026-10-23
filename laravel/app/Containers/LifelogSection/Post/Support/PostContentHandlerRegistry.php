@@ -4,7 +4,9 @@ namespace App\Containers\LifelogSection\Post\Support;
 
 use App\Containers\LifelogSection\Post\Contracts\PostContentHandlerInterface;
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
+use App\Containers\LifelogSection\Post\Handlers\AlbumPostContentHandler;
 use App\Containers\LifelogSection\Post\Handlers\MoviePostContentHandler;
+use App\Containers\LifelogSection\Post\Handlers\TaskPostContentHandler;
 use Illuminate\Support\Collection;
 
 class PostContentHandlerRegistry
@@ -14,9 +16,13 @@ class PostContentHandlerRegistry
 
     public function __construct(
         MoviePostContentHandler $moviePostContentHandler,
+        TaskPostContentHandler $taskPostContentHandler,
+        AlbumPostContentHandler $albumPostContentHandler,
     ) {
         $this->handlers = [
             $moviePostContentHandler,
+            $taskPostContentHandler,
+            $albumPostContentHandler,
         ];
     }
 

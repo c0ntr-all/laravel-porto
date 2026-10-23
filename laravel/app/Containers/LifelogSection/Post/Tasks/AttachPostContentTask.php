@@ -19,9 +19,12 @@ class AttachPostContentTask extends ParentTask
         $handler = $this->handlerRegistry->for($dto->content_type);
 
         if (!$handler) {
+            $post->detachAllSubjects();
+
             return;
         }
 
         $handler->attach($post, $dto);
+        $post->detachSubjectsExcept($handler->subjectableType());
     }
 }

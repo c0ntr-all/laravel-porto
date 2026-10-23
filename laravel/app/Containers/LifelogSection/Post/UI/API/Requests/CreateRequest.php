@@ -14,6 +14,9 @@ class CreateRequest extends AuthenticatedRequest
     {
         $isMovieContent = $this->isMovieContentType();
         $isTvSeriesContent = $this->isTvSeriesContentType();
+        $isTaskContent = $this->isTaskContentType();
+        $isAlbumContent = $this->isAlbumContentType();
+        $userId = auth()->id();
 
         return [
             'title' => 'sometimes|string|max:70',
@@ -83,6 +86,20 @@ class CreateRequest extends AuthenticatedRequest
                 'string',
                 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
             ],
+            'task_id' => [
+                Rule::requiredIf(fn () => $isTaskContent),
+                Rule::prohibitedIf(fn () => !$isTaskContent),
+                'nullable',
+                'integer',
+                Rule::exists('tm_tasks', 'id')->where('user_id', $userId),
+            ],
+            'album_id' => [
+                Rule::requiredIf(fn () => $isAlbumContent),
+                Rule::prohibitedIf(fn () => !$isAlbumContent),
+                'nullable',
+                'integer',
+                Rule::exists('gallery_albums', 'id')->where('user_id', $userId),
+            ],
         ];
     }
 
@@ -134,5 +151,19 @@ class CreateRequest extends AuthenticatedRequest
         $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
 
         return $contentType === PostContentTypeEnum::TV_SERIES->value;
+    }
+
+    private function isTaskContentType(): bool
+    {
+        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
+
+        return $contentType === PostContentTypeEnum::TASK->value;
+    }
+
+    private function isAlbumContentType(): bool
+    {
+        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
+
+        return $contentType === PostContentTypeEnum::ALBUM->value;
     }
 }

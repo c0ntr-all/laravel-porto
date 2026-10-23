@@ -21,6 +21,9 @@ class UpdateRequest extends AuthenticatedRequest
         $requiresMoviePayload = $this->requiresMoviePayload();
         $allowsWatch = $this->allowsWatch();
         $allowsStartedAt = $this->allowsStartedAt();
+        $requiresTaskPayload = $this->requiresTaskPayload();
+        $requiresAlbumPayload = $this->requiresAlbumPayload();
+        $userId = auth()->id();
 
         return [
             'title' => 'sometimes|string|max:70',
@@ -94,6 +97,22 @@ class UpdateRequest extends AuthenticatedRequest
                 'string',
                 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
             ],
+            'task_id' => [
+                Rule::requiredIf(fn () => $requiresTaskPayload),
+                Rule::prohibitedIf(fn () => $this->isNonTaskContentType()),
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('tm_tasks', 'id')->where('user_id', $userId),
+            ],
+            'album_id' => [
+                Rule::requiredIf(fn () => $requiresAlbumPayload),
+                Rule::prohibitedIf(fn () => $this->isNonAlbumContentType()),
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('gallery_albums', 'id')->where('user_id', $userId),
+            ],
         ];
     }
 
@@ -161,6 +180,38 @@ class UpdateRequest extends AuthenticatedRequest
             PostContentTypeEnum::MOVIE->value,
             PostContentTypeEnum::TV_SERIES->value,
         ], true);
+    }
+
+    private function requiresTaskPayload(): bool
+    {
+        return $this->input('content_type') === PostContentTypeEnum::TASK->value;
+    }
+
+    private function isNonTaskContentType(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === null) {
+            return false;
+        }
+
+        return $contentType !== PostContentTypeEnum::TASK->value;
+    }
+
+    private function requiresAlbumPayload(): bool
+    {
+        return $this->input('content_type') === PostContentTypeEnum::ALBUM->value;
+    }
+
+    private function isNonAlbumContentType(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === null) {
+            return false;
+        }
+
+        return $contentType !== PostContentTypeEnum::ALBUM->value;
     }
 
     private function allowsWatch(): bool

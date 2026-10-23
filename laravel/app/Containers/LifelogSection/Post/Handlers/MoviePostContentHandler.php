@@ -12,6 +12,7 @@ use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Containers\MovieSection\Movie\Tasks\FindMovieByIdTask;
 use App\Containers\MovieSection\Movie\Tasks\FindOrCreateMovieByTitleTask;
+use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -35,6 +36,11 @@ class MoviePostContentHandler implements PostContentHandlerInterface
         $payload = $this->resolvePayload($post, $movie, $dto);
 
         $post->attachMovie($movie, $payload);
+    }
+
+    public function subjectableType(): ContainerAliasEnum
+    {
+        return ContainerAliasEnum::MOVIE;
     }
 
     public function eagerLoadRelations(): array

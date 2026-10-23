@@ -13,6 +13,8 @@ enum PostContentTypeEnum: string
     case MOVIE = 'movie';
     case TV_SERIES = 'tv_series';
     case GAME = 'game';
+    case TASK = 'task';
+    case ALBUM = 'album';
 
     public static function default(): self
     {
@@ -27,6 +29,8 @@ enum PostContentTypeEnum: string
             self::MOVIE => 'Фильм',
             self::TV_SERIES => 'Сериал',
             self::GAME => 'Игра',
+            self::TASK => 'Задача',
+            self::ALBUM => 'Альбом',
         };
     }
 }

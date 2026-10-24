@@ -40,8 +40,11 @@
     </div>
 
     <div class="lifelog-post-form__files q-pa-md">
-      <p>Загрузить новые файлы</p>
-      <PostFormFilesUpload v-model="newAttachmentsModel" />
+      <p>Новые вложения</p>
+      <PostFormFilesUpload
+        v-model="newAttachmentsModel"
+        :exclude-ids="attachedMediaIds"
+      />
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -109,7 +112,8 @@ import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetim
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
-import { IPost, IPostAttachmentWithState, IPostUpdateModel } from 'src/types'
+import { IPost, IPostAttachmentWithState, IPostFormPendingAttachment, IPostUpdateModel } from 'src/types'
+import { isPostMediaAttachment, splitPendingAttachments } from 'src/utils/attachment'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import LifeLogTag from 'src/components/client/LifeLog/LifeLogTag.vue'
@@ -141,10 +145,16 @@ const model = ref<IPostUpdateModel>({
   attachments: [],
   isNullTime: false
 })
-const newAttachmentsModel = ref<File[]>([])
+const newAttachmentsModel = ref<IPostFormPendingAttachment[]>([])
 const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
+
+const attachedMediaIds = computed(() =>
+  model.value.attachments
+    .filter(item => !item.is_deleted && isPostMediaAttachment(item))
+    .map(item => item.id)
+)
 
 const selectedTags = computed(() => {
   return unique(
@@ -154,11 +164,14 @@ const selectedTags = computed(() => {
 })
 
 const updatePost = async () => {
+  const { files, galleryRefs } = splitPendingAttachments(newAttachmentsModel.value)
+
   await postStore.updatePost(
     props.post.id,
     model.value,
     props.post,
-    newAttachmentsModel.value
+    files,
+    galleryRefs
   ).then(updatedPost => {
     if (updatedPost) {
       mapPostToModel(updatedPost)

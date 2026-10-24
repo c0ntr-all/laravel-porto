@@ -23,9 +23,18 @@
       </div>
     </div>
 
+    <video
+      v-else-if="deviceVideoSrc"
+      :src="deviceVideoSrc"
+      class="post-form-attachment-preview__image"
+      muted
+      playsinline
+      preload="metadata"
+    />
+
     <img
-      v-else-if="attachmentPreviewSrc"
-      :src="attachmentPreviewSrc"
+      v-else-if="imageSrc"
+      :src="imageSrc"
       :alt="documentName"
       class="post-form-attachment-preview__image"
     >
@@ -33,12 +42,16 @@
     <div v-else class="post-form-attachment-preview__fallback">
       <q-icon name="insert_drive_file" size="28px" color="grey-6" />
     </div>
+
+    <div v-if="showVideoBadge" class="post-form-attachment-preview__video">
+      <q-icon name="play_arrow" size="16px" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { IPostAttachment } from 'src/types'
+import { IGalleryMediaItem, IPostAttachment } from 'src/types'
 import { isGalleryVideo, resolveMediaUrl } from 'src/utils/gallery'
 import {
   formatFileSize,
@@ -51,6 +64,7 @@ import {
 const props = defineProps<{
   attachment?: IPostAttachment
   file?: File
+  media?: IGalleryMediaItem
   deleted?: boolean
   removable?: boolean
 }>()
@@ -70,6 +84,10 @@ const isDocument = computed(() => {
 const documentName = computed(() => {
   if (props.file) {
     return props.file.name
+  }
+
+  if (props.media) {
+    return props.media.name || (isGalleryVideo(props.media) ? 'Видео' : 'Фото')
   }
 
   if (props.attachment && isPostDocumentAttachment(props.attachment)) {
@@ -120,9 +138,23 @@ watch(
   { immediate: true }
 )
 
-const attachmentPreviewSrc = computed(() => {
+const deviceVideoSrc = computed(() => {
+  if (!props.file?.type.startsWith('video/')) {
+    return ''
+  }
+
+  return previewSrc.value
+})
+
+const imageSrc = computed(() => {
   if (props.file) {
-    return previewSrc.value
+    return props.file.type.startsWith('image/') ? previewSrc.value : ''
+  }
+
+  if (props.media) {
+    return resolveMediaUrl(
+      props.media.list_thumb_path || props.media.preview_thumb_path || props.media.original
+    )
   }
 
   if (!props.attachment || isPostDocumentAttachment(props.attachment)) {
@@ -134,6 +166,26 @@ const attachmentPreviewSrc = computed(() => {
   }
 
   return resolveMediaUrl(props.attachment.list_thumb_path || props.attachment.preview_thumb_path)
+})
+
+const showVideoBadge = computed(() => {
+  if (isDocument.value) {
+    return false
+  }
+
+  if (props.file) {
+    return props.file.type.startsWith('video/')
+  }
+
+  if (props.media) {
+    return isGalleryVideo(props.media)
+  }
+
+  if (props.attachment) {
+    return isGalleryVideo(props.attachment)
+  }
+
+  return false
 })
 
 onUnmounted(() => {
@@ -193,6 +245,22 @@ onUnmounted(() => {
     width: 100%;
     font-size: 0.75rem;
     font-weight: 500;
+  }
+
+  &__video {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(18, 18, 18, 0.72);
+    color: #fff;
+    pointer-events: none;
   }
 }
 </style>

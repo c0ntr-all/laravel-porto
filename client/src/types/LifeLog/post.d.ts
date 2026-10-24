@@ -4,6 +4,7 @@ import { IPostDocumentAttachment } from 'src/types/document'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { IMovie } from 'src/types/Movie'
 import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
+import { IGalleryMediaItem } from 'src/types/gallery'
 
 export interface IPostGalleryAttachment {
   id: string
@@ -64,3 +65,15 @@ export interface IPostModel {
 export interface IPostUpdateModel extends IPostModel {
   attachments: IPostAttachmentWithState[]
 }
+
+export type IPostFormPendingAttachment =
+  | {
+      key: string
+      source: 'device'
+      file: File
+    }
+  | {
+      key: string
+      source: 'gallery'
+      media: IGalleryMediaItem
+    }

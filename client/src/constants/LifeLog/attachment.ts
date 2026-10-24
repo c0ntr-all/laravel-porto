@@ -36,6 +36,8 @@ export const DOCUMENT_EXTENSIONS = [
   'pptx'
 ] as const
 
+export const POST_GALLERY_ATTACH_LIMIT = 10
+
 export const POST_FILE_ACCEPT = [
   'image/*',
   'video/*',

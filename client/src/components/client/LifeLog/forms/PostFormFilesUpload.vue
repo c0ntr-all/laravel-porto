@@ -1,23 +1,15 @@
 <template>
   <div class="post-form-files-upload">
-    <q-file
-      v-model="attachmentModel"
-      label="Выберите файлы"
-      outlined
-      use-chips
-      multiple
-      clearable
-      dense
+    <AppMediaAttach
+      :limit="pickerLimit"
       :accept="POST_FILE_ACCEPT"
-      @update:model-value="handleFilesSelected"
-    >
-      <template #prepend>
-        <q-icon name="attach_file" />
-      </template>
-    </q-file>
+      :exclude-ids="blockedIds"
+      @select-files="appendFiles"
+      @select-gallery="appendGallery"
+    />
 
     <div class="text-caption text-grey-7 q-mt-xs">
-      Фото, видео, PDF, Office, архивы
+      С устройства или из альбомов галереи. Фото, видео, PDF, Office, архивы
     </div>
 
     <q-banner
@@ -29,47 +21,93 @@
       Неподдерживаемые файлы: {{ unsupportedNames }}
     </q-banner>
 
-    <div v-if="attachmentModel?.length" class="post-form-files-upload__grid q-mt-sm">
-      <PostFormAttachmentPreview
-        v-for="file in attachmentModel"
-        :key="`${file.name}-${file.size}-${file.lastModified}`"
-        :file="file"
-      />
+    <div v-if="items?.length" class="post-form-files-upload__grid q-mt-sm">
+      <template v-for="entry in items" :key="entry.key">
+        <PostFormAttachmentPreview
+          v-if="entry.source === 'device'"
+          :file="entry.file"
+          removable
+          @toggle-remove="removeItem(entry.key)"
+        />
+        <PostFormAttachmentPreview
+          v-else
+          :media="entry.media"
+          removable
+          @toggle-remove="removeItem(entry.key)"
+        />
+      </template>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { POST_FILE_ACCEPT } from 'src/constants/LifeLog/attachment'
-import { getUnsupportedFiles, groupFileTypes } from 'src/services/post.service'
+import { POST_FILE_ACCEPT, POST_GALLERY_ATTACH_LIMIT } from 'src/constants/LifeLog/attachment'
+import { groupFileTypes } from 'src/services/post.service'
+import { IGalleryMediaItem, IPostFormPendingAttachment } from 'src/types'
+import AppMediaAttach from 'src/components/default/AppMediaAttach.vue'
 import PostFormAttachmentPreview from 'src/components/client/LifeLog/forms/PostFormAttachmentPreview.vue'
 
-const attachmentModel = defineModel<File[]>()
-const $q = useQuasar()
+const props = withDefaults(defineProps<{
+  excludeIds?: string[]
+  galleryLimit?: number
+}>(), {
+  excludeIds: () => [],
+  galleryLimit: POST_GALLERY_ATTACH_LIMIT
+})
 
-const unsupportedFiles = computed(() =>
-  getUnsupportedFiles(attachmentModel.value ?? [])
-)
+const items = defineModel<IPostFormPendingAttachment[]>({
+  default: () => []
+})
+
+const $q = useQuasar()
+const unsupportedFiles = ref<File[]>([])
+const fileSeq = ref(0)
 
 const unsupportedNames = computed(() =>
   unsupportedFiles.value.map(file => file.name).join(', ')
 )
 
-function handleFilesSelected(files: File[] | null) {
-  if (!files?.length) {
-    attachmentModel.value = []
-    return
+const pickerLimit = computed(() => {
+  const used = (items.value ?? []).filter(entry => entry.source === 'gallery').length
+
+  return Math.max(0, props.galleryLimit - used)
+})
+
+const blockedIds = computed(() => {
+  const ids = [...props.excludeIds]
+
+  for (const entry of items.value ?? []) {
+    if (entry.source === 'gallery') {
+      ids.push(entry.media.id)
+    }
   }
 
-  const groups = groupFileTypes(files)
+  return ids
+})
 
-  attachmentModel.value = [
-    ...groups.images,
-    ...groups.videos,
-    ...groups.documents
-  ]
+function nextFileKey(file: File): string {
+  fileSeq.value += 1
+
+  return `file-${fileSeq.value}-${file.name}-${file.size}-${file.lastModified}`
+}
+
+function appendFiles(files: File[]) {
+  const groups = groupFileTypes(files)
+  unsupportedFiles.value = groups.other
+  const accepted = [...groups.images, ...groups.videos, ...groups.documents]
+
+  if (accepted.length) {
+    items.value = [
+      ...(items.value ?? []),
+      ...accepted.map(file => ({
+        key: nextFileKey(file),
+        source: 'device' as const,
+        file
+      }))
+    ]
+  }
 
   if (groups.other.length) {
     $q.notify({
@@ -77,6 +115,42 @@ function handleFilesSelected(files: File[] | null) {
       message: `Некоторые файлы не поддерживаются: ${groups.other.map(file => file.name).join(', ')}`
     })
   }
+}
+
+function appendGallery(media: IGalleryMediaItem[]) {
+  const next = [...(items.value ?? [])]
+  const known = new Set<string>(props.excludeIds)
+
+  for (const entry of next) {
+    if (entry.source === 'gallery') {
+      known.add(entry.media.id)
+    }
+  }
+
+  for (const item of media) {
+    if (known.has(item.id)) {
+      continue
+    }
+
+    const galleryCount = next.filter(entry => entry.source === 'gallery').length
+
+    if (galleryCount >= props.galleryLimit) {
+      break
+    }
+
+    known.add(item.id)
+    next.push({
+      key: `gallery-${item.id}`,
+      source: 'gallery',
+      media: item
+    })
+  }
+
+  items.value = next
+}
+
+function removeItem(key: string) {
+  items.value = (items.value ?? []).filter(item => item.key !== key)
 }
 </script>
 

@@ -19,7 +19,7 @@
       />
     </div>
     <div class="lifelog-post-form__files q-pa-md">
-      <PostFormFilesUpload v-model="attachmentModel" />
+      <PostFormFilesUpload v-model="pendingAttachments" />
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -70,7 +70,8 @@
 import { nextTick, ref } from 'vue'
 import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
-import { IPostModel } from 'src/types'
+import { IPostFormPendingAttachment, IPostModel } from 'src/types'
+import { splitPendingAttachments } from 'src/utils/attachment'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
@@ -106,7 +107,7 @@ const getEmptyPostModel = (): IPostModel => {
 
 // --- Models ---
 const model = ref<IPostModel>(getEmptyPostModel())
-const attachmentModel = ref<File[]>([])
+const pendingAttachments = ref<IPostFormPendingAttachment[]>([])
 const isSubmitting = ref(false)
 
 // --- Refs ---
@@ -120,10 +121,11 @@ const createPost = async () => {
   }
 
   isSubmitting.value = true
-  const submission = postStore.createPost(model.value, attachmentModel.value)
+  const { files, galleryRefs } = splitPendingAttachments(pendingAttachments.value)
+  const submission = postStore.createPost(model.value, files, galleryRefs)
 
   clearModel()
-  clearAttachmentModel()
+  pendingAttachments.value = []
   resetAvailableTags()
   emit('success')
 
@@ -132,9 +134,6 @@ const createPost = async () => {
   } finally {
     isSubmitting.value = false
   }
-}
-const clearAttachmentModel = () => {
-  attachmentModel.value = []
 }
 const clearModel = () => {
   model.value = getEmptyPostModel()

@@ -12,7 +12,8 @@ import {
   IJsonApiResponse,
   IPost,
   IPostModel,
-  IPostUpdateModel
+  IPostUpdateModel,
+  IRelationshipItem
 } from 'src/types'
 
 interface PostOperationResult {
@@ -30,11 +31,13 @@ function mergePostAttachments(post: IPost, attachments: IPost['attachments']): I
 export async function createPostWithAttachments(
   postModel: IPostModel,
   files: File[],
+  galleryRefs: IRelationshipItem[] = [],
   initialCtx: ApiRequestContext = {}
 ): Promise<PostOperationResult> {
   let ctx = { ...initialCtx }
   const dto = mapPostFormToCreateDto(postModel)
   const fileGroups = groupFileTypes(files)
+  const linked = [...galleryRefs]
 
   if (fileGroups.images.length || fileGroups.videos.length) {
     const uploadResult = await uploadPostGalleryAttachments(
@@ -42,8 +45,12 @@ export async function createPostWithAttachments(
       ctx
     )
 
-    dto.attachments = uploadResult.ids
+    linked.push(...uploadResult.ids)
     ctx = uploadResult.context
+  }
+
+  if (linked.length) {
+    dto.attachments = linked
   }
 
   const response = await postApi.createPost(dto, ctx)
@@ -64,11 +71,13 @@ export async function updatePostWithAttachments(
   postModel: IPostUpdateModel,
   originalPost: IPost,
   files: File[],
+  galleryRefs: IRelationshipItem[] = [],
   initialCtx: ApiRequestContext = {}
 ): Promise<PostOperationResult> {
   let ctx = { ...initialCtx }
   const dto = mapPostFormToUpdateDto(postModel, originalPost)
   const fileGroups = groupFileTypes(files)
+  const linked = [...galleryRefs]
 
   if (fileGroups.images.length || fileGroups.videos.length) {
     const uploadResult = await uploadPostGalleryAttachments(
@@ -76,8 +85,12 @@ export async function updatePostWithAttachments(
       ctx
     )
 
-    dto.attachments = uploadResult.ids
+    linked.push(...uploadResult.ids)
     ctx = uploadResult.context
+  }
+
+  if (linked.length) {
+    dto.attachments = linked
   }
 
   const response = await postApi.updatePost(id, dto, ctx)

@@ -24,7 +24,8 @@ import {
   IFilter,
   IPost,
   IPostModel,
-  IPostUpdateModel
+  IPostUpdateModel,
+  IRelationshipItem
 } from 'src/types'
 
 function mergePostsById(current: IPost[], incoming: IPost[]): IPost[] {
@@ -128,7 +129,11 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
-  async function createPost(postModel: IPostModel, attachmentModel: File[]): Promise<IPost> {
+  async function createPost(
+    postModel: IPostModel,
+    attachmentModel: File[],
+    galleryRefs: IRelationshipItem[] = []
+  ): Promise<IPost> {
     const userStore = useUserStore()
     const optimisticPost = buildOptimisticPost(postModel, userStore.user)
     const optimisticId = optimisticPost.id
@@ -140,7 +145,11 @@ export const usePostStore = defineStore('post', () => {
     }
 
     try {
-      const { post, response } = await createPostWithAttachments(postModel, attachmentModel)
+      const { post, response } = await createPostWithAttachments(
+        postModel,
+        attachmentModel,
+        galleryRefs
+      )
       const normalizedPost = normalizePost(post)
 
       if (shouldShowOptimistic) {
@@ -178,7 +187,8 @@ export const usePostStore = defineStore('post', () => {
     id: string,
     postModel: IPostUpdateModel,
     originalPost: IPost,
-    attachmentModel: File[]
+    attachmentModel: File[],
+    galleryRefs: IRelationshipItem[] = []
   ) {
     if (!postModel || !originalPost) return
 
@@ -187,7 +197,8 @@ export const usePostStore = defineStore('post', () => {
         id,
         postModel,
         originalPost,
-        attachmentModel
+        attachmentModel,
+        galleryRefs
       )
 
       syncPostWithListFilters(normalizePost(post))

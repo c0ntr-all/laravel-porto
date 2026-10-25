@@ -36,7 +36,7 @@ class TaskPostContentHandler implements PostContentHandlerInterface
 
     public function eagerLoadRelations(): array
     {
-        return ['tasks'];
+        return ['tasks.taskList'];
     }
 
     private function resolveTask(Post $post, PostContentAttachDto $dto): Task

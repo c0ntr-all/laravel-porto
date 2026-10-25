@@ -6,11 +6,19 @@
       :exclude-ids="blockedIds"
       @select-files="appendFiles"
       @select-gallery="appendGallery"
+      @select-task="onSelectTask"
+      @select-album="onSelectAlbum"
     />
 
     <div class="text-caption text-grey-7 q-mt-xs">
-      С устройства или из альбомов галереи. Фото, видео, PDF, Office, архивы
+      Файлы, фото из галереи, задача или альбом
     </div>
+
+    <PostFormSubjectPreview
+      :task="attachedTask"
+      :album="attachedAlbum"
+      @clear="clearSubject"
+    />
 
     <q-banner
       v-if="unsupportedFiles.length"
@@ -45,9 +53,15 @@ import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { POST_FILE_ACCEPT, POST_GALLERY_ATTACH_LIMIT } from 'src/constants/LifeLog/attachment'
 import { groupFileTypes } from 'src/services/post.service'
-import { IGalleryMediaItem, IPostFormPendingAttachment } from 'src/types'
+import {
+  IGalleryMediaItem,
+  IPostAlbumSubject,
+  IPostFormPendingAttachment,
+  IPostTaskSubject
+} from 'src/types'
 import AppMediaAttach from 'src/components/default/AppMediaAttach.vue'
 import PostFormAttachmentPreview from 'src/components/client/LifeLog/forms/PostFormAttachmentPreview.vue'
+import PostFormSubjectPreview from 'src/components/client/LifeLog/forms/PostFormSubjectPreview.vue'
 
 const props = withDefaults(defineProps<{
   excludeIds?: string[]
@@ -59,6 +73,14 @@ const props = withDefaults(defineProps<{
 
 const items = defineModel<IPostFormPendingAttachment[]>({
   default: () => []
+})
+
+const attachedTask = defineModel<IPostTaskSubject | null>('task', {
+  default: null
+})
+
+const attachedAlbum = defineModel<IPostAlbumSubject | null>('album', {
+  default: null
 })
 
 const $q = useQuasar()
@@ -87,13 +109,13 @@ const blockedIds = computed(() => {
   return ids
 })
 
-function nextFileKey(file: File): string {
+function nextFileKey (file: File): string {
   fileSeq.value += 1
 
   return `file-${fileSeq.value}-${file.name}-${file.size}-${file.lastModified}`
 }
 
-function appendFiles(files: File[]) {
+function appendFiles (files: File[]) {
   const groups = groupFileTypes(files)
   unsupportedFiles.value = groups.other
   const accepted = [...groups.images, ...groups.videos, ...groups.documents]
@@ -117,7 +139,7 @@ function appendFiles(files: File[]) {
   }
 }
 
-function appendGallery(media: IGalleryMediaItem[]) {
+function appendGallery (media: IGalleryMediaItem[]) {
   const next = [...(items.value ?? [])]
   const known = new Set<string>(props.excludeIds)
 
@@ -149,7 +171,22 @@ function appendGallery(media: IGalleryMediaItem[]) {
   items.value = next
 }
 
-function removeItem(key: string) {
+function onSelectTask (task: IPostTaskSubject) {
+  attachedAlbum.value = null
+  attachedTask.value = task
+}
+
+function onSelectAlbum (album: IPostAlbumSubject) {
+  attachedTask.value = null
+  attachedAlbum.value = album
+}
+
+function clearSubject () {
+  attachedTask.value = null
+  attachedAlbum.value = null
+}
+
+function removeItem (key: string) {
   items.value = (items.value ?? []).filter(item => item.key !== key)
 }
 </script>

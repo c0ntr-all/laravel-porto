@@ -19,6 +19,14 @@ export function isMovieWatchPost(post: IPost): boolean {
     post.content_type === PostContentTypeEnum.TV_SERIES
 }
 
+export function isTaskPost(post: IPost): boolean {
+  return post.content_type === PostContentTypeEnum.TASK
+}
+
+export function isAlbumPost(post: IPost): boolean {
+  return post.content_type === PostContentTypeEnum.ALBUM
+}
+
 export const MOVIE_WATCH_POST_TITLE = 'Просмотр фильма'
 export const TV_SERIES_WATCH_POST_TITLE = 'Просмотр сериала'
 
@@ -114,6 +122,18 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
       : null,
     watch: isSeriesPost ? (model.watch ?? null) : null,
     started_at: isMoviePost ? (normalizeStartedAt(model.started_at) ?? null) : null,
+    task: contentType === PostContentTypeEnum.TASK ? (model.task ?? null) : null,
+    album: contentType === PostContentTypeEnum.ALBUM
+      ? (model.album
+          ? {
+              id: String(model.album.id),
+              name: 'name' in model.album ? model.album.name : '',
+              description: model.album.description ?? null,
+              image: 'image' in model.album ? (model.album.image || null) : null,
+              media_count: 'media_count' in model.album ? model.album.media_count : undefined
+            }
+          : null)
+      : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     is_draft: Boolean(model.is_draft),

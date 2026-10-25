@@ -3,6 +3,7 @@
 namespace App\Containers\LifelogSection\Post\UI\API\Requests;
 
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
+use App\Containers\LifelogSection\Post\UI\API\Rules\AttachableAlbumRule;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
@@ -98,7 +99,7 @@ class CreateRequest extends AuthenticatedRequest
                 Rule::prohibitedIf(fn () => !$isAlbumContent),
                 'nullable',
                 'integer',
-                Rule::exists('gallery_albums', 'id')->where('user_id', $userId),
+                new AttachableAlbumRule((int) $userId),
             ],
         ];
     }

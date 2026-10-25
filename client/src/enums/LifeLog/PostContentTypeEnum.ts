@@ -3,7 +3,9 @@ export enum PostContentTypeEnum {
   MUSIC = 'music',
   MOVIE = 'movie',
   TV_SERIES = 'tv_series',
-  GAME = 'game'
+  GAME = 'game',
+  TASK = 'task',
+  ALBUM = 'album'
 }
 
 export const POST_CONTENT_TYPES = Object.values(PostContentTypeEnum)
@@ -13,5 +15,7 @@ export const POST_CONTENT_TYPE_LABELS: Record<PostContentTypeEnum, string> = {
   [PostContentTypeEnum.MUSIC]: 'Музыка',
   [PostContentTypeEnum.MOVIE]: 'Фильм',
   [PostContentTypeEnum.TV_SERIES]: 'Сериал',
-  [PostContentTypeEnum.GAME]: 'Игра'
+  [PostContentTypeEnum.GAME]: 'Игра',
+  [PostContentTypeEnum.TASK]: 'Задача',
+  [PostContentTypeEnum.ALBUM]: 'Альбом'
 }

@@ -16,4 +16,6 @@ export interface IPostUpdateDto {
   movie_title?: string
   watch?: ISeriesWatchProgress | null
   started_at?: string | null
+  task_id?: number
+  album_id?: number
 }

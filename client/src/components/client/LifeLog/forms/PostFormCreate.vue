@@ -19,7 +19,11 @@
       />
     </div>
     <div class="lifelog-post-form__files q-pa-md">
-      <PostFormFilesUpload v-model="pendingAttachments" />
+      <PostFormFilesUpload
+        v-model="pendingAttachments"
+        v-model:task="attachedTask"
+        v-model:album="attachedAlbum"
+      />
     </div>
 
     <div class="lifelog-post-form__tags q-pa-md">
@@ -67,10 +71,15 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { usePostStore } from 'src/stores/modules/postStore'
-import { IPostFormPendingAttachment, IPostModel } from 'src/types'
+import {
+  IPostAlbumSubject,
+  IPostFormPendingAttachment,
+  IPostModel,
+  IPostTaskSubject
+} from 'src/types'
 import { splitPendingAttachments } from 'src/utils/attachment'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
@@ -108,11 +117,53 @@ const getEmptyPostModel = (): IPostModel => {
 // --- Models ---
 const model = ref<IPostModel>(getEmptyPostModel())
 const pendingAttachments = ref<IPostFormPendingAttachment[]>([])
+const attachedTask = ref<IPostTaskSubject | null>(null)
+const attachedAlbum = ref<IPostAlbumSubject | null>(null)
 const isSubmitting = ref(false)
 
 // --- Refs ---
 const titleRef = ref<IInputRef | null>(null)
 const formTagsRef = ref<ITagsRef | null>(null)
+
+watch(attachedTask, task => {
+  if (!task) {
+    if (model.value.content_type === PostContentTypeEnum.TASK) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.task_id = null
+      model.value.task = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.TASK
+  model.value.task_id = Number(task.id)
+  model.value.task = task
+  model.value.album_id = null
+  model.value.album = null
+  if (!model.value.title?.trim()) {
+    model.value.title = task.title
+  }
+})
+
+watch(attachedAlbum, album => {
+  if (!album) {
+    if (model.value.content_type === PostContentTypeEnum.ALBUM) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.album_id = null
+      model.value.album = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.ALBUM
+  model.value.album_id = Number(album.id)
+  model.value.album = album
+  model.value.task_id = null
+  model.value.task = null
+  if (!model.value.title?.trim()) {
+    model.value.title = album.name
+  }
+})
 
 // --- Methods ---
 const createPost = async () => {
@@ -126,6 +177,8 @@ const createPost = async () => {
 
   clearModel()
   pendingAttachments.value = []
+  attachedTask.value = null
+  attachedAlbum.value = null
   resetAvailableTags()
   emit('success')
 
@@ -137,6 +190,8 @@ const createPost = async () => {
 }
 const clearModel = () => {
   model.value = getEmptyPostModel()
+  attachedTask.value = null
+  attachedAlbum.value = null
 
   nextTick(() => {
     if (titleRef.value) {

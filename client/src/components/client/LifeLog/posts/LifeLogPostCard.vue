@@ -49,6 +49,20 @@
     </header>
 
     <section
+      v-if="post.task"
+      class="ll-post-card__section"
+    >
+      <LifeLogPostTaskSubject :task="post.task" />
+    </section>
+
+    <section
+      v-if="post.album"
+      class="ll-post-card__section"
+    >
+      <LifeLogPostAlbumSubject :album="post.album" />
+    </section>
+
+    <section
       v-if="post.attachments?.length"
       class="ll-post-card__section"
     >
@@ -75,6 +89,8 @@
 import { IPost } from 'src/types'
 import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLogPostActions'
 import LifeLogPostAttachments from 'src/components/client/LifeLog/posts/LifeLogPostAttachments.vue'
+import LifeLogPostTaskSubject from 'src/components/client/LifeLog/posts/LifeLogPostTaskSubject.vue'
+import LifeLogPostAlbumSubject from 'src/components/client/LifeLog/posts/LifeLogPostAlbumSubject.vue'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'

@@ -43,6 +43,8 @@
       <p>Новые вложения</p>
       <PostFormFilesUpload
         v-model="newAttachmentsModel"
+        v-model:task="attachedTask"
+        v-model:album="attachedAlbum"
         :exclude-ids="attachedMediaIds"
       />
     </div>
@@ -105,14 +107,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw, onMounted, onUnmounted, ref, toRaw } from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { unique } from 'radash'
 import { applyIsNullTimeToDatetime, getCurrentDateTime } from 'src/utils/datetime'
 import { useTagStore } from 'src/stores/modules/tagStore'
 import { usePostStore } from 'src/stores/modules/postStore'
 import { INewTag, ITag } from 'src/types/tag'
-import { IPost, IPostAttachmentWithState, IPostFormPendingAttachment, IPostUpdateModel } from 'src/types'
+import {
+  IPost,
+  IPostAlbumSubject,
+  IPostAttachmentWithState,
+  IPostFormPendingAttachment,
+  IPostTaskSubject,
+  IPostUpdateModel
+} from 'src/types'
 import { isPostMediaAttachment, splitPendingAttachments } from 'src/utils/attachment'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
@@ -146,9 +155,45 @@ const model = ref<IPostUpdateModel>({
   isNullTime: false
 })
 const newAttachmentsModel = ref<IPostFormPendingAttachment[]>([])
+const attachedTask = ref<IPostTaskSubject | null>(null)
+const attachedAlbum = ref<IPostAlbumSubject | null>(null)
 const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
+
+watch(attachedTask, task => {
+  if (!task) {
+    if (model.value.content_type === PostContentTypeEnum.TASK) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.task_id = null
+      model.value.task = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.TASK
+  model.value.task_id = Number(task.id)
+  model.value.task = task
+  model.value.album_id = null
+  model.value.album = null
+})
+
+watch(attachedAlbum, album => {
+  if (!album) {
+    if (model.value.content_type === PostContentTypeEnum.ALBUM) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.album_id = null
+      model.value.album = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.ALBUM
+  model.value.album_id = Number(album.id)
+  model.value.album = album
+  model.value.task_id = null
+  model.value.task = null
+})
 
 const attachedMediaIds = computed(() =>
   model.value.attachments
@@ -245,6 +290,10 @@ const mapPostToModel = (post: IPost) => {
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
     isNullTime: !rawPost.time,
+    task_id: rawPost.task ? Number(rawPost.task.id) : null,
+    album_id: rawPost.album ? Number(rawPost.album.id) : null,
+    task: rawPost.task ?? null,
+    album: rawPost.album ?? null,
     attachments: (rawPost.attachments ?? []).map((item: IPostAttachmentWithState) => ({
       ...toRaw(item),
       is_deleted: false
@@ -252,6 +301,8 @@ const mapPostToModel = (post: IPost) => {
   }
 
   model.value = preparedPost
+  attachedTask.value = rawPost.task ?? null
+  attachedAlbum.value = rawPost.album ?? null
 }
 
 const clearAttachmentModel = () => {
@@ -278,10 +329,16 @@ onUnmounted(() => {
     newTags: [],
     datetime: rawPost.time ? `${rawPost.date} ${rawPost.time}` : rawPost.date,
     isNullTime: !rawPost.time,
+    task_id: rawPost.task ? Number(rawPost.task.id) : null,
+    album_id: rawPost.album ? Number(rawPost.album.id) : null,
+    task: rawPost.task ?? null,
+    album: rawPost.album ?? null,
     attachments: []
   }
 
   newAttachmentsModel.value = []
+  attachedTask.value = null
+  attachedAlbum.value = null
 })
 
 </script>

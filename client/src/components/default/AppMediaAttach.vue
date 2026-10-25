@@ -77,6 +77,38 @@
             </span>
             <q-icon name="chevron_right" color="grey-5" size="22px" />
           </button>
+
+          <button
+            v-if="allowTask"
+            type="button"
+            class="source-option"
+            @click="chooseTask"
+          >
+            <span class="source-option__icon source-option__icon--task">
+              <q-icon name="task_alt" size="22px" />
+            </span>
+            <span class="source-option__text">
+              <span class="source-option__title">Задача</span>
+              <span class="source-option__hint">Прикрепить задачу из Task Manager</span>
+            </span>
+            <q-icon name="chevron_right" color="grey-5" size="22px" />
+          </button>
+
+          <button
+            v-if="allowAlbum"
+            type="button"
+            class="source-option"
+            @click="chooseAlbum"
+          >
+            <span class="source-option__icon source-option__icon--album">
+              <q-icon name="photo_album" size="22px" />
+            </span>
+            <span class="source-option__text">
+              <span class="source-option__title">Альбом</span>
+              <span class="source-option__hint">Прикрепить альбом галереи</span>
+            </span>
+            <q-icon name="chevron_right" color="grey-5" size="22px" />
+          </button>
         </div>
       </q-card>
     </q-dialog>
@@ -87,13 +119,28 @@
       :exclude-ids="excludeIds"
       @select="onGallerySelect"
     />
+
+    <AppMediaAttachTask
+      v-if="allowTask"
+      v-model="taskOpen"
+      @select="onTaskSelect"
+    />
+
+    <AppMediaAttachAlbum
+      v-if="allowAlbum"
+      v-model="albumOpen"
+      @select="onAlbumSelect"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { nextTick, ref } from 'vue'
+import { IPostAlbumSubject, IPostTaskSubject } from 'src/types'
 import { IGalleryMediaItem } from 'src/types/gallery'
 import AppMediaAttachGallery from 'src/components/default/AppMediaAttachGallery.vue'
+import AppMediaAttachTask from 'src/components/default/AppMediaAttachTask.vue'
+import AppMediaAttachAlbum from 'src/components/default/AppMediaAttachAlbum.vue'
 
 defineOptions({
   inheritAttrs: false
@@ -112,28 +159,36 @@ const props = withDefaults(defineProps<{
   unelevated?: boolean
   dense?: boolean
   disable?: boolean
+  allowTask?: boolean
+  allowAlbum?: boolean
 }>(), {
   limit: 10,
   accept: 'image/*,video/*',
   multiple: true,
   excludeIds: () => [],
-  label: 'Прикрепить файл',
+  label: 'Прикрепить',
   icon: 'attach_file',
   color: 'primary',
   flat: false,
   outline: true,
   unelevated: false,
   dense: false,
-  disable: false
+  disable: false,
+  allowTask: true,
+  allowAlbum: true
 })
 
 const emit = defineEmits<{
   'select-files': [files: File[]]
   'select-gallery': [items: IGalleryMediaItem[]]
+  'select-task': [task: IPostTaskSubject]
+  'select-album': [album: IPostAlbumSubject]
 }>()
 
 const sourceOpen = ref(false)
 const galleryOpen = ref(false)
+const taskOpen = ref(false)
+const albumOpen = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
 function openSource() {
@@ -158,6 +213,18 @@ async function chooseGallery() {
   galleryOpen.value = true
 }
 
+async function chooseTask() {
+  sourceOpen.value = false
+  await nextTick()
+  taskOpen.value = true
+}
+
+async function chooseAlbum() {
+  sourceOpen.value = false
+  await nextTick()
+  albumOpen.value = true
+}
+
 function onFilesPicked(event: Event) {
   const input = event.target as HTMLInputElement
   const files = input.files ? Array.from(input.files) : []
@@ -177,6 +244,14 @@ function onGallerySelect(items: IGalleryMediaItem[]) {
   }
 
   emit('select-gallery', items)
+}
+
+function onTaskSelect(task: IPostTaskSubject) {
+  emit('select-task', task)
+}
+
+function onAlbumSelect(album: IPostAlbumSubject) {
+  emit('select-album', album)
 }
 </script>
 
@@ -263,6 +338,16 @@ function onGallerySelect(items: IGalleryMediaItem[]) {
     border-radius: 12px;
     background: rgba(108, 95, 252, 0.12);
     color: $primary;
+
+    &--task {
+      background: rgba(33, 186, 69, 0.12);
+      color: #21ba45;
+    }
+
+    &--album {
+      background: rgba(38, 166, 218, 0.12);
+      color: #26a6da;
+    }
   }
 
   &__text {

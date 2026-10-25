@@ -4,7 +4,22 @@ import { IPostDocumentAttachment } from 'src/types/document'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { IMovie } from 'src/types/Movie'
 import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
-import { IGalleryMediaItem } from 'src/types/gallery'
+import { IGalleryAlbum, IGalleryMediaItem } from 'src/types/gallery'
+
+export interface IPostTaskSubject {
+  id: string
+  title: string
+  task_list_id: string | null
+  task_list_title: string | null
+}
+
+export interface IPostAlbumSubject {
+  id: string
+  name: string
+  description: string | null
+  image: string | null
+  media_count?: number
+}
 
 export interface IPostGalleryAttachment {
   id: string
@@ -42,6 +57,8 @@ export interface IPost {
   tags: ITag[]
   attachments: IPostAttachment[]
   movie?: IMovie | null
+  task?: IPostTaskSubject | null
+  album?: IPostAlbumSubject | null
   watch?: ISeriesWatchProgress | null
   started_at?: string | null
   is_pending?: boolean
@@ -60,6 +77,10 @@ export interface IPostModel {
   movie_title?: string | null
   watch?: ISeriesWatchProgress | null
   started_at?: string | null
+  task_id?: number | null
+  album_id?: number | null
+  task?: IPostTaskSubject | null
+  album?: IPostAlbumSubject | IGalleryAlbum | null
 }
 
 export interface IPostUpdateModel extends IPostModel {

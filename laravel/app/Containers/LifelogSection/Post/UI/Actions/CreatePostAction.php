@@ -120,7 +120,7 @@ class CreatePostAction extends UseCaseAction
         $post = $this->handle($postCreateDto);
 
         return fractal($post, new PostTransformer($postCreateDto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task', 'album'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album'])
             ->withResourceName('ll_posts')
             ->addMeta(['message' => 'New post successfully created!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

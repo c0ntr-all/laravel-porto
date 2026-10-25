@@ -82,6 +82,14 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
     }
   }
 
+  if (contentType === PostContentTypeEnum.TASK && postModel.task_id != null) {
+    data.task_id = postModel.task_id
+  }
+
+  if (contentType === PostContentTypeEnum.ALBUM && postModel.album_id != null) {
+    data.album_id = postModel.album_id
+  }
+
   return data
 }
 
@@ -156,6 +164,24 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
           dto.content_type = PostContentTypeEnum.TV_SERIES
         }
       }
+    }
+  }
+
+  if (contentType === PostContentTypeEnum.TASK) {
+    const nextTaskId = edited.task_id ?? null
+    const prevTaskId = original.task ? Number(original.task.id) : null
+    if (nextTaskId !== prevTaskId && nextTaskId != null) {
+      dto.task_id = nextTaskId
+      dto.content_type = PostContentTypeEnum.TASK
+    }
+  }
+
+  if (contentType === PostContentTypeEnum.ALBUM) {
+    const nextAlbumId = edited.album_id ?? null
+    const prevAlbumId = original.album ? Number(original.album.id) : null
+    if (nextAlbumId !== prevAlbumId && nextAlbumId != null) {
+      dto.album_id = nextAlbumId
+      dto.content_type = PostContentTypeEnum.ALBUM
     }
   }
 

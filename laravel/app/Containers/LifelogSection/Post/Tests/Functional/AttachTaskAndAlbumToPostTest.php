@@ -114,6 +114,30 @@ class AttachTaskAndAlbumToPostTest extends TestCase
             ->assertJsonValidationErrors(['album_id']);
     }
 
+    public function test_cannot_attach_system_album(): void
+    {
+        $user = User::factory()->create();
+        $systemAlbum = Album::withoutGlobalScopes()
+            ->whereNotNull('system_code')
+            ->whereNull('user_id')
+            ->firstOrFail();
+
+        $response = $this->actingAs($user, 'api')
+            ->postJson('/api/v1/lifelog/posts', [
+                'title' => 'System album post',
+                'content_type' => PostContentTypeEnum::ALBUM->value,
+                'date' => '2026-10-21',
+                'album_id' => $systemAlbum->id,
+            ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['album_id'])
+            ->assertJsonPath(
+                'errors.album_id.0',
+                'Системные альбомы нельзя прикреплять к посту.'
+            );
+    }
+
     public function test_changing_content_type_from_movie_to_task_replaces_subject(): void
     {
         $user = User::factory()->create();

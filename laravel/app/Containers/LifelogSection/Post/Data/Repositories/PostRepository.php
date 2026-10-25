@@ -53,7 +53,7 @@ class PostRepository
                                'attachments.fileable',
                                'movies.genres',
                                'movies.countries',
-                               'tasks',
+                               'tasks.taskList',
                                'albums',
                            ])
                            ->cursorPaginate(self::LIST_PER_PAGE);

@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property int|null $year
  * @property MovieTypeEnum $type
  * @property string|null $cover
+ * @property string|null $img
  * @property string|null $embed_link
  * @property string|null $kp_rating
  * @property string|null $kp_img
@@ -63,6 +64,7 @@ class Movie extends Model
         'year',
         'type',
         'cover',
+        'img',
         'embed_link',
         'kp_rating',
         'kp_img',

@@ -25,6 +25,8 @@ use App\Containers\MovieSection\Import\UI\API\Requests\ImportRequest;
 use App\Containers\MovieSection\Import\UI\API\Transformers\MovieImportTransformer;
 use App\Containers\MovieSection\Movie\Data\Repositories\MovieRepository;
 use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
+use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\MovieSection\Movie\Tasks\PersistMovieKinopoiskImageTask;
 use App\Containers\MovieSection\Movie\Tasks\SyncCountriesForMovieTask;
 use App\Containers\MovieSection\Movie\Tasks\SyncGenresForMovieTask;
 use App\Containers\MovieSection\Movie\Tasks\SyncPersonsForMovieTask;
@@ -32,6 +34,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Actions\BaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ImportMovieFromKinopoiskAction extends BaseAction
@@ -51,6 +54,7 @@ class ImportMovieFromKinopoiskAction extends BaseAction
         private readonly SyncCountriesForMovieTask $syncCountriesForMovieTask,
         private readonly SyncPersonsForMovieTask $syncPersonsForMovieTask,
         private readonly FinalizeMovieImportLogTask $finalizeMovieImportLogTask,
+        private readonly PersistMovieKinopoiskImageTask $persistMovieKinopoiskImageTask,
         private readonly MovieRepository $movieRepository,
     ) {
     }
@@ -121,6 +125,15 @@ class ImportMovieFromKinopoiskAction extends BaseAction
             });
 
             $movie = $result['movie'];
+            $before = is_array($result['before'] ?? null) ? $result['before'] : null;
+            $movie = $this->persistImportedMovieImage(
+                $movie,
+                wasCreated: $result['was_created'],
+                beforeKpImg: is_string($before['kp_img'] ?? null) ? $before['kp_img'] : null,
+            );
+            $result['after'] = MovieStateSnapshot::fromMovie($movie);
+            $result['changes'] = MovieStateSnapshot::diff($result['before'], $result['after']);
+
             $meta = MovieImportLogMeta::from(
                 $response,
                 $parsed,
@@ -209,6 +222,28 @@ class ImportMovieFromKinopoiskAction extends BaseAction
             ->withResourceName(ContainerAliasEnum::MOVIE_IMPORT->value)
             ->addMeta(['message' => $message])
             ->respond($status, [], JSON_PRETTY_PRINT);
+    }
+
+    private function persistImportedMovieImage(
+        Movie $movie,
+        bool $wasCreated,
+        ?string $beforeKpImg,
+    ): Movie {
+        $force = $wasCreated || $beforeKpImg !== $movie->kp_img;
+
+        try {
+            return $this->persistMovieKinopoiskImageTask->run($movie, force: $force);
+        } catch (Throwable $exception) {
+            Log::warning('movie.kinopoisk_image.import_failed', [
+                'movie_id' => $movie->id,
+                'kp_id' => $movie->kp_id,
+                'kp_img' => $movie->kp_img,
+                'force' => $force,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return $movie->refresh();
+        }
     }
 
     private function shouldImportSeasons(MovieTypeEnum $type): bool

@@ -45,4 +45,11 @@ Restart app container after key generation:
 docker compose restart app
 ```
 
+***MovieSection:***
+import kinopoisk images:
+```shell
+docker exec php-app php artisan movie:sync-kinopoisk-images --sync
+```
+
+
 More information — https://laravel.com/docs/11.x/passport

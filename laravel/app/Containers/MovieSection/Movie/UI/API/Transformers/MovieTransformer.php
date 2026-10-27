@@ -33,6 +33,7 @@ class MovieTransformer extends TransformerAbstract
             'year' => $movie->year,
             'type' => $movie->type->value,
             'cover' => $movie->cover,
+            'img' => $this->mapImg($movie),
             'embed_link' => $movie->embed_link,
             'kp_rating' => $movie->kp_rating !== null ? (float) $movie->kp_rating : null,
             'kp_img' => $movie->kp_img,
@@ -71,6 +72,19 @@ class MovieTransformer extends TransformerAbstract
         ]);
 
         return $this->collection($movie->seasons, new SeasonTransformer(), ContainerAliasEnum::MOVIE_SEASON->value);
+    }
+
+    private function mapImg(Movie $movie): ?string
+    {
+        if (!is_string($movie->img) || $movie->img === '') {
+            return null;
+        }
+
+        if (str_contains($movie->img, 'http://') || str_contains($movie->img, 'https://')) {
+            return $movie->img;
+        }
+
+        return url('/storage/'.$movie->img);
     }
 
     /**

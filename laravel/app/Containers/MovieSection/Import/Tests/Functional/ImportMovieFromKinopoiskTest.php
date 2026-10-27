@@ -10,7 +10,9 @@ use App\Containers\MovieSection\Movie\Enums\MovieTypeEnum;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ImportMovieFromKinopoiskTest extends TestCase
@@ -28,6 +30,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
         config()->set('movie_import.movie_path', '/v1.5/movie/%d');
         config()->set('movie_import.retries', 2);
         config()->set('movie_import.retry_sleep_ms', 0);
+        Storage::fake('public');
     }
 
     public function test_guest_cannot_import_movie(): void
@@ -37,9 +40,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
 
     public function test_imports_movie_with_genres_countries_and_log(): void
     {
-        Http::fake([
-            'https://api.poiskkino.dev/v1.5/movie/325' => Http::response($this->moviePayload(), 200),
-        ]);
+        $this->fakeKinopoiskMovieHttp(325, $this->moviePayload());
 
         $response = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/movie/imports', ['kp_id' => 325]);
@@ -69,10 +70,15 @@ class ImportMovieFromKinopoiskTest extends TestCase
             'description' => 'Криминальная сага о семье Корлеоне.',
             'short_description' => 'Революция в гангстерском кино.',
         ]);
-        $this->assertNotNull(Movie::query()->where('kp_id', 325)->value('kp_imported_at'));
+        $movie = Movie::query()->where('kp_id', 325)->firstOrFail();
+        $this->assertNotNull($movie->kp_imported_at);
+        $this->assertNotNull($movie->img);
+        $this->assertStringStartsWith('kinopoisk/movies/'.$movie->id.'/poster.', $movie->img);
+        Storage::disk('public')->assertExists($movie->img);
         $includedMovie = collect($response->json('included'))->firstWhere('type', 'movies');
         $this->assertIsArray($includedMovie);
         $this->assertNotNull($includedMovie['attributes']['kp_imported_at'] ?? null);
+        $this->assertStringContainsString('/storage/'.$movie->img, (string) ($includedMovie['attributes']['img'] ?? ''));
         $this->assertDatabaseHas('movie_genres', ['name' => 'драма']);
         $this->assertDatabaseHas('countries', ['name' => 'США']);
         $this->assertDatabaseCount('movie_genre', 2);
@@ -103,9 +109,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
             'kp_img' => 'https://example.com/old.jpg',
         ]);
 
-        Http::fake([
-            'https://api.poiskkino.dev/v1.5/movie/325' => Http::response($this->moviePayload(), 200),
-        ]);
+        $this->fakeKinopoiskMovieHttp(325, $this->moviePayload());
 
         $response = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/movie/imports', ['kp_id' => 325]);
@@ -133,6 +137,8 @@ class ImportMovieFromKinopoiskTest extends TestCase
         $this->assertSame('https://example.com/custom-cover.jpg', $movie->cover);
         $this->assertSame('https://avatars.mds.yandex.net/get-kinopoisk-image/poster/600x900', $movie->kp_img);
         $this->assertNotNull($movie->kp_imported_at);
+        $this->assertNotNull($movie->img);
+        Storage::disk('public')->assertExists($movie->img);
     }
 
     public function test_missing_api_key_is_logged_as_failed(): void
@@ -154,7 +160,11 @@ class ImportMovieFromKinopoiskTest extends TestCase
     public function test_retries_after_connection_timeout_and_imports(): void
     {
         $attempts = 0;
-        Http::fake(function () use (&$attempts) {
+        Http::fake(function (Request $request) use (&$attempts) {
+            if ($this->isImageRequest($request)) {
+                return $this->imageResponse();
+            }
+
             $attempts++;
             if ($attempts === 1) {
                 throw new ConnectionException('cURL error 28: Connection timed out after 5000 milliseconds');
@@ -221,10 +231,21 @@ class ImportMovieFromKinopoiskTest extends TestCase
 
     public function test_imports_tv_series_with_seasons_and_episodes(): void
     {
-        Http::fake([
-            'https://api.poiskkino.dev/v1.5/movie/404900' => Http::response($this->seriesPayload(), 200),
-            'https://api.poiskkino.dev/v1.5/season*' => Http::response($this->seasonsPayload(), 200),
-        ]);
+        Http::fake(function (Request $request) {
+            if ($this->isImageRequest($request)) {
+                return $this->imageResponse();
+            }
+
+            if (str_contains($request->url(), '/v1.5/season')) {
+                return Http::response($this->seasonsPayload(), 200);
+            }
+
+            if (str_contains($request->url(), '/v1.5/movie/404900')) {
+                return Http::response($this->seriesPayload(), 200);
+            }
+
+            return Http::response(['message' => 'unexpected'], 500);
+        });
 
         $response = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/movie/imports', ['kp_id' => 404900]);
@@ -270,9 +291,7 @@ class ImportMovieFromKinopoiskTest extends TestCase
         $movie->genres()->attach($drama);
         $movie->countries()->attach($usa);
 
-        Http::fake([
-            'https://api.poiskkino.dev/v1.5/movie/325' => Http::response($this->moviePayload(), 200),
-        ]);
+        $this->fakeKinopoiskMovieHttp(325, $this->moviePayload());
 
         $created = $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/movie/imports', ['kp_id' => 325])
@@ -289,6 +308,37 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->getJson('/api/v1/movie/imports/'.$importId)
             ->assertOk()
             ->assertJsonPath('data.attributes.kp_id', 325);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function fakeKinopoiskMovieHttp(int $kpId, array $payload): void
+    {
+        Http::fake(function (Request $request) use ($kpId, $payload) {
+            if ($this->isImageRequest($request)) {
+                return $this->imageResponse();
+            }
+
+            if (str_contains($request->url(), '/v1.5/movie/'.$kpId)) {
+                return Http::response($payload, 200);
+            }
+
+            return Http::response(['message' => 'unexpected'], 500);
+        });
+    }
+
+    private function isImageRequest(Request $request): bool
+    {
+        $url = $request->url();
+
+        return str_contains($url, 'avatars.mds.yandex.net')
+            || str_contains($url, 'example.com');
+    }
+
+    private function imageResponse(): mixed
+    {
+        return Http::response('fake-image-bytes', 200, ['Content-Type' => 'image/jpeg']);
     }
 
     /**

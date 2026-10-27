@@ -1,5 +1,6 @@
 <?php
 use App\Containers\DashboardSection\Widget\UI\CLI\Commands\MakeWidgetCommand;
+use App\Containers\MovieSection\Movie\UI\CLI\Commands\SyncMovieKinopoiskImagesCommand;
 use App\Containers\TaskManagerSection\Reminder\UI\CLI\Commands\ProcessDueRemindersCommand;
 use App\Ship\Middleware\AuthenticateBearerFromQuery;
 use Illuminate\Console\Scheduling\Schedule;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         ProcessDueRemindersCommand::class,
         MakeWidgetCommand::class,
+        SyncMovieKinopoiskImagesCommand::class,
     ])
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command(ProcessDueRemindersCommand::class)

@@ -14,7 +14,7 @@ class ListTasksTask extends ParentTask
     }
 
     /**
-     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool} $filters
+     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool, is_favorite?: bool} $filters
      * @param list<string> $with
      */
     public function run(array $filters = [], array $with = []): Collection

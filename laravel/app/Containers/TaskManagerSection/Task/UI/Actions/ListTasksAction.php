@@ -17,7 +17,7 @@ class ListTasksAction extends BaseAction
     }
 
     /**
-     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool} $filters
+     * @param array{task_list_id?: int|null, unlisted?: bool, parent_id?: int|null, roots_only?: bool, is_favorite?: bool} $filters
      * @param list<string> $with
      */
     public function handle(array $filters = [], array $with = []): Collection
@@ -41,6 +41,10 @@ class ListTasksAction extends BaseAction
         if (array_key_exists('parent_id', $validated) && $validated['parent_id'] !== null) {
             $filters['parent_id'] = $validated['parent_id'];
             $filters['roots_only'] = false;
+        }
+
+        if (array_key_exists('is_favorite', $validated)) {
+            $filters['is_favorite'] = (bool) $validated['is_favorite'];
         }
 
         $with = $this->relationsFromInclude((string) $request->query('include', ''));

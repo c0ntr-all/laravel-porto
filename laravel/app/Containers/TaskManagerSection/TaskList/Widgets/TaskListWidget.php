@@ -65,7 +65,8 @@ class TaskListWidget extends AbstractWidget
             ->whereNull('parent_id')
             ->whereNull('finished_at')
             ->where('is_declined', false)
-            ->orderByDesc('id')
+            ->orderBy('priority')
+            ->orderBy('id')
             ->limit($context->limit())
             ->get();
 

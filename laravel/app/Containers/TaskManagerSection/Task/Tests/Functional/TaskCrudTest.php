@@ -262,4 +262,145 @@ class TaskCrudTest extends TestCase
         $childResponse->assertOk()
             ->assertJsonPath('data.attributes.parent_id', (string) $parent->id);
     }
+
+    public function test_user_can_mark_task_as_favorite(): void
+    {
+        $task = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Favorite me',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->patchJson("/api/v1/task-manager/tasks/{$task->id}", [
+                'is_favorite' => true,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.attributes.is_favorite', true);
+
+        $this->assertDatabaseHas('tm_tasks', [
+            'id' => $task->id,
+            'is_favorite' => true,
+        ]);
+    }
+
+    public function test_user_can_filter_favorite_tasks(): void
+    {
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Regular',
+            'is_favorite' => false,
+            'priority' => 0,
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Starred',
+            'is_favorite' => true,
+            'priority' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/task-manager/tasks?is_favorite=1');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.count', 1)
+            ->assertJsonPath('data.0.attributes.title', 'Starred');
+    }
+
+    public function test_new_task_gets_auto_priority(): void
+    {
+        $first = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks', ['title' => 'First']);
+
+        $second = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks', ['title' => 'Second']);
+
+        $first->assertCreated()->assertJsonPath('data.attributes.priority', 0);
+        $second->assertCreated()->assertJsonPath('data.attributes.priority', 1);
+    }
+
+    public function test_list_is_ordered_by_priority(): void
+    {
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Low',
+            'priority' => 10,
+        ]);
+
+        Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'High',
+            'priority' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/task-manager/tasks');
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'High')
+            ->assertJsonPath('data.1.attributes.title', 'Low');
+    }
+
+    public function test_user_can_reorder_tasks(): void
+    {
+        $first = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'A',
+            'priority' => 0,
+        ]);
+
+        $second = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'B',
+            'priority' => 1,
+        ]);
+
+        $third = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'C',
+            'priority' => 2,
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks/reorder', [
+                'ids' => [$third->id, $first->id, $second->id],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'C')
+            ->assertJsonPath('data.0.attributes.priority', 0)
+            ->assertJsonPath('data.1.attributes.title', 'A')
+            ->assertJsonPath('data.1.attributes.priority', 1)
+            ->assertJsonPath('data.2.attributes.title', 'B')
+            ->assertJsonPath('data.2.attributes.priority', 2);
+    }
+
+    public function test_reorder_rejects_mixed_scopes(): void
+    {
+        $list = TaskList::create([
+            'user_id' => $this->user->id,
+            'title' => 'Board',
+        ]);
+
+        $inbox = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Inbox task',
+            'priority' => 0,
+        ]);
+
+        $listed = Task::create([
+            'user_id' => $this->user->id,
+            'task_list_id' => $list->id,
+            'title' => 'Listed task',
+            'priority' => 0,
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks/reorder', [
+                'ids' => [$inbox->id, $listed->id],
+            ]);
+
+        $response->assertUnprocessable();
+    }
 }

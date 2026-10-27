@@ -17,6 +17,8 @@ class TaskUpdateData extends Data
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]
     public Carbon|Optional|null $finished_at;
     public bool|Optional|null $is_declined;
+    public bool|Optional|null $is_favorite;
+    public int|Optional|null $priority;
 
     public function __construct(
     ) {

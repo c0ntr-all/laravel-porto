@@ -42,6 +42,8 @@ class TaskTransformer extends TransformerAbstract
             'content' => $task->content,
             'finished_at' => $task->finished_at?->format('Y-m-d H:i:s'),
             'is_declined' => (bool) $task->is_declined,
+            'is_favorite' => (bool) $task->is_favorite,
+            'priority' => (int) $task->priority,
             'reminders_count' => $task->relationLoaded('reminder')
                 ? ($task->reminder ? 1 : 0)
                 : $task->reminder()->count(),

@@ -24,6 +24,8 @@ class UpdateRequest extends AuthenticatedRequest
             'is_finished' => 'sometimes|boolean',
             'finished_at' => 'sometimes|nullable|date_format:Y-m-d H:i:s',
             'is_declined' => 'sometimes|boolean',
+            'is_favorite' => 'sometimes|boolean',
+            'priority' => 'sometimes|integer|min:0',
             'deleted_attachments_ids' => 'sometimes|array',
             'deleted_attachments_ids.*' => 'sometimes|string|max:36',
             'attachments' => 'sometimes|array',

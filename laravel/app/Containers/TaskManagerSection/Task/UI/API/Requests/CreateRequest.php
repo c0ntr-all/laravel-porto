@@ -16,6 +16,8 @@ class CreateRequest extends AuthenticatedRequest
             'task_template_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate,id',
             'title' => 'required_without:task_template_id|string|max:70',
             'content' => 'sometimes|nullable|max:3000',
+            'is_favorite' => 'sometimes|boolean',
+            'priority' => 'sometimes|integer|min:0',
             'attachments' => 'sometimes|array',
             'attachments.*.type' => [
                 'required',

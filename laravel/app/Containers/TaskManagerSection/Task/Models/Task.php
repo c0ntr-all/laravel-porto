@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\DB;
  * @property string $title
  * @property string|null $content
  * @property bool $is_declined
+ * @property bool $is_favorite
+ * @property int $priority
  * @property \Illuminate\Support\Carbon|null $finished_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -55,11 +57,15 @@ class Task extends ActivityLoggableModel
         'content',
         'finished_at',
         'is_declined',
+        'is_favorite',
+        'priority',
     ];
 
     protected $casts = [
         'finished_at' => 'datetime',
         'is_declined' => 'bool',
+        'is_favorite' => 'bool',
+        'priority' => 'integer',
     ];
 
     protected static function booted(): void
@@ -86,7 +92,9 @@ class Task extends ActivityLoggableModel
 
     public function subtasks(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')
+                    ->orderBy('priority')
+                    ->orderBy('id');
     }
 
     public function sourceChecklistItem(): HasOne

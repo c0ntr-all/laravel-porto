@@ -18,6 +18,8 @@ class TaskUpdateContextDto extends Data
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]
     public Carbon|Optional|null $finished_at;
     public bool|Optional|null $is_declined;
+    public bool|Optional|null $is_favorite;
+    public int|Optional|null $priority;
     public array $deleted_attachments_ids = [];
     public ?array $attachments = [];
 

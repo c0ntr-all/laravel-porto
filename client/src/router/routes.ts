@@ -35,15 +35,30 @@ const routes: RouteRecordRaw[] = [{
       exact: false
     },
     name: 'task-manager',
-    alias: '/task-manager'
-  }, {
-    path: '/task-manager/tasks/:taskId',
-    component: () => import('pages/client/TaskManager/TaskManagerPage.vue'),
-    meta: {
-      title: 'Task Manager',
-      icon: 'list'
-    },
-    name: 'task-manager-task'
+    redirect: { name: 'task-manager-tasks' },
+    children: [{
+      path: 'tasks',
+      name: 'task-manager-tasks',
+      component: () => import('components/client/TaskManager/TMTasksTab.vue')
+    }, {
+      // Legacy deep-link: /task-manager/tasks/:taskId → /task-manager/tasks?open-task=:taskId
+      path: 'tasks/:taskId',
+      redirect: (to) => ({
+        name: 'task-manager-tasks',
+        query: {
+          ...to.query,
+          'open-task': String(Array.isArray(to.params.taskId) ? to.params.taskId[0] : to.params.taskId)
+        }
+      })
+    }, {
+      path: 'calendar',
+      name: 'task-manager-calendar',
+      component: () => import('components/client/TaskManager/TMCalendarTab.vue')
+    }, {
+      path: 'templates',
+      name: 'task-manager-templates',
+      component: () => import('components/client/TaskManager/TMTaskTemplatesTab.vue')
+    }]
   }, {
     path: '/music',
     component: () => import('layouts/PageLayout.vue'),

@@ -1,13 +1,17 @@
 import { computed, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { LocationQuery, LocationQueryRaw, useRoute, useRouter } from 'vue-router'
 import { ITask } from 'src/types/TaskManager/task'
+import {
+  isTaskManagerSectionRoute,
+  TASK_DIALOG_QUERY_KEY
+} from 'src/constants/TaskManager/route'
 
 // Shared across composable instances: q-dialog hide during in-dialog
 // navigation must be ignored by the page-level closeTask handler.
 let ignoreDialogClose = false
 let ignoreDialogCloseTimer: ReturnType<typeof setTimeout> | null = null
 
-function armIgnoreDialogClose() {
+function armIgnoreDialogClose () {
   ignoreDialogClose = true
   if (ignoreDialogCloseTimer) {
     clearTimeout(ignoreDialogCloseTimer)
@@ -18,15 +22,39 @@ function armIgnoreDialogClose() {
   }, 100)
 }
 
-export function useTaskDialogRoute() {
+function readQueryValue (value: LocationQuery[string]): string | null {
+  if (Array.isArray(value)) {
+    return value[0] || null
+  }
+
+  return value || null
+}
+
+function withTaskQuery (query: LocationQuery, taskId: string): LocationQueryRaw {
+  return {
+    ...query,
+    [TASK_DIALOG_QUERY_KEY]: taskId
+  }
+}
+
+function withoutTaskQuery (query: LocationQuery): LocationQueryRaw {
+  const next: LocationQueryRaw = { ...query }
+  delete next[TASK_DIALOG_QUERY_KEY]
+  return next
+}
+
+/**
+ * Opens/closes the task modal via `?task=<id>` on the current section route.
+ * Keeps calendar/templates/tasks background intact and scales to new sections.
+ */
+export function useTaskDialogRoute () {
   const route = useRoute()
   const router = useRouter()
 
   const selectedTaskId = computed(() => {
-    const param = route.params.taskId
-    const taskId = Array.isArray(param) ? param[0] : param
+    if (!isTaskManagerSectionRoute(route.name)) return null
 
-    return taskId || null
+    return readQueryValue(route.query[TASK_DIALOG_QUERY_KEY])
   })
 
   const isDialogOpen = computed({
@@ -38,16 +66,18 @@ export function useTaskDialogRoute() {
     }
   })
 
-  async function openTask(task: ITask | string) {
+  async function openTask (task: ITask | string) {
     const taskId = typeof task === 'string' ? task : task.id
     if (!taskId || taskId === selectedTaskId.value) return
+    if (!isTaskManagerSectionRoute(route.name)) return
 
     const location = {
-      name: 'task-manager-task',
-      params: { taskId }
+      name: route.name,
+      params: route.params,
+      query: withTaskQuery(route.query, taskId)
     }
 
-    if (route.name === 'task-manager-task') {
+    if (selectedTaskId.value) {
       armIgnoreDialogClose()
       await router.replace(location)
       await nextTick()
@@ -57,17 +87,32 @@ export function useTaskDialogRoute() {
     void router.push(location)
   }
 
-  function closeTask() {
+  function closeTask () {
     if (ignoreDialogClose) return
-    if (route.name !== 'task-manager-task') return
+    if (!selectedTaskId.value) return
+    if (!isTaskManagerSectionRoute(route.name)) return
 
     const previous = window.history.state?.back
-    if (previous === '/task-manager' || previous === '/task-manager/') {
+    const previousUrl = typeof previous === 'string' ? previous : null
+    const previousHadTask = Boolean(
+      previousUrl && new URL(previousUrl, window.location.origin).searchParams.has(TASK_DIALOG_QUERY_KEY)
+    )
+
+    // Prefer history back when we opened the dialog with push() from the same section
+    if (
+      previousUrl &&
+      previousUrl.startsWith('/task-manager') &&
+      !previousHadTask
+    ) {
       router.back()
       return
     }
 
-    void router.replace({ name: 'task-manager' })
+    void router.replace({
+      name: route.name,
+      params: route.params,
+      query: withoutTaskQuery(route.query)
+    })
   }
 
   return {

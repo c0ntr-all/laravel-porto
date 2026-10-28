@@ -17,6 +17,7 @@ class UpdateRequest extends AuthenticatedRequest
         return [
             'name' => 'sometimes|string|max:50',
             'description' => 'sometimes|string|nullable|max:30000',
+            'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];
     }
 }

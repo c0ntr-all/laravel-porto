@@ -23,6 +23,26 @@
         </q-input>
       </div>
       <div class="col-auto">
+        <q-btn-toggle
+          v-model="viewMode"
+          unelevated
+          dense
+          toggle-color="primary"
+          color="grey-2"
+          text-color="primary"
+          :options="viewModeOptions"
+        >
+          <template #blocks>
+            <q-icon name="grid_view" size="sm" />
+            <q-tooltip>Blocks</q-tooltip>
+          </template>
+          <template #list>
+            <q-icon name="view_agenda" size="sm" />
+            <q-tooltip>List</q-tooltip>
+          </template>
+        </q-btn-toggle>
+      </div>
+      <div class="col-auto">
         <q-btn
           icon="add"
           label="Create playlist"
@@ -76,26 +96,48 @@
       </q-card>
     </q-dialog>
 
-    <div v-if="playlistStore.isPlaylistsLoading" class="row q-col-gutter-md">
-      <div
-        v-for="n in 8"
-        :key="n"
-        class="col-6 col-sm-4 col-md-3"
-      >
-        <MusicPlaylistCardSkeleton />
-      </div>
+    <div
+      v-if="playlistStore.isPlaylistsLoading"
+      :class="isList ? 'playlists-list' : 'row q-col-gutter-md'"
+    >
+      <template v-if="isList">
+        <q-skeleton
+          v-for="n in 8"
+          :key="n"
+          class="playlists-list-skeleton"
+          type="rect"
+        />
+      </template>
+      <template v-else>
+        <div
+          v-for="n in 12"
+          :key="n"
+          class="col-6 col-sm-4 col-md-3 col-lg-2"
+        >
+          <MusicPlaylistCardSkeleton />
+        </div>
+      </template>
     </div>
 
-    <template v-else-if="playlistStore.playlists.length">
-      <div class="row q-col-gutter-md">
+    <template v-else-if="displayedPlaylists.length">
+      <div v-if="!isList" class="row q-col-gutter-md">
         <div
-          v-for="playlist in playlistStore.playlists"
+          v-for="playlist in displayedPlaylists"
           :key="playlist.id"
-          class="col-6 col-sm-4 col-md-3"
+          class="col-6 col-sm-4 col-md-3 col-lg-2"
         >
           <MusicPlaylistCard :playlist="playlist" />
         </div>
       </div>
+
+      <div v-else class="playlists-list">
+        <MusicPlaylistRow
+          v-for="playlist in displayedPlaylists"
+          :key="playlist.id"
+          :playlist="playlist"
+        />
+      </div>
+
       <div
         v-if="playlistStore.hasMorePlaylists"
         ref="sentinel"
@@ -118,18 +160,44 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMusicPlaylistStore } from 'src/stores/modules/musicPlaylistStore'
 import { useScrollSentinel } from 'src/composables/useScrollSentinel'
+import { usePlaylistsViewMode } from 'src/composables/client/Music/usePlaylistsViewMode'
+import { PlaylistsViewModeEnum } from 'src/enums/Music/PlaylistsViewModeEnum'
 import MusicPlaylistCard from 'src/components/client/Music/MusicPlaylistCard.vue'
 import MusicPlaylistCardSkeleton from 'src/components/client/Music/MusicPlaylistCardSkeleton.vue'
+import MusicPlaylistRow from 'src/components/client/Music/MusicPlaylistRow.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const playlistStore = useMusicPlaylistStore()
+const { viewMode } = usePlaylistsViewMode()
 const createPlaylistModal = ref(false)
 const newPlaylistName = ref('')
 const newPlaylistDescription = ref('')
 const searchText = ref(playlistStore.playlistListName)
+
+const viewModeOptions = [
+  { value: PlaylistsViewModeEnum.BLOCKS, slot: 'blocks' },
+  { value: PlaylistsViewModeEnum.LIST, slot: 'list' }
+]
+
+const isList = computed(() => viewMode.value === PlaylistsViewModeEnum.LIST)
+
+const displayedPlaylists = computed(() => {
+  const items = playlistStore.playlists
+
+  if (!isList.value) {
+    return items
+  }
+
+  return [...items].sort((left, right) => (
+    left.name.localeCompare(right.name, undefined, {
+      sensitivity: 'base',
+      numeric: true
+    })
+  ))
+})
 
 const onSearch = (value: string | number | null) => {
   void playlistStore.getPlaylists({ name: String(value ?? '') })
@@ -168,6 +236,16 @@ onMounted(() => {
 .playlist-modal {
   min-width: 360px;
   max-width: 480px;
+}
+
+.playlists-list {
+  max-width: 760px;
+}
+
+.playlists-list-skeleton {
+  height: 52px;
+  margin-bottom: 4px;
+  border-radius: 4px;
 }
 
 .playlists-list-sentinel {

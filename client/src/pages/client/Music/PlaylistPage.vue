@@ -11,21 +11,7 @@
   <PlaylistPageSkeleton v-if="playlistStore.isPlaylistLoading && !playlistStore.playlist"/>
   <template v-else-if="playlistStore.playlist">
     <div class="playlist">
-      <div class="playlist-head q-mb-lg">
-        <div class="playlist-head__left">
-          <div class="playlist-head__image q-mb-md">
-            <img :src="playlistStore.playlist.image" alt=""/>
-          </div>
-        </div>
-        <div class="playlist-head__right">
-          <h2 class="playlist-head__name">{{ playlistStore.playlist.name }}</h2>
-          <div class="playlist-head__description">
-            <div class="playlist-head__description-item">
-              {{ playlistStore.playlist.description }}
-            </div>
-          </div>
-        </div>
-      </div>
+      <MusicPlaylistHeader :playlist="playlistStore.playlist" />
       <div class="playlist-body">
         <MusicPlaylistTrackSearch/>
         <MusicPlaylistTracksList v-if="playlistStore.playlist.tracks.length"/>
@@ -46,6 +32,7 @@
 <script lang="ts" setup>
 import { watch } from 'vue'
 import { useMusicPlaylistStore } from 'src/stores/modules/musicPlaylistStore'
+import MusicPlaylistHeader from 'src/components/client/Music/MusicPlaylistHeader.vue'
 import MusicPlaylistTracksList from 'src/components/client/Music/MusicPlaylistTracksList.vue'
 import MusicPlaylistTrackSearch from 'src/components/client/Music/MusicPlaylistTrackSearch.vue'
 import PlaylistPageSkeleton from 'src/pages/client/Music/PlaylistPageSkeleton.vue'
@@ -63,34 +50,6 @@ watch(() => props.id, (id) => {
 </script>
 
 <style lang="scss" scoped>
-.playlist-head {
-  display: flex;
-  column-gap: 1rem;
-  padding: 1rem 0 0 0;
-
-  &__image {
-    & > * {
-      width: 200px;
-      height: 200px;
-    }
-  }
-
-  &__name {
-    margin: 0 0 1rem 0;
-    font-size: 45px;
-    line-height: 45px;
-    font-weight: 700;
-  }
-
-  &__description {
-    margin: 0 0 1rem 0;
-
-    &-item {
-      margin-bottom: 1rem;
-    }
-  }
-}
-
 .playlist-body {
   background: #fff;
 }

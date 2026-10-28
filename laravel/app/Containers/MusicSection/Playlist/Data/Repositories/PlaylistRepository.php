@@ -24,6 +24,7 @@ class PlaylistRepository
                            ])
                            ->allowedSorts(['name', 'created_at'])
                            ->allowedIncludes(['tracks'])
+                           ->withCount('tracks')
                            ->when($userId, fn($query) => $query->where('user_id', $userId))
                            ->orderByDesc('created_at')
                            ->orderByDesc('id')

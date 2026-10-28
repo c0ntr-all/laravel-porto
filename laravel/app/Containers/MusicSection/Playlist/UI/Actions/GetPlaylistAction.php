@@ -13,7 +13,8 @@ class GetPlaylistAction extends BaseAction
 
     public function handle(Playlist $playlist): Playlist
     {
-        return $playlist->load(['tracks.artists', 'tracks.album.albumType']);
+        return $playlist->load(['tracks.artists', 'tracks.album.albumType'])
+            ->loadCount('tracks');
     }
 
     public function asController(Playlist $playlist, GetRequest $request): JsonResponse

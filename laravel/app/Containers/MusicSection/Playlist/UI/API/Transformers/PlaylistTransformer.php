@@ -20,6 +20,7 @@ class PlaylistTransformer extends TransformerAbstract
             'name' => $playlist->name,
             'description' => $playlist->description,
             'image' => $playlist->full_image,
+            'tracks_count' => $playlist->tracks_count ?? $playlist->tracks->count(),
             'created_at' => $playlist->created_at->format('Y-m-d H:i:s'),
         ];
     }

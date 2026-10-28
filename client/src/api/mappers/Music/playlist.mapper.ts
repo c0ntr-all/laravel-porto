@@ -4,13 +4,19 @@ import { asRecords } from 'src/api/mappers/Music/helpers'
 import { normalizeTrack } from 'src/api/mappers/Music/track.mapper'
 
 export function normalizePlaylist(raw: Record<string, unknown>): IPlaylist {
+  const tracks = asRecords(raw.tracks).map(item => normalizeTrack(item))
+  const tracksCount = raw.tracks_count == null
+    ? tracks.length
+    : Number(raw.tracks_count)
+
   return {
     id: String(raw.id),
     name: String(raw.name ?? ''),
     description: raw.description == null ? null : String(raw.description),
     image: String(raw.image ?? ''),
+    tracks_count: Number.isFinite(tracksCount) ? tracksCount : tracks.length,
     created_at: raw.created_at ? String(raw.created_at) : undefined,
-    tracks: asRecords(raw.tracks).map(item => normalizeTrack(item))
+    tracks
   }
 }
 

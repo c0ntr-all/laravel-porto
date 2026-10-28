@@ -6,7 +6,7 @@ import { trackApi } from 'src/api/requests/trackApi'
 import { mapPlaylistResponse, mapPlaylistsResponse } from 'src/api/mappers/Music/playlist.mapper'
 import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
 import { extractCursorFromLink, extractCursorFromResponse, handleApiError, handleApiSuccess, hasMoreFromResponse } from 'src/utils/jsonapi'
-import { IPlaylist, IPlaylistCreateDto, ITrack } from 'src/types'
+import { IPlaylist, IPlaylistCreateDto, IPlaylistUpdateDto, ITrack } from 'src/types'
 
 export const TRACK_SEARCH_MIN_LENGTH = 3
 const SEARCH_DEBOUNCE_MS = 400
@@ -67,9 +67,11 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
       return
     }
 
+    const tracks = [...playlist.value.tracks, track]
     playlist.value = {
       ...playlist.value,
-      tracks: [...playlist.value.tracks, track]
+      tracks,
+      tracks_count: tracks.length
     }
   }
 
@@ -78,9 +80,11 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
       return
     }
 
+    const tracks = playlist.value.tracks.filter(track => track.id !== trackId)
     playlist.value = {
       ...playlist.value,
-      tracks: playlist.value.tracks.filter(track => track.id !== trackId)
+      tracks,
+      tracks_count: tracks.length
     }
   }
 
@@ -306,6 +310,49 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
     }
   }
 
+  async function updatePlaylist(
+    id: string,
+    payload: IPlaylistUpdateDto
+  ): Promise<IPlaylist | null> {
+    isPlaylistSaving.value = true
+
+    try {
+      const response = await playlistApi.updatePlaylist(id, payload)
+      const updated = mapPlaylistResponse(response)
+      const previous = playlist.value?.id === id ? playlist.value : null
+
+      const merged: IPlaylist = {
+        ...previous,
+        ...updated,
+        tracks: previous?.tracks ?? updated.tracks ?? [],
+        tracks_count: updated.tracks_count ?? previous?.tracks_count ?? previous?.tracks.length ?? 0
+      }
+
+      if (playlist.value?.id === id) {
+        playlist.value = merged
+      }
+
+      playlists.value = playlists.value.map(item => (
+        item.id === merged.id
+          ? {
+              ...item,
+              ...merged,
+              tracks: item.tracks
+            }
+          : item
+      ))
+
+      handleApiSuccess(response)
+
+      return merged
+    } catch (error) {
+      handleApiError(error)
+      return null
+    } finally {
+      isPlaylistSaving.value = false
+    }
+  }
+
   return {
     playlist,
     isPlaylistLoading,
@@ -333,6 +380,7 @@ export const useMusicPlaylistStore = defineStore('musicPlaylist', () => {
     removeTrackLocal,
     resetSearch,
     getPlaylists,
-    createPlaylist
+    createPlaylist,
+    updatePlaylist
   }
 })

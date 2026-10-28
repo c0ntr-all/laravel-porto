@@ -12,14 +12,14 @@
       </div>
       <q-card-section>
         <div class="text-subtitle1 text-weight-medium ellipsis">{{ playlist.name }}</div>
+        <div class="text-caption text-grey-7 q-mt-xs">
+          {{ tracksLabel }}
+        </div>
         <div
           v-if="playlist.description"
-          class="text-caption text-grey-7 ellipsis-2-lines q-mt-xs"
+          class="text-caption text-grey-6 ellipsis-2-lines q-mt-xs"
         >
           {{ playlist.description }}
-        </div>
-        <div v-if="playlist.created_at" class="text-caption text-grey-5 q-mt-xs">
-          {{ playlist.created_at }}
         </div>
       </q-card-section>
     </q-card>
@@ -27,11 +27,15 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { IPlaylist } from 'src/types'
+import { formatPlaylistTracksCount } from 'src/utils/playlist'
 
-defineProps<{
+const props = defineProps<{
   playlist: IPlaylist
 }>()
+
+const tracksLabel = computed(() => formatPlaylistTracksCount(props.playlist))
 </script>
 
 <style lang="scss" scoped>

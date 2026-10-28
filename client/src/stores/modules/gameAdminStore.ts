@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { gameApi } from 'src/api/requests/gameApi'
-import { gameImportApi } from 'src/api/requests/gameImportApi'
 import { mapGameResponse, mapGamesResponse } from 'src/api/mappers/Game/game.mapper'
 import { handleApiSuccess } from 'src/utils/jsonapi'
 import { notifyGameApiError } from 'src/utils/game'
@@ -13,7 +12,6 @@ export const useGameAdminStore = defineStore('gameAdmin', () => {
   const gamesTotal = ref<number | null>(null)
   const isGamesLoading = ref(false)
   const isSaving = ref(false)
-  const isImporting = ref(false)
   const listName = ref('')
 
   let listRequestId = 0
@@ -40,6 +38,11 @@ export const useGameAdminStore = defineStore('gameAdmin', () => {
     }
 
     games.value.splice(index, 1, incoming)
+  }
+
+  function upsertImportedGame(incoming: IGame): void {
+    upsertGame(incoming)
+    syncPublicStore(incoming)
   }
 
   async function getGames(options?: { name?: string }): Promise<void> {
@@ -121,36 +124,15 @@ export const useGameAdminStore = defineStore('gameAdmin', () => {
     }
   }
 
-  async function importFromSteam(steamId: number): Promise<IGame | null> {
-    isImporting.value = true
-
-    try {
-      const response = await gameImportApi.importGame(steamId)
-      const imported = mapGameResponse(response)
-
-      upsertGame(imported)
-      syncPublicStore(imported)
-      handleApiSuccess(response)
-
-      return imported
-    } catch (error) {
-      notifyGameApiError(error)
-      return null
-    } finally {
-      isImporting.value = false
-    }
-  }
-
   return {
     games,
     gamesTotal,
     isGamesLoading,
     isSaving,
-    isImporting,
     listName,
     getGames,
     updateGame,
     deleteGame,
-    importFromSteam
+    upsertImportedGame
   }
 })

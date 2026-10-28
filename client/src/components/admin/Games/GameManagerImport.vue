@@ -19,7 +19,7 @@
               outlined
               dense
               lazy-rules
-              :disable="gameStore.isImporting"
+              :disable="store.isImporting"
               :rules="[validateInput]"
             >
               <template #prepend>
@@ -35,7 +35,7 @@
               color="primary"
               unelevated
               no-caps
-              :loading="gameStore.isImporting"
+              :loading="store.isImporting"
               :disable="!canSubmit"
             />
           </div>
@@ -43,63 +43,153 @@
       </q-card-section>
     </q-card>
 
-    <q-card v-if="imported" flat bordered>
-      <q-item>
-        <q-item-section avatar class="imported-game__cover-wrap">
-          <div class="imported-game__cover">
-            <q-img
-              v-if="imported.img"
-              :src="imported.img"
-              :alt="imported.name"
-              fit="cover"
-            />
-            <div v-else class="imported-game__cover-fallback">
-              <q-icon name="sports_esports" />
+    <div class="text-h6 q-mb-md">Import history</div>
+
+    <q-card flat bordered>
+      <q-inner-loading :showing="store.isLoading">
+        <q-spinner color="primary" size="2em" />
+      </q-inner-loading>
+
+      <q-list v-if="store.imports.length" separator>
+        <q-item
+          v-for="item in store.imports"
+          :key="item.id"
+          class="import-row"
+        >
+          <q-item-section avatar class="import-row__cover-wrap">
+            <div class="import-row__cover">
+              <q-img
+                v-if="item.game?.img"
+                :src="item.game.img"
+                :alt="item.game.name"
+                fit="cover"
+              >
+                <template #error>
+                  <div class="import-row__cover-fallback">
+                    <q-icon name="sports_esports" />
+                  </div>
+                </template>
+              </q-img>
+              <div v-else class="import-row__cover-fallback">
+                <q-icon name="sports_esports" />
+              </div>
             </div>
-          </div>
-        </q-item-section>
-        <q-item-section>
-          <q-item-label class="text-subtitle1 text-weight-medium">
-            {{ imported.name }}
-          </q-item-label>
-          <q-item-label caption>
-            Steam {{ imported.steam_id }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section side>
-          <q-btn
-            dense
-            flat
-            no-caps
-            color="primary"
-            icon="open_in_new"
-            label="Открыть"
-            :to="{ name: 'game', params: { id: imported.id } }"
-          />
-        </q-item-section>
-      </q-item>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-subtitle1 text-weight-medium">
+              {{ item.game?.name || `Steam ${item.steam_id}` }}
+            </q-item-label>
+            <q-item-label caption>
+              Steam ID {{ item.steam_id }}
+              <span v-if="airDate(item)"> · {{ airDate(item) }}</span>
+              <span v-if="durationLabel(item)"> · {{ durationLabel(item) }}</span>
+            </q-item-label>
+            <q-item-label
+              v-if="item.error_message"
+              caption
+              class="text-negative"
+            >
+              {{ item.error_message }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <div class="column items-end q-gutter-xs">
+              <q-chip
+                dense
+                :color="statusColor(item.status)"
+                text-color="white"
+              >
+                {{ GAME_IMPORT_STATUS_LABELS[item.status] }}
+              </q-chip>
+              <q-chip
+                v-if="item.status === GameImportStatusEnum.COMPLETED && item.was_created != null"
+                dense
+                outline
+                color="primary"
+              >
+                {{ item.was_created ? 'Created' : 'Updated' }}
+              </q-chip>
+              <q-btn
+                v-if="steamLink(item)"
+                dense
+                flat
+                no-caps
+                size="sm"
+                icon="open_in_new"
+                label="Steam"
+                :href="steamLink(item) ?? undefined"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            </div>
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <div v-else-if="!store.isLoading" class="q-pa-lg text-grey-6">
+        No imports yet. Paste a Steam ID to start.
+      </div>
+
+      <div v-if="store.hasMoreImports" ref="sentinel" class="list-sentinel" />
+      <div v-if="store.isLoadingMore" class="flex justify-center q-py-md">
+        <q-spinner color="primary" />
+      </div>
     </q-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import type { QInput } from 'quasar'
-import { useGameAdminStore } from 'src/stores/modules/gameAdminStore'
-import { parseSteamId } from 'src/utils/game'
-import { IGame } from 'src/types/Game'
+import { useGameImportStore } from 'src/stores/modules/gameImportStore'
+import { useScrollSentinel } from 'src/composables/useScrollSentinel'
+import { formatGameAirDate, parseSteamId, steamStoreUrl } from 'src/utils/game'
+import {
+  GameImportStatusEnum,
+  GAME_IMPORT_STATUS_LABELS
+} from 'src/enums/Game/GameImportStatusEnum'
+import { IGameImport } from 'src/types/Game'
 
-const gameStore = useGameAdminStore()
+const store = useGameImportStore()
 const steamInput = ref('')
 const steamInputRef = ref<QInput | null>(null)
-const imported = ref<IGame | null>(null)
 
 const canSubmit = computed(() => (
-  Boolean(parseSteamId(steamInput.value)) && !gameStore.isImporting
+  Boolean(parseSteamId(steamInput.value)) && !store.isImporting
 ))
 
 function validateInput(value: string): true | string {
   return parseSteamId(value) ? true : 'Укажите Steam ID или ссылку на игру в магазине'
+}
+
+function airDate(item: IGameImport): string {
+  return formatGameAirDate(item.game?.air_date)
+}
+
+function statusColor(status: GameImportStatusEnum): string {
+  if (status === GameImportStatusEnum.COMPLETED) {
+    return 'positive'
+  }
+
+  if (status === GameImportStatusEnum.FAILED) {
+    return 'negative'
+  }
+
+  return 'grey-7'
+}
+
+function durationLabel(item: IGameImport): string {
+  if (item.duration_ms == null) {
+    return ''
+  }
+
+  const seconds = item.duration_ms / 1000
+
+  return seconds < 10 ? `${seconds.toFixed(1)}s` : `${Math.round(seconds)}s`
+}
+
+function steamLink(item: IGameImport): string | null {
+  return steamStoreUrl(item.steam_id)
 }
 
 async function submit(): Promise<void> {
@@ -110,18 +200,30 @@ async function submit(): Promise<void> {
     return
   }
 
-  const result = await gameStore.importFromSteam(steamId)
+  const imported = await store.importFromSteam(steamId)
 
-  if (result) {
-    imported.value = result
+  if (imported?.status === GameImportStatusEnum.COMPLETED) {
     steamInput.value = ''
     steamInputRef.value?.resetValidation()
   }
 }
+
+const { sentinel } = useScrollSentinel(
+  () => { void store.getImports({ append: true }) },
+  () => store.hasMoreImports && !store.isLoading && !store.isLoadingMore
+)
+
+onMounted(() => {
+  if (!store.imports.length) {
+    void store.getImports()
+  }
+})
 </script>
 
 <style lang="scss" scoped>
-.imported-game {
+.import-row {
+  min-height: 96px;
+
   &__cover-wrap {
     min-width: 128px;
   }
@@ -146,5 +248,9 @@ async function submit(): Promise<void> {
     height: 100%;
     color: #9aa0b8;
   }
+}
+
+.list-sentinel {
+  height: 1px;
 }
 </style>

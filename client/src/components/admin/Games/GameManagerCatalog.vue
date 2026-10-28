@@ -81,7 +81,7 @@
                 outline
                 dense
                 no-caps
-                :disable="!item.steam_id || gameStore.isImporting"
+                :disable="!item.steam_id || importStore.isImporting"
                 @click="openReimport(item)"
               />
               <q-btn
@@ -117,13 +117,13 @@
           Текущие название, описание, обложка, дата выхода, разработчик и издатель будут заменены данными магазина.
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat no-caps v-close-popup :disable="gameStore.isImporting">Отмена</q-btn>
+          <q-btn flat no-caps v-close-popup :disable="importStore.isImporting">Отмена</q-btn>
           <q-btn
             color="primary"
             unelevated
             no-caps
             label="Реимпорт"
-            :loading="gameStore.isImporting"
+            :loading="importStore.isImporting"
             @click="runReimport"
           />
         </q-card-actions>
@@ -155,11 +155,14 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
 import { useGameAdminStore } from 'src/stores/modules/gameAdminStore'
+import { useGameImportStore } from 'src/stores/modules/gameImportStore'
 import { formatGameAirDate } from 'src/utils/game'
+import { GameImportStatusEnum } from 'src/enums/Game/GameImportStatusEnum'
 import { IGame } from 'src/types/Game'
 import GameFormDialog from 'src/components/admin/Games/GameFormDialog.vue'
 
 const gameStore = useGameAdminStore()
+const importStore = useGameImportStore()
 const searchText = ref(gameStore.listName)
 const showEdit = ref(false)
 const editing = ref<IGame | null>(null)
@@ -190,7 +193,7 @@ function openEdit(item: IGame): void {
 }
 
 function openReimport(item: IGame): void {
-  if (!item.steam_id || gameStore.isImporting) {
+  if (!item.steam_id || importStore.isImporting) {
     return
   }
 
@@ -210,9 +213,9 @@ async function runReimport(): Promise<void> {
     return
   }
 
-  const imported = await gameStore.importFromSteam(steamId)
+  const imported = await importStore.importFromSteam(steamId)
 
-  if (imported) {
+  if (imported?.status === GameImportStatusEnum.COMPLETED) {
     showReimport.value = false
     reimporting.value = null
   }

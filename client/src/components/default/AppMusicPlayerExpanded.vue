@@ -125,24 +125,19 @@
     </div>
 
     <div class="music-player-expanded__playlist">
-      <button
-        v-for="(track, index) in player.playlist"
-        :key="track.id"
-        type="button"
-        class="music-player-expanded__track"
-        :class="{ 'music-player-expanded__track--current': player.isCurrentTrack(track.id) }"
-        @click="player.toggleTrack(track)"
+      <div
+        v-if="player.playlist.length"
+        class="music-player-expanded__tracks q-gutter-xs"
       >
-        <span class="music-player-expanded__track-index">{{ index + 1 }}</span>
-        <span class="music-player-expanded__track-body">
-          <span class="music-player-expanded__track-name">
-            <MusicTrackName :name="track.name" :credits="track.credits" />
-          </span>
-          <span class="music-player-expanded__track-artist">{{ trackArtist(track) }}</span>
-        </span>
-        <span class="music-player-expanded__track-time">{{ track.duration }}</span>
-      </button>
-      <div v-if="!player.playlist.length" class="music-player-expanded__empty">
+        <MusicTrackCard
+          v-for="track in player.playlist"
+          :key="track.id"
+          :track="track"
+          :actions="trackActions"
+          @play="playTrack(track)"
+        />
+      </div>
+      <div v-else class="music-player-expanded__empty">
         Playlist is empty
       </div>
     </div>
@@ -153,11 +148,12 @@
 import { computed } from 'vue'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
 import AppSlider from 'src/components/default/AppSlider.vue'
-import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
-import { ITrack } from 'src/types'
+import MusicTrackCard from 'src/components/client/Music/MusicTrackCard.vue'
 import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
+import { ITrack } from 'src/types'
 
 const player = useMusicPlayer()
+const trackActions = ['addToPlaylist']
 
 const progress = computed({
   get: () => player.progress,
@@ -181,8 +177,9 @@ const volumeIcon = computed(() => {
   return 'volume_up'
 })
 
-const trackArtist = (track: ITrack): string => {
-  return formatTrackArtist(track) || 'Unknown artist'
+const playTrack = (track: ITrack) => {
+  // Keep the existing queue order (including shuffle); do not rebuild from a snapshot.
+  void player.toggleTrack(track)
 }
 </script>
 
@@ -190,8 +187,8 @@ const trackArtist = (track: ITrack): string => {
 .music-player-expanded {
   display: flex;
   flex-direction: column;
-  width: 560px;
-  max-width: 90vw;
+  width: 640px;
+  max-width: 92vw;
   max-height: min(72vh, 720px);
 
   &__controls {
@@ -309,76 +306,17 @@ const trackArtist = (track: ITrack): string => {
     flex: 1 1 auto;
     min-height: 180px;
     overflow: auto;
-    padding: 0 8px 8px;
+    padding: 0 12px 12px;
+  }
+
+  &__tracks {
+    max-width: 100%;
   }
 
   &__empty {
     padding: 24px 16px;
     color: #818c99;
     text-align: center;
-  }
-
-  &__track {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-width: 0;
-    padding: 8px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover,
-    &--current {
-      background: rgba(174, 183, 194, 0.12);
-    }
-
-    &--current .music-player-expanded__track-name {
-      color: #1976d2;
-      font-weight: 700;
-    }
-  }
-
-  &__track-index {
-    flex-shrink: 0;
-    width: 24px;
-    color: #818c99;
-    font-size: 12px;
-    text-align: center;
-  }
-
-  &__track-body {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-    margin: 0 8px;
-  }
-
-  &__track-name,
-  &__track-artist {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__track-name {
-    font-size: 13px;
-    line-height: 16px;
-  }
-
-  &__track-artist {
-    color: #818c99;
-    font-size: 12px;
-    line-height: 16px;
-  }
-
-  &__track-time {
-    flex-shrink: 0;
-    color: #818c99;
-    font-size: 12px;
   }
 }
 </style>

@@ -28,13 +28,25 @@ class ReorderTasksTask extends ParentTask
             throw new UnprocessableEntityHttpException('One or more tasks were not found.');
         }
 
-        $this->assertSameSiblingScope($tasks);
+        // Favorites may live in different lists; their priority is a global sort key.
+        if (!$this->areAllFavorites($tasks)) {
+            $this->assertSameSiblingScope($tasks);
+        }
 
         DB::transaction(function () use ($dto): void {
             $this->taskRepository->reorder($dto->ids);
         });
 
         return $this->taskRepository->findManyOrderedByIds($dto->ids);
+    }
+
+    /**
+     * @param Collection<int, Task> $tasks
+     */
+    private function areAllFavorites(Collection $tasks): bool
+    {
+        return $tasks->isNotEmpty()
+            && $tasks->every(static fn (Task $task): bool => (bool) $task->is_favorite);
     }
 
     /**

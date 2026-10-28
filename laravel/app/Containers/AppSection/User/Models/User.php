@@ -5,8 +5,10 @@ namespace App\Containers\AppSection\User\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Containers\AppSection\Notification\Contracts\ReceivesNotifications;
 use App\Containers\AppSection\Notification\Models\Traits\HasUserNotifications;
+use App\Containers\AppSection\SteamUser\Models\SteamUser;
 use App\Containers\AppSection\User\Models\Traits\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
@@ -22,6 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read SteamUser|null $steamUser
  */
 class User extends Authenticatable implements ReceivesNotifications
 {
@@ -70,5 +73,10 @@ class User extends Authenticatable implements ReceivesNotifications
     public function getNotificationUserId(): int
     {
         return (int) $this->id;
+    }
+
+    public function steamUser(): HasOne
+    {
+        return $this->hasOne(SteamUser::class, 'user_id');
     }
 }

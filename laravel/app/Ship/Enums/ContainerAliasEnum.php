@@ -18,6 +18,7 @@ enum ContainerAliasEnum: string
     case COMMENTS = 'comments';
     case CUSTOM_FIELD = 'custom_fields';
     case COUNTRY = 'countries';
+    case STEAM_USER = 'steam_users';
     //MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
@@ -48,6 +49,9 @@ enum ContainerAliasEnum: string
     case MOVIE_SEASON = 'movie_seasons';
     case MOVIE_EPISODE = 'movie_episodes';
     case MOVIE_FRANCHISE = 'movie_franchises';
+    //GameSection
+    case GAME = 'games';
+    case GAME_ACHIEVEMENT = 'game_achievements';
 
     public function getContainerMessage(): string
     {
@@ -83,6 +87,9 @@ enum ContainerAliasEnum: string
             self::MOVIE_SEASON => 'Сезон сериала',
             self::MOVIE_EPISODE => 'Эпизод сериала',
             self::MOVIE_FRANCHISE => 'Франшиза',
+            self::GAME => 'Игра',
+            self::GAME_ACHIEVEMENT => 'Достижение',
+            self::STEAM_USER => 'Профиль Steam',
         };
     }
 

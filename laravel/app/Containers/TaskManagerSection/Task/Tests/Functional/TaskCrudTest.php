@@ -403,4 +403,38 @@ class TaskCrudTest extends TestCase
 
         $response->assertUnprocessable();
     }
+
+    public function test_user_can_reorder_favorites_across_lists(): void
+    {
+        $list = TaskList::create([
+            'user_id' => $this->user->id,
+            'title' => 'Board',
+        ]);
+
+        $inbox = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Inbox favorite',
+            'is_favorite' => true,
+            'priority' => 0,
+        ]);
+
+        $listed = Task::create([
+            'user_id' => $this->user->id,
+            'task_list_id' => $list->id,
+            'title' => 'Listed favorite',
+            'is_favorite' => true,
+            'priority' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks/reorder', [
+                'ids' => [$listed->id, $inbox->id],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'Listed favorite')
+            ->assertJsonPath('data.0.attributes.priority', 0)
+            ->assertJsonPath('data.1.attributes.title', 'Inbox favorite')
+            ->assertJsonPath('data.1.attributes.priority', 1);
+    }
 }

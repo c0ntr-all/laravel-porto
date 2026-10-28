@@ -32,6 +32,7 @@ class ShipServiceProvider extends ServiceProvider
         \App\Containers\DashboardSection\Widget\Providers\WidgetServiceProvider::class,
         \App\Containers\MovieSection\Import\Providers\ImportServiceProvider::class,
         \App\Containers\MovieSection\Folder\Providers\FolderServiceProvider::class,
+        \App\Containers\GameSection\Import\Providers\ImportServiceProvider::class,
     ];
 
     /**
@@ -72,6 +73,9 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::MOVIE_SEASON->value => 'App\Containers\MovieSection\Season\Models\Season',
             ContainerAliasEnum::MOVIE_EPISODE->value => 'App\Containers\MovieSection\Episode\Models\Episode',
             ContainerAliasEnum::MOVIE_FRANCHISE->value => 'App\Containers\MovieSection\Franchise\Models\Franchise',
+            ContainerAliasEnum::GAME->value => 'App\Containers\GameSection\Game\Models\Game',
+            ContainerAliasEnum::GAME_ACHIEVEMENT->value => 'App\Containers\GameSection\Achievement\Models\Achievement',
+            ContainerAliasEnum::STEAM_USER->value => 'App\Containers\AppSection\SteamUser\Models\SteamUser',
             // JSON:API resource names that may have been stored as morph types
             'albums' => 'App\Containers\GallerySection\Album\Models\Album',
             'images' => 'App\Containers\GallerySection\Image\Models\Image',

@@ -188,6 +188,25 @@ const routes: RouteRecordRaw[] = [{
       props: true
     }]
   }, {
+    path: '/games',
+    component: () => import('layouts/PageLayout.vue'),
+    meta: {
+      title: 'Игры',
+      icon: 'sports_esports',
+      menu: true
+    },
+    children: [{
+      path: '/games',
+      component: () => import('pages/client/Games/GamesPage.vue'),
+      name: 'games',
+      props: true
+    }, {
+      path: '/games/:id',
+      component: () => import('pages/client/Games/GamePage.vue'),
+      name: 'game',
+      props: true
+    }]
+  }, {
     path: '/admin/music',
     component: () => import('pages/admin/Music/AdminMusicPage.vue'),
     meta: {
@@ -207,6 +226,16 @@ const routes: RouteRecordRaw[] = [{
     },
     name: 'moviemanage',
     alias: '/admin/movies'
+  }, {
+    path: '/admin/games',
+    component: () => import('pages/admin/Games/AdminGamesPage.vue'),
+    meta: {
+      title: 'Games Manager',
+      icon: 'sports_esports',
+      is_admin: true
+    },
+    name: 'gamesmanage',
+    alias: '/admin/games'
   }, {
     path: '/data-grid',
     component: () => import('pages/client/DataGridPlaygroundPage.vue'),

@@ -9,16 +9,7 @@
         </p>
       </div>
 
-      <AppNoResultsPlug
-        v-if="!events.length"
-        title="Напоминаний пока нет"
-        body="Добавьте напоминание в задаче — оно появится в ячейке нужного дня"
-      />
-
-      <div
-        v-else
-        class="tm-calendar-tab__board"
-      >
+      <div class="tm-calendar-tab__board">
         <AppCalendar
           v-model="selectedDate"
           v-model:view-month="viewMonth"
@@ -77,7 +68,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
 import AppCalendar from 'src/components/default/AppCalendar.vue'
-import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPageSkeleton.vue'
 import { useTaskDialogRoute } from 'src/composables/client/TaskManager/useTaskDialogRoute'
 import { useTaskStore } from 'src/stores/modules/taskStore'
@@ -100,10 +90,10 @@ interface ICalendarReminderEvent extends ICalendarEvent {
 }
 
 const URGENCY_COLOR: Record<ReminderUrgency, string> = {
-  overdue: '#fecaca',
-  'due-soon': '#fde68a',
-  upcoming: '#bfdbfe',
-  inactive: '#e5e7eb'
+  overdue: '#c10015',
+  'due-soon': '#f2c037',
+  upcoming: '#1976d2',
+  inactive: '#9e9e9e'
 }
 
 const taskStore = useTaskStore()

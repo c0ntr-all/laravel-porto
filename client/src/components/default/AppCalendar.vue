@@ -91,17 +91,17 @@
               :key="event.id"
               type="button"
               class="app-calendar__event"
-              :style="eventStyle(event)"
               :title="eventTooltip(event)"
               @click.stop="onEventClick(event)"
             >
               <span
-                v-if="event.time"
-                class="app-calendar__event-time"
-              >
-                {{ event.time }}
+                class="app-calendar__event-stripe"
+                :style="stripeStyle(event)"
+                aria-hidden="true"
+              />
+              <span class="app-calendar__event-time">
+                {{ event.time || '—' }}
               </span>
-              <span class="app-calendar__event-title">{{ event.title }}</span>
             </button>
 
             <button
@@ -224,12 +224,11 @@ function hiddenEventsCount (cell: ICalendarDayCell): number {
   return Math.max(0, cell.events.length - props.maxVisibleEvents)
 }
 
-function eventStyle (event: ICalendarEvent): Record<string, string> | undefined {
+function stripeStyle (event: ICalendarEvent): Record<string, string> | undefined {
   if (!event.color) return undefined
 
   return {
-    backgroundColor: event.color,
-    borderColor: event.color
+    backgroundColor: event.color
   }
 }
 
@@ -326,8 +325,8 @@ function goToToday () {
   &__day {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-height: 118px;
+    gap: 6px;
+    min-height: 90px;
     padding: 6px;
     background: #fff;
     cursor: pointer;
@@ -384,60 +383,59 @@ function goToToday () {
   &__day-events {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 4px;
     min-height: 0;
   }
 
   &__event {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    width: 100%;
+    gap: 6px;
     max-width: 100%;
-    padding: 2px 6px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    background: #dbeafe;
-    color: #1e3a5f;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #374151;
     text-align: left;
     cursor: pointer;
-    transition: filter 0.12s ease, transform 0.12s ease;
 
-    &:hover {
-      filter: brightness(0.96);
+    &:hover .app-calendar__event-time {
+      color: #111827;
     }
 
     &:focus-visible {
       outline: 2px solid $primary;
-      outline-offset: 1px;
+      outline-offset: 2px;
+      border-radius: 4px;
     }
   }
 
-  &__event-time {
+  &__event-stripe {
     flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 700;
-    opacity: 0.85;
+    width: 18px;
+    height: 4px;
+    border-radius: 999px;
+    background: $primary;
   }
 
-  &__event-title {
+  &__event-time {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: 11px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
   }
 
   &__more {
-    align-self: flex-start;
-    padding: 0 4px;
+    padding: 0;
     border: 0;
     background: transparent;
-    color: #4b5563;
+    color: #6b7280;
     font-size: 11px;
     font-weight: 600;
+    line-height: 1;
     cursor: pointer;
 
     &:hover {
@@ -450,12 +448,8 @@ function goToToday () {
 @media (max-width: 899px) {
   .app-calendar {
     &__day {
-      min-height: 96px;
+      min-height: 168px;
       padding: 4px;
-    }
-
-    &__event-time {
-      display: none;
     }
   }
 }
@@ -471,10 +465,14 @@ function goToToday () {
     }
 
     &__day {
-      min-height: 84px;
+      min-height: 147px;
     }
 
-    &__event-title {
+    &__event-stripe {
+      width: 14px;
+    }
+
+    &__event-time {
       font-size: 10px;
     }
   }

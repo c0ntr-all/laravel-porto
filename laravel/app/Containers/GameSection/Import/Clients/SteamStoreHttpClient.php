@@ -66,6 +66,7 @@ class SteamStoreHttpClient implements SteamStoreClientInterface
             throw new SteamStoreException(
                 'Steam store connection timed out for app '.$steamId.'.',
                 504,
+                null,
                 $exception,
             );
         }

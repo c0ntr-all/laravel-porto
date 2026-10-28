@@ -65,6 +65,16 @@ class GameRepository
         return (bool) $game->delete();
     }
 
+    public function findBySteamId(int $steamId, bool $forUpdate = false): ?Game
+    {
+        $query = Game::query()->where('steam_id', $steamId);
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
     public function upsertBySteamId(
         int $steamId,
         string $name,

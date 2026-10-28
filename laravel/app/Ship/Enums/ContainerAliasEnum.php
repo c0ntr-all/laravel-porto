@@ -52,6 +52,7 @@ enum ContainerAliasEnum: string
     //GameSection
     case GAME = 'games';
     case GAME_ACHIEVEMENT = 'game_achievements';
+    case GAME_IMPORT = 'game_imports';
 
     public function getContainerMessage(): string
     {
@@ -89,6 +90,7 @@ enum ContainerAliasEnum: string
             self::MOVIE_FRANCHISE => 'Франшиза',
             self::GAME => 'Игра',
             self::GAME_ACHIEVEMENT => 'Достижение',
+            self::GAME_IMPORT => 'Импорт игры',
             self::STEAM_USER => 'Профиль Steam',
         };
     }

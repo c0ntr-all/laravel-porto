@@ -7,6 +7,10 @@
       <q-icon name="star" color="amber-8" />
       <q-tooltip>Избранная</q-tooltip>
     </div>
+    <div v-if="isSubtasksExists" class="task-item__panel-item">
+      <q-icon name="account_tree" />
+      <q-tooltip>Подзадачи: {{ task.subtasks_count }}</q-tooltip>
+    </div>
     <div v-if="isReminderExists" class="task-item__panel-item">
       <q-icon name="schedule" />
     </div>
@@ -27,6 +31,7 @@ const props = defineProps<{
   task: ITask
 }>()
 
+const isSubtasksExists = computed(() => (props.task.subtasks_count ?? 0) > 0)
 const isChecklistsExists = computed(() => props.task.checklists_count > 0)
 const isReminderExists = computed(() => props.task.reminders_count > 0)
 const isProgressExists = computed(() => props.task.progresses_count > 0)

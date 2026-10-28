@@ -3,7 +3,7 @@
     <AppNoResultsPlug
       v-if="!groups.length"
       title="Задач пока нет"
-      body="Создайте карточку в режиме блоков, и она появится здесь"
+      body="Создайте задачу или примените шаблон — она появится в этом списке"
     />
 
     <section
@@ -74,18 +74,18 @@ const groups = computed<ITaskGroup[]>(() => {
   return result
 })
 
-function parseTaskDate(value?: string): Date | null {
+function parseTaskDate (value?: string): Date | null {
   if (!value) return null
 
   const parsed = new Date(value.replace(' ', 'T'))
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-function parseTaskTime(value?: string): number {
+function parseTaskTime (value?: string): number {
   return parseTaskDate(value)?.getTime() ?? 0
 }
 
-function getDateGroupKey(value?: string): string {
+function getDateGroupKey (value?: string): string {
   const parsed = parseTaskDate(value)
   if (!parsed) return 'unknown'
 
@@ -96,7 +96,7 @@ function getDateGroupKey(value?: string): string {
   ].join('-')
 }
 
-function getDateGroupLabel(value?: string): string {
+function getDateGroupLabel (value?: string): string {
   const parsed = parseTaskDate(value)
   if (!parsed) return 'Без даты'
 

@@ -305,10 +305,30 @@ export const useTaskStore = defineStore('task', () => {
   async function createTask(payload: ITaskCreatePayload): Promise<ITask | undefined> {
     try {
       const responseData = await taskApi.createTask(payload)
-      const { entity } = normalizeEntity<ITask>(responseData.data, responseData.included)
+      const { entity, related } = normalizeEntity<ITask>(responseData.data, responseData.included)
+
+      for (const type in related) {
+        const camelType = camel(type)
+
+        switch (camelType) {
+          case 'checklists':
+            for (const id in related[type]) {
+              upsertEntity(checklists, related[type][id] as unknown as IChecklist)
+            }
+            break
+          case 'checklistItems':
+            for (const id in related[type]) {
+              upsertEntity(checklistItems, related[type][id] as unknown as IChecklistItem)
+            }
+            break
+          case 'attachments':
+            upsertMappedAttachments(relatedItems(related as Record<string, unknown>, type))
+            break
+        }
+      }
 
       prepareEmptyTaskRelations(entity)
-      entity.isHydrated = !entity.parent_id
+      entity.isHydrated = Boolean(payload.task_template_id) || !entity.parent_id
 
       upsertEntity(tasks, entity)
 

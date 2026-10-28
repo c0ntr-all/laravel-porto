@@ -11,6 +11,15 @@
           label="Create a list"
           no-caps
         />
+        <q-btn
+          v-else-if="viewMode === TasksViewModeEnum.LIST"
+          color="primary"
+          icon="add"
+          label="Создать задачу"
+          no-caps
+          unelevated
+          @click="isCreateDialogOpen = true"
+        />
         <div v-if="showAddForm" class="list__add-form">
           <q-input
             @keyup.enter="createTaskList"
@@ -49,6 +58,12 @@
 
     <TMRemindersView v-else-if="viewMode === TasksViewModeEnum.REMINDERS" />
     <TMTasksListView v-else />
+
+    <TMTaskCreateDialog
+      v-if="viewMode === TasksViewModeEnum.LIST"
+      v-model="isCreateDialogOpen"
+      @created="onTaskCreated"
+    />
   </template>
 </template>
 
@@ -59,14 +74,19 @@ import TaskManagerPageSkeleton from 'src/pages/client/TaskManager/TaskManagerPag
 import TMTaskList from 'src/components/client/TaskManager/TMTaskList.vue'
 import TMTasksListView from 'src/components/client/TaskManager/TMTasksListView.vue'
 import TMRemindersView from 'src/components/client/TaskManager/TMRemindersView.vue'
+import TMTaskCreateDialog from 'src/components/client/TaskManager/TMTaskCreateDialog.vue'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { useSettingsStore } from 'src/stores/modules/settingsStore'
 import { TasksViewModeEnum } from 'src/enums/TaskManager/TasksViewModeEnum'
+import { ITask } from 'src/types/TaskManager/task'
+import { useTaskDialogRoute } from 'src/composables/client/TaskManager/useTaskDialogRoute'
 
 const taskStore = useTaskStore()
 const settingsStore = useSettingsStore()
+const { openTask } = useTaskDialogRoute()
 
 const showAddForm = ref<boolean>(false)
+const isCreateDialogOpen = ref(false)
 const loading = ref<boolean>(true)
 const listAddTextarea = ref<HTMLElement | null>(null)
 const model = ref<{ newListName: string }>({
@@ -148,7 +168,14 @@ watch(viewMode, (mode) => {
   if (mode !== TasksViewModeEnum.BLOCKS) {
     closeAddForm()
   }
+  if (mode !== TasksViewModeEnum.LIST) {
+    isCreateDialogOpen.value = false
+  }
 })
+
+function onTaskCreated (task: ITask) {
+  openTask(task)
+}
 
 onMounted(() => {
   getTaskLists()

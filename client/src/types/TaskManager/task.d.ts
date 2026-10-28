@@ -227,10 +227,11 @@ export interface ITask extends ITaskFields {
   subtasksIds?: string[]
 }
 export interface ITaskCreatePayload {
-  title: string
+  title?: string
   content?: string
   task_list_id?: string
   parent_id?: string
+  task_template_id?: string
 }
 export interface ITaskUpdatePayload extends Partial<ITaskFields> {
   deleted_attachments_ids?: string[]

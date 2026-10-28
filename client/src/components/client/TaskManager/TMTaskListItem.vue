@@ -14,9 +14,10 @@
       <TMTaskListItemPanel :task="task" />
     </div>
     <TMTaskListItemActionsButton
-      :data="{ isFinished, isDeclined }"
+      :data="{ isFinished, isDeclined, isFavorite }"
       @finish-switched="switchTaskFinishing"
       @declanation-switched="switchTaskDeclanation"
+      @favorite-toggled="toggleFavorite"
       @deleted="deleteTask"
     />
   </div>
@@ -40,6 +41,7 @@ const emit = defineEmits<{
 
 const isFinished = computed(() => props.task.finished_at !== null)
 const isDeclined = computed(() => props.task.is_declined)
+const isFavorite = computed(() => Boolean(props.task.is_favorite))
 
 const openTask = () => emit('opened', props.task)
 
@@ -48,6 +50,9 @@ async function switchTaskFinishing(status: boolean) {
 }
 async function switchTaskDeclanation(status: boolean) {
   return await taskStore.updateTask(props.task.id, { is_declined: status })
+}
+async function toggleFavorite() {
+  return await taskStore.toggleTaskFavorite(props.task.id)
 }
 async function deleteTask() {
   return await taskStore.deleteTask(props.task.id)

@@ -3,9 +3,24 @@
     class="task-row task-item"
     :class="{
       'task-row--finished': isFinished,
-      'task-row--declined': isDeclined
+      'task-row--declined': isDeclined,
+      'task-row--favorite': isFavorite
     }"
   >
+    <q-btn
+      class="task-row__favorite"
+      :icon="isFavorite ? 'star' : 'star_border'"
+      :color="isFavorite ? 'amber-8' : 'grey-5'"
+      flat
+      round
+      dense
+      @click.stop="toggleFavorite"
+    >
+      <q-tooltip>
+        {{ isFavorite ? 'Убрать из избранного' : 'В избранное' }}
+      </q-tooltip>
+    </q-btn>
+
     <q-btn
       class="task-row__status"
       :icon="statusIcon"
@@ -88,9 +103,10 @@
     </div>
 
     <TMTaskListItemActionsButton
-      :data="{ isFinished, isDeclined }"
+      :data="{ isFinished, isDeclined, isFavorite }"
       @finish-switched="switchTaskFinishing"
       @declanation-switched="switchTaskDeclanation"
+      @favorite-toggled="toggleFavorite"
       @deleted="deleteTask"
     />
   </article>
@@ -115,6 +131,7 @@ const emit = defineEmits<{
 
 const isFinished = computed(() => props.task.finished_at !== null)
 const isDeclined = computed(() => props.task.is_declined)
+const isFavorite = computed(() => Boolean(props.task.is_favorite))
 
 const listTitle = computed(() => {
   if (!props.task.task_list_id) return ''
@@ -153,6 +170,10 @@ async function switchTaskDeclanation(status: boolean) {
   await taskStore.updateTask(props.task.id, { is_declined: status })
 }
 
+async function toggleFavorite() {
+  await taskStore.toggleTaskFavorite(props.task.id)
+}
+
 async function deleteTask() {
   await taskStore.deleteTask(props.task.id)
 }
@@ -168,8 +189,8 @@ async function toggleFinish() {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 12px 40px 12px 8px;
+  gap: 4px;
+  padding: 12px 40px 12px 4px;
   background: #fff;
   border: 1px solid #e4e6ee;
   border-radius: 10px;
@@ -197,6 +218,19 @@ async function toggleFinish() {
     opacity: 0.88;
   }
 
+  &--favorite {
+    border-left-color: #f59e0b;
+  }
+
+  &--favorite.task-row--finished {
+    border-left-color: $positive;
+  }
+
+  &--favorite.task-row--declined {
+    border-left-color: $negative;
+  }
+
+  &__favorite,
   &__status {
     margin-top: 1px;
     flex-shrink: 0;

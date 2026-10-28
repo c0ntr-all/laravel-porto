@@ -207,6 +207,8 @@ export interface ITaskFields {
   is_declined: boolean
   decline_reason: string | null
   parent_id: string | null
+  is_favorite: boolean
+  priority: number
   reminders_count: number
   checklists_count: number
   subtasks_count: number
@@ -233,6 +235,9 @@ export interface ITaskCreatePayload {
 export interface ITaskUpdatePayload extends Partial<ITaskFields> {
   deleted_attachments_ids?: string[]
 }
+export interface ITasksReorderPayload {
+  ids: string[]
+}
 export interface ITaskResource extends IJsonApiResource {
   attributes: ITaskFields
 }
@@ -243,6 +248,9 @@ export interface ITaskGetResponse extends ITaskResponse {}
 export interface ITaskCreateResponse extends ITaskResponse {}
 export interface ITaskUpdateResponse extends ITaskResponse {}
 export interface ITaskDeleteResponse extends ITaskResponse {} // TODO: Переделать в просто сообщение
+export interface ITasksReorderResponse extends IJsonApiResponse<ITaskResource> {
+  data: ITaskResource[]
+}
 
 /**
  * Only backend fields

@@ -332,7 +332,9 @@ export const useTaskStore = defineStore('task', () => {
       const responseData = await taskApi.updateTask(id, payload)
       const { entity, related } = normalizeEntity<ITask>(responseData.data, responseData.included)
 
-      entity.isHydrated = true
+      // Keep existing hydration when updating from list/card actions
+      const previous = tasks.byId[entity.id]
+      entity.isHydrated = previous?.isHydrated ?? false
 
       if (related.attachments) {
         upsertMappedAttachments(relatedItems(related as Record<string, unknown>, 'attachments'))
@@ -349,6 +351,73 @@ export const useTaskStore = defineStore('task', () => {
       handleApiSuccess(responseData)
       return true
     } catch (error: unknown) {
+      handleApiError(error)
+      return false
+    }
+  }
+
+  async function toggleTaskFavorite(taskId: string): Promise<boolean> {
+    const task = tasks.byId[taskId]
+    if (!task) return false
+
+    const nextFavorite = !task.is_favorite
+    const previousFavorite = task.is_favorite
+    task.is_favorite = nextFavorite
+
+    try {
+      const responseData = await taskApi.updateTask(taskId, { is_favorite: nextFavorite })
+      const { entity } = normalizeEntity<ITask>(responseData.data, responseData.included)
+      patchEntity(tasks, {
+        id: entity.id,
+        is_favorite: entity.is_favorite,
+        priority: entity.priority
+      } as ITask)
+
+      return true
+    } catch (error: unknown) {
+      task.is_favorite = previousFavorite
+      handleApiError(error)
+      return false
+    }
+  }
+
+  async function reorderTasks(orderedIds: string[]): Promise<boolean> {
+    if (orderedIds.length < 2) return true
+
+    const previousPriorities = new Map<string, number>()
+    orderedIds.forEach((id, index) => {
+      const task = tasks.byId[id]
+      if (!task) return
+      previousPriorities.set(id, task.priority)
+      task.priority = index
+    })
+
+    try {
+      const responseData = await taskApi.reorderTasks({ ids: orderedIds })
+      const entities = normalizeEntityCollection(responseData.data, responseData.included)
+
+      if (entities.tasks) {
+        for (const id in entities.tasks) {
+          const entity = entities.tasks[id] as ITask
+          patchEntity(tasks, {
+            id: entity.id,
+            priority: entity.priority,
+            is_favorite: entity.is_favorite
+          } as ITask)
+        }
+      } else {
+        orderedIds.forEach((id, index) => {
+          const task = tasks.byId[id]
+          if (task) task.priority = index
+        })
+      }
+
+      return true
+    } catch (error: unknown) {
+      for (const [id, priority] of previousPriorities) {
+        const task = tasks.byId[id]
+        if (task) task.priority = priority
+      }
       handleApiError(error)
       return false
     }
@@ -903,6 +972,8 @@ export const useTaskStore = defineStore('task', () => {
     getTask,
     createTask,
     updateTask,
+    toggleTaskFavorite,
+    reorderTasks,
     deleteTask,
     createChecklist,
     updateChecklist,

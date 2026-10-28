@@ -1,9 +1,26 @@
 <template>
   <article
     class="reminder-row"
-    :class="`reminder-row--${urgency}`"
+    :class="[
+      `reminder-row--${urgency}`,
+      { 'reminder-row--favorite': isFavorite }
+    ]"
     @click="openTask"
   >
+    <q-btn
+      class="reminder-row__favorite"
+      :icon="isFavorite ? 'star' : 'star_border'"
+      :color="isFavorite ? 'amber-8' : 'grey-5'"
+      flat
+      round
+      dense
+      @click.stop="toggleFavorite"
+    >
+      <q-tooltip>
+        {{ isFavorite ? 'Убрать из избранного' : 'В избранное' }}
+      </q-tooltip>
+    </q-btn>
+
     <div class="reminder-row__body">
       <h3 class="reminder-row__title">{{ task.title }}</h3>
       <div class="reminder-row__meta">
@@ -73,6 +90,7 @@ const relativeLabel = computed(() => formatReminderRelative(props.reminder.datet
 const isRecurring = computed(() => isRecurringReminder(props.reminder))
 const intervalLabel = computed(() => formatReminderInterval(props.reminder.interval))
 const canComplete = computed(() => canCompleteReminder(props.reminder))
+const isFavorite = computed(() => Boolean(props.task.is_favorite))
 const completeTooltip = computed(() =>
   isRecurring.value
     ? 'Отметить выполненным — закроет цикл и перенесёт дату'
@@ -80,6 +98,10 @@ const completeTooltip = computed(() =>
 )
 
 const openTask = () => emit('opened', props.task)
+
+async function toggleFavorite() {
+  await taskStore.toggleTaskFavorite(props.task.id)
+}
 
 async function completeOccurrence() {
   if (isCompleting.value || !canComplete.value) return
@@ -107,8 +129,8 @@ onUnmounted(() => {
 .reminder-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 10px 12px 14px;
+  gap: 4px;
+  padding: 12px 10px 12px 4px;
   background: #fff;
   border: 1px solid #e4e6ee;
   border-radius: 10px;
@@ -142,6 +164,14 @@ onUnmounted(() => {
     background: #fdecea;
     border-color: #f3c1c0;
     border-left-color: $negative;
+  }
+
+  &--favorite {
+    border-left-color: #f59e0b;
+  }
+
+  &__favorite {
+    flex-shrink: 0;
   }
 
   &__title {

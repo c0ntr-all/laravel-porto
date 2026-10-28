@@ -1,13 +1,43 @@
 <template>
   <div class="reminders-view">
     <AppNoResultsPlug
-      v-if="!groups.length"
+      v-if="!hasContent"
       title="Напоминаний пока нет"
       body="Добавьте напоминание в задаче — оно появится здесь в своём списке"
     />
 
     <section
-      v-for="group in groups"
+      v-if="favoriteItems.length"
+      class="reminders-view__group"
+    >
+      <h2 class="reminders-view__group-title reminders-view__group-title--favorite">
+        <q-icon name="star" size="16px" color="amber-8" />
+        Избранное
+        <span class="reminders-view__group-count">{{ favoriteItems.length }}</span>
+      </h2>
+
+      <div
+        ref="favoritesListRef"
+        class="reminders-view__items"
+        :class="{ 'reminders-view__items--sorting': isSorting }"
+      >
+        <TMFavoriteTaskRow
+          v-for="(item, index) in displayFavorites"
+          :key="item.id"
+          class="reminders-view__favorite-row"
+          :task="item.task"
+          :reminder="item.reminder"
+          :is-lifted="draggingId === item.id"
+          :is-active="draggingId === item.id && dragActive"
+          :style="rowStyle(index)"
+          @opened="openTask"
+          @handle-pointerdown="onPointerDown($event, item.id, index)"
+        />
+      </div>
+    </section>
+
+    <section
+      v-for="group in reminderGroups"
       :key="group.key"
       class="reminders-view__group"
     >
@@ -31,17 +61,25 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { IReminderItem, ITask } from 'src/types/TaskManager/task'
 import { useTaskStore } from 'src/stores/modules/taskStore'
 import { getReminderUrgency, parseApiDatetime, ReminderUrgency } from 'src/utils/reminder'
 import TMReminderRow from 'src/components/client/TaskManager/TMReminderRow.vue'
+import TMFavoriteTaskRow from 'src/components/client/TaskManager/TMFavoriteTaskRow.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 import { useTaskDialogRoute } from 'src/composables/client/TaskManager/useTaskDialogRoute'
+import { useVerticalReorder } from 'src/composables/client/TaskManager/useVerticalReorder'
 
 interface IReminderEntry {
   reminder: IReminderItem
   task: ITask
+}
+
+interface IFavoriteEntry {
+  id: string
+  task: ITask
+  reminder: IReminderItem | null
 }
 
 interface IReminderGroup {
@@ -59,8 +97,38 @@ const URGENCY_ORDER: Record<ReminderUrgency, number> = {
 
 const taskStore = useTaskStore()
 const { openTask } = useTaskDialogRoute()
+const favoritesListRef = ref<HTMLElement | null>(null)
 
-const groups = computed<IReminderGroup[]>(() => {
+const favoriteItems = computed<IFavoriteEntry[]>(() =>
+  taskStore.tasks.allIds
+    .map(id => taskStore.tasks.byId[id])
+    .filter((task): task is ITask => Boolean(task?.is_favorite))
+    .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.id.localeCompare(b.id))
+    .map(task => ({
+      id: task.id,
+      task,
+      reminder: findTaskReminder(task.id)
+    }))
+)
+
+const favoriteTaskIds = computed(() => new Set(favoriteItems.value.map(item => item.id)))
+
+const {
+  displayItems: displayFavorites,
+  isSorting,
+  draggingId,
+  dragActive,
+  rowStyle,
+  onPointerDown
+} = useVerticalReorder(favoritesListRef, {
+  items: favoriteItems,
+  rowSelector: '.reminders-view__favorite-row',
+  onReorder: async (orderedIds) => {
+    await taskStore.reorderTasks(orderedIds)
+  }
+})
+
+const reminderGroups = computed<IReminderGroup[]>(() => {
   const now = Date.now()
   const byList = new Map<string, IReminderEntry[]>()
 
@@ -70,6 +138,7 @@ const groups = computed<IReminderGroup[]>(() => {
 
     const task = taskStore.tasks.byId[reminder.task_id]
     if (!task) continue
+    if (favoriteTaskIds.value.has(task.id)) continue
 
     const listId = task.task_list_id || 'ungrouped'
     const bucket = byList.get(listId) ?? []
@@ -102,7 +171,15 @@ const groups = computed<IReminderGroup[]>(() => {
   return result
 })
 
-function sortReminderItems(items: IReminderEntry[], now: number): IReminderEntry[] {
+const hasContent = computed(() =>
+  favoriteItems.value.length > 0 || reminderGroups.value.length > 0
+)
+
+function findTaskReminder (taskId: string): IReminderItem | null {
+  return Object.values(taskStore.reminder.byId).find(item => item.task_id === taskId) || null
+}
+
+function sortReminderItems (items: IReminderEntry[], now: number): IReminderEntry[] {
   return [...items].sort((a, b) => {
     const urgencyDiff = URGENCY_ORDER[getReminderUrgency(a.reminder, now)] -
       URGENCY_ORDER[getReminderUrgency(b.reminder, now)]
@@ -141,6 +218,10 @@ function sortReminderItems(items: IReminderEntry[], now: number): IReminderEntry
     letter-spacing: 0.04em;
     line-height: 1;
     text-transform: uppercase;
+
+    &--favorite {
+      color: #b45309;
+    }
   }
 
   &__group-count {
@@ -161,6 +242,12 @@ function sortReminderItems(items: IReminderEntry[], now: number): IReminderEntry
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    &--sorting {
+      user-select: none;
+      touch-action: none;
+      cursor: grabbing;
+    }
   }
 }
 </style>

@@ -10,6 +10,26 @@
       <q-menu cover auto-close anchor="bottom left" self="top start">
         <q-list dense>
           <q-item
+            @click="toggleFavorite"
+            clickable
+          >
+            <q-item-section>
+              <div class="flex items-center">
+                <q-icon
+                  size="xs"
+                  :name="isFavorite ? 'star' : 'star_border'"
+                  :color="isFavorite ? 'amber-8' : undefined"
+                  flat
+                  round
+                  dense
+                />
+                <div class="q-ml-xs">
+                  {{ isFavorite ? 'Убрать из избранного' : 'В избранное' }}
+                </div>
+              </div>
+            </q-item-section>
+          </q-item>
+          <q-item
             v-if="!isFinished"
             @click="switchTaskFinishing(true)"
             clickable
@@ -108,21 +128,24 @@
 import { computed } from 'vue'
 
 interface ActionsButtonData {
-  isFinished: boolean,
-  isDeclined: boolean,
+  isFinished: boolean
+  isDeclined: boolean
+  isFavorite: boolean
 }
 const props = defineProps<{
   data: ActionsButtonData
 }>()
 
 const emit = defineEmits<{
-  (e: 'finishSwitched', status: boolean): void,
-  (e: 'declanationSwitched', status: boolean): void,
-  (e: 'deleted'): void,
+  (e: 'finishSwitched', status: boolean): void
+  (e: 'declanationSwitched', status: boolean): void
+  (e: 'favoriteToggled'): void
+  (e: 'deleted'): void
 }>()
 
 const isFinished = computed(() => props.data.isFinished)
 const isDeclined = computed(() => props.data.isDeclined)
+const isFavorite = computed(() => props.data.isFavorite)
 
 const switchTaskFinishing = (status: boolean) => {
   emit('finishSwitched', status)
@@ -130,6 +153,10 @@ const switchTaskFinishing = (status: boolean) => {
 
 const switchTaskDeclanation = (status: boolean) => {
   emit('declanationSwitched', status)
+}
+
+const toggleFavorite = () => {
+  emit('favoriteToggled')
 }
 
 const deleteTask = () => {

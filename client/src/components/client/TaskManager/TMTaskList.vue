@@ -107,7 +107,10 @@ const model = ref<{ taskTitle: string, taskContent: string }>({
 })
 
 const tasks = computed(() => {
-  return props.list.tasksIds?.map(id => taskStore.tasks.byId[id])
+  return (props.list.tasksIds || [])
+    .map(id => taskStore.tasks.byId[id])
+    .filter((task): task is NonNullable<typeof task> => Boolean(task))
+    .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.id.localeCompare(b.id))
 })
 
 const openAddForm = () => {

@@ -4,6 +4,8 @@ import {
   ITaskListCreatePayload,
   ITaskCreatePayload,
   ITaskUpdatePayload,
+  ITasksReorderPayload,
+  ITasksReorderResponse,
   ITaskGetResponse,
   ITaskCreateResponse,
   ITaskUpdateResponse,
@@ -62,6 +64,12 @@ export const taskApi = {
   },
   async deleteTask(id: string): Promise<ITaskDeleteResponse> {
     const response = await api.delete(`v1/task-manager/tasks/${id}`)
+
+    return response.data
+  },
+
+  async reorderTasks(payload: ITasksReorderPayload): Promise<ITasksReorderResponse> {
+    const response = await api.post('v1/task-manager/tasks/reorder', payload)
 
     return response.data
   },

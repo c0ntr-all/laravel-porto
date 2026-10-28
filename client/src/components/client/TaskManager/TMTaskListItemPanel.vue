@@ -1,19 +1,20 @@
 <template>
   <div class="task-item__panel">
+    <div
+      v-if="task.is_favorite"
+      class="task-item__panel-item task-item__panel-item--favorite"
+    >
+      <q-icon name="star" color="amber-8" />
+      <q-tooltip>Избранная</q-tooltip>
+    </div>
     <div v-if="isReminderExists" class="task-item__panel-item">
-      <q-icon
-        name="schedule"
-      />
+      <q-icon name="schedule" />
     </div>
     <div v-if="isChecklistsExists" class="task-item__panel-item">
-      <q-icon
-        name="checklist"
-      />
+      <q-icon name="checklist" />
     </div>
     <div v-if="isProgressExists" class="task-item__panel-item">
-      <q-icon
-        name="timeline"
-      />
+      <q-icon name="timeline" />
     </div>
   </div>
 </template>
@@ -36,6 +37,10 @@ const isProgressExists = computed(() => props.task.progresses_count > 0)
   &__panel {
     display: flex;
     column-gap: 3px;
+  }
+
+  &__panel-item--favorite {
+    color: #f59e0b;
   }
 }
 </style>

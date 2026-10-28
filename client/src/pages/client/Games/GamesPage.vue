@@ -24,27 +24,56 @@
         <q-icon name="search" />
       </template>
     </q-input>
+
+    <q-btn-toggle
+      v-model="viewMode"
+      unelevated
+      dense
+      toggle-color="primary"
+      color="grey-2"
+      text-color="primary"
+      :options="viewModeOptions"
+    >
+      <template #tile>
+        <q-icon name="grid_view" size="sm" />
+        <q-tooltip>Блоки</q-tooltip>
+      </template>
+      <template #list>
+        <q-icon name="view_agenda" size="sm" />
+        <q-tooltip>Список</q-tooltip>
+      </template>
+    </q-btn-toggle>
   </div>
 
   <div
     v-if="gameStore.isGamesLoading && !gameStore.games.length"
-    class="games-grid"
+    :class="isList ? 'games-list' : 'games-grid'"
   >
     <q-skeleton
       v-for="item in 8"
       :key="item"
       class="games-skeleton"
+      :class="{ 'games-skeleton--row': isList }"
       square
     />
   </div>
 
-  <div v-else-if="gameStore.games.length" class="games-grid">
-    <GameCard
-      v-for="item in gameStore.games"
-      :key="item.id"
-      :game="item"
-    />
-  </div>
+  <template v-else-if="gameStore.games.length">
+    <div v-if="!isList" class="games-grid">
+      <GameCard
+        v-for="item in gameStore.games"
+        :key="item.id"
+        :game="item"
+      />
+    </div>
+    <div v-else class="games-list">
+      <GameCardRow
+        v-for="item in gameStore.games"
+        :key="item.id"
+        :game="item"
+      />
+    </div>
+  </template>
 
   <q-card v-else class="q-mb-md" flat>
     <AppNoResultsPlug
@@ -57,12 +86,23 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from 'src/stores/modules/gameStore'
+import { GamesViewModeEnum } from 'src/enums/Game/GamesViewModeEnum'
+import { useGamesViewMode } from 'src/composables/client/Games/useGamesViewMode'
 import { formatGamesCount } from 'src/utils/game'
 import GameCard from 'src/components/client/Games/GameCard.vue'
+import GameCardRow from 'src/components/client/Games/GameCardRow.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
 const gameStore = useGameStore()
 const searchText = ref(gameStore.listName)
+const { viewMode } = useGamesViewMode()
+
+const viewModeOptions = [
+  { value: GamesViewModeEnum.TILE, slot: 'tile' },
+  { value: GamesViewModeEnum.LIST, slot: 'list' }
+]
+
+const isList = computed(() => viewMode.value === GamesViewModeEnum.LIST)
 
 const totalLabel = computed(() => {
   if (gameStore.gamesTotal == null) {
@@ -120,9 +160,15 @@ onMounted(() => {
 }
 
 .games-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 1.25rem;
 
   &__search {
+    flex: 1 1 260px;
     max-width: 420px;
   }
 }
@@ -133,8 +179,19 @@ onMounted(() => {
   gap: 1.5rem 1.25rem;
 }
 
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .games-skeleton {
   aspect-ratio: 460 / 215;
   border-radius: 16px;
+
+  &--row {
+    aspect-ratio: auto;
+    height: 92px;
+  }
 }
 </style>

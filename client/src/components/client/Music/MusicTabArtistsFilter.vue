@@ -223,12 +223,17 @@ function resetFilter (): void {
 }
 
 let emitTimer: ReturnType<typeof setTimeout> | undefined
+let canEmit = false
 
 watch(groupTrees, () => {
   ensureGroupKeys()
 }, { immediate: true })
 
 watch([tagsMatch, tagsNested], () => {
+  if (!canEmit) {
+    return
+  }
+
   scheduleEmit()
 })
 
@@ -237,9 +242,12 @@ onMounted(async () => {
     await tagStore.loadAll()
   }
   applySelected(props.selectedTags)
+  // Ignore Quasar control init noise so the parent tab owns the first fetch.
+  canEmit = true
 })
 
 onUnmounted(() => {
+  canEmit = false
   if (emitTimer) {
     clearTimeout(emitTimer)
   }

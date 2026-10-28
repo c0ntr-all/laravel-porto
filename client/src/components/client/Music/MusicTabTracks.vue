@@ -95,9 +95,7 @@ const { sentinel } = useScrollSentinel(
 )
 
 onMounted(() => {
-  if (!catalog.tracks.length) {
-    void catalog.getTracks()
-  }
+  void catalog.getTracks()
 })
 </script>
 

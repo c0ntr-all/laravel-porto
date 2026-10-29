@@ -80,13 +80,14 @@ export const movieFranchiseApi = {
 
   async getFranchiseMovies(
     franchiseId: string,
-    query?: { page?: number, per_page?: number }
+    query?: { page?: number, per_page?: number, sort?: string }
   ): Promise<IJsonApiResponse> {
     const response = await api.get(`v1/movie/franchises/${franchiseId}/movies`, {
       params: {
         include: 'genres,countries',
         per_page: query?.per_page ?? 100,
-        ...(query?.page ? { page: query.page } : {})
+        ...(query?.page ? { page: query.page } : {}),
+        ...(query?.sort ? { sort: query.sort } : {})
       }
     })
 

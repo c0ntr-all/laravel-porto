@@ -47,7 +47,26 @@
       </header>
 
       <section class="movie-franchise-page__movies">
-        <h2 class="movie-franchise-page__movies-title">Фильмы</h2>
+        <div class="movie-franchise-page__movies-head">
+          <h2 class="movie-franchise-page__movies-title">Фильмы</h2>
+          <q-select
+            v-model="sortFilter"
+            class="movie-franchise-page__sort"
+            label="Сортировка"
+            outlined
+            dense
+            emit-value
+            map-options
+            options-dense
+            :options="sortOptions"
+            :disable="store.isMoviesLoading"
+            @update:model-value="onSortChange"
+          >
+            <template #prepend>
+              <q-icon name="sort" />
+            </template>
+          </q-select>
+        </div>
 
         <div v-if="store.isMoviesLoading && !store.franchiseMovies.length" class="movies-list">
           <MovieCardRowSkeleton v-for="index in 4" :key="index" />
@@ -81,7 +100,7 @@
 </template>
 
 <script lang="ts" setup>
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useMovieFranchiseStore } from 'src/stores/modules/movieFranchiseStore'
 import { franchiseImageUrl } from 'src/api/mappers/Movie/movie.mapper'
 import MoviesShell from 'src/components/client/Movies/MoviesShell.vue'
@@ -90,17 +109,46 @@ import MovieCardRowSkeleton from 'src/components/client/Movies/MovieCardRowSkele
 import AppBackButton from 'src/components/default/AppBackButton.vue'
 import AppNoResultsPlug from 'src/components/default/AppNoResultsPlug.vue'
 
+const SORT_ORDER_ASC = 'order'
+const SORT_ORDER_DESC = '-order'
+const SORT_YEAR_ASC = 'year'
+const SORT_YEAR_DESC = '-year'
+
 const props = defineProps<{
   id: string
 }>()
 
 const store = useMovieFranchiseStore()
+const sortFilter = ref(SORT_ORDER_ASC)
+
+const sortOptions = [
+  { label: 'Порядок: по возрастанию', value: SORT_ORDER_ASC },
+  { label: 'Порядок: по убыванию', value: SORT_ORDER_DESC },
+  { label: 'Дата выхода: по возрастанию', value: SORT_YEAR_ASC },
+  { label: 'Дата выхода: по убыванию', value: SORT_YEAR_DESC }
+]
+
+function resolvedSort(): string | null {
+  return sortFilter.value === SORT_ORDER_ASC ? null : sortFilter.value
+}
+
+async function loadMovies(franchiseId: string): Promise<void> {
+  await store.getFranchiseMovies(franchiseId, { sort: resolvedSort() })
+}
+
+function onSortChange(): void {
+  if (!sortFilter.value) {
+    sortFilter.value = SORT_ORDER_ASC
+  }
+
+  void loadMovies(props.id)
+}
 
 watch(
   () => props.id,
   async (id) => {
     await store.getFranchise(id)
-    await store.getFranchiseMovies(id)
+    await loadMovies(id)
   },
   { immediate: true }
 )
@@ -170,11 +218,25 @@ watch(
     }
   }
 
+  &__movies-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
   &__movies-title {
-    margin: 0 0 12px;
+    margin: 0;
     font-size: 18px;
     font-weight: 600;
     color: #282f53;
+  }
+
+  &__sort {
+    flex: 0 1 280px;
+    min-width: 220px;
   }
 }
 

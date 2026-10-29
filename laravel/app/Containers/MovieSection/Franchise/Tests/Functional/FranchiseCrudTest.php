@@ -204,6 +204,60 @@ class FranchiseCrudTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_user_can_sort_franchise_movies_by_year_and_order(): void
+    {
+        $franchise = Franchise::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'Sortable',
+        ]);
+
+        $early = Movie::factory()->create(['title' => 'Early', 'year' => 1999]);
+        $mid = Movie::factory()->create(['title' => 'Mid', 'year' => 2005]);
+        $late = Movie::factory()->create(['title' => 'Late', 'year' => 2010]);
+
+        $franchise->movies()->attach($mid->id, ['order' => 1]);
+        $franchise->movies()->attach($late->id, ['order' => 2]);
+        $franchise->movies()->attach($early->id, ['order' => 3]);
+
+        $byYearAsc = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/franchises/'.$franchise->id.'/movies?sort=year');
+
+        $byYearAsc->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'Early')
+            ->assertJsonPath('data.1.attributes.title', 'Mid')
+            ->assertJsonPath('data.2.attributes.title', 'Late');
+
+        $byYearDesc = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/franchises/'.$franchise->id.'/movies?sort=-year');
+
+        $byYearDesc->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'Late')
+            ->assertJsonPath('data.1.attributes.title', 'Mid')
+            ->assertJsonPath('data.2.attributes.title', 'Early');
+
+        $byOrderAsc = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/franchises/'.$franchise->id.'/movies?sort=order');
+
+        $byOrderAsc->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'Mid')
+            ->assertJsonPath('data.0.attributes.order', 1)
+            ->assertJsonPath('data.1.attributes.title', 'Late')
+            ->assertJsonPath('data.1.attributes.order', 2)
+            ->assertJsonPath('data.2.attributes.title', 'Early')
+            ->assertJsonPath('data.2.attributes.order', 3);
+
+        $byOrderDesc = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/franchises/'.$franchise->id.'/movies?sort=-order');
+
+        $byOrderDesc->assertOk()
+            ->assertJsonPath('data.0.attributes.title', 'Early')
+            ->assertJsonPath('data.0.attributes.order', 3)
+            ->assertJsonPath('data.1.attributes.title', 'Late')
+            ->assertJsonPath('data.1.attributes.order', 2)
+            ->assertJsonPath('data.2.attributes.title', 'Mid')
+            ->assertJsonPath('data.2.attributes.order', 1);
+    }
+
     public function test_create_without_order_appends_to_end(): void
     {
         Franchise::factory()->create([

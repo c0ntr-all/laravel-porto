@@ -144,12 +144,18 @@ export const useMovieFranchiseStore = defineStore('movieFranchises', () => {
     }
   }
 
-  async function getFranchiseMovies(franchiseId: string): Promise<IMovieFranchiseMovie[]> {
+  async function getFranchiseMovies(
+    franchiseId: string,
+    options?: { sort?: string | null }
+  ): Promise<IMovieFranchiseMovie[]> {
     franchiseMoviesId.value = franchiseId
     isMoviesLoading.value = true
 
     try {
-      const response = await movieFranchiseApi.getFranchiseMovies(franchiseId, { per_page: 100 })
+      const response = await movieFranchiseApi.getFranchiseMovies(franchiseId, {
+        per_page: 100,
+        sort: options?.sort || undefined
+      })
       franchiseMovies.value = mapMovieFranchiseMoviesResponse(response)
 
       return franchiseMovies.value

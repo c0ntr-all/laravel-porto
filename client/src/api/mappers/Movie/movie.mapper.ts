@@ -421,9 +421,7 @@ export function mapMovieFranchiseResponse(response: IJsonApiResponse): IMovieFra
 }
 
 export function mapMovieFranchiseMoviesResponse(response: IJsonApiResponse): IMovieFranchiseMovie[] {
-  return mapResponse(response)
-    .map(normalizeMovieFranchiseMovie)
-    .sort((left, right) => left.order - right.order || Number(left.year) - Number(right.year))
+  return mapResponse(response).map(normalizeMovieFranchiseMovie)
 }
 
 export function franchiseImageUrl(franchise: Pick<IMovieFranchise, 'image'>): string | null {

@@ -10,6 +10,11 @@ class ListFranchiseMoviesRequest extends AuthenticatedRequest
     {
         return [
             'per_page' => 'sometimes|integer|min:1|max:100',
+            'sort' => [
+                'sometimes',
+                'string',
+                'regex:/^-?(order|year|title|kp_rating)(,-?(order|year|title|kp_rating))*$/',
+            ],
         ];
     }
 }

@@ -106,14 +106,13 @@ export const movieFranchiseApi = {
     return response.data
   },
 
-  async updateMovieOrder(
+  async reorderFranchiseMovies(
     franchiseId: string,
-    movieId: string,
-    order: number
+    movieIds: string[]
   ): Promise<IJsonApiResponse> {
-    const response = await api.patch(
-      `v1/movie/franchises/${franchiseId}/movies/${movieId}`,
-      { order }
+    const response = await api.post(
+      `v1/movie/franchises/${franchiseId}/movies/reorder`,
+      { movie_ids: movieIds.map(id => Number(id)) }
     )
 
     return response.data

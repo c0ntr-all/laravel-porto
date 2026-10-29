@@ -153,8 +153,8 @@ class FranchiseCrudTest extends TestCase
             ->assertJsonPath('data.2.attributes.order', 3);
 
         $this->actingAs($this->user, 'api')
-            ->patchJson('/api/v1/movie/franchises/'.$franchise->id.'/movies/'.$third->id, [
-                'order' => 0,
+            ->postJson('/api/v1/movie/franchises/'.$franchise->id.'/movies/reorder', [
+                'movie_ids' => [$third->id, $first->id, $second->id],
             ])
             ->assertOk();
 
@@ -163,7 +163,11 @@ class FranchiseCrudTest extends TestCase
 
         $reordered->assertOk()
             ->assertJsonPath('data.0.attributes.title', 'Prisoner of Azkaban')
-            ->assertJsonPath('data.0.attributes.order', 0);
+            ->assertJsonPath('data.0.attributes.order', 1)
+            ->assertJsonPath('data.1.attributes.title', 'Philosopher Stone')
+            ->assertJsonPath('data.1.attributes.order', 2)
+            ->assertJsonPath('data.2.attributes.title', 'Chamber of Secrets')
+            ->assertJsonPath('data.2.attributes.order', 3);
 
         $this->actingAs($this->user, 'api')
             ->deleteJson('/api/v1/movie/franchises/'.$franchise->id.'/movies/'.$second->id)
@@ -178,6 +182,26 @@ class FranchiseCrudTest extends TestCase
             ->getJson('/api/v1/movie/franchises/'.$franchise->id.'/movies')
             ->assertOk()
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_reorder_movies_rejects_incomplete_set(): void
+    {
+        $franchise = Franchise::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'Incomplete Reorder',
+        ]);
+
+        $first = Movie::factory()->create();
+        $second = Movie::factory()->create();
+
+        $franchise->movies()->attach($first->id, ['order' => 1]);
+        $franchise->movies()->attach($second->id, ['order' => 2]);
+
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/franchises/'.$franchise->id.'/movies/reorder', [
+                'movie_ids' => [$second->id],
+            ])
+            ->assertUnprocessable();
     }
 
     public function test_create_without_order_appends_to_end(): void

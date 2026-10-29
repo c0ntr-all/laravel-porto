@@ -225,10 +225,9 @@ export const useMovieFranchiseStore = defineStore('movieFranchises', () => {
     isMoviesSaving.value = true
 
     try {
-      await Promise.all(
-        franchiseMovies.value.map((movie, index) => (
-          movieFranchiseApi.updateMovieOrder(franchiseId, movie.id, index + 1)
-        ))
+      await movieFranchiseApi.reorderFranchiseMovies(
+        franchiseId,
+        franchiseMovies.value.map(movie => movie.id)
       )
     } catch (error) {
       franchiseMovies.value = previous

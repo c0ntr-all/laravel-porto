@@ -9,9 +9,11 @@ use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class FranchiseRepository
 {
@@ -100,6 +102,45 @@ class FranchiseRepository
         $franchise->movies()->updateExistingPivot($movie->id, [
             'order' => $order,
         ]);
+
+        return $franchise->refresh();
+    }
+
+    /**
+     * @param list<int> $movieIds
+     */
+    public function reorderMovies(Franchise $franchise, array $movieIds): Franchise
+    {
+        $requestedIds = collect($movieIds)
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->values();
+
+        if ($requestedIds->unique()->count() !== $requestedIds->count()) {
+            throw new UnprocessableEntityHttpException('movie_ids must be unique.');
+        }
+
+        $attachedIds = $franchise->movies()
+            ->pluck('movies.id')
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->sort()
+            ->values()
+            ->all();
+
+        $sortedRequestedIds = $requestedIds->sort()->values()->all();
+
+        if ($sortedRequestedIds !== $attachedIds) {
+            throw new UnprocessableEntityHttpException(
+                'movie_ids must contain each movie currently in the franchise exactly once.',
+            );
+        }
+
+        DB::transaction(static function () use ($franchise, $requestedIds): void {
+            foreach ($requestedIds as $index => $movieId) {
+                $franchise->movies()->updateExistingPivot($movieId, [
+                    'order' => $index + 1,
+                ]);
+            }
+        });
 
         return $franchise->refresh();
     }

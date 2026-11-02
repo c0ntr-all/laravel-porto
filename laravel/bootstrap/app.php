@@ -1,4 +1,5 @@
 <?php
+use App\Containers\AppSection\SteamUser\UI\CLI\Commands\ImportSteamUserCommand;
 use App\Containers\DashboardSection\Widget\UI\CLI\Commands\MakeWidgetCommand;
 use App\Containers\MovieSection\Movie\UI\CLI\Commands\SyncMovieKinopoiskImagesCommand;
 use App\Containers\TaskManagerSection\Reminder\UI\CLI\Commands\ProcessDueRemindersCommand;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ProcessDueRemindersCommand::class,
         MakeWidgetCommand::class,
         SyncMovieKinopoiskImagesCommand::class,
+        ImportSteamUserCommand::class,
     ])
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command(ProcessDueRemindersCommand::class)

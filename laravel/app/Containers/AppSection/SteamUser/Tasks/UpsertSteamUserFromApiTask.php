@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Containers\AppSection\SteamUser\Tasks;
 
+use App\Containers\AppSection\Steam\Data\DTO\SteamPlayerSummaryDto;
 use App\Containers\AppSection\SteamUser\Data\DTO\SteamUserUpsertData;
 use App\Containers\AppSection\SteamUser\Data\Repositories\SteamUserRepository;
 use App\Containers\AppSection\SteamUser\Models\SteamUser;
 use App\Containers\AppSection\User\Models\User;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Carbon;
-use InvalidArgumentException;
 
 class UpsertSteamUserFromApiTask extends ParentTask
 {
@@ -18,80 +18,33 @@ class UpsertSteamUserFromApiTask extends ParentTask
         private readonly SteamUserRepository $steamUserRepository,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $player  GetPlayerSummaries player object (camelCase keys)
-     */
-    public function run(User $user, array $player): SteamUser
+    public function run(User $user, SteamPlayerSummaryDto $summary): SteamUser
     {
-        $steamId = $this->stringValue($player, 'steamid');
-        if ($steamId === null) {
-            throw new InvalidArgumentException('Steam player summary is missing steamid.');
-        }
-
-        $personaName = $this->stringValue($player, 'personaname');
-        if ($personaName === null) {
-            throw new InvalidArgumentException('Steam player summary is missing personaname.');
-        }
-
         return $this->steamUserRepository->upsert($user, new SteamUserUpsertData(
-            steam_id: $steamId,
-            persona_name: $personaName,
-            community_visibility_state: $this->intValue($player, 'communityvisibilitystate') ?? 0,
-            profile_state: $this->intValue($player, 'profilestate'),
-            comment_permission: $this->intValue($player, 'commentpermission'),
-            profile_url: $this->stringValue($player, 'profileurl'),
-            avatar: $this->stringValue($player, 'avatar'),
-            avatar_medium: $this->stringValue($player, 'avatarmedium'),
-            avatar_full: $this->stringValue($player, 'avatarfull'),
-            avatar_hash: $this->stringValue($player, 'avatarhash'),
-            last_logoff: $this->timestampValue($player, 'lastlogoff'),
-            persona_state: $this->intValue($player, 'personastate') ?? 0,
-            real_name: $this->stringValue($player, 'realname'),
-            primary_clan_id: $this->stringValue($player, 'primaryclanid'),
-            time_created: $this->timestampValue($player, 'timecreated'),
-            persona_state_flags: $this->intValue($player, 'personastateflags'),
-            loc_country_code: $this->stringValue($player, 'loccountrycode'),
-            loc_state_code: $this->stringValue($player, 'locstatecode'),
-            loc_city_id: $this->intValue($player, 'loccityid'),
+            steam_id: $summary->steam_id,
+            persona_name: $summary->persona_name,
+            community_visibility_state: $summary->community_visibility_state,
+            profile_state: $summary->profile_state,
+            comment_permission: $summary->comment_permission,
+            profile_url: $summary->profile_url,
+            avatar: $summary->avatar,
+            avatar_medium: $summary->avatar_medium,
+            avatar_full: $summary->avatar_full,
+            avatar_hash: $summary->avatar_hash,
+            last_logoff: $this->timestampValue($summary->last_logoff),
+            persona_state: $summary->persona_state,
+            real_name: $summary->real_name,
+            primary_clan_id: $summary->primary_clan_id,
+            time_created: $this->timestampValue($summary->time_created),
+            persona_state_flags: $summary->persona_state_flags,
+            loc_country_code: $summary->loc_country_code,
+            loc_state_code: $summary->loc_state_code,
+            loc_city_id: $summary->loc_city_id,
         ));
     }
 
-    /**
-     * @param  array<string, mixed>  $player
-     */
-    private function stringValue(array $player, string $key): ?string
+    private function timestampValue(?int $unix): ?string
     {
-        if (! array_key_exists($key, $player) || $player[$key] === null) {
-            return null;
-        }
-
-        $value = trim((string) $player[$key]);
-
-        return $value === '' ? null : $value;
-    }
-
-    /**
-     * @param  array<string, mixed>  $player
-     */
-    private function intValue(array $player, string $key): ?int
-    {
-        if (! array_key_exists($key, $player) || $player[$key] === null || $player[$key] === '') {
-            return null;
-        }
-
-        if (! is_numeric($player[$key])) {
-            return null;
-        }
-
-        return (int) $player[$key];
-    }
-
-    /**
-     * @param  array<string, mixed>  $player
-     */
-    private function timestampValue(array $player, string $key): ?string
-    {
-        $unix = $this->intValue($player, $key);
         if ($unix === null || $unix <= 0) {
             return null;
         }

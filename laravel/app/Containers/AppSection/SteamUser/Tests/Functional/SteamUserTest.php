@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Containers\AppSection\SteamUser\Tests\Functional;
 
+use App\Containers\AppSection\Steam\Data\DTO\SteamPlayerSummaryDto;
 use App\Containers\AppSection\SteamUser\Models\SteamUser;
 use App\Containers\AppSection\SteamUser\Tasks\UpsertSteamUserFromApiTask;
 use App\Containers\AppSection\User\Models\User;
@@ -34,7 +35,7 @@ class SteamUserTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $steamUser = app(UpsertSteamUserFromApiTask::class)->run($user, [
+        $steamUser = app(UpsertSteamUserFromApiTask::class)->run($user, SteamPlayerSummaryDto::fromApiPlayer([
             'steamid' => '76561197960435530',
             'communityvisibilitystate' => 3,
             'profilestate' => 1,
@@ -54,7 +55,7 @@ class SteamUserTest extends TestCase
             'loccountrycode' => 'US',
             'locstatecode' => 'WA',
             'loccityid' => 3961,
-        ]);
+        ]));
 
         $this->assertTrue($user->steamUser->is($steamUser));
         $this->assertSame(1, SteamUser::query()->count());

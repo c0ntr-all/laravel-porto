@@ -33,6 +33,7 @@ class ShipServiceProvider extends ServiceProvider
         \App\Containers\MovieSection\Import\Providers\ImportServiceProvider::class,
         \App\Containers\MovieSection\Folder\Providers\FolderServiceProvider::class,
         \App\Containers\GameSection\Import\Providers\ImportServiceProvider::class,
+        \App\Containers\AppSection\Steam\Providers\SteamWebApiServiceProvider::class,
     ];
 
     /**

@@ -5,8 +5,10 @@ namespace App\Containers\TaskManagerSection\Task\Data\DTO;
 use App\Ship\Parents\DTO\Data;
 use Illuminate\Support\Carbon;
 use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Optional;
+use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 class TaskUpdateContextDto extends Data
 {
@@ -16,6 +18,7 @@ class TaskUpdateContextDto extends Data
     public string|Optional|null $title;
     public string|Optional|null $content;
     #[WithCast(DateTimeInterfaceCast::class, format: 'Y-m-d H:i:s')]
+    #[WithTransformer(DateTimeInterfaceTransformer::class, format: 'Y-m-d H:i:s')]
     public Carbon|Optional|null $finished_at;
     public bool|Optional|null $is_declined;
     public bool|Optional|null $is_favorite;

@@ -16,6 +16,7 @@ use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelData\Optional;
 
 class UpdateTaskAction extends UseCaseAction
 {
@@ -33,7 +34,7 @@ class UpdateTaskAction extends UseCaseAction
     public function handle(Task $task, TaskUpdateContextDto $contextDto): Task
     {
         $updatedTask = DB::transaction(function () use ($task, $contextDto) {
-            $taskUpdateDto = TaskUpdateData::from($contextDto->toArray());
+            $taskUpdateDto = $this->toUpdateData($contextDto);
             $updatedTask = $this->updateTaskTask->run($task, $taskUpdateDto);
 
             if (!empty($contextDto->attachments)) {
@@ -74,5 +75,27 @@ class UpdateTaskAction extends UseCaseAction
             ->withResourceName('tasks')
             ->addMeta(['message' => 'Task successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    private function toUpdateData(TaskUpdateContextDto $contextDto): TaskUpdateData
+    {
+        $payload = [];
+
+        foreach ([
+            'task_list_id',
+            'parent_id',
+            'title',
+            'content',
+            'finished_at',
+            'is_declined',
+            'is_favorite',
+            'priority',
+        ] as $field) {
+            if (!($contextDto->{$field} instanceof Optional)) {
+                $payload[$field] = $contextDto->{$field};
+            }
+        }
+
+        return TaskUpdateData::from($payload);
     }
 }

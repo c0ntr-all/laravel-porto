@@ -263,6 +263,34 @@ class TaskCrudTest extends TestCase
             ->assertJsonPath('data.attributes.parent_id', (string) $parent->id);
     }
 
+    public function test_user_can_finish_task_via_is_finished(): void
+    {
+        $task = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Finish me',
+        ]);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->patchJson("/api/v1/task-manager/tasks/{$task->id}", [
+                'is_finished' => true,
+            ]);
+
+        $response->assertOk();
+        $this->assertIsString($response->json('data.attributes.finished_at'));
+        $this->assertNotSame('', $response->json('data.attributes.finished_at'));
+        $this->assertNotNull($task->fresh()->finished_at);
+
+        $unfinish = $this->actingAs($this->user, 'api')
+            ->patchJson("/api/v1/task-manager/tasks/{$task->id}", [
+                'is_finished' => false,
+            ]);
+
+        $unfinish->assertOk()
+            ->assertJsonPath('data.attributes.finished_at', null);
+
+        $this->assertNull($task->fresh()->finished_at);
+    }
+
     public function test_user_can_mark_task_as_favorite(): void
     {
         $task = Task::create([

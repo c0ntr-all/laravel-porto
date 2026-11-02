@@ -1,6 +1,8 @@
 <?php
-use App\Containers\AppSection\SteamUser\UI\CLI\Commands\ImportSteamUserCommand;
 use App\Containers\DashboardSection\Widget\UI\CLI\Commands\MakeWidgetCommand;
+use App\Containers\GameSection\Achievement\UI\CLI\Commands\ImportGameAchievementsCommand;
+use App\Containers\GameSection\PlayerAchievement\UI\CLI\Commands\ImportPlayerAchievementsCommand;
+use App\Containers\GameSection\SteamUser\UI\CLI\Commands\ImportSteamUserCommand;
 use App\Containers\MovieSection\Movie\UI\CLI\Commands\SyncMovieKinopoiskImagesCommand;
 use App\Containers\TaskManagerSection\Reminder\UI\CLI\Commands\ProcessDueRemindersCommand;
 use App\Ship\Middleware\AuthenticateBearerFromQuery;
@@ -23,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         MakeWidgetCommand::class,
         SyncMovieKinopoiskImagesCommand::class,
         ImportSteamUserCommand::class,
+        ImportGameAchievementsCommand::class,
+        ImportPlayerAchievementsCommand::class,
     ])
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command(ProcessDueRemindersCommand::class)

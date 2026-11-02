@@ -22,6 +22,8 @@ class AchievementFactory extends Factory
             'name' => fake()->unique()->words(2, true),
             'description' => fake()->sentence(),
             'steam_api_name' => strtoupper(fake()->unique()->bothify('ACH_????_###')),
+            'hidden' => false,
+            'archived' => false,
         ];
     }
 }

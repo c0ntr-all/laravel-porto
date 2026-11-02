@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Ship\Providers;
 
@@ -33,7 +35,7 @@ class ShipServiceProvider extends ServiceProvider
         \App\Containers\MovieSection\Import\Providers\ImportServiceProvider::class,
         \App\Containers\MovieSection\Folder\Providers\FolderServiceProvider::class,
         \App\Containers\GameSection\Import\Providers\ImportServiceProvider::class,
-        \App\Containers\AppSection\Steam\Providers\SteamWebApiServiceProvider::class,
+        \App\Containers\GameSection\Steam\Providers\SteamWebApiServiceProvider::class,
     ];
 
     /**
@@ -77,7 +79,8 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::GAME->value => 'App\Containers\GameSection\Game\Models\Game',
             ContainerAliasEnum::GAME_ACHIEVEMENT->value => 'App\Containers\GameSection\Achievement\Models\Achievement',
             ContainerAliasEnum::GAME_IMPORT->value => 'App\Containers\GameSection\Import\Models\GameImport',
-            ContainerAliasEnum::STEAM_USER->value => 'App\Containers\AppSection\SteamUser\Models\SteamUser',
+            ContainerAliasEnum::GAME_PLAYER_ACHIEVEMENT->value => 'App\Containers\GameSection\PlayerAchievement\Models\PlayerAchievement',
+            ContainerAliasEnum::STEAM_USER->value => 'App\Containers\GameSection\SteamUser\Models\SteamUser',
             // JSON:API resource names that may have been stored as morph types
             'albums' => 'App\Containers\GallerySection\Album\Models\Album',
             'images' => 'App\Containers\GallerySection\Image\Models\Image',
@@ -99,12 +102,12 @@ class ShipServiceProvider extends ServiceProvider
 
             // Если структура не совпадает — падаем обратно на стандартную логику
             if ($last !== 'Models') {
-                return 'Database\\Factories\\' . $class . 'Factory';
+                return 'Database\\Factories\\'.$class.'Factory';
             }
 
             $base = implode('\\', $parts);
 
-            return $base . '\\Data\\Factories\\' . $class . 'Factory';
+            return $base.'\\Data\\Factories\\'.$class.'Factory';
         });
     }
 }

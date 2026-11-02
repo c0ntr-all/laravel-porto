@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Ship\Enums;
 
@@ -10,7 +12,7 @@ enum ContainerAliasEnum: string
 {
     use Arrayable;
 
-    //AppSection
+    // AppSection
     case USER = 'users';
     case TAG = 'tags';
     case ATTACHMENT = 'attachments';
@@ -19,26 +21,26 @@ enum ContainerAliasEnum: string
     case CUSTOM_FIELD = 'custom_fields';
     case COUNTRY = 'countries';
     case STEAM_USER = 'steam_users';
-    //MusicSection
+    // MusicSection
     case MUSIC_ARTIST = 'music_artists';
     case MUSIC_ALBUM = 'music_albums';
     case MUSIC_TRACK = 'music_tracks';
     case MUSIC_PLAYLIST = 'music_playlists';
     case MUSIC_TAG = 'music_tags';
     case MUSIC_HISTORY = 'music_history';
-    //TaskManagerSection
+    // TaskManagerSection
     case TM_TASK = 'tm_tasks';
-    //LifelogSection
+    // LifelogSection
     case LL_POST = 'll_posts';
     case LL_PRESET = 'll_presets';
-    //DashboardSection
+    // DashboardSection
     case DASHBOARD = 'dashboards';
     case DASHBOARD_WIDGET = 'dashboard_widgets';
-    //GallerySection
+    // GallerySection
     case GALLERY_ALBUM = 'gallery_albums';
     case GALLERY_IMAGE = 'gallery_images';
     case GALLERY_VIDEO = 'gallery_videos';
-    //MovieSection
+    // MovieSection
     case MOVIE = 'movies';
     case MOVIE_GENRE = 'movie_genres';
     case MOVIE_IMPORT = 'movie_imports';
@@ -49,14 +51,15 @@ enum ContainerAliasEnum: string
     case MOVIE_SEASON = 'movie_seasons';
     case MOVIE_EPISODE = 'movie_episodes';
     case MOVIE_FRANCHISE = 'movie_franchises';
-    //GameSection
+    // GameSection
     case GAME = 'games';
     case GAME_ACHIEVEMENT = 'game_achievements';
     case GAME_IMPORT = 'game_imports';
+    case GAME_PLAYER_ACHIEVEMENT = 'game_player_achievements';
 
     public function getContainerMessage(): string
     {
-        return match($this) {
+        return match ($this) {
             self::USER => 'Пользователь',
             self::TAG => 'Тег',
             self::ATTACHMENT => 'Вложение',
@@ -91,6 +94,7 @@ enum ContainerAliasEnum: string
             self::GAME => 'Игра',
             self::GAME_ACHIEVEMENT => 'Достижение',
             self::GAME_IMPORT => 'Импорт игры',
+            self::GAME_PLAYER_ACHIEVEMENT => 'Достижение игрока',
             self::STEAM_USER => 'Профиль Steam',
         };
     }
@@ -118,6 +122,7 @@ enum ContainerAliasEnum: string
 
     /**
      * @deprecated Use attachmentFileableTypes()
+     *
      * @return list<string>
      */
     public static function galleryFileableTypes(): array

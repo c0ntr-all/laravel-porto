@@ -1,12 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Containers\AppSection\User\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Containers\AppSection\Notification\Contracts\ReceivesNotifications;
 use App\Containers\AppSection\Notification\Models\Traits\HasUserNotifications;
-use App\Containers\AppSection\SteamUser\Models\SteamUser;
 use App\Containers\AppSection\User\Models\Traits\HasAvatar;
+use App\Containers\GameSection\SteamUser\Models\SteamUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -28,12 +30,12 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements ReceivesNotifications
 {
-    use HasFactory,
-        Notifiable,
-        HasApiTokens,
-        HasRoles,
+    use HasApiTokens,
         HasAvatar,
-        HasUserNotifications;
+        HasFactory,
+        HasRoles,
+        HasUserNotifications,
+        Notifiable;
 
     /**
      * The attributes that are mass assignable.

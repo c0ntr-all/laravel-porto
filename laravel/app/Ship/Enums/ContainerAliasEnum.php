@@ -56,6 +56,7 @@ enum ContainerAliasEnum: string
     case GAME_ACHIEVEMENT = 'game_achievements';
     case GAME_IMPORT = 'game_imports';
     case GAME_PLAYER_ACHIEVEMENT = 'game_player_achievements';
+    case GAME_OWNED_GAME = 'game_owned_games';
 
     public function getContainerMessage(): string
     {
@@ -95,6 +96,7 @@ enum ContainerAliasEnum: string
             self::GAME_ACHIEVEMENT => 'Достижение',
             self::GAME_IMPORT => 'Импорт игры',
             self::GAME_PLAYER_ACHIEVEMENT => 'Достижение игрока',
+            self::GAME_OWNED_GAME => 'Игра в библиотеке',
             self::STEAM_USER => 'Профиль Steam',
         };
     }

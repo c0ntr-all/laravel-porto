@@ -14,5 +14,6 @@ return [
         'player_summaries' => '/ISteamUser/GetPlayerSummaries/v0002/',
         'game_achievements' => '/IPlayerService/GetGameAchievements/v1/',
         'player_achievements' => '/ISteamUserStats/GetPlayerAchievements/v0001/',
+        'owned_games' => '/IPlayerService/GetOwnedGames/v0001/',
     ],
 ];

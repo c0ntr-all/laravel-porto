@@ -7,8 +7,10 @@ namespace App\Containers\GameSection\Steam\Clients;
 use App\Containers\GameSection\Steam\Contracts\SteamWebApiClientInterface;
 use App\Containers\GameSection\Steam\Data\DTO\SteamGameAchievementDto;
 use App\Containers\GameSection\Steam\Data\DTO\SteamGetGameAchievementsResponseDto;
+use App\Containers\GameSection\Steam\Data\DTO\SteamGetOwnedGamesResponseDto;
 use App\Containers\GameSection\Steam\Data\DTO\SteamGetPlayerAchievementsResponseDto;
 use App\Containers\GameSection\Steam\Data\DTO\SteamGetPlayerSummariesResponseDto;
+use App\Containers\GameSection\Steam\Data\DTO\SteamOwnedGameDto;
 use App\Containers\GameSection\Steam\Data\DTO\SteamPlayerAchievementDto;
 use App\Containers\GameSection\Steam\Data\DTO\SteamPlayerSummaryDto;
 use App\Containers\GameSection\Steam\Exceptions\SteamWebApiConfigurationException;
@@ -142,6 +144,50 @@ class SteamWebApiHttpClient implements SteamWebApiClientInterface
             success: true,
             game_name: is_string($gameName) && $gameName !== '' ? $gameName : null,
             achievements: $achievements,
+        );
+    }
+
+    public function getOwnedGames(string $steamId): SteamGetOwnedGamesResponseDto
+    {
+        $steamId = trim($steamId);
+        if ($steamId === '') {
+            throw new InvalidArgumentException('Steam ID is required.');
+        }
+
+        $url = SteamWebApiUrl::ownedGames($steamId);
+        $response = $this->get($url);
+        $payload = $this->assertSuccessfulJson($response);
+
+        $responsePayload = $payload['response'] ?? null;
+        if (! is_array($responsePayload)) {
+            throw new SteamWebApiException('Steam GetOwnedGames returned an invalid response payload.');
+        }
+
+        $rawGames = $responsePayload['games'] ?? [];
+        if (! is_array($rawGames)) {
+            throw new SteamWebApiException('Steam GetOwnedGames returned an invalid games payload.');
+        }
+
+        $games = [];
+        foreach ($rawGames as $game) {
+            if (! is_array($game)) {
+                continue;
+            }
+
+            $games[] = SteamOwnedGameDto::fromApi($game);
+        }
+
+        $gameCount = $responsePayload['game_count'] ?? count($games);
+        if (! is_numeric($gameCount)) {
+            $gameCount = count($games);
+        }
+
+        return new SteamGetOwnedGamesResponseDto(
+            steam_id: $steamId,
+            url: $this->redactKey($url),
+            http_status: $response->status(),
+            game_count: (int) $gameCount,
+            games: $games,
         );
     }
 

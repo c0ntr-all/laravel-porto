@@ -36,6 +36,15 @@ class SteamWebApiUrl
         ]);
     }
 
+    public static function ownedGames(string $steamId): string
+    {
+        return self::build('owned_games', [
+            'key' => self::apiKey(),
+            'steamid' => $steamId,
+            'format' => 'json',
+        ]);
+    }
+
     /**
      * @param  array<string, scalar|null>  $query
      */
@@ -46,6 +55,7 @@ class SteamWebApiUrl
             'player_summaries' => '/ISteamUser/GetPlayerSummaries/v0002/',
             'game_achievements' => '/IPlayerService/GetGameAchievements/v1/',
             'player_achievements' => '/ISteamUserStats/GetPlayerAchievements/v0001/',
+            'owned_games' => '/IPlayerService/GetOwnedGames/v0001/',
         ];
         $path = (string) config('steam_web_api.paths.'.$pathKey, $defaults[$pathKey] ?? '/');
         if (! str_starts_with($path, '/')) {

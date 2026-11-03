@@ -372,6 +372,8 @@ function clearFilters(): void {
   void movieStore.getMovies(listParams())
 }
 
+void movieStore.getMovies(listParams())
+
 onMounted(() => {
   filteredGenreOptions.value = genreOptions.value
   filteredYearOptions.value = yearOptions.value
@@ -382,10 +384,6 @@ onMounted(() => {
     void genreStore.getGenres().then(() => {
       filteredGenreOptions.value = genreOptions.value
     })
-  }
-
-  if (!movieStore.movies.length) {
-    void movieStore.getMovies(listParams())
   }
 })
 </script>

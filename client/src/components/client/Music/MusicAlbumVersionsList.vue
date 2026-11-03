@@ -1,6 +1,8 @@
 <template>
   <div class="album-versions q-mb-lg">
-    <p class="album-versions__title text-h5 q-mb-lg">Другие версии альбома ({{ versions.meta.count }})</p>
+    <p class="album-versions__title text-h5 q-mb-lg">
+      Другие версии альбома ({{ versions.meta.count }})
+    </p>
     <q-table
       :rows="versions.data"
       :columns="columns"
@@ -10,17 +12,16 @@
       hide-bottom
       flat
     >
-      <template v-slot:body="props">
+      <template v-slot:body="bodyProps">
         <q-tr
           class="album-versions__row"
-          :props="props"
-          :key="`m_${props.row.index}`"
-          @click="router.push(`/music/albums/${props.row.id}`)"
+          :props="bodyProps"
+          @click="openVersion(bodyProps.row.id)"
         >
           <q-td
-            v-for="col in props.cols"
+            v-for="col in bodyProps.cols"
             :key="col.name"
-            :props="props"
+            :props="bodyProps"
           >
             <template v-if="col.name === 'image'">
               <q-img
@@ -29,11 +30,11 @@
               />
             </template>
             <template v-else-if="col.name === 'name'">
-              <div>{{ props.row.name }}</div>
+              <div>{{ bodyProps.row.name }}</div>
               <MusicAlbumMetaChips
                 class="q-mt-xs"
-                :album-type="props.row.album_type"
-                :edition="props.row.edition"
+                :album-type="bodyProps.row.album_type"
+                :edition="bodyProps.row.edition"
               />
             </template>
             <template v-else>
@@ -47,7 +48,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AlbumVersion } from 'src/components/client/Music/types'
 import MusicAlbumMetaChips from 'src/components/client/Music/MusicAlbumMetaChips.vue'
@@ -66,11 +66,12 @@ interface AlbumVersionsProp {
   }
 }
 
-const props = defineProps<{
+defineProps<{
   versions: AlbumVersionsProp
 }>()
+
 const router = useRouter()
-const versions = ref(props.versions)
+
 const columns = [{
   name: 'id',
   label: 'id',
@@ -104,4 +105,23 @@ const formatDate = (dateString: string): string => {
   const year = new Date(dateString).getFullYear()
   return Number.isFinite(year) ? String(year) : ''
 }
+
+const openVersion = (id: string): void => {
+  void router.push(`/music/albums/${id}`)
+}
 </script>
+
+<style lang="scss" scoped>
+.album-versions {
+  max-width: 720px;
+  border-right: 1px solid #ccc;
+
+  &__row {
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+  }
+}
+</style>

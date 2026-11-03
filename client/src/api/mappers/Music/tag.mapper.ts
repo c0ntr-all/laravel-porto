@@ -17,12 +17,16 @@ export function normalizeMusicTag(raw: Record<string, unknown>): IMusicTag {
     group: normalizeTagGroupOptional(raw.group),
     tags: asRecords(raw.tags).map(normalizeMusicTag),
     content: description == null ? null : String(description),
-    is_base: Boolean(raw.is_base)
+    is_base: Boolean(raw.is_base),
+    tracks_count: raw.tracks_count == null ? null : Number(raw.tracks_count),
+    percentage: raw.percentage == null ? null : Number(raw.percentage)
   }
 }
 
 export function normalizeMusicTags(value: unknown): IMusicTag[] {
-  return asRecords(value).map(normalizeMusicTag)
+  return asRecords(value)
+    .map(normalizeMusicTag)
+    .sort((left, right) => (right.percentage ?? -1) - (left.percentage ?? -1))
 }
 
 export function mapTagResponse(response: IJsonApiResponse): IMusicTag {

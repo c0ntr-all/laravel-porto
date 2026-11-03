@@ -29,7 +29,9 @@
               v-for="tag in artist.tags"
               :key="tag.id"
               color="primary"
-              text-color="white"
+              text-color="primary"
+              outline
+              dense
             >{{ tag.name }}</q-chip>
           </div>
         </div>

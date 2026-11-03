@@ -12,6 +12,8 @@ export interface IMusicTag {
   tags: IMusicTag[]
   content?: string | null
   is_base?: boolean
+  tracks_count?: number | null
+  percentage?: number | null
 }
 
 export interface IMusicTagWriteDto {

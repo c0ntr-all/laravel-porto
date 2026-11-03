@@ -66,14 +66,14 @@
     </div>
     <MusicAlbumVersionsList
       v-if="album"
+      :key="album.id"
       :versions="album.relationships.versions"
     />
   </template>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, watch } from 'vue'
 import { api } from 'src/boot/axios'
 import { getIncluded, handleApiError } from 'src/utils/jsonapi'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
@@ -184,7 +184,6 @@ interface GetAlbumApiResponse {
   included: IncludeItem[]
 }
 
-const route = useRoute()
 const musicPlayer = useMusicPlayer()
 
 const props = defineProps<{
@@ -193,48 +192,68 @@ const props = defineProps<{
 const loading = ref(true)
 const showImage = ref(false)
 const album = ref<Album | null>(null)
+let albumRequestId = 0
 
 const getAlbum = async (id: string): Promise<void> => {
-  await api.get<GetAlbumApiResponse>(`v1/music/albums/${id}`, {
-    params: { include: 'artists,tracks,tracks.artists,tags,versions,parent,discs' }
-  })
-    .then(response => {
-      const responseAlbum = response.data.data
-      const artists = getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included) as { data: Artist[] }
-      const tracks = getIncluded<ITrack>('tracks.artists', responseAlbum.relationships, response.data.included) as { data: ITrack[] }
-      const albumArtist = artists.data.map(artist => artist.name).filter(Boolean).join(' • ')
+  if (!id) {
+    return
+  }
 
-      album.value = {
-        id: responseAlbum.id,
-        ...responseAlbum.attributes,
-        relationships: {
-          artists,
-          tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as { data: Tag[] },
-          tracks: {
-            ...tracks,
-            data: tracks.data.map(track => {
-              const trackArtists = listTrackArtists(track)
+  albumRequestId += 1
+  const requestId = albumRequestId
+  loading.value = true
+  album.value = null
 
-              return {
-                ...track,
-                artists: trackArtists,
-                artist: formatTrackArtist({ ...track, artists: trackArtists }, trackArtists.length ? '' : albumArtist)
-              }
-            })
-          },
-          versions: {
-            ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included) as { data: AlbumVersion[] },
-            meta: {
-              count: responseAlbum.relationships.versions.meta.count
+  try {
+    const response = await api.get<GetAlbumApiResponse>(`v1/music/albums/${id}`, {
+      params: { include: 'artists,tracks,tracks.artists,tags,versions,parent,discs' }
+    })
+
+    if (requestId !== albumRequestId) {
+      return
+    }
+
+    const responseAlbum = response.data.data
+    const artists = getIncluded<Artist>('artists', responseAlbum.relationships, response.data.included) as { data: Artist[] }
+    const tracks = getIncluded<ITrack>('tracks.artists', responseAlbum.relationships, response.data.included) as { data: ITrack[] }
+    const albumArtist = artists.data.map(artist => artist.name).filter(Boolean).join(' • ')
+
+    album.value = {
+      id: responseAlbum.id,
+      ...responseAlbum.attributes,
+      relationships: {
+        artists,
+        tags: getIncluded<Tag>('tags', responseAlbum.relationships, response.data.included) as { data: Tag[] },
+        tracks: {
+          ...tracks,
+          data: tracks.data.map(track => {
+            const trackArtists = listTrackArtists(track)
+
+            return {
+              ...track,
+              artists: trackArtists,
+              artist: formatTrackArtist({ ...track, artists: trackArtists }, trackArtists.length ? '' : albumArtist)
             }
+          })
+        },
+        versions: {
+          ...getIncluded<AlbumVersion>('versions', responseAlbum.relationships, response.data.included) as { data: AlbumVersion[] },
+          meta: {
+            count: responseAlbum.relationships.versions.meta.count
           }
         }
       }
-    }).catch(error => {
-      handleApiError(error)
-    }).finally(() => {
+    }
+  } catch (error) {
+    if (requestId !== albumRequestId) {
+      return
+    }
+    handleApiError(error)
+  } finally {
+    if (requestId === albumRequestId) {
       loading.value = false
-    })
+    }
+  }
 }
 
 const addToPlaylist = () => {
@@ -243,16 +262,9 @@ const addToPlaylist = () => {
   }
 }
 
-onMounted(() => {
-  getAlbum(props.id)
-})
-
-watch(
-  () => route.params,
-  (toParams) => {
-    getAlbum(toParams.id as string)
-  }
-)
+watch(() => props.id, (id) => {
+  void getAlbum(id)
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
@@ -307,17 +319,6 @@ watch(
       flex: 1 0 45px;
       justify-content: center;
       margin-right: 15px;
-    }
-  }
-}
-
-.album-versions {
-  max-width: 720px;
-  border-right: 1px solid #ccc;
-
-  &__row {
-    &:hover {
-      cursor: pointer;
     }
   }
 }

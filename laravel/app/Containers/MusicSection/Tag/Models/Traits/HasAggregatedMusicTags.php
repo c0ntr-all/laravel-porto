@@ -23,6 +23,7 @@ trait HasAggregatedMusicTags
             'tag_id',
         )
             ->withPivot(['tracks_count', 'percentage'])
+            ->orderByPivot('percentage', 'desc')
             ->withTimestamps();
     }
 

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 return [
     'default_name' => 'Главная',
@@ -31,6 +33,14 @@ return [
         [
             'type' => 'gallery.albums',
             'size' => 'half',
+        ],
+        [
+            'type' => 'notes.recent-notes',
+            'size' => 'third',
+        ],
+        [
+            'type' => 'notes.pinned-notes',
+            'size' => 'third',
         ],
     ],
 ];

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Containers\DashboardSection\Widget\Enums;
 
@@ -13,6 +15,7 @@ enum WidgetCategoryEnum: string
     case TASK_MANAGER = 'task-manager';
     case MUSIC = 'music';
     case GALLERY = 'gallery';
+    case NOTES = 'notes';
     case CUSTOM = 'custom';
 
     public function label(): string
@@ -23,6 +26,7 @@ enum WidgetCategoryEnum: string
             self::TASK_MANAGER => 'Task Manager',
             self::MUSIC => 'Music',
             self::GALLERY => 'Gallery',
+            self::NOTES => 'Notes',
             self::CUSTOM => 'Custom',
         };
     }

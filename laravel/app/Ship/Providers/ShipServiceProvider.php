@@ -82,6 +82,7 @@ class ShipServiceProvider extends ServiceProvider
             ContainerAliasEnum::GAME_PLAYER_ACHIEVEMENT->value => 'App\Containers\GameSection\PlayerAchievement\Models\PlayerAchievement',
             ContainerAliasEnum::GAME_OWNED_GAME->value => 'App\Containers\GameSection\OwnedGame\Models\OwnedGame',
             ContainerAliasEnum::STEAM_USER->value => 'App\Containers\GameSection\SteamUser\Models\SteamUser',
+            ContainerAliasEnum::NOTE->value => 'App\Containers\NotesSection\Note\Models\Note',
             // JSON:API resource names that may have been stored as morph types
             'albums' => 'App\Containers\GallerySection\Album\Models\Album',
             'images' => 'App\Containers\GallerySection\Image\Models\Image',

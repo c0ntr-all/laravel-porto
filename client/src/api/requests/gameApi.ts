@@ -19,6 +19,12 @@ export const gameApi = {
     return response.data
   },
 
+  async createGame(payload: IGameWriteDto): Promise<IJsonApiResponse> {
+    const response = await api.post('v1/games', payload)
+
+    return response.data
+  },
+
   async updateGame(id: string, payload: IGameWriteDto): Promise<IJsonApiResponse> {
     const response = await api.patch(`v1/games/${id}`, payload)
 

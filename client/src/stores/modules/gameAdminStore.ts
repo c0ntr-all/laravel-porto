@@ -80,6 +80,26 @@ export const useGameAdminStore = defineStore('gameAdmin', () => {
     }
   }
 
+  async function createGame(payload: IGameWriteDto): Promise<IGame | null> {
+    isSaving.value = true
+
+    try {
+      const response = await gameApi.createGame(payload)
+      const created = mapGameResponse(response)
+
+      upsertGame(created)
+      syncPublicStore(created)
+      handleApiSuccess(response)
+
+      return created
+    } catch (error) {
+      notifyGameApiError(error)
+      return null
+    } finally {
+      isSaving.value = false
+    }
+  }
+
   async function updateGame(id: string, payload: IGameWriteDto): Promise<IGame | null> {
     isSaving.value = true
 
@@ -131,6 +151,7 @@ export const useGameAdminStore = defineStore('gameAdmin', () => {
     isSaving,
     listName,
     getGames,
+    createGame,
     updateGame,
     deleteGame,
     upsertImportedGame

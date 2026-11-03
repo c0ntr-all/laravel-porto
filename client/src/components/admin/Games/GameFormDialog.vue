@@ -1,9 +1,9 @@
 <template>
   <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card class="game-form-dialog">
-      <q-form @submit.prevent="submit">
+      <q-form :key="formKey" @submit.prevent="submit">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Редактирование</div>
+          <div class="text-h6">{{ title }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -42,25 +42,21 @@
             dense
             :rules="[validateDate]"
           />
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
-              <q-input
-                v-model="model.developer"
-                label="Разработчик"
-                filled
-                dense
-                :rules="[validateParty]"
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input
-                v-model="model.publisher"
-                label="Издатель"
-                filled
-                dense
-                :rules="[validateParty]"
-              />
-            </div>
+          <div class="game-form-dialog__pair">
+            <q-input
+              v-model="model.developer"
+              label="Разработчик"
+              filled
+              dense
+              :rules="[validateParty]"
+            />
+            <q-input
+              v-model="model.publisher"
+              label="Издатель"
+              filled
+              dense
+              :rules="[validateParty]"
+            />
           </div>
           <q-input
             v-model="model.steam_id"
@@ -75,7 +71,7 @@
         <q-card-section align="right">
           <q-btn
             type="submit"
-            label="Сохранить"
+            :label="submitLabel"
             color="primary"
             unelevated
             no-caps
@@ -88,7 +84,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useGameAdminStore } from 'src/stores/modules/gameAdminStore'
 import { IGame, IGameWriteDto } from 'src/types/Game'
 import { parseSteamId } from 'src/utils/game'
@@ -103,6 +99,9 @@ const emit = defineEmits<{
 }>()
 
 const gameStore = useGameAdminStore()
+const title = computed(() => (props.game ? 'Редактирование' : 'Добавить игру'))
+const submitLabel = computed(() => (props.game ? 'Сохранить' : 'Добавить'))
+const formKey = computed(() => props.game?.id ?? 'create')
 
 const model = reactive({
   name: '',
@@ -205,11 +204,9 @@ function payload(): IGameWriteDto {
 }
 
 async function submit(): Promise<void> {
-  if (!props.game) {
-    return
-  }
-
-  const saved = await gameStore.updateGame(props.game.id, payload())
+  const saved = props.game
+    ? await gameStore.updateGame(props.game.id, payload())
+    : await gameStore.createGame(payload())
 
   if (saved) {
     emit('update:modelValue', false)
@@ -236,11 +233,21 @@ watch(() => [props.modelValue, props.game] as const, ([open]) => {
   min-width: 480px;
   width: 100%;
   max-width: 640px;
+
+  &__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 600px) {
   .game-form-dialog {
     min-width: 0;
+
+    &__pair {
+      grid-template-columns: 1fr;
+    }
   }
 }
 </style>

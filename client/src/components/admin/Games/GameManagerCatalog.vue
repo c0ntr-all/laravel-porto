@@ -4,7 +4,7 @@
       <div class="col-12 col-md">
         <div class="text-h6">Catalog</div>
         <div class="text-caption text-grey-7">
-          Игры каталога. Редактирование, реимпорт из Steam и удаление.
+          Игры каталога. Добавление, редактирование, реимпорт из Steam и удаление.
         </div>
       </div>
       <div class="col-12 col-sm-4 col-md-3">
@@ -21,6 +21,16 @@
             <q-icon name="search" />
           </template>
         </q-input>
+      </div>
+      <div class="col-auto">
+        <q-btn
+          icon="add"
+          label="Добавить игру"
+          color="primary"
+          unelevated
+          no-caps
+          @click="openCreate"
+        />
       </div>
     </div>
 
@@ -185,6 +195,11 @@ function onSearch(value: string | number | null): void {
   void gameStore.getGames({
     name: value == null ? '' : String(value)
   })
+}
+
+function openCreate(): void {
+  editing.value = null
+  showEdit.value = true
 }
 
 function openEdit(item: IGame): void {

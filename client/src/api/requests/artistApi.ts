@@ -59,13 +59,29 @@ export const artistApi = {
     return response.data
   },
 
-  async getArtistTracks(id: string, cursor?: string | null): Promise<IJsonApiResponse> {
-    const response = await api.get(`v1/music/artists/${id}/tracks`, {
-      params: {
-        include: 'artists,album,tags',
-        ...(cursor ? { cursor } : {})
-      }
+  async getArtistTracks(
+    id: string,
+    query?: {
+      cursor?: string | null
+      rate?: number[]
+      sort?: string
+    }
+  ): Promise<IJsonApiResponse> {
+    const filters = buildFilterForUrl({
+      rate: query?.rate
     })
+    const response = await api.get(
+      filters
+        ? `v1/music/artists/${id}/tracks?${filters}`
+        : `v1/music/artists/${id}/tracks`,
+      {
+        params: {
+          include: 'artists,album,tags',
+          ...(query?.cursor ? { cursor: query.cursor } : {}),
+          ...(query?.sort ? { sort: query.sort } : {})
+        }
+      }
+    )
 
     return response.data
   },

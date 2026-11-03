@@ -27,6 +27,10 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const isArtistLoading = ref(false)
   const isArtistTracksLoading = ref(false)
   const isArtistTracksLoadingMore = ref(false)
+  const artistTrackListRates = ref<number[]>([])
+  const artistTrackListSortField = ref<TrackSortField>('created_at')
+  const artistTrackListSortDesc = ref(true)
+  let artistTrackListRequestId = 0
 
   const artists = ref<IArtist[]>([])
   const artistsCursor = ref<string | null>(null)
@@ -78,35 +82,72 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
 
   async function getArtistTracks(
     id: string,
-    options?: { append?: boolean; fallbackArtist?: string }
+    options?: {
+      append?: boolean
+      fallbackArtist?: string
+      rates?: number[]
+      sortField?: TrackSortField
+      sortDesc?: boolean
+    }
   ): Promise<void> {
+    if (!id) {
+      return
+    }
+
     const append = Boolean(options?.append)
 
+    if (options && 'rates' in options) {
+      artistTrackListRates.value = [...(options.rates ?? [])]
+    }
+
+    if (options?.sortField) {
+      artistTrackListSortField.value = options.sortField
+    }
+
+    if (options && 'sortDesc' in options) {
+      artistTrackListSortDesc.value = Boolean(options.sortDesc)
+    }
+
     if (append) {
-      if (!artistTracksCursor.value || isArtistTracksLoadingMore.value) {
+      if (!artistTracksCursor.value || isArtistTracksLoadingMore.value || isArtistTracksLoading.value) {
         return
       }
       isArtistTracksLoadingMore.value = true
     } else {
+      artistTrackListRequestId += 1
       isArtistTracksLoading.value = true
+      isArtistTracksLoadingMore.value = false
       artistTracks.value = []
       artistTracksCursor.value = null
     }
 
+    const requestId = artistTrackListRequestId
+
     try {
-      const response = await artistApi.getArtistTracks(
-        id,
-        append ? artistTracksCursor.value : null
-      )
+      const response = await artistApi.getArtistTracks(id, {
+        cursor: append ? artistTracksCursor.value : null,
+        rate: artistTrackListRates.value,
+        sort: `${artistTrackListSortDesc.value ? '-' : ''}${artistTrackListSortField.value}`
+      })
+
+      if (requestId !== artistTrackListRequestId) {
+        return
+      }
+
       const mapped = mapTracksResponse(response, options?.fallbackArtist ?? artist.value?.name ?? '')
 
-      artistTracks.value = append ? [...artistTracks.value, ...mapped] : mapped
+      artistTracks.value = append ? mergeById(artistTracks.value, mapped) : mapped
       artistTracksCursor.value = extractCursorFromLink(response.links?.next)
     } catch (error) {
+      if (requestId !== artistTrackListRequestId) {
+        return
+      }
       handleApiError(error)
     } finally {
-      isArtistTracksLoading.value = false
-      isArtistTracksLoadingMore.value = false
+      if (requestId === artistTrackListRequestId) {
+        isArtistTracksLoading.value = false
+        isArtistTracksLoadingMore.value = false
+      }
     }
   }
 
@@ -276,6 +317,9 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
     isArtistLoading,
     isArtistTracksLoading,
     isArtistTracksLoadingMore,
+    artistTrackListRates,
+    artistTrackListSortField,
+    artistTrackListSortDesc,
     artists,
     artistsCursor,
     hasMoreArtists,

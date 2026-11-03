@@ -8,26 +8,11 @@
     @reset="onReset"
   >
     <template #before-tags>
-      <div class="tracks-rate-filter q-mb-md">
-        <div class="tracks-rate-filter__label">Rating</div>
-        <div class="tracks-rate-filter__row">
-          <q-btn
-            v-for="option in rateOptions"
-            :key="option.value"
-            class="tracks-rate-filter__chip"
-            unelevated
-            dense
-            no-caps
-            :color="isRateSelected(option.value) ? 'primary' : 'grey-2'"
-            :text-color="isRateSelected(option.value) ? 'white' : 'grey-8'"
-            :icon="option.icon || undefined"
-            :label="option.label || undefined"
-            @click="toggleRate(option.value)"
-          >
-            <q-tooltip>{{ option.hint }}</q-tooltip>
-          </q-btn>
-        </div>
-      </div>
+      <MusicTrackRateFilter
+        class="q-mb-md"
+        :model-value="catalog.trackListRates"
+        @update:model-value="onRatesChange"
+      />
     </template>
   </MusicTabArtistsFilter>
 </template>
@@ -35,29 +20,12 @@
 <script lang="ts" setup>
 import { useMusicCatalogStore } from 'src/stores/modules/musicCatalogStore'
 import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFilter.vue'
+import MusicTrackRateFilter from 'src/components/client/Music/MusicTrackRateFilter.vue'
 
 const catalog = useMusicCatalogStore()
 
-const rateOptions = [
-  { value: 1, icon: 'star', hint: '1 star', label: '1' },
-  { value: 2, icon: 'star', hint: '2 stars', label: '2' },
-  { value: 3, icon: 'star', hint: '3 stars', label: '3' },
-  { value: 4, icon: 'star', hint: '4 stars', label: '4' },
-  { value: 5, icon: 'star', hint: '5 stars', label: '5' },
-  { value: 0, icon: '', hint: 'Not rated yet', label: 'Unrated' }
-] as const
-
-const isRateSelected = (value: number): boolean => {
-  return catalog.trackListRates.includes(value)
-}
-
-const toggleRate = (value: number): void => {
-  const current = catalog.trackListRates
-  const next = current.includes(value)
-    ? current.filter(item => item !== value)
-    : [...current, value]
-
-  void catalog.getTracks({ rates: next })
+const onRatesChange = (rates: number[]): void => {
+  void catalog.getTracks({ rates })
 }
 
 const onTagsChange = (payload: {
@@ -81,27 +49,3 @@ const onReset = (): void => {
   })
 }
 </script>
-
-<style lang="scss" scoped>
-.tracks-rate-filter {
-  &__label {
-    margin-bottom: 8px;
-    color: rgba(0, 0, 0, 0.7);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  &__row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  &__chip {
-    min-width: 40px;
-    padding: 0 8px;
-  }
-}
-</style>

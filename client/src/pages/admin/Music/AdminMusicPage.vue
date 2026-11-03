@@ -12,7 +12,6 @@
     <q-tab name="albums" label="Albums"/>
     <q-tab name="tracks" label="Tracks"/>
     <q-tab name="tags" label="Tags"/>
-    <q-tab name="playing" label="Playing"/>
   </q-tabs>
 
   <q-separator/>
@@ -30,9 +29,6 @@
     <q-tab-panel name="tags">
       <AdminMusicTabTags/>
     </q-tab-panel>
-    <q-tab-panel name="playing">
-      <AdminMusicTabPlaying/>
-    </q-tab-panel>
   </q-tab-panels>
 </template>
 <script lang="ts" setup>
@@ -41,7 +37,6 @@ import AdminMusicTabArtists from 'src/components/admin/Music/MusicArtists.vue'
 import AdminMusicTabAlbums from 'src/components/admin/Music/MusicAlbums.vue'
 import AdminMusicTabTracks from 'src/components/admin/Music/MusicTracks.vue'
 import AdminMusicTabTags from 'src/components/admin/Music/MusicTags.vue'
-import AdminMusicTabPlaying from 'src/components/admin/Music/MusicPlayingSettings.vue'
 
 const tabs = ref('artists')
 </script>

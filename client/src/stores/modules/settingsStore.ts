@@ -8,11 +8,15 @@ import {
   IDashboardSettings,
   IGallerySettings,
   ILifelogSettings,
+  IMusicSettings,
   ITaskManagerSettings
 } from 'src/types/settings'
 
 const SETTINGS_STORAGE_KEY = 'home-portal.settings'
 const LEGACY_TASK_VIEW_KEY = 'taskManager.tasksViewMode'
+export const MUSIC_SCROBBLE_PERCENT_MIN = 10
+export const MUSIC_SCROBBLE_PERCENT_MAX = 100
+export const MUSIC_SCROBBLE_PERCENT_DEFAULT = 30
 
 const GALLERY_GRID_MIN: Record<GalleryGridSize, number> = {
   s: 180,
@@ -37,8 +41,23 @@ function defaultSettings(): IAppSettings {
     },
     gallery: {
       gridSize: 'm'
+    },
+    music: {
+      scrobblePercent: MUSIC_SCROBBLE_PERCENT_DEFAULT
     }
   }
+}
+
+function clampScrobblePercent(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(numeric)) {
+    return MUSIC_SCROBBLE_PERCENT_DEFAULT
+  }
+
+  return Math.min(
+    MUSIC_SCROBBLE_PERCENT_MAX,
+    Math.max(MUSIC_SCROBBLE_PERCENT_MIN, Math.round(numeric))
+  )
 }
 
 function isGalleryGridSize(value: unknown): value is GalleryGridSize {
@@ -88,6 +107,13 @@ function mergeSettings(raw: Partial<IAppSettings> | null): IAppSettings {
       gridSize: isGalleryGridSize(raw?.gallery?.gridSize)
         ? raw.gallery.gridSize
         : defaults.gallery.gridSize
+    },
+    music: {
+      ...defaults.music,
+      ...(raw?.music ?? {}),
+      scrobblePercent: clampScrobblePercent(
+        raw?.music?.scrobblePercent ?? defaults.music.scrobblePercent
+      )
     }
   }
 }
@@ -143,6 +169,13 @@ export const useSettingsStore = defineStore('settings', () => {
     persist()
   }
 
+  function updateMusic(patch: Partial<IMusicSettings>): void {
+    if (patch.scrobblePercent !== undefined) {
+      settings.music.scrobblePercent = clampScrobblePercent(patch.scrobblePercent)
+    }
+    persist()
+  }
+
   function resetSection(section: keyof IAppSettings): void {
     const defaults = defaultSettings()
     Object.assign(settings[section], defaults[section])
@@ -156,6 +189,7 @@ export const useSettingsStore = defineStore('settings', () => {
     updateLifelog,
     updateTaskManager,
     updateGallery,
+    updateMusic,
     resetSection
   }
 })

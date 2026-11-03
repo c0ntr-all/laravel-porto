@@ -73,15 +73,11 @@
         <q-rating
           v-model="track.rate"
           @update:model-value="rateTrack"
-          :max="4"
+          :max="5"
           size="1.5em"
-          color="primary"
-          :icon="[
-            'sentiment_very_dissatisfied',
-            'sentiment_dissatisfied',
-            'sentiment_satisfied',
-            'sentiment_very_satisfied'
-          ]"
+          color="amber"
+          icon="star_border"
+          icon-selected="star"
         />
       </div>
       <div class="music-track__end-column">

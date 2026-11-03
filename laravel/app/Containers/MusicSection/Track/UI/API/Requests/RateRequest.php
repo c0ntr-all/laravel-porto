@@ -15,7 +15,7 @@ class RateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'rate' => 'required|integer|min:0|max:4'
+            'rate' => 'required|integer|min:0|max:5'
         ];
     }
 }

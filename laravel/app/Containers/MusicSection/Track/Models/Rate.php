@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Music\Rate
  *
- * @property int $id
  * @property int $user_id
  * @property int $track_id
  * @property int $rate
@@ -17,7 +16,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Rate newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Rate query()
  * @method static \Illuminate\Database\Eloquent\Builder|Rate whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Rate whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Rate whereRate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Rate whereTrackId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Rate whereUpdatedAt($value)
@@ -27,6 +25,8 @@ use Illuminate\Database\Eloquent\Model;
 class Rate extends Model
 {
     protected $table = 'music_track_rates';
+
+    public $incrementing = false;
 
     protected $fillable = [
         'user_id',
@@ -43,5 +43,38 @@ class Rate extends Model
                 $builder->where('user_id', '=', auth()->id());
             }
         });
+    }
+
+    /**
+     * The table primary key is (user_id, track_id). Eloquent's default `id`
+     * produces `where id is null` on update.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    protected function setKeysForSaveQuery($query)
+    {
+        $query->where('user_id', '=', $this->keyValue('user_id'))
+            ->where('track_id', '=', $this->keyValue('track_id'));
+
+        return $query;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    protected function setKeysForSelectQuery($query)
+    {
+        return $this->setKeysForSaveQuery($query);
+    }
+
+    private function keyValue(string $key): mixed
+    {
+        if (array_key_exists($key, $this->original)) {
+            return $this->original[$key];
+        }
+
+        return $this->getAttribute($key);
     }
 }

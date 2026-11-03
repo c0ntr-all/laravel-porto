@@ -23,9 +23,15 @@ export interface IGallerySettings {
   gridSize: GalleryGridSize
 }
 
+export interface IMusicSettings {
+  /** Percent of track duration that must be listened before scrobbling to history. */
+  scrobblePercent: number
+}
+
 export interface IAppSettings {
   dashboard: IDashboardSettings
   lifelog: ILifelogSettings
   taskManager: ITaskManagerSettings
   gallery: IGallerySettings
+  music: IMusicSettings
 }

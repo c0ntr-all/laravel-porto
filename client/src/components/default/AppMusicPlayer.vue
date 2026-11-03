@@ -53,6 +53,16 @@
       />
     </div>
 
+    <div
+      class="music-player__scrobble"
+      :title="scrobbleTitle"
+    >
+      <div
+        class="music-player__scrobble-fill"
+        :style="{ width: `${player.scrobbleProgress}%` }"
+      />
+    </div>
+
     <q-menu
       class="music-player__menu"
       anchor="bottom left"
@@ -68,11 +78,30 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMusicPlayer } from 'src/stores/modules/musicPlayer'
+import { useSettingsStore } from 'src/stores/modules/settingsStore'
 import AppMusicPlayerExpanded from 'src/components/default/AppMusicPlayerExpanded.vue'
 import MusicTrackName from 'src/components/client/Music/MusicTrackName.vue'
 
 const player = useMusicPlayer()
+const { settings } = storeToRefs(useSettingsStore())
+
+const scrobbleTitle = computed(() => {
+  const percent = settings.value.music.scrobblePercent
+  const progress = Math.round(player.scrobbleProgress)
+
+  if (!player.hasTrack) {
+    return `Скроббл с ${percent}% трека`
+  }
+
+  if (player.isScrobbled) {
+    return `Скроббл выполнен (${percent}% порог)`
+  }
+
+  return `Прослушано ${progress}% от порога скроббла (${percent}%)`
+})
 </script>
 
 <style lang="scss" scoped>
@@ -117,6 +146,24 @@ const player = useMusicPlayer()
     width: 32px;
     height: 32px;
     margin-left: 4px;
+  }
+
+  &__scrobble {
+    flex-shrink: 0;
+    align-self: center;
+    width: 100px;
+    height: 10px;
+    margin-left: 1rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #f9e4e4;
+  }
+
+  &__scrobble-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #ed7d7d;
+    transition: width 0.2s linear;
   }
 }
 </style>

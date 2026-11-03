@@ -40,6 +40,7 @@ class HistoryRepository
         return History::create([
             'user_id' => $dto->user_id,
             'track_id' => $dto->track_id,
+            'progress' => $dto->progress,
         ]);
     }
 

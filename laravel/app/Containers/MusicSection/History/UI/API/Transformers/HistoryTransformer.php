@@ -24,6 +24,9 @@ class HistoryTransformer extends TransformerAbstract
             'id' => $history->id,
             'track_id' => $history->track_id,
             'user_id' => $history->user_id,
+            'progress' => $history->progress !== null
+                ? round((float) $history->progress, 2)
+                : null,
             'created_at' => $history->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $history->updated_at?->format('Y-m-d H:i:s'),
         ];

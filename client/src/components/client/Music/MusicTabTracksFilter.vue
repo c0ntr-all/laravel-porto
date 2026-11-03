@@ -39,10 +39,11 @@ import MusicTabArtistsFilter from 'src/components/client/Music/MusicTabArtistsFi
 const catalog = useMusicCatalogStore()
 
 const rateOptions = [
-  { value: 1, icon: 'sentiment_very_dissatisfied', hint: '1 star', label: '' },
-  { value: 2, icon: 'sentiment_dissatisfied', hint: '2 stars', label: '' },
-  { value: 3, icon: 'sentiment_satisfied', hint: '3 stars', label: '' },
-  { value: 4, icon: 'sentiment_very_satisfied', hint: '4 stars', label: '' },
+  { value: 1, icon: 'star', hint: '1 star', label: '1' },
+  { value: 2, icon: 'star', hint: '2 stars', label: '2' },
+  { value: 3, icon: 'star', hint: '3 stars', label: '3' },
+  { value: 4, icon: 'star', hint: '4 stars', label: '4' },
+  { value: 5, icon: 'star', hint: '5 stars', label: '5' },
   { value: 0, icon: '', hint: 'Not rated yet', label: 'Unrated' }
 ] as const
 

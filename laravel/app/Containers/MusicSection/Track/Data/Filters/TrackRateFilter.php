@@ -47,7 +47,7 @@ class TrackRateFilter implements FilterInterface
         return collect($value)
             ->flatten()
             ->map(fn (mixed $rate) => (int) $rate)
-            ->filter(fn (int $rate) => $rate >= 0 && $rate <= 4)
+            ->filter(fn (int $rate) => $rate >= 0 && $rate <= 5)
             ->unique()
             ->values()
             ->all();

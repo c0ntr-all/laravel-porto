@@ -17,6 +17,11 @@ class History extends Model
     protected $fillable = [
         'user_id',
         'track_id',
+        'progress',
+    ];
+
+    protected $casts = [
+        'progress' => 'float',
     ];
 
     public function track(): BelongsTo

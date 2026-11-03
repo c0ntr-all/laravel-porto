@@ -5,6 +5,12 @@ import { handleApiError } from 'src/utils/jsonapi'
 import { audioEngine, type AudioBufferedRange } from 'src/services/audio-engine'
 import { formatPlaybackTime, parseDuration } from 'src/utils/playbackTime'
 import { formatTrackArtist } from 'src/api/mappers/Music/track.mapper'
+import {
+  MUSIC_SCROBBLE_PERCENT_DEFAULT,
+  MUSIC_SCROBBLE_PERCENT_MAX,
+  MUSIC_SCROBBLE_PERCENT_MIN,
+  useSettingsStore
+} from 'src/stores/modules/settingsStore'
 import { ITrack } from 'src/types'
 
 export type RepeatMode = 'off' | 'all' | 'one'
@@ -22,7 +28,6 @@ const QUEUE_KEY = 'home-portal.music-player.queue'
 const DEFAULT_VOLUME = 0.7
 const SEEK_STEP_SECONDS = 10
 const PREVIOUS_RESTART_SECONDS = 3
-const SCROBBLE_MAX_SECONDS = 240
 const REPEAT_ORDER: RepeatMode[] = ['off', 'all', 'one']
 
 interface PersistedQueue {
@@ -201,12 +206,28 @@ function writePersistedQueue(queueState: PersistedQueue | null): void {
   }))
 }
 
+function readScrobblePercent(): number {
+  try {
+    const percent = useSettingsStore().settings.music.scrobblePercent
+    if (!Number.isFinite(percent)) {
+      return MUSIC_SCROBBLE_PERCENT_DEFAULT
+    }
+
+    return Math.min(
+      MUSIC_SCROBBLE_PERCENT_MAX,
+      Math.max(MUSIC_SCROBBLE_PERCENT_MIN, percent)
+    )
+  } catch {
+    return MUSIC_SCROBBLE_PERCENT_DEFAULT
+  }
+}
+
 function getScrobbleThreshold(duration: number): number {
   if (!Number.isFinite(duration) || duration <= 0) {
     return 30
   }
 
-  return Math.min(Math.max(duration / 2, 1), SCROBBLE_MAX_SECONDS)
+  return Math.max(duration * (readScrobblePercent() / 100), 0.1)
 }
 
 export const useMusicPlayer = defineStore('musicPlayer', () => {
@@ -224,11 +245,11 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
   const shuffleEnabled = ref(preferences.shuffle)
   const repeatMode = ref<RepeatMode>(preferences.repeat)
   const isScrobbled = ref(false)
+  const listenedSeconds = ref(0)
   const bufferedRanges = ref<AudioBufferedRange[]>([])
 
   let initialized = false
   let scrobbleInFlight = false
-  let listenedSeconds = 0
   let lastTimeUpdate = 0
   let persistQueueEnabled = true
 
@@ -309,6 +330,22 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       start: (range.start / duration.value) * 100,
       end: (range.end / duration.value) * 100
     }))
+  })
+  const scrobbleProgress = computed(() => {
+    if (isScrobbled.value) {
+      return 100
+    }
+
+    if (!hasTrack.value || duration.value <= 0) {
+      return 0
+    }
+
+    const threshold = getScrobbleThreshold(duration.value)
+    if (threshold <= 0) {
+      return 0
+    }
+
+    return Math.min(100, (listenedSeconds.value / threshold) * 100)
   })
 
   function isIgnorablePlaybackError(error: unknown): boolean {
@@ -402,6 +439,19 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     })
   }
 
+  function getListenedProgress(): number {
+    if (duration.value <= 0) {
+      return 0
+    }
+
+    const ratio = listenedSeconds.value / duration.value
+    if (!Number.isFinite(ratio) || ratio <= 0) {
+      return 0
+    }
+
+    return Math.min(100, Math.round(ratio * 10000) / 100)
+  }
+
   async function scrobbleCurrentTrack(): Promise<void> {
     const track = currentTrack.value
     if (!track || isScrobbled.value || scrobbleInFlight) {
@@ -412,7 +462,8 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
 
     try {
       await api.post('v1/music/history', {
-        track_id: Number(track.id)
+        track_id: Number(track.id),
+        progress: getListenedProgress()
       })
       isScrobbled.value = true
     } catch (error) {
@@ -425,7 +476,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
   function resetScrobbleState(): void {
     isScrobbled.value = false
     scrobbleInFlight = false
-    listenedSeconds = 0
+    listenedSeconds.value = 0
     lastTimeUpdate = 0
   }
 
@@ -434,7 +485,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       return
     }
 
-    if (listenedSeconds >= getScrobbleThreshold(duration.value)) {
+    if (listenedSeconds.value >= getScrobbleThreshold(duration.value)) {
       void scrobbleCurrentTrack()
     }
   }
@@ -495,7 +546,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
       if (status.value === 'playing' && lastTimeUpdate > 0) {
         const delta = nextTime - lastTimeUpdate
         if (delta > 0 && delta < 1.5) {
-          listenedSeconds += delta
+          listenedSeconds.value += delta
         }
       }
 
@@ -814,6 +865,8 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     trackTitle,
     currentArtist,
     bufferedPercents,
+    scrobbleProgress,
+    isScrobbled,
     hasPrevious,
     hasNext,
     volumePercent,

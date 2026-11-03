@@ -10,6 +10,17 @@ class RateRepository
 {
     public function create(Track $track, RateTrackData $dto): Rate
     {
+        if ($dto->rate <= 0) {
+            $track->rate()->where('user_id', $dto->user_id)->delete();
+
+            $rate = new Rate();
+            $rate->user_id = $dto->user_id;
+            $rate->track_id = $track->id;
+            $rate->rate = 0;
+
+            return $rate;
+        }
+
         return $track->rate()->updateOrCreate([
             'user_id' => $dto->user_id,
         ], [

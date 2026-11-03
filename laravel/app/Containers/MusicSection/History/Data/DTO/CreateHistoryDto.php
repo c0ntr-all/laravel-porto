@@ -8,6 +8,7 @@ class CreateHistoryDto extends Data
 {
     public int $user_id;
     public int $track_id;
+    public ?float $progress = null;
 
     public function __construct()
     {

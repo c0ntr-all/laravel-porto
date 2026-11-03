@@ -16,9 +16,9 @@ class TrackRateSort implements Sort
 
         $table = $query->getModel()->getTable();
         $direction = $descending ? 'desc' : 'asc';
-        // Personal scale is 1–4. Sentinel keeps unrated rows last in both directions
+        // Personal scale is 1–5. Sentinel keeps unrated rows last in both directions
         // and is a real expression (not a SELECT-only alias), so cursor WHERE works.
-        $unrated = $descending ? 0 : 5;
+        $unrated = $descending ? 0 : 6;
 
         $query->select($table.'.*')
             ->selectRaw('COALESCE('.self::JOIN_ALIAS.'.rate, '.$unrated.') as user_rate')

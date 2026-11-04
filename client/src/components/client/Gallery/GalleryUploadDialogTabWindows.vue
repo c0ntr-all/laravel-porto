@@ -2,6 +2,7 @@
   <div class="upload-path">
     <p class="upload-path__hint">
       Files are not copied. Only the path is sent — later the backend will serve the object from this computer.
+      <router-link :to="{ name: 'gallery-computer' }">Browse a folder instead.</router-link>
     </p>
 
     <q-input

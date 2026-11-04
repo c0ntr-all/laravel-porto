@@ -5,10 +5,11 @@ namespace App\Containers\GallerySection\Image\UI\Actions;
 use App\Containers\GallerySection\Album\Models\Album;
 use App\Containers\GallerySection\Image\Data\DTO\CreateImageDto;
 use App\Containers\GallerySection\Image\Data\DTO\UploadImageFromWindowsDto;
-use App\Containers\GallerySection\Image\Factories\ImageSourceFactory;
-use App\Containers\GallerySection\Image\Services\PathGenerationService;
-use App\Containers\GallerySection\Image\Tasks\CreateAllImageThumbsTask;
+use App\Containers\GallerySection\Image\Enums\ImageMimeEnum;
+use App\Containers\GallerySection\Image\Jobs\GenerateGalleryImageThumbJob;
+use App\Containers\GallerySection\Image\Models\Image;
 use App\Containers\GallerySection\Image\Tasks\CreateImageInAlbumTask;
+use App\Containers\GallerySection\Image\Tasks\ReadImageFileFactsTask;
 use App\Containers\GallerySection\Image\UI\API\Requests\UploadImagesFromWindowsRequest;
 use App\Containers\GallerySection\Image\UI\API\Transformers\ImageTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
@@ -20,7 +21,6 @@ use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class UploadImagesFromWindowsAction extends UseCaseAction
 {
@@ -31,8 +31,7 @@ class UploadImagesFromWindowsAction extends UseCaseAction
 
     public function __construct(
         private readonly CreateImageInAlbumTask $createImageInAlbumTask,
-        private readonly CreateAllImageThumbsTask $createAllImageThumbsTask,
-        private readonly PathGenerationService $pathGenerationService,
+        private readonly ReadImageFileFactsTask $readImageFileFactsTask,
     ) {
         parent::__construct();
     }
@@ -41,43 +40,53 @@ class UploadImagesFromWindowsAction extends UseCaseAction
     {
         return DB::transaction(function () use ($album, $uploadImageDto) {
             $result = collect();
+            $created = collect();
+            $disk = (string) config('image.windows.disk', 'windows_f');
+            $root = (string) config('image.windows.root_folder', config('app.windows_images_root_folder'));
 
             foreach ($uploadImageDto->paths as $filePath) {
-                $uuid = UuidV7::generate();
                 $windowsPath = WindowsPathHelper::normalizeWindows($filePath);
-                $imageStrategy = ImageSourceFactory::create($windowsPath, self::SOURCE_TYPE);
-                $albumPath = $this->pathGenerationService->getAlbumFolderPath(
-                    (string) $uploadImageDto->user_id,
-                    (string) $album->id,
-                );
+                $existing = $this->findCanonical((int) $uploadImageDto->user_id, $windowsPath);
 
-                try {
-                    $this->createAllImageThumbsTask->run($imageStrategy, $albumPath, $uuid);
-                } catch (\Throwable $exception) {
-                    Log::warning("Unable to create thumbnails({$uuid}): " . $exception->getMessage());
+                if ($existing !== null) {
+                    $existing->albums()->syncWithoutDetaching([(int) $album->id]);
+                    $result->push($existing);
+                    continue;
                 }
 
-                $createImageDto = CreateImageDto::from([
-                    'uuid' => $uuid,
+                $absolutePath = WindowsPathHelper::assertReadableFile($windowsPath, $disk, $root);
+                $facts = $this->readImageFileFactsTask->run($absolutePath);
+                $extension = ImageMimeEnum::canonicalize(
+                    (string) pathinfo(str_replace('\\', '/', $windowsPath), PATHINFO_EXTENSION)
+                );
+
+                $image = $this->createImageInAlbumTask->run($album, CreateImageDto::from([
+                    'uuid' => UuidV7::generate(),
                     'user_id' => $uploadImageDto->user_id,
-                    'extension' => $imageStrategy->getExtension(),
+                    'extension' => $extension ?? 'jpg',
                     'external_url' => $windowsPath,
-                    'width' => $imageStrategy->getImage()->width(),
-                    'height' => $imageStrategy->getImage()->height(),
+                    'width' => $facts['width'],
+                    'height' => $facts['height'],
                     'source' => self::SOURCE_TYPE,
-                ]);
+                    'thumb_status' => 'pending',
+                    'file_size' => $facts['file_size'],
+                    'file_mtime' => $facts['file_mtime'],
+                    'taken_at' => $facts['taken_at'],
+                ]));
 
-                $savedImage = $this->createImageInAlbumTask->run($album, $createImageDto);
-                $result->push($savedImage);
+                $result->push($image);
+                $created->push($image);
+
+                if (!$album->isUploadStagingAlbum()) {
+                    $this->recordUseCase($image);
+                }
             }
 
-            if (!$album->isUploadStagingAlbum()) {
-                DB::afterCommit(function () use ($result) {
-                    foreach ($result as $image) {
-                        $this->recordUseCase($image);
-                    }
-                });
-            }
+            DB::afterCommit(function () use ($created) {
+                foreach ($created as $image) {
+                    GenerateGalleryImageThumbJob::dispatch($image->id);
+                }
+            });
 
             return $result;
         });
@@ -94,5 +103,16 @@ class UploadImagesFromWindowsAction extends UseCaseAction
             ->withResourceName(ContainerAliasEnum::GALLERY_IMAGE->value)
             ->addMeta(['message' => 'Image successfully uploaded!', 'count' => $images->count()])
             ->respond(200, [], JSON_PRETTY_PRINT);
+    }
+
+    private function findCanonical(int $userId, string $windowsPath): ?Image
+    {
+        return Image::query()
+            ->where('user_id', $userId)
+            ->where('source', self::SOURCE_TYPE)
+            ->where('external_url', $windowsPath)
+            ->orderByRaw('saved_from_id IS NULL DESC')
+            ->orderBy('id')
+            ->first();
     }
 }

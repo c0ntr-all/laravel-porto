@@ -18,17 +18,13 @@ class CreateAllImageThumbsTask extends ParentTask
      */
     public function run(ImageSourceContract $imageStrategy, string $albumPath, string $fileId): array
     {
-        $thumbs = [];
-
-        foreach (ImageThumbTypeEnum::cases() as $thumbType) {
-            $thumbs[$thumbType->value] = $this->createImageThumbTask->run(
+        return [
+            ImageThumbTypeEnum::LIST->value => $this->createImageThumbTask->run(
                 $imageStrategy,
-                $thumbType->value,
+                ImageThumbTypeEnum::LIST->value,
                 $albumPath,
                 $fileId,
-            );
-        }
-
-        return $thumbs;
+            ),
+        ];
     }
 }

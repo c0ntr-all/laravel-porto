@@ -41,6 +41,24 @@ enum ImageMimeEnum: string
         };
     }
 
+    /**
+     * Extensions the computer-folder browser and Windows import will read.
+     * RAW and HEIC are left on disk: decoding them stalls a thumbnail batch.
+     *
+     * @return list<string>
+     */
+    public static function libraryExtensions(): array
+    {
+        return [
+            self::JPG->value,
+            self::JPEG->value,
+            self::JFIF->value,
+            self::PNG->value,
+            self::GIF->value,
+            self::WEBP->value,
+        ];
+    }
+
     public static function canonicalize(string $extension): ?string
     {
         $ext = strtolower(trim($extension));

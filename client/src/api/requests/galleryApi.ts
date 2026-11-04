@@ -1,8 +1,14 @@
 import { api } from 'src/boot/axios'
 import { ApiRequestContext, IJsonApiResponse } from 'src/types'
-import { mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
+import { mapGalleryBrowseThumbs, mapGalleryLibraryListing, mapMediaItemToFormData } from 'src/api/mappers/gallery.mapper'
 import { buildCorrelationHeaders } from 'src/utils/correlation'
-import { IGalleryAlbumCreateDto, IGalleryAlbumUpdateDto, IGalleryTagsSyncPayload } from 'src/types/gallery'
+import {
+  IGalleryAlbumCreateDto,
+  IGalleryAlbumUpdateDto,
+  IGalleryBrowseThumb,
+  IGalleryLibraryListing,
+  IGalleryTagsSyncPayload
+} from 'src/types/gallery'
 
 export const galleryApi = {
   async getAlbums(): Promise<IJsonApiResponse> {
@@ -82,8 +88,9 @@ export const galleryApi = {
     return response.data
   },
 
-  async deleteImage(id: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
+  async deleteImage(id: string, albumId?: string, ctx?: ApiRequestContext): Promise<IJsonApiResponse> {
     const response = await api.delete(`v1/gallery/images/${id}`, {
+      params: albumId ? { album_id: albumId } : undefined,
       headers: buildCorrelationHeaders(ctx)
     })
 
@@ -167,5 +174,29 @@ export const galleryApi = {
     })
 
     return response.data
+  },
+
+  async listComputerFolder(path: string, page = 1, perPage = 60): Promise<IGalleryLibraryListing> {
+    const response = await api.get('v1/gallery/library/folders', {
+      params: { path, page, per_page: perPage }
+    })
+
+    return mapGalleryLibraryListing(response.data)
+  },
+
+  async queueComputerThumbs(paths: string[]): Promise<IGalleryBrowseThumb[]> {
+    const response = await api.post('v1/gallery/library/thumbnails', { paths })
+
+    return mapGalleryBrowseThumbs(response.data)
+  },
+
+  async relinkComputerFolder(path: string): Promise<{ relinked: number; still_missing: number }> {
+    const response = await api.post('v1/gallery/library/relink', { path })
+    const data = response.data?.data ?? {}
+
+    return {
+      relinked: Number(data.relinked ?? 0),
+      still_missing: Number(data.still_missing ?? 0)
+    }
   }
 }

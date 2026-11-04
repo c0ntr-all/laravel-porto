@@ -168,6 +168,26 @@ export function resolveMediaUrl(path?: string | null): string {
   return `${siteOrigin}/${trimmed}`
 }
 
+export function resolveAuthedMediaUrl(path?: string | null): string {
+  const url = resolveMediaUrl(path)
+
+  if (!url || !url.includes('/api/v1/gallery/')) {
+    return url
+  }
+
+  if (url.includes('access_token=')) {
+    return url
+  }
+
+  const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('access_token')
+
+  if (!token) {
+    return url
+  }
+
+  return `${url}${url.includes('?') ? '&' : '?'}access_token=${encodeURIComponent(token)}`
+}
+
 export function getMediaOriginalUrl(item: { original?: string; original_path?: string }): string {
   return resolveMediaUrl(item.original || item.original_path)
 }
@@ -197,8 +217,10 @@ export function mediaCreatedAt(item: { created_at?: string | null }): string {
   return item.created_at?.trim() || ''
 }
 
-export function mediaDayKey(item: { created_at?: string | null }): string {
-  return mediaCreatedAt(item).slice(0, 10)
+export function mediaDayKey(item: { created_at?: string | null; taken_at?: string | null }): string {
+  const source = item.taken_at?.trim() || item.created_at?.trim() || ''
+
+  return source.slice(0, 10)
 }
 
 export function formatMediaDayLabel(dayKey: string): string {

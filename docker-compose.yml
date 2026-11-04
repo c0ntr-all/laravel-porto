@@ -54,6 +54,26 @@ services:
             timeout: 3s
             retries: 5
 
+    queue:
+        image: home-portal-v2loc-app
+        container_name: php-queue
+        user: www-data
+        working_dir: /var/www/laravel
+        entrypoint: ["sh", "-c"]
+        command:
+            - "php artisan queue:work --sleep=1 --tries=2 --timeout=120 & php artisan queue:work --sleep=1 --tries=2 --timeout=120 & php artisan queue:work --sleep=1 --tries=2 --timeout=120 & wait"
+        volumes:
+            - ${WINDOWS_F_MOUNT:-/mnt/f}/Music:/var/www/laravel/storage/mnt/f/Music
+            - ${WINDOWS_F_MOUNT:-/mnt/f}/Images:/var/www/laravel/storage/mnt/f/Images
+            - ${WINDOWS_F_MOUNT:-/mnt/f}/Video:/var/www/laravel/storage/mnt/f/Video
+            - ./laravel:/var/www/laravel
+        networks:
+            - app-network
+        restart: unless-stopped
+        depends_on:
+            - mysql
+            - redis
+
     nginx:
         image: nginx:alpine
         container_name: nginx-web

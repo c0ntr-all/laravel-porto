@@ -349,9 +349,20 @@ export const useGalleryStore = defineStore('gallery', () => {
     try {
       const response = isGalleryVideo(item)
         ? await galleryApi.deleteVideo(id)
-        : await galleryApi.deleteImage(id)
+        : await galleryApi.deleteImage(id, album.value?.id)
 
-      removeMedia(id)
+      const removed = (response.meta as { removed?: string } | undefined)?.removed
+
+      if (removed === 'detached' && album.value) {
+        album.value = {
+          ...album.value,
+          media: album.value.media.filter(mediaItem => mediaItem.id !== id),
+          media_count: Math.max(0, album.value.media_count - 1)
+        }
+        upsertAlbum(album.value)
+      } else {
+        removeMedia(id)
+      }
       handleApiSuccess(response)
 
       return true
@@ -502,8 +513,10 @@ export const useGalleryStore = defineStore('gallery', () => {
     }
   }
 
-  async function uploadFromWindows(paths: string[]): Promise<IGalleryMediaItem[]> {
-    if (!album.value || paths.length === 0) {
+  async function uploadFromWindows(paths: string[], targetAlbumId?: string): Promise<IGalleryMediaItem[]> {
+    const albumId = targetAlbumId ?? album.value?.id
+
+    if (!albumId || paths.length === 0) {
       return []
     }
 
@@ -526,7 +539,7 @@ export const useGalleryStore = defineStore('gallery', () => {
         }
 
         const response = await galleryApi.uploadFromPaths(
-          galleryUploadUrl(album.value.id, kind, 'windows'),
+          galleryUploadUrl(albumId, kind, 'windows'),
           groups[kind]
         )
         const mapped = mapGalleryMediaUploadResponse(response)
@@ -535,7 +548,9 @@ export const useGalleryStore = defineStore('gallery', () => {
         handleApiSuccess(response)
       }
 
-      addMedia(uploaded)
+      if (album.value?.id === albumId) {
+        addMedia(uploaded)
+      }
 
       return uploaded
     } catch (err) {

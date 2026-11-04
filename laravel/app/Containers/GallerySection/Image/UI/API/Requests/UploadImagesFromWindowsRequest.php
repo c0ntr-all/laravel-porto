@@ -18,7 +18,7 @@ class UploadImagesFromWindowsRequest extends AuthenticatedRequest
             'paths.*' => [
                 'required',
                 'string',
-                new ValidateWindowsFilePath($rootFolder, $disk, ImageMimeEnum::toArray()),
+                new ValidateWindowsFilePath($rootFolder, $disk, ImageMimeEnum::libraryExtensions()),
             ],
         ];
     }

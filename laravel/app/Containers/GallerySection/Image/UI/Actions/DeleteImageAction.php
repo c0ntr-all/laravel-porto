@@ -22,22 +22,41 @@ class DeleteImageAction extends UseCaseAction
         parent::__construct();
     }
 
-    public function handle(Image $image): bool
+    public function handle(Image $image, ?int $albumId = null): string
     {
-        return DB::transaction(function () use ($image) {
-            $this->recordUseCase($image);
+        return DB::transaction(function () use ($image, $albumId) {
+            if ($albumId !== null) {
+                $belongs = $image->albums()->where('gallery_albums.id', $albumId)->exists()
+                    || (int) $image->album_id === $albumId;
 
-            return $this->deleteImageTask->run($image);
+                if (!$belongs) {
+                    abort(404);
+                }
+
+                $image->albums()->detach($albumId);
+
+                if ($image->albums()->exists()) {
+                    return 'detached';
+                }
+            }
+
+            $this->recordUseCase($image);
+            $this->deleteImageTask->run($image);
+
+            return 'deleted';
         });
     }
 
     public function asController(Image $image, DeleteImageRequest $request): JsonResponse
     {
-        $this->handle($image);
+        $removed = $this->handle($image, $request->albumId());
 
         return response()->json([
             'meta' => [
-                'message' => 'Image successfully deleted!',
+                'message' => $removed === 'detached'
+                    ? 'Image removed from the album.'
+                    : 'Image successfully deleted!',
+                'removed' => $removed,
             ],
         ]);
     }

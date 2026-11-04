@@ -31,19 +31,29 @@
                 <AppVideo
                   v-if="isGalleryVideo(slide) && isCurrentSlide(slide)"
                   class="photo-viewer__video"
-                  :src="resolveMediaUrl(slide.original_path)"
+                  :src="resolveAuthedMediaUrl(slide.original_path)"
                   :autoplay="true"
                 />
+                <div
+                  v-else-if="slide.file_missing"
+                  class="photo-viewer__missing"
+                >
+                  <q-icon name="broken_image" size="42px" />
+                  <span>File not found</span>
+                </div>
                 <q-img
                   v-else
                   class="photo-viewer__image"
-                  :src="resolveMediaUrl(
-                    isGalleryVideo(slide)
-                      ? (slide.list_thumb_path || slide.preview_thumb_path)
-                      : slide.preview_thumb_path
-                  )"
+                  :src="resolveAuthedMediaUrl(slide.original_path || slide.preview_thumb_path)"
                   fit="contain"
-                />
+                >
+                  <template #error>
+                    <div class="photo-viewer__missing">
+                      <q-icon name="broken_image" size="42px" />
+                      <span>File not found</span>
+                    </div>
+                  </template>
+                </q-img>
 
                 <template v-if="isCurrentSlide(slide) && !isGalleryVideo(slide)">
                   <button
@@ -116,7 +126,7 @@ import GalleryInlineDescription from 'src/components/client/Gallery/GalleryInlin
 import {
   galleryCommentableType,
   isGalleryVideo,
-  resolveMediaUrl
+  resolveAuthedMediaUrl
 } from 'src/utils/gallery'
 
 const props = defineProps<{
@@ -332,6 +342,18 @@ onUnmounted(() => {
       height: 100%;
       object-fit: contain;
     }
+  }
+
+  &__missing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    color: #c5c8d8;
+    font-size: 14px;
   }
 
   &__video {

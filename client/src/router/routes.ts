@@ -172,6 +172,10 @@ const routes: RouteRecordRaw[] = [{
       name: 'gallery',
       props: true
     }, {
+      path: '/gallery/computer',
+      component: () => import('pages/client/Gallery/ComputerLibraryPage.vue'),
+      name: 'gallery-computer'
+    }, {
       path: '/gallery/albums/:id',
       component: () => import('pages/client/Gallery/AlbumPage.vue'),
       name: 'gallery-album',

@@ -4,9 +4,14 @@
     :class="{ 'media-card--selected': selected }"
     @click="emit('click')"
   >
+    <div v-if="!thumbSrc" class="media-card__fallback">
+      <q-icon :name="isVideo ? 'movie' : 'hide_image'" size="32px" />
+      <span v-if="media.file_missing" class="media-card__missing-label">File not found</span>
+    </div>
     <q-img
+      v-else
       class="media-card__image"
-      :src="media.list_thumb_path"
+      :src="thumbSrc"
       :alt="media.name"
       fit="cover"
     >
@@ -21,9 +26,14 @@
       <template #error>
         <div class="media-card__fallback">
           <q-icon :name="isVideo ? 'movie' : 'hide_image'" size="32px" />
+          <span v-if="media.file_missing" class="media-card__missing-label">File not found</span>
         </div>
       </template>
     </q-img>
+
+    <div v-if="media.file_missing && thumbSrc" class="media-card__missing">
+      File not found
+    </div>
 
     <div v-if="visibleTags.length" class="media-card__tags">
       <span
@@ -76,6 +86,13 @@ const emit = defineEmits<{
 
 const isVideo = computed(() => isGalleryVideo(props.media))
 const duration = computed(() => formatMediaDuration(props.media.duration))
+const thumbSrc = computed(() => {
+  if (props.media.thumb_status === 'pending' || props.media.thumb_status === 'failed') {
+    return ''
+  }
+
+  return props.media.list_thumb_path
+})
 const visibleTags = computed(() => (props.media.tags ?? []).slice(0, 2))
 const extraTagCount = computed(() => Math.max(0, (props.media.tags ?? []).length - visibleTags.value.length))
 
@@ -223,11 +240,32 @@ const actions = computed<IAction[]>(() => [
 
   &__fallback {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     width: 100%;
     height: 100%;
     color: #9aa0b8;
+  }
+
+  &__missing,
+  &__missing-label {
+    color: #9aa0b8;
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  &__missing {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    z-index: 1;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(18, 18, 18, 0.72);
+    color: #fff;
   }
 }
 

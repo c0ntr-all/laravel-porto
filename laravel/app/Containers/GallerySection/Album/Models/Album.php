@@ -10,6 +10,7 @@ use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasImage;
 use App\Ship\Models\Traits\HasUuidV7;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -74,9 +75,9 @@ class Album extends ActivityLoggableModel
         return $this->system_code === SystemAlbumsEnum::UPLOAD->value;
     }
 
-    public function images(): HasMany
+    public function images(): BelongsToMany
     {
-        return $this->hasMany(Image::class);
+        return $this->belongsToMany(Image::class, 'gallery_album_image')->withTimestamps();
     }
 
     public function videos(): HasMany

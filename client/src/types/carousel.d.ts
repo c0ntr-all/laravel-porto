@@ -9,6 +9,7 @@ export interface IImageSource {
   original?: string
   preview_thumb_path: string
   list_thumb_path?: string
+  file_missing?: boolean
   type?: string
   description?: string | null
   album_id?: string | null

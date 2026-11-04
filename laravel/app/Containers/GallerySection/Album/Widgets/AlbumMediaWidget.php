@@ -66,9 +66,8 @@ class AlbumMediaWidget extends AbstractWidget
             return WidgetPayload::error($this->type(), $this->title($context), 'Альбом не найден.');
         }
 
-        $images = Image::query()
-            ->where('album_id', $album->id)
-            ->orderByDesc('created_at')
+        $images = $album->images()
+            ->orderByDesc('gallery_images.created_at')
             ->limit($context->limit())
             ->get();
 

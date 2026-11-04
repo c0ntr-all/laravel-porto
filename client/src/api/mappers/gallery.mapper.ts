@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { IJsonApiResponse } from 'src/types'
-import { GalleryMediaKind, IGalleryAlbum, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
+import { GalleryMediaKind, IGalleryAlbum, IGalleryBrowseThumb, IGalleryLibraryListing, IGalleryMediaItem, IUploadItem } from 'src/types/gallery'
 import { ITag } from 'src/types/tag'
 import { TagsModeEnum } from 'src/enums/upload/UploadStatusEnum'
 import { mapResponse } from 'src/utils/jsonApiMapper'
@@ -97,6 +97,11 @@ export function normalizeGalleryMedia(raw: Record<string, unknown>): IGalleryMed
       ? null
       : String(raw.saved_from_id),
     created_at: String(raw.created_at ?? ''),
+    taken_at: raw.taken_at == null || raw.taken_at === '' ? null : String(raw.taken_at),
+    thumb_status: raw.thumb_status == null ? 'ready' : String(raw.thumb_status),
+    file_missing: Boolean(raw.file_missing),
+    file_size: raw.file_size == null ? null : Number(raw.file_size),
+    file_mtime: raw.file_mtime == null ? null : Number(raw.file_mtime),
     tags: asRecords(raw.tags).map(normalizeGalleryTag)
   }
 }
@@ -173,4 +178,46 @@ export function countMediaByKind(media: IGalleryMediaItem[]): { photos: number; 
     },
     { photos: 0, videos: 0 }
   )
+}
+
+export function mapGalleryLibraryListing(payload: {
+  data?: Record<string, unknown>
+  meta?: Record<string, unknown>
+}): IGalleryLibraryListing {
+  const data = payload.data ?? {}
+  const meta = payload.meta ?? {}
+
+  return {
+    path: String(data.path ?? ''),
+    name: String(data.name ?? ''),
+    breadcrumbs: asRecords(data.breadcrumbs).map(item => ({
+      name: String(item.name ?? ''),
+      path: String(item.path ?? '')
+    })),
+    folders: asRecords(data.folders).map(item => ({
+      name: String(item.name ?? ''),
+      path: String(item.path ?? '')
+    })),
+    files: asRecords(data.files).map(item => ({
+      name: String(item.name ?? ''),
+      path: String(item.path ?? ''),
+      size: Number(item.size ?? 0),
+      mtime: Number(item.mtime ?? 0),
+      in_gallery: Boolean(item.in_gallery),
+      file_missing: Boolean(item.file_missing),
+      thumb_url: item.thumb_url == null || item.thumb_url === '' ? null : String(item.thumb_url)
+    })),
+    page: Number(meta.page ?? 1),
+    per_page: Number(meta.per_page ?? 60),
+    total: Number(meta.total ?? 0),
+    last_page: Number(meta.last_page ?? 1)
+  }
+}
+
+export function mapGalleryBrowseThumbs(payload: { data?: unknown }): IGalleryBrowseThumb[] {
+  return asRecords(payload.data).map(item => ({
+    path: String(item.path ?? ''),
+    status: String(item.status ?? 'missing'),
+    url: item.url == null || item.url === '' ? null : String(item.url)
+  }))
 }

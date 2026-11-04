@@ -72,6 +72,11 @@ export interface IGalleryMediaItem {
   album_id: string | null
   saved_from_id: string | null
   created_at: string
+  taken_at?: string | null
+  thumb_status?: string
+  file_missing?: boolean
+  file_size?: number | null
+  file_mtime?: number | null
   tags: ITag[]
 }
 
@@ -89,6 +94,44 @@ export interface IGalleryComment {
   commentable_type: string
   created_at: string
   user: IGalleryCommentAuthor | null
+}
+
+export interface IGalleryLibraryCrumb {
+  name: string
+  path: string
+}
+
+export interface IGalleryLibraryFolder {
+  name: string
+  path: string
+}
+
+export interface IGalleryLibraryFile {
+  name: string
+  path: string
+  size: number
+  mtime: number
+  in_gallery: boolean
+  file_missing: boolean
+  thumb_url: string | null
+}
+
+export interface IGalleryLibraryListing {
+  path: string
+  name: string
+  breadcrumbs: IGalleryLibraryCrumb[]
+  folders: IGalleryLibraryFolder[]
+  files: IGalleryLibraryFile[]
+  page: number
+  per_page: number
+  total: number
+  last_page: number
+}
+
+export interface IGalleryBrowseThumb {
+  path: string
+  status: 'ready' | 'pending' | 'missing' | string
+  url: string | null
 }
 
 export interface IGalleryAlbum {

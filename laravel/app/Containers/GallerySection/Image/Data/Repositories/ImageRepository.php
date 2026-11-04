@@ -13,7 +13,7 @@ class ImageRepository
 {
     public function listByAlbum(Album $album): Collection
     {
-        return $album->images()->orderByDesc('created_at')->get();
+        return $album->images()->orderByDesc('gallery_images.created_at')->get();
     }
 
     public function findSavedCopy(int $userId, int|string $albumId, int|string $originId): ?Image
@@ -37,8 +37,10 @@ class ImageRepository
 
     public function create(Album $album, CreateImageDto $dto): Image
     {
-        $image = $album->images()->make($dto->toArray());
+        $image = new Image($dto->toArray());
+        $image->album_id = $album->id;
         $image->save();
+        $image->albums()->syncWithoutDetaching([(int) $album->id]);
 
         return $image;
     }

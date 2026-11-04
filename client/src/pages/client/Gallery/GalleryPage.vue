@@ -6,7 +6,17 @@
       <div class="gallery-toolbar__count">
         {{ albumsCountLabel }}
       </div>
-      <GalleryCreateAlbumButton />
+      <div class="gallery-toolbar__actions">
+        <q-btn
+          outline
+          no-caps
+          color="primary"
+          icon="folder"
+          label="Folders on this computer"
+          :to="{ name: 'gallery-computer' }"
+        />
+        <GalleryCreateAlbumButton />
+      </div>
     </div>
 
     <div
@@ -69,6 +79,12 @@ onMounted(() => {
   &__count {
     font-size: 14px;
     color: #777a8f;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 

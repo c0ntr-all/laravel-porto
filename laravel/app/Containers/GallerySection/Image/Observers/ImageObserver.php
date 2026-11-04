@@ -12,6 +12,10 @@ class ImageObserver
 {
     public function created(Image $image): void
     {
+        if ($image->album_id) {
+            $image->albums()->syncWithoutDetaching([(int) $image->album_id]);
+        }
+
         Event::dispatch(new CreatedEvent($image));
     }
 

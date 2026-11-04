@@ -84,4 +84,35 @@ class WindowsPathHelper
 
         return $realFile;
     }
+
+    public static function assertReadableDirectory(string $windowsPath, string $disk, string $rootFolder): string
+    {
+        if (!self::isUnderRoot($windowsPath, $rootFolder)) {
+            throw new InvalidArgumentException('Path is outside of the allowed root folder.');
+        }
+
+        $absolutePath = self::toLinux($windowsPath, $disk);
+        $realDirectory = realpath($absolutePath);
+
+        if ($realDirectory === false || !is_dir($realDirectory)) {
+            throw new InvalidArgumentException('Folder was not found on disk.');
+        }
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $rootReal = realpath(rtrim(self::normalizeWindows($rootFolder), '\\'));
+            if ($rootReal === false || !WindowsDiskRoot::contains($rootReal, $realDirectory)) {
+                throw new InvalidArgumentException('Folder was not found on disk.');
+            }
+
+            return $realDirectory;
+        }
+
+        $libraryRoot = realpath(Storage::disk($disk)->path(''));
+
+        if ($libraryRoot === false || !WindowsDiskRoot::contains($libraryRoot, $realDirectory)) {
+            throw new InvalidArgumentException('Folder was not found on disk.');
+        }
+
+        return $realDirectory;
+    }
 }

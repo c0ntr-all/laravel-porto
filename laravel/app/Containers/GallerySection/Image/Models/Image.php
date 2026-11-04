@@ -13,6 +13,7 @@ use App\Ship\Enums\FileSourceEnum;
 use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 
@@ -29,6 +30,11 @@ use Illuminate\Support\Carbon;
  * @property integer $width
  * @property integer $height
  * @property string|null $description
+ * @property string $thumb_status
+ * @property int|null $file_size
+ * @property int|null $file_mtime
+ * @property Carbon|null $taken_at
+ * @property bool $file_missing
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $base_path
@@ -59,11 +65,28 @@ class Image extends ActivityLoggableModel
         'height',
         'description',
         'saved_from_id',
+        'thumb_status',
+        'file_size',
+        'file_mtime',
+        'taken_at',
+        'file_missing',
+    ];
+
+    protected $casts = [
+        'file_missing' => 'boolean',
+        'file_size' => 'integer',
+        'file_mtime' => 'integer',
+        'taken_at' => 'datetime',
     ];
 
     public function album(): BelongsTo
     {
         return $this->belongsTo(Album::class);
+    }
+
+    public function albums(): BelongsToMany
+    {
+        return $this->belongsToMany(Album::class, 'gallery_album_image')->withTimestamps();
     }
 
     public function getListThumbPathAttribute(): string

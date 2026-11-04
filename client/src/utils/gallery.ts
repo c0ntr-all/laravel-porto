@@ -189,7 +189,7 @@ export function resolveAuthedMediaUrl(path?: string | null): string {
 }
 
 export function getMediaOriginalUrl(item: { original?: string; original_path?: string }): string {
-  return resolveMediaUrl(item.original || item.original_path)
+  return resolveAuthedMediaUrl(item.original || item.original_path)
 }
 
 export function getAttachmentThumbSrc(attachment: {

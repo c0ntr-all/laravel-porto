@@ -26,6 +26,24 @@ const routes: RouteRecordRaw[] = [{
     name: 'lifelog',
     alias: '/lifelog'
   }, {
+    path: '/notes',
+    component: () => import('layouts/PageLayout.vue'),
+    meta: {
+      title: 'Заметки',
+      icon: 'sticky_note_2',
+      menu: true,
+      exact: false
+    },
+    children: [{
+      path: '',
+      name: 'notes',
+      component: () => import('pages/client/Notes/NotesPage.vue')
+    }, {
+      path: ':id',
+      name: 'note',
+      component: () => import('pages/client/Notes/NotesPage.vue')
+    }]
+  }, {
     path: '/task-manager',
     component: () => import('pages/client/TaskManager/TaskManagerPage.vue'),
     meta: {

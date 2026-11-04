@@ -212,10 +212,7 @@ export function handleApiError(error: unknown) {
     const data = error.response?.data as any
 
     message = data?.message || error.message
-  }
-
-  // Стандартная ошибка JavaScript
-  if (error instanceof Error) {
+  } else if (error instanceof Error) {
     message = error.message
   }
 

@@ -198,7 +198,7 @@ class NoteStructureTest extends TestCase
         Note::query()->whereKey($older->id)->update(['updated_at' => now()->subDay()]);
         $pinnedId = $this->createNote('На виду');
         $this->pin($pinnedId);
-        Note::factory()->create([
+        $fresh = Note::factory()->create([
             'user_id' => $this->user->id,
             'name' => 'Свежая',
             'content' => '<p>сегодня</p>',
@@ -216,7 +216,9 @@ class NoteStructureTest extends TestCase
                 'size' => 'third',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.attributes.payload.data.items.0.title', 'Свежая');
+            ->assertJsonPath('data.attributes.payload.data.items.0.title', 'Свежая')
+            ->assertJsonPath('data.attributes.payload.meta.href', '/notes')
+            ->assertJsonPath('data.attributes.payload.data.items.0.href', '/notes/'.$fresh->id);
 
         $this->actingAs($this->user, 'api')
             ->postJson('/api/v1/dashboards/'.$dashboard->id.'/widgets', [
@@ -225,7 +227,9 @@ class NoteStructureTest extends TestCase
             ])
             ->assertCreated()
             ->assertJsonPath('data.attributes.payload.data.items.0.title', 'На виду')
-            ->assertJsonPath('data.attributes.payload.meta.count', 1);
+            ->assertJsonPath('data.attributes.payload.meta.count', 1)
+            ->assertJsonPath('data.attributes.payload.meta.href', '/notes')
+            ->assertJsonPath('data.attributes.payload.data.items.0.href', '/notes/'.$pinnedId);
     }
 
     /**

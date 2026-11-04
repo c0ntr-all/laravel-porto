@@ -68,7 +68,7 @@ class RecentNotesWidget extends AbstractWidget
                 'id' => (string) $note->id,
                 'title' => $note->name,
                 'subtitle' => $subtitle !== '' ? $subtitle : null,
-                'href' => '/notes',
+                'href' => '/notes/'.$note->id,
             ];
         })->values()->all();
     }

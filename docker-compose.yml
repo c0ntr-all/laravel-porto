@@ -13,6 +13,7 @@ services:
             - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
             - ./docker/php/php.ini:/usr/local/etc/php/php.ini
             - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+            - ./docker/php/entrypoint.sh:/usr/local/bin/app-entrypoint.sh
         networks:
             - app-network
         extra_hosts:
@@ -54,27 +55,6 @@ services:
             interval: 10s
             timeout: 3s
             retries: 5
-
-    queue:
-        image: home-portal-v2loc-app
-        container_name: php-queue
-        user: www-data
-        working_dir: /var/www/laravel
-        entrypoint: ["sh", "-c"]
-        command:
-            - "php artisan queue:work --sleep=1 --tries=2 --timeout=120 & php artisan queue:work --sleep=1 --tries=2 --timeout=120 & php artisan queue:work --sleep=1 --tries=2 --timeout=120 & wait"
-        volumes:
-            - ${WINDOWS_F_MOUNT:-/mnt/f}/Music:/var/www/laravel/storage/mnt/f/Music
-            - ${WINDOWS_F_MOUNT:-/mnt/f}/Images:/var/www/laravel/storage/mnt/f/Images
-            - ${WINDOWS_F_MOUNT:-/mnt/f}/Video:/var/www/laravel/storage/mnt/f/Video
-            - ./laravel:/var/www/laravel
-        networks:
-            - app-network
-        restart: unless-stopped
-        depends_on:
-            - app
-            - mysql
-            - redis
 
     nginx:
         image: nginx:alpine

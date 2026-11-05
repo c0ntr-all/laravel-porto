@@ -23,4 +23,21 @@ for key in storage/oauth-private.key storage/oauth-public.key; do
     fi
 done
 
+# php-fpm stays PID 1. Reverb and queue workers run as www-data and restart
+# if they exit. Reverb listens on REVERB_SERVER_HOST:REVERB_SERVER_PORT (0.0.0.0:8080).
+supervise_www() {
+    su -s /bin/sh www-data -c "
+        while true; do
+            $1
+            echo \"[entrypoint] exited (\$?), restart in 2s: $1\"
+            sleep 2
+        done
+    " &
+}
+
+supervise_www "php artisan reverb:start"
+supervise_www "php artisan queue:work --sleep=1 --tries=2 --timeout=120"
+supervise_www "php artisan queue:work --sleep=1 --tries=2 --timeout=120"
+supervise_www "php artisan queue:work --sleep=1 --tries=2 --timeout=120"
+
 exec docker-php-entrypoint php-fpm

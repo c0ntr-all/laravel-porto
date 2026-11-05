@@ -22,8 +22,12 @@ docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan storage:link
 docker compose exec app php artisan migrate
-docker compose exec -u www-data app php artisan queue:work
-docker compose exec -u www-data app php artisan reverb:start
+```
+
+`php-app` starts Reverb (`php artisan reverb:start`, port 8080) and three `php artisan queue:work` processes together with php-fpm. Apply the entrypoint and drop the old `php-queue` container:
+
+```bash
+docker compose up -d --force-recreate --remove-orphans app
 ```
 
 6. Laravel Passport (fix `Invalid key supplied` on login/register):

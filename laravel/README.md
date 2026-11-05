@@ -29,8 +29,11 @@ docker compose exec app php artisan key:generate
 ```
 
 **Generate Passport keys**
+
+Run as root. `docker compose exec -u www-data` fails with permission denied: `storage/` and existing keys belong to root.
 ```shell
 docker compose exec app php artisan passport:keys --force
+docker compose exec app sh -c 'chgrp www-data storage/oauth-private.key storage/oauth-public.key && chmod 640 storage/oauth-private.key storage/oauth-public.key'
 ```
 
 **Generate password grant client**

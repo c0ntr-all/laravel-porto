@@ -41,10 +41,12 @@ PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET=<Client secret>
 ```
 
 Keys are stored in `laravel/storage/oauth-private.key` and `laravel/storage/oauth-public.key`.
-After generation, restart the app container so entrypoint fixes file permissions for `www-data`:
+Generate them as root (`docker compose exec app`, without `-u www-data`): `www-data` cannot write `storage/` or overwrite root-owned keys.
+Then make the keys readable by php-fpm and restart:
 
 ```bash
-docker compose restart app
+docker compose exec app sh -c 'chgrp www-data storage/oauth-private.key storage/oauth-public.key && chmod 640 storage/oauth-private.key storage/oauth-public.key'
+docker compose up -d --build app
 ```
 
 7. Open app: http://docker-porto.loc

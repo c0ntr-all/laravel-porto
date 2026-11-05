@@ -102,7 +102,37 @@
               dense
             />
             <div class="text-subtitle2">Tags</div>
-            <MusicTagGroupSelect v-model="tagIds" />
+            <div
+              v-if="tagsUnlocked"
+              class="album-dialog__tags-note"
+            >
+              <q-icon name="warning_amber" size="18px" color="warning" />
+              <span>Изменения применятся ко всем трекам этого альбома.</span>
+            </div>
+            <div
+              class="album-dialog__tags"
+              :class="{ 'is-locked': !tagsUnlocked }"
+            >
+              <div
+                v-if="!tagsUnlocked"
+                class="album-dialog__tags-banner"
+                aria-hidden="true"
+              >
+                <q-icon name="lock" size="16px" />
+                <span>Нажмите, чтобы изменить</span>
+              </div>
+              <MusicTagGroupSelect
+                v-model="tagIds"
+                :disable="!tagsUnlocked"
+              />
+              <button
+                v-if="!tagsUnlocked"
+                type="button"
+                class="album-dialog__tags-shield"
+                aria-label="Нажмите, чтобы изменить теги"
+                @click="showTagsConfirm = true"
+              />
+            </div>
           </div>
         </div>
 
@@ -170,6 +200,40 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+
+  <q-dialog v-model="showTagsConfirm" persistent>
+    <q-card class="album-tags-confirm">
+      <q-card-section class="row items-start no-wrap q-gutter-md">
+        <q-avatar
+          icon="warning_amber"
+          color="warning"
+          text-color="dark"
+          font-size="22px"
+        />
+        <div class="album-tags-confirm__text">
+          Изменение тегов у альбома применится ко всем трекам этого альбома! Продолжить?
+        </div>
+      </q-card-section>
+      <q-card-actions align="right" class="q-px-md q-pb-md">
+        <q-btn
+          flat
+          no-caps
+          label="Нет"
+          color="grey-8"
+          autofocus
+          v-close-popup
+        />
+        <q-btn
+          unelevated
+          no-caps
+          label="Да"
+          color="warning"
+          text-color="dark"
+          @click="unlockTags"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -215,6 +279,8 @@ const discs = ref<IAlbumDiscFormState[]>(
   }))
 )
 const imageFile = ref<File | null>(null)
+const tagsUnlocked = ref(false)
+const showTagsConfirm = ref(false)
 const artistOptions = ref<IArtistShort[]>([...props.album.artists])
 const extraParents = ref<IAlbum[]>([])
 const parentSearchLoading = ref(false)
@@ -263,11 +329,26 @@ const hydrate = (album: IAlbum) => {
     tracks_count: disc.tracks_count
   }))
   imageFile.value = null
+  tagsUnlocked.value = false
+  showTagsConfirm.value = false
   artistOptions.value = [...album.artists]
   extraParents.value = []
 }
 
 watch(() => props.album, hydrate)
+
+watch(show, open => {
+  tagsUnlocked.value = false
+
+  if (!open) {
+    showTagsConfirm.value = false
+  }
+})
+
+const unlockTags = () => {
+  tagsUnlocked.value = true
+  showTagsConfirm.value = false
+}
 
 const formState = computed((): IAlbumFormState => ({
   name: name.value,
@@ -368,6 +449,80 @@ onMounted(() => {
   &__disc-badge {
     min-width: 52px;
     justify-content: center;
+  }
+
+  &__tags {
+    position: relative;
+
+    &.is-locked :deep(.q-field--disabled) {
+      opacity: 1;
+
+      .q-field__control {
+        background: #f6f7f9;
+      }
+
+      .q-field__native,
+      .q-field__label,
+      .q-chip {
+        color: inherit;
+        opacity: 1;
+      }
+    }
+
+    :deep(.q-gutter-md) {
+      margin-top: 0;
+    }
+  }
+
+  &__tags-banner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    color: #5f6368;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  &__tags-shield {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px dashed rgba(0, 0, 0, 0.22);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: #f2c037;
+      background: rgba(255, 243, 205, 0.28);
+      outline: none;
+    }
+  }
+
+  &__tags-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff6e0;
+    color: #7a4e00;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+}
+
+.album-tags-confirm {
+  width: 480px;
+  max-width: 92vw;
+
+  &__text {
+    padding-top: 6px;
+    line-height: 1.45;
   }
 }
 </style>

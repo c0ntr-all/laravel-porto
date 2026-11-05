@@ -3,6 +3,8 @@
 namespace App\Containers\LifelogSection\Post\Models;
 
 use App\Containers\AppSection\Attachment\Models\Traits\HasAttachments;
+use App\Containers\AppSection\Comment\Models\Comment;
+use App\Containers\AppSection\Comment\Models\Traits\HasComments;
 use App\Containers\AppSection\CustomField\Models\Traits\HasCustomFields;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Containers\AppSection\Tag\Models\Traits\HasTags;
@@ -41,6 +43,8 @@ use Illuminate\Support\Carbon;
  * @property-read EloquentCollection<int, Movie> $movies
  * @property-read EloquentCollection<int, \App\Containers\TaskManagerSection\Task\Models\Task> $tasks
  * @property-read EloquentCollection<int, \App\Containers\GallerySection\Album\Models\Album> $albums
+ * @property-read EloquentCollection<int, Comment> $comments
+ * @property-read int|null $comments_count
  * @method static Builder|Post newModelQuery()
  * @method static Builder|Post newQuery()
  * @method static Builder|Post onlyTrashed()
@@ -62,6 +66,7 @@ class Post extends ActivityLoggableModel
         HasUser,
         HasTags,
         HasAttachments,
+        HasComments,
         HasCustomFields,
         HasSubjects,
         HasUuidV7;

@@ -157,6 +157,21 @@ enum ContainerAliasEnum: string
         ];
     }
 
+    /**
+     * @return list<string>
+     */
+    public static function commentableTypes(): array
+    {
+        return [
+            self::LL_POST->value,
+            self::TM_TASK->value,
+            self::GALLERY_IMAGE->value,
+            self::GALLERY_VIDEO->value,
+            'images',
+            'videos',
+        ];
+    }
+
     public static function toCanonicalMorphAlias(string $type): string
     {
         return match ($type) {

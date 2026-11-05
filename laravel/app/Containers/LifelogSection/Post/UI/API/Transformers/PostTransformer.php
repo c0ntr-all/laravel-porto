@@ -3,6 +3,7 @@
 namespace App\Containers\LifelogSection\Post\UI\API\Transformers;
 
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
+use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Containers\AppSection\Tag\UI\API\Transformers\TagTransformer;
 use App\Containers\AppSection\User\UI\Transformer\UserTransformer;
@@ -31,6 +32,7 @@ class PostTransformer extends TransformerAbstract
         'tags',
         'attachments',
         'customFields',
+        'comments',
         'movies',
         'movie',
         'tasks',
@@ -52,6 +54,7 @@ class PostTransformer extends TransformerAbstract
             'time' => $post->time?->format('H:i'),
             'watch' => $post->watchProgress()?->toArray(),
             'started_at' => $post->startedAt(),
+            'comments_count' => $this->commentsCount($post),
             'created_at' => $post->created_at->format('Y-m-d H:i:s'),
         ];
     }
@@ -83,6 +86,29 @@ class PostTransformer extends TransformerAbstract
 
         return $this->collection($customFields, new CustomFieldTransformer(), 'custom_fields')
             ->setMeta(['count' => $customFields->count()]);
+    }
+
+    public function includeComments(Post $post): Collection
+    {
+        $comments = $post->relationLoaded('comments')
+            ? $post->comments
+            : $post->comments()->with('user')->get();
+
+        return $this->collection($comments, new CommentTransformer(), ContainerAliasEnum::COMMENTS->value)
+            ->setMeta(['count' => $comments->count()]);
+    }
+
+    private function commentsCount(Post $post): int
+    {
+        if (array_key_exists('comments_count', $post->getAttributes())) {
+            return (int) $post->comments_count;
+        }
+
+        if ($post->relationLoaded('comments')) {
+            return $post->comments->count();
+        }
+
+        return (int) $post->comments()->count();
     }
 
     public function includeMovies(Post $post): Collection

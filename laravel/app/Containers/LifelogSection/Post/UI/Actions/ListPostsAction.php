@@ -37,9 +37,17 @@ class ListPostsAction extends BaseAction
         if (str_contains($include, 'customFields')) {
             $posts->getCollection()->load('customFields');
         }
+        if (str_contains($include, 'comments')) {
+            $posts->getCollection()->load('comments.user');
+        }
+
+        $defaultIncludes = ['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album'];
+        if (str_contains($include, 'comments')) {
+            $defaultIncludes[] = 'comments';
+        }
 
         return fractal($posts, new PostTransformer($dto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album'])
+            ->parseIncludes($defaultIncludes)
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->withCursor($this->cursorFromPaginator($posts))
             ->addMeta($this->cursorMeta($posts))

@@ -122,7 +122,9 @@ class UpdatePostAction extends UseCaseAction
                 $this->attachPostContentTask->run($updatedPost, $contentAttachDto);
             }
 
-            return $updatedPost->load($this->postContentHandlerRegistry->eagerLoadRelationsFor());
+            return $updatedPost
+                ->load($this->postContentHandlerRegistry->eagerLoadRelationsFor())
+                ->loadCount('comments');
         });
 
         $this->recordUseCase($updatedPost);

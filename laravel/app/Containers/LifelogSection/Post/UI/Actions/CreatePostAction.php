@@ -99,7 +99,9 @@ class CreatePostAction extends UseCaseAction
                 );
             }
 
-            return $post->load($this->postContentHandlerRegistry->eagerLoadRelationsFor());
+            return $post
+                ->load($this->postContentHandlerRegistry->eagerLoadRelationsFor())
+                ->loadCount('comments');
         });
 
         $this->recordUseCase($post);

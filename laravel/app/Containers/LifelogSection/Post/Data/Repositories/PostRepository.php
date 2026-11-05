@@ -14,6 +14,7 @@ use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Pagination\CursorPaginator;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\Enums\SortDirection;
 
 class PostRepository
 {
@@ -28,14 +29,19 @@ class PostRepository
 
     public function get(array $data): CursorPaginator
     {
+        $datetimeSort = AllowedSort::custom('datetime', new DatetimeSort())
+            ->defaultDirection(SortDirection::DESCENDING);
+
         return QueryBuilder::for(Post::whereUserId($data['user_id']))
                            ->allowedSorts([
                                'date',
                                'id',
                                'created_at',
-                               AllowedSort::custom('datetime', new DatetimeSort()),
+                               $datetimeSort,
                            ])
-                           ->defaultSort('-datetime')
+                           // Must pass AllowedSort instance: string defaultSort('-datetime')
+                           // becomes a field sort and fails (no datetime column).
+                           ->defaultSort($datetimeSort)
                            ->allowedFilters([
                                AllowedFilter::custom('preset', $this->presetFilter),
                                AllowedFilter::custom('tags', new TagsFilter()),
@@ -56,6 +62,7 @@ class PostRepository
                                'tasks.taskList',
                                'albums',
                            ])
+                           ->withCount('comments')
                            ->cursorPaginate(self::LIST_PER_PAGE);
     }
 

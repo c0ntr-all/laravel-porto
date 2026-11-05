@@ -28,7 +28,7 @@ class CreateRequest extends AuthenticatedRequest
     {
         return [
             'commentable_id' => 'required|string|max:36',
-            'commentable_type' => ['required', Rule::in(ContainerAliasEnum::toArray())],
+            'commentable_type' => ['required', Rule::in(ContainerAliasEnum::commentableTypes())],
             'content' => 'required|string|max:1000',
         ];
     }

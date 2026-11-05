@@ -4,4 +4,5 @@ use App\Containers\DashboardSection\Widget\UI\Actions\UpdateWidgetAction;
 use Illuminate\Support\Facades\Route;
 
 Route::patch('dashboards/{dashboard}/widgets/{widget}', UpdateWidgetAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

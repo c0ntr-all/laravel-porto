@@ -11,7 +11,7 @@ class FranchiseTransformer extends TransformerAbstract
     {
         return [
             'id' => $franchise->id,
-            'user_id' => $franchise->user_id,
+            'created_by' => $franchise->created_by,
             'name' => $franchise->name,
             'description' => $franchise->description,
             'image' => $franchise->full_image,

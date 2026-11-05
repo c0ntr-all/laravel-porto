@@ -6,6 +6,7 @@ use App\Containers\AppSection\User\Models\User;
 use App\Containers\LifelogSection\Post\Models\Post;
 use App\Containers\AppSection\Tag\Models\Tag;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Helpers\UuidV7;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -231,11 +232,31 @@ class UpdatePostTest extends TestCase
             ]);
     }
 
+    public function test_user_cannot_update_another_users_post(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        Post::unsetEventDispatcher();
+        $post = $this->createUpdateablePost($owner->id);
+
+        $this->actingAs($other)
+            ->patchJson("/api/v1/lifelog/posts/{$post->id}", [
+                'title' => 'Hijacked',
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('lifelog_posts', [
+            'id' => $post->id,
+            'title' => 'Old title',
+        ]);
+    }
+
     private function createUpdateablePost($userId): Model
     {
         $datetime = fake()->dateTimeBetween('-2 months', 'now');
 
         return Post::factory()->create([
+            'uuid' => UuidV7::generate(),
             'user_id' => $userId,
             'title' => 'Old title',
             'content' => 'Old content',

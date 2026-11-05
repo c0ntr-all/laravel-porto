@@ -2,6 +2,7 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\API\Requests;
 
+use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 
 class ReorderRequest extends AuthenticatedRequest
@@ -10,7 +11,7 @@ class ReorderRequest extends AuthenticatedRequest
     {
         return [
             'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|distinct|exists:App\Containers\TaskManagerSection\Task\Models\Task,id',
+            'ids.*' => ['integer', 'distinct', $this->existsForCurrentUser(Task::class)],
         ];
     }
 }

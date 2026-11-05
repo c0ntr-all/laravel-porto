@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $user_id
+ * @property int|null $created_by
  * @property string $name
  * @property string|null $description
  * @property string|null $image
@@ -24,7 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read string $full_image
- * @property-read User $user
+ * @property-read User|null $creator
  * @property-read Collection<int, Movie> $movies
  */
 class Franchise extends Model
@@ -36,7 +36,7 @@ class Franchise extends Model
     protected $table = 'movie_franchises';
 
     protected $fillable = [
-        'user_id',
+        'created_by',
         'name',
         'description',
         'image',
@@ -46,14 +46,14 @@ class Franchise extends Model
     protected function casts(): array
     {
         return [
-            'user_id' => 'integer',
+            'created_by' => 'integer',
             'order' => 'integer',
         ];
     }
 
-    public function user(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function movies(): BelongsToMany

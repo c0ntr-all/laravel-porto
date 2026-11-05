@@ -4,4 +4,5 @@ use App\Containers\TaskManagerSection\Checklist\UI\Actions\CreateChecklistItemAc
 use Illuminate\Support\Facades\Route;
 
 Route::post('task-manager/tasks/{task}/checklists/{checklist}/items', CreateChecklistItemAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

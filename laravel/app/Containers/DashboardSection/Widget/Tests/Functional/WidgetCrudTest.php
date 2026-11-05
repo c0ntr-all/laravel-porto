@@ -137,6 +137,42 @@ class WidgetCrudTest extends TestCase
         $this->assertSoftDeleted('dashboard_widgets', ['id' => $id]);
     }
 
+    public function test_widget_must_belong_to_the_dashboard_in_the_url(): void
+    {
+        $other = Dashboard::create([
+            'user_id' => $this->user->id,
+            'name' => 'Second',
+        ]);
+        $widget = Widget::create([
+            'dashboard_id' => $this->dashboard->id,
+            'user_id' => $this->user->id,
+            'type' => 'dashboard.welcome',
+            'title' => 'Welcome',
+            'size' => 'full',
+            'sort_order' => 0,
+            'is_enabled' => true,
+        ]);
+
+        $this->patchJson("/api/v1/dashboards/{$other->id}/widgets/{$widget->id}", [
+            'title' => 'Moved',
+        ])->assertNotFound();
+
+        $this->assertDatabaseHas('dashboard_widgets', [
+            'id' => $widget->id,
+            'title' => 'Welcome',
+            'dashboard_id' => $this->dashboard->id,
+        ]);
+    }
+
+    public function test_other_user_cannot_read_a_dashboard(): void
+    {
+        $other = User::factory()->create();
+
+        $this->actingAs($other, 'api')
+            ->getJson("/api/v1/dashboards/{$this->dashboard->id}")
+            ->assertNotFound();
+    }
+
     public function test_get_dashboard_includes_widget_payloads(): void
     {
         $this->postJson("/api/v1/dashboards/{$this->dashboard->id}/widgets", [

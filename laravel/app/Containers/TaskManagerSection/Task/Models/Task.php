@@ -102,6 +102,15 @@ class Task extends ActivityLoggableModel
         return $this->hasOne(ChecklistItem::class, 'converted_task_id');
     }
 
+    protected function childRouteBindingRelationshipName($childType)
+    {
+        if ($childType === 'progress') {
+            return 'progress';
+        }
+
+        return parent::childRouteBindingRelationshipName($childType);
+    }
+
     public function checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);

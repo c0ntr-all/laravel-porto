@@ -22,7 +22,7 @@ class FranchiseRepository
         return QueryBuilder::for(Franchise::class)
             ->allowedFilters([
                 AllowedFilter::partial('name'),
-                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('created_by'),
             ])
             ->allowedSorts(['name', 'order', 'created_at'])
             ->defaultSort('order')
@@ -38,7 +38,7 @@ class FranchiseRepository
         }
 
         return Franchise::create([
-            'user_id' => $dto->user_id,
+            'created_by' => $dto->created_by,
             'name' => $dto->name,
             'description' => $dto->description,
             'image' => $dto->image,

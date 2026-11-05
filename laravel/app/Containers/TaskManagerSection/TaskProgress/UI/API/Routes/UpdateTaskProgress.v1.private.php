@@ -4,4 +4,5 @@ use App\Containers\TaskManagerSection\TaskProgress\UI\Actions\UpdateTaskProgress
 use Illuminate\Support\Facades\Route;
 
 Route::patch('task-manager/tasks/{task}/progress/{progress}', UpdateTaskProgressAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

@@ -45,7 +45,7 @@ class CreateFranchiseAction extends BaseAction
         $imageFile = $payload['image_file'] ?? null;
         unset($payload['image_file']);
 
-        $payload['user_id'] = (int) $request->user()->id;
+        $payload['created_by'] = (int) $request->user()->id;
 
         $franchise = $this->handle(
             FranchiseCreateData::from($payload),

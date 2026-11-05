@@ -3,6 +3,7 @@
 namespace App\Containers\TaskManagerSection\Task\Tests\Functional;
 
 use App\Containers\AppSection\User\Models\User;
+use App\Containers\TaskManagerSection\Checklist\Models\Checklist;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -464,5 +465,78 @@ class TaskCrudTest extends TestCase
             ->assertJsonPath('data.0.attributes.priority', 0)
             ->assertJsonPath('data.1.attributes.title', 'Inbox favorite')
             ->assertJsonPath('data.1.attributes.priority', 1);
+    }
+
+    public function test_other_user_cannot_read_or_change_a_task(): void
+    {
+        $task = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Private',
+        ]);
+        $other = User::factory()->create();
+
+        $this->actingAs($other, 'api')
+            ->getJson("/api/v1/task-manager/tasks/{$task->id}")
+            ->assertNotFound();
+
+        $this->actingAs($other, 'api')
+            ->patchJson("/api/v1/task-manager/tasks/{$task->id}", [
+                'title' => 'Hijacked',
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('tm_tasks', [
+            'id' => $task->id,
+            'title' => 'Private',
+        ]);
+    }
+
+    public function test_user_cannot_attach_a_task_to_another_users_list(): void
+    {
+        $other = User::factory()->create();
+        $list = TaskList::create([
+            'user_id' => $other->id,
+            'title' => 'Foreign list',
+        ]);
+
+        $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/task-manager/tasks', [
+                'title' => 'Should fail',
+                'task_list_id' => $list->id,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['task_list_id']);
+
+        $this->assertDatabaseMissing('tm_tasks', [
+            'title' => 'Should fail',
+        ]);
+    }
+
+    public function test_checklist_must_belong_to_the_task_in_the_url(): void
+    {
+        $task = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Owner task',
+        ]);
+        $otherTask = Task::create([
+            'user_id' => $this->user->id,
+            'title' => 'Other task',
+        ]);
+        $checklist = Checklist::create([
+            'user_id' => $this->user->id,
+            'task_id' => $otherTask->id,
+            'title' => 'Not on the first task',
+        ]);
+
+        $this->actingAs($this->user, 'api')
+            ->patchJson("/api/v1/task-manager/tasks/{$task->id}/checklists/{$checklist->id}", [
+                'title' => 'Renamed',
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('tm_checklists', [
+            'id' => $checklist->id,
+            'title' => 'Not on the first task',
+        ]);
     }
 }

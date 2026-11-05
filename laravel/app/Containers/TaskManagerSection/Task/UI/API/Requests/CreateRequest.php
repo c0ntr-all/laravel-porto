@@ -2,6 +2,9 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\API\Requests;
 
+use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
+use App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Validation\Rule;
@@ -11,9 +14,9 @@ class CreateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'task_list_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
-            'parent_id' => 'sometimes|nullable|exists:App\Containers\TaskManagerSection\Task\Models\Task,id',
-            'task_template_id' => 'sometimes|exists:App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate,id',
+            'task_list_id' => ['sometimes', $this->existsForCurrentUser(TaskList::class)],
+            'parent_id' => ['sometimes', 'nullable', $this->existsForCurrentUser(Task::class)],
+            'task_template_id' => ['sometimes', $this->existsForCurrentUser(TaskTemplate::class)],
             'title' => 'required_without:task_template_id|string|max:70',
             'content' => 'sometimes|nullable|max:3000',
             'is_favorite' => 'sometimes|boolean',

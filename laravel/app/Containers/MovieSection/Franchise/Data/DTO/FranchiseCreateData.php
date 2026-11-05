@@ -6,7 +6,7 @@ use App\Ship\Parents\DTO\Data;
 
 class FranchiseCreateData extends Data
 {
-    public int $user_id;
+    public int $created_by;
     public string $name;
     public ?string $description = null;
     public ?string $image = null;

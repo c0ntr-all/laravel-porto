@@ -75,6 +75,26 @@ class AlbumCrudTest extends TestCase
             ]);
     }
 
+    public function test_private_albums_stay_with_their_owner_and_system_albums_stay_shared(): void
+    {
+        $other = User::factory()->create();
+        $foreign = Album::create([
+            'user_id' => $other->id,
+            'name' => 'Foreign album',
+        ]);
+
+        $this->actingAs($this->user, 'api')
+            ->getJson("/api/v1/gallery/albums/{$foreign->id}")
+            ->assertNotFound();
+
+        $names = collect(
+            $this->actingAs($this->user, 'api')->getJson('/api/v1/gallery/albums')->json('data')
+        )->pluck('attributes.name');
+
+        $this->assertFalse($names->contains('Foreign album'));
+        $this->assertTrue($names->contains('Upload'));
+    }
+
     public function test_user_can_update_album(): void
     {
         $album = Album::create([

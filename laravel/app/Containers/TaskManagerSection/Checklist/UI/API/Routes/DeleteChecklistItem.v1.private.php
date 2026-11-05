@@ -4,4 +4,5 @@ use App\Containers\TaskManagerSection\Checklist\UI\Actions\DeleteChecklistItemAc
 use Illuminate\Support\Facades\Route;
 
 Route::delete('task-manager/tasks/{task}/checklists/{checklist}/items/{checklistItem}', DeleteChecklistItemAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

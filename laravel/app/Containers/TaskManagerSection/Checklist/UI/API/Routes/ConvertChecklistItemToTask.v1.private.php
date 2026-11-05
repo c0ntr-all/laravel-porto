@@ -6,4 +6,5 @@ use Illuminate\Support\Facades\Route;
 Route::post(
     'task-manager/tasks/{task}/checklists/{checklist}/items/{checklistItem}/convert-to-task',
     ConvertChecklistItemToTaskAction::class
-)->middleware(['auth:api']);
+)->middleware(['auth:api'])
+    ->scopeBindings();

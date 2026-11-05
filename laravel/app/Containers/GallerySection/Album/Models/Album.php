@@ -65,6 +65,11 @@ class Album extends ActivityLoggableModel
         });
     }
 
+    public function sharesUnassignedRows(): bool
+    {
+        return true;
+    }
+
     public function isSystem(): bool
     {
         return $this->system_code !== null && $this->system_code !== '';

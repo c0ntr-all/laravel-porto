@@ -4,4 +4,5 @@ use App\Containers\DashboardSection\Widget\UI\Actions\DeleteWidgetAction;
 use Illuminate\Support\Facades\Route;
 
 Route::delete('dashboards/{dashboard}/widgets/{widget}', DeleteWidgetAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

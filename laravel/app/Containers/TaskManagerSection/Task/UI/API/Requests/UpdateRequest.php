@@ -2,6 +2,8 @@
 
 namespace App\Containers\TaskManagerSection\Task\UI\API\Requests;
 
+use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Ship\Enums\ContainerAliasEnum;
 use App\Ship\Parents\Requests\AuthenticatedRequest;
 use Illuminate\Support\Carbon;
@@ -12,11 +14,11 @@ class UpdateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         return [
-            'task_list_id' => 'sometimes|nullable|exists:App\Containers\TaskManagerSection\TaskList\Models\TaskList,id',
+            'task_list_id' => ['sometimes', 'nullable', $this->existsForCurrentUser(TaskList::class)],
             'parent_id' => [
                 'sometimes',
                 'nullable',
-                'exists:App\Containers\TaskManagerSection\Task\Models\Task,id',
+                $this->existsForCurrentUser(Task::class),
                 Rule::notIn([(string) $this->route('task')?->id]),
             ],
             'title' => 'sometimes|string|max:70',

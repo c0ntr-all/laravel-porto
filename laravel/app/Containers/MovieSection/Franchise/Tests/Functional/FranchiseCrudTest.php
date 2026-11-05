@@ -41,7 +41,7 @@ class FranchiseCrudTest extends TestCase
             ->assertJsonPath('data.attributes.name', 'Marvel Cinematic Universe')
             ->assertJsonPath('data.attributes.description', 'MCU shared universe')
             ->assertJsonPath('data.attributes.order', 10)
-            ->assertJsonPath('data.attributes.user_id', $this->user->id);
+            ->assertJsonPath('data.attributes.created_by', $this->user->id);
 
         $franchiseId = (int) $created->json('data.id');
 
@@ -73,7 +73,7 @@ class FranchiseCrudTest extends TestCase
     public function test_franchise_name_must_be_unique_among_active(): void
     {
         Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'Star Wars',
         ]);
 
@@ -89,12 +89,12 @@ class FranchiseCrudTest extends TestCase
         $other = User::factory()->create();
 
         Franchise::factory()->create([
-            'user_id' => $other->id,
+            'created_by' => $other->id,
             'name' => 'Second',
             'order' => 20,
         ]);
         Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'First',
             'order' => 5,
         ]);
@@ -111,7 +111,7 @@ class FranchiseCrudTest extends TestCase
     public function test_user_can_attach_list_reorder_and_detach_movies(): void
     {
         $franchise = Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'Harry Potter',
             'order' => 1,
         ]);
@@ -187,7 +187,7 @@ class FranchiseCrudTest extends TestCase
     public function test_reorder_movies_rejects_incomplete_set(): void
     {
         $franchise = Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'Incomplete Reorder',
         ]);
 
@@ -207,7 +207,7 @@ class FranchiseCrudTest extends TestCase
     public function test_user_can_sort_franchise_movies_by_year_and_order(): void
     {
         $franchise = Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'Sortable',
         ]);
 
@@ -261,7 +261,7 @@ class FranchiseCrudTest extends TestCase
     public function test_create_without_order_appends_to_end(): void
     {
         Franchise::factory()->create([
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
             'name' => 'Existing',
             'order' => 7,
         ]);

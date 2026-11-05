@@ -16,7 +16,7 @@ class FranchiseFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'created_by' => User::factory(),
             'name' => fake()->unique()->words(3, true),
             'description' => fake()->optional()->sentence(),
             'image' => null,

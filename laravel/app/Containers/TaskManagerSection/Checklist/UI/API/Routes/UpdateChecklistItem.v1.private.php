@@ -4,4 +4,5 @@ use App\Containers\TaskManagerSection\Checklist\UI\Actions\UpdateChecklistItemAc
 use Illuminate\Support\Facades\Route;
 
 Route::patch('task-manager/tasks/{task}/checklists/{checklist}/items/{checklistItem}', UpdateChecklistItemAction::class)
-     ->middleware(['auth:api']);
+     ->middleware(['auth:api'])
+     ->scopeBindings();

@@ -61,6 +61,7 @@ export interface IPost {
   album?: IPostAlbumSubject | null
   watch?: ISeriesWatchProgress | null
   started_at?: string | null
+  comments_count: number
   is_pending?: boolean
 }
 

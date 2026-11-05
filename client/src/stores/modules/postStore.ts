@@ -211,6 +211,15 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
+  function setCommentsCount(postId: string, count: number): void {
+    const post = posts.value.find(item => item.id === postId)
+    if (!post) {
+      return
+    }
+
+    post.comments_count = Math.max(0, count)
+  }
+
   return {
     posts,
     postsCount,
@@ -220,6 +229,7 @@ export const usePostStore = defineStore('post', () => {
     isLoadingMore,
     getPosts,
     createPost,
-    updatePost
+    updatePost,
+    setCommentsCount
   }
 })

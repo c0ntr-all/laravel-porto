@@ -93,6 +93,7 @@ export interface IGalleryComment {
   commentable_id: string
   commentable_type: string
   created_at: string
+  updated_at?: string | null
   user: IGalleryCommentAuthor | null
 }
 

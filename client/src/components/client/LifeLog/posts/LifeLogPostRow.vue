@@ -37,8 +37,16 @@
     </button>
 
     <div v-if="expanded" class="ll-post-row__expanded q-pt-sm">
-      <LifeLogPostMovieCard v-if="isMovieWatchPost(post)" :post="post" />
-      <LifeLogPostCard v-else :post="post" />
+      <LifeLogPostMovieCard
+        v-if="isMovieWatchPost(post)"
+        :post="post"
+        :comments-enabled="false"
+      />
+      <LifeLogPostCard
+        v-else
+        :post="post"
+        :comments-enabled="false"
+      />
     </div>
   </div>
 </template>

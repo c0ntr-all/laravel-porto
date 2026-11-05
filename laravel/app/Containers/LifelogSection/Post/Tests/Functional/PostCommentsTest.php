@@ -140,4 +140,86 @@ class PostCommentsTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.attributes.comments_count', 0);
     }
+
+    public function test_author_can_update_own_comment(): void
+    {
+        $created = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/comments', [
+                'commentable_id' => (string) $this->post->id,
+                'commentable_type' => ContainerAliasEnum::LL_POST->value,
+                'content' => 'Original',
+            ])
+            ->assertOk();
+
+        $commentId = $created->json('data.id');
+
+        $this->actingAs($this->user, 'api')
+            ->patchJson('/api/v1/comments/'.$commentId, [
+                'content' => '  Edited comment  ',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.attributes.content', 'Edited comment');
+
+        $this->assertDatabaseHas('comments', [
+            'id' => $commentId,
+            'content' => 'Edited comment',
+            'user_id' => $this->user->id,
+        ]);
+    }
+
+    public function test_author_can_delete_own_comment(): void
+    {
+        $created = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/comments', [
+                'commentable_id' => (string) $this->post->id,
+                'commentable_type' => ContainerAliasEnum::LL_POST->value,
+                'content' => 'To delete',
+            ])
+            ->assertOk();
+
+        $commentId = $created->json('data.id');
+
+        $this->actingAs($this->user, 'api')
+            ->deleteJson('/api/v1/comments/'.$commentId)
+            ->assertOk();
+
+        $this->assertSoftDeleted('comments', [
+            'id' => $commentId,
+        ]);
+
+        $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/lifelog/posts')
+            ->assertOk()
+            ->assertJsonPath('data.0.attributes.comments_count', 0);
+    }
+
+    public function test_other_user_cannot_update_or_delete_comment(): void
+    {
+        $created = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/comments', [
+                'commentable_id' => (string) $this->post->id,
+                'commentable_type' => ContainerAliasEnum::LL_POST->value,
+                'content' => 'Owned',
+            ])
+            ->assertOk();
+
+        $commentId = $created->json('data.id');
+        $other = User::factory()->create();
+
+        $this->actingAs($other, 'api')
+            ->patchJson('/api/v1/comments/'.$commentId, [
+                'content' => 'Hijacked',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($other, 'api')
+            ->deleteJson('/api/v1/comments/'.$commentId)
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('comments', [
+            'id' => $commentId,
+            'content' => 'Owned',
+            'deleted_at' => null,
+        ]);
+    }
 }

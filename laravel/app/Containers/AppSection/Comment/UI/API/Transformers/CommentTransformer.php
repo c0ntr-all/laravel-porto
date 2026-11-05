@@ -22,6 +22,7 @@ class CommentTransformer extends TransformerAbstract
             'commentable_id' => (string) $comment->commentable_id,
             'commentable_type' => ContainerAliasEnum::toCanonicalMorphAlias((string) $comment->commentable_type),
             'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $comment->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 

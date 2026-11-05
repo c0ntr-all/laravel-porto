@@ -77,7 +77,10 @@
     </section>
 
     <footer class="ll-post-card__section ll-post-card__footer">
-      <LifeLogPostMeta :post="post" />
+      <LifeLogPostMeta
+        :post="post"
+        :comments-enabled="commentsEnabled"
+      />
     </footer>
 
     <q-dialog v-model="showEditPostModal">
@@ -107,9 +110,12 @@ import PostFormMovieUpdate from 'src/components/client/LifeLog/forms/PostFormMov
 import MovieCardHorizontal from 'src/components/client/Movies/MovieCardHorizontal.vue'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   post: IPost
-}>()
+  commentsEnabled?: boolean
+}>(), {
+  commentsEnabled: true
+})
 
 const {
   showEditPostModal,

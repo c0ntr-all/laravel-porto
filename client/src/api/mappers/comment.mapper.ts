@@ -23,6 +23,7 @@ export function normalizeComment(raw: Record<string, unknown>): IGalleryComment 
     commentable_id: String(raw.commentable_id ?? ''),
     commentable_type: String(raw.commentable_type ?? ''),
     created_at: String(raw.created_at ?? ''),
+    updated_at: raw.updated_at == null || raw.updated_at === '' ? null : String(raw.updated_at),
     user: normalizeAuthor(asRecord(raw.user))
   }
 }

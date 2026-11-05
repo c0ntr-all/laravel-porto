@@ -143,6 +143,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
     user,
     tags: [...model.tags, ...mapNewTagsToOptimisticTags(model.newTags)],
     attachments: [],
+    comments_count: 0,
     is_pending: true
   }
 }

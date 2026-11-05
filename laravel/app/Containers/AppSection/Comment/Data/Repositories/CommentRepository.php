@@ -58,4 +58,17 @@ class CommentRepository
             'content' => $dto->content,
         ]);
     }
+
+    public function update(Comment $comment, string $content): Comment
+    {
+        $comment->content = $content;
+        $comment->save();
+
+        return $comment->load('user');
+    }
+
+    public function delete(Comment $comment): bool
+    {
+        return (bool) $comment->delete();
+    }
 }

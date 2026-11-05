@@ -92,8 +92,19 @@ export function normalizePost (post: IPost): IPost {
     task: extractPostTask(withRelations),
     album: extractPostAlbum(withRelations),
     watch: normalizeSeriesWatchProgress(rawWatch),
-    started_at: normalizeStartedAt(rawStartedAt)
+    started_at: normalizeStartedAt(rawStartedAt),
+    comments_count: normalizeCommentsCount(post.comments_count)
   }
+}
+
+function normalizeCommentsCount (value: unknown): number {
+  const count = Number(value ?? 0)
+
+  if (!Number.isFinite(count) || count < 0) {
+    return 0
+  }
+
+  return Math.trunc(count)
 }
 
 export function normalizePosts (posts: IPost[]): IPost[] {

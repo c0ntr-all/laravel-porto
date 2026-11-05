@@ -15,6 +15,7 @@
       multiple
       outlined
       dense
+      :disable="disable"
       input-debounce="0"
       @filter="(val, update) => filterGroup(group.id, val, update)"
       @update:model-value="ids => setGroupIds(group.id, Array.isArray(ids) ? ids.map(String) : [])"
@@ -33,9 +34,12 @@ interface TagOption {
   groupId: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: string[]
-}>()
+  disable?: boolean
+}>(), {
+  disable: false
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: string[]]

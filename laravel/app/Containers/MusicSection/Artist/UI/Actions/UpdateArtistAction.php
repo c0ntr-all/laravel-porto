@@ -50,6 +50,7 @@ class UpdateArtistAction extends BaseAction
             if (array_key_exists('tags', $requestData)) {
                 $syncTagsDto = SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]);
                 $this->syncTagsTask->run($updatedArtist, $syncTagsDto);
+                $updatedArtist->unsetRelation('tags');
             }
 
             return $updatedArtist;

@@ -6,6 +6,11 @@ use App\Ship\Parents\Requests\AdminRequest;
 
 class UpdateRequest extends AdminRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeTags();
+    }
+
     public function rules(): array
     {
         return [
@@ -24,9 +29,31 @@ class UpdateRequest extends AdminRequest
             'artist_ids.*' => 'integer|exists:music_artists,id',
             'featured_artist_ids' => 'sometimes|array',
             'featured_artist_ids.*' => 'integer|exists:music_artists,id',
-            'tags' => 'sometimes|array',
+            'tags' => 'sometimes|nullable|array',
             'tags.*' => 'integer|exists:music_tags,id',
             'image_file' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:8192|nullable',
         ];
+    }
+
+    private function normalizeTags(): void
+    {
+        if (!$this->exists('tags')) {
+            return;
+        }
+
+        $tags = $this->input('tags');
+
+        if (!is_array($tags)) {
+            $this->merge(['tags' => []]);
+
+            return;
+        }
+
+        $this->merge([
+            'tags' => array_values(array_filter(
+                $tags,
+                static fn (mixed $id): bool => $id !== null && $id !== '',
+            )),
+        ]);
     }
 }

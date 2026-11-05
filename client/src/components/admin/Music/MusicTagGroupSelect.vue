@@ -13,6 +13,7 @@
       use-input
       use-chips
       multiple
+      clearable
       outlined
       dense
       :disable="disable"

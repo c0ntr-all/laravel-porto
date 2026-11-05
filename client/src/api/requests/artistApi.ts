@@ -45,10 +45,14 @@ export const artistApi = {
     if (payload.description !== undefined) {
       formData.append('description', payload.description ?? '')
     }
-    if (payload.tags?.length) {
-      payload.tags.forEach(tagId => {
-        formData.append('tags[]', String(tagId))
-      })
+    if (payload.tags !== undefined) {
+      if (payload.tags.length === 0) {
+        formData.append('tags', '')
+      } else {
+        payload.tags.forEach(tagId => {
+          formData.append('tags[]', String(tagId))
+        })
+      }
     }
     if (payload.image_file) {
       formData.append('image_file', payload.image_file)

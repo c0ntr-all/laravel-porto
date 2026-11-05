@@ -15,17 +15,17 @@ class DispatchUserTagRecalculationTask extends ParentTask
     public function forTrack(int $userId, Track $track): void
     {
         if ($track->album_id) {
-            RecalculateUserAlbumAggregatedTagsJob::dispatch($userId, (int) $track->album_id);
+            RecalculateUserAlbumAggregatedTagsJob::dispatchSync($userId, (int) $track->album_id);
         }
 
         foreach ($track->artists()->pluck('music_artists.id') as $artistId) {
-            RecalculateUserArtistAggregatedTagsJob::dispatch($userId, (int) $artistId);
+            RecalculateUserArtistAggregatedTagsJob::dispatchSync($userId, (int) $artistId);
         }
     }
 
     public function forAlbum(int $userId, Album $album): void
     {
-        RecalculateUserAlbumAggregatedTagsJob::dispatch($userId, (int) $album->id);
+        RecalculateUserAlbumAggregatedTagsJob::dispatchSync($userId, (int) $album->id);
 
         $artistIds = DB::table('music_track_artist')
             ->join('music_tracks', 'music_tracks.id', '=', 'music_track_artist.track_id')
@@ -35,14 +35,14 @@ class DispatchUserTagRecalculationTask extends ParentTask
             ->pluck('music_track_artist.artist_id');
 
         foreach ($artistIds as $artistId) {
-            RecalculateUserArtistAggregatedTagsJob::dispatch($userId, (int) $artistId);
+            RecalculateUserArtistAggregatedTagsJob::dispatchSync($userId, (int) $artistId);
         }
     }
 
     public function forArtist(int $userId, Artist $artist): void
     {
         $artistId = (int) $artist->id;
-        RecalculateUserArtistAggregatedTagsJob::dispatch($userId, $artistId);
+        RecalculateUserArtistAggregatedTagsJob::dispatchSync($userId, $artistId);
 
         $trackIds = DB::table('music_track_artist')
             ->join('music_tracks', 'music_tracks.id', '=', 'music_track_artist.track_id')
@@ -57,7 +57,7 @@ class DispatchUserTagRecalculationTask extends ParentTask
             ->pluck('album_id');
 
         foreach ($albumIds as $albumId) {
-            RecalculateUserAlbumAggregatedTagsJob::dispatch($userId, (int) $albumId);
+            RecalculateUserAlbumAggregatedTagsJob::dispatchSync($userId, (int) $albumId);
         }
 
         $relatedArtistIds = DB::table('music_track_artist')
@@ -67,7 +67,7 @@ class DispatchUserTagRecalculationTask extends ParentTask
             ->pluck('artist_id');
 
         foreach ($relatedArtistIds as $relatedArtistId) {
-            RecalculateUserArtistAggregatedTagsJob::dispatch($userId, (int) $relatedArtistId);
+            RecalculateUserArtistAggregatedTagsJob::dispatchSync($userId, (int) $relatedArtistId);
         }
     }
 }

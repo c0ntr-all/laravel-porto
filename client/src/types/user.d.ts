@@ -1,3 +1,5 @@
+import type { UserRoleEnum } from 'src/enums/User/UserRoleEnum'
+
 export interface IUser {
   id: string
   name: string
@@ -6,8 +8,8 @@ export interface IUser {
   last_name?: string
   patronymic?: string
   login?: string
-  role?: string
-  roles?: string[]
+  role: UserRoleEnum
+  roles: UserRoleEnum[]
   avatar?: string | null
   created_at?: string | null
 }

@@ -1,4 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
+import { SidebarSectionEnum } from 'src/enums/Navigation/SidebarSectionEnum'
+import { UserRoleEnum } from 'src/enums/User/UserRoleEnum'
 
 const routes: RouteRecordRaw[] = [{
   path: '/',
@@ -249,7 +251,8 @@ const routes: RouteRecordRaw[] = [{
     meta: {
       title: 'Music Manager',
       icon: 'settings',
-      is_admin: true
+      sidebar: SidebarSectionEnum.Admin,
+      roles: [UserRoleEnum.Admin]
     },
     name: 'musicmanage',
     alias: '/admin/music'
@@ -259,7 +262,8 @@ const routes: RouteRecordRaw[] = [{
     meta: {
       title: 'Movie Manager',
       icon: 'movie_filter',
-      is_admin: true
+      sidebar: SidebarSectionEnum.Admin,
+      roles: [UserRoleEnum.Admin]
     },
     name: 'moviemanage',
     alias: '/admin/movies'
@@ -269,7 +273,8 @@ const routes: RouteRecordRaw[] = [{
     meta: {
       title: 'Games Manager',
       icon: 'sports_esports',
-      is_admin: true
+      sidebar: SidebarSectionEnum.Admin,
+      roles: [UserRoleEnum.Admin]
     },
     name: 'gamesmanage',
     alias: '/admin/games'

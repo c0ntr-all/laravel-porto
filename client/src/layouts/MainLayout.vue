@@ -43,7 +43,7 @@
             <q-item-section>{{ item.meta?.title || defaultTitleText }}</q-item-section>
           </q-item>
 
-          <q-separator color="grey-3" />
+          <q-separator v-if="adminItems.length" color="grey-3" />
 
           <q-item
             v-for="item in adminItems"
@@ -78,10 +78,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from 'src/stores/modules/userStore'
 import { useNotificationsRealtime } from 'src/composables/useNotificationsRealtime'
+import { useRouteAccess } from 'src/composables/useRouteAccess'
+import { useSidebarMenu } from 'src/composables/useSidebarMenu'
 import AppMusicPlayer from 'src/components/default/AppMusicPlayer.vue'
 import AppUserMenu from 'src/components/default/AppUserMenu.vue'
 import AppNotificationsBell from 'src/components/default/AppNotificationsBell.vue'
@@ -90,43 +92,16 @@ defineOptions({
   name: 'MainLayout'
 })
 
-interface Route {
-  path: string
-  children?: unknown[]
-  meta?: {
-    icon?: string
-    title?: string
-    menu?: boolean
-    is_admin?: boolean
-    exact?: boolean
-  }
-}
-
-const $router = useRouter()
-const $route: Route = useRoute()
+const $route = useRoute()
 const userStore = useUserStore()
 const leftDrawerOpen = ref<boolean>(false)
+const { menuItems, adminItems } = useSidebarMenu()
 
 useNotificationsRealtime()
+useRouteAccess()
 
 const defaultTitleText = 'No title for route'
 const defaultIcon = 'label'
-
-const menuItems = computed((): Route[] => {
-  const routes = $router.options.routes
-  if (routes.length > 0 && routes[0].children) {
-    return routes[0].children.filter((route: Route) => route.meta?.menu === true)
-  }
-  return []
-})
-
-const adminItems = computed((): Route[] => {
-  const routes = $router.options.routes
-  if (routes.length > 0 && routes[0].children) {
-    return routes[0].children.filter((route: Route) => route.meta?.is_admin === true)
-  }
-  return []
-})
 
 const toggleLeftDrawer = (): void => {
   leftDrawerOpen.value = !leftDrawerOpen.value

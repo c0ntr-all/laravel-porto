@@ -6,6 +6,7 @@ import {
   createWebHistory
 } from 'vue-router'
 
+import { useUserStore } from 'src/stores/modules/userStore'
 import routes from './routes'
 
 /*
@@ -45,6 +46,19 @@ export default route(function (/* { store, ssrContext } */) {
       return next({
         name: 'home'
       })
+    }
+
+    next()
+  })
+
+  Router.beforeEach((to, from, next) => {
+    if (to.name === 'login' || !localStorage.getItem('access_token')) {
+      return next()
+    }
+
+    const userStore = useUserStore()
+    if (!userStore.hasRouteAccess(to.matched) && to.name !== 'dashboard') {
+      return next({ name: 'dashboard' })
     }
 
     next()

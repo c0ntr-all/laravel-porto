@@ -1,14 +1,10 @@
+import { UserRoleEnum } from 'src/enums/User/UserRoleEnum'
 import {
   IProfileForm,
   IUser,
   IUserUpdateDto
 } from 'src/types/user'
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Администратор',
-  administrator: 'Администратор',
-  user: 'Пользователь'
-}
+import { normalizeUserRoles } from 'src/utils/userRole'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -63,8 +59,8 @@ export function emptyUser(): IUser {
     last_name: '',
     patronymic: '',
     login: '',
-    role: 'user',
-    roles: [],
+    role: UserRoleEnum.Default,
+    roles: [UserRoleEnum.Default],
     avatar: null,
     created_at: null
   }
@@ -109,11 +105,6 @@ export function formatFullName(user: IUser): string {
   return joined || user.name || user.login || user.email || 'Пользователь'
 }
 
-export function formatRole(role?: string): string {
-  const value = (role || 'user').toLowerCase()
-  return ROLE_LABELS[value] || role || 'Пользователь'
-}
-
 export function getUserInitials(user: IUser): string {
   const first = (user.first_name || '').trim()
   const last = (user.last_name || '').trim()
@@ -155,9 +146,7 @@ export function mapProfile(payload: unknown): IUser {
   const name = asString(raw.name)
   const email = asString(raw.email)
   const fio = splitFullName(name)
-  const roles = Array.isArray(raw.roles)
-    ? raw.roles.filter((item): item is string => typeof item === 'string')
-    : []
+  const { role, roles } = normalizeUserRoles(raw.role, raw.roles)
 
   return {
     id: String(raw.id ?? ''),
@@ -167,7 +156,7 @@ export function mapProfile(payload: unknown): IUser {
     last_name: asString(raw.last_name, fio.last_name),
     patronymic: asString(raw.patronymic, fio.patronymic),
     login: asString(raw.login, email),
-    role: asString(raw.role, roles[0] || 'user'),
+    role,
     roles,
     avatar: asAvatar(raw.avatar) ?? asAvatar(raw.avatar_url),
     created_at: asString(raw.created_at) || null

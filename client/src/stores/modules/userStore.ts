@@ -3,11 +3,12 @@ import { defineStore } from 'pinia'
 import { userApi } from 'src/api/requests/userApi'
 import {
   emptyUser,
-  formatRole,
   mapProfile,
   toProfileUpdateDto
 } from 'src/api/mappers/user.mapper'
+import { UserRoleEnum } from 'src/enums/User/UserRoleEnum'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { allowsRoles, canAccessMatchedRoutes, userRoleLabel } from 'src/utils/userRole'
 import { IChangePasswordDto, IProfileForm, IUser } from 'src/types/user'
 
 interface LoginPayload {
@@ -81,11 +82,8 @@ export const useUserStore = defineStore('userStore', () => {
   const isAvatarBusy = ref(false)
 
   const isLoggedIn = computed(() => Boolean(localStorage.getItem('access_token')))
-  const isAdmin = computed(() => {
-    const role = (user.value.role || '').toLowerCase()
-    const roles = (user.value.roles || []).map(item => item.toLowerCase())
-    return role === 'admin' || role === 'administrator' || roles.includes('admin')
-  })
+  const roles = computed(() => user.value.roles)
+  const isAdmin = computed(() => roles.value.includes(UserRoleEnum.Admin))
   const displayName = computed(() => {
     const parts = [user.value.last_name, user.value.first_name, user.value.patronymic]
       .map(part => (part || '').trim())
@@ -93,8 +91,22 @@ export const useUserStore = defineStore('userStore', () => {
 
     return parts.join(' ') || user.value.name || user.value.login || user.value.email || 'Пользователь'
   })
-  const displayRole = computed(() => formatRole(user.value.role))
+  const displayRole = computed(() => userRoleLabel(user.value.role))
   const displayLogin = computed(() => user.value.login || user.value.email)
+
+  function hasRole(role: UserRoleEnum): boolean {
+    return roles.value.includes(role)
+  }
+
+  function hasAccess(required?: readonly UserRoleEnum[] | null): boolean {
+    return allowsRoles(roles.value, required)
+  }
+
+  function hasRouteAccess(
+    matched: readonly { meta?: { roles?: readonly UserRoleEnum[] } }[]
+  ): boolean {
+    return canAccessMatchedRoutes(roles.value, matched)
+  }
 
   function setUser(next: IUser): void {
     user.value = next
@@ -251,7 +263,11 @@ export const useUserStore = defineStore('userStore', () => {
     isLoading,
     isAvatarBusy,
     isLoggedIn,
+    roles,
     isAdmin,
+    hasRole,
+    hasAccess,
+    hasRouteAccess,
     displayName,
     displayRole,
     displayLogin,

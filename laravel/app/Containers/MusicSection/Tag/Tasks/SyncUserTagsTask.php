@@ -18,8 +18,9 @@ class SyncUserTagsTask extends ParentTask
     }
 
     /**
-     * User tags are stored only on tracks. Album/Artist assignment attaches
-     * the tags to every track of that entity, then per-user counts are recalculated.
+     * User tags are stored only on tracks. Album/Artist assignment updates that
+     * user's union: new tags are attached to every track, removed tags are
+     * detached from every track, then per-user counts are recalculated.
      *
      * @return array<string, mixed>
      */
@@ -31,6 +32,7 @@ class SyncUserTagsTask extends ParentTask
             $current = $model->userTags()
                 ->wherePivot('user_id', $dto->user_id)
                 ->pluck('music_user_tags.id')
+                ->map(static fn (mixed $id): int => (int) $id)
                 ->all();
 
             $detach = array_values(array_diff($current, $tagIds));
@@ -46,18 +48,18 @@ class SyncUserTagsTask extends ParentTask
 
         if ($model instanceof Album) {
             $trackIds = $model->tracks()->pluck('id');
-            $this->applyUserTagsToTracksTask->run($dto->user_id, $trackIds, $tagIds);
+            $result = $this->applyUserTagsToTracksTask->syncUnion($dto->user_id, $trackIds, $tagIds);
             $this->dispatchUserTagRecalculationTask->forAlbum($dto->user_id, $model);
 
-            return ['attached' => $tagIds];
+            return $result;
         }
 
         if ($model instanceof Artist) {
             $trackIds = $model->tracks()->pluck('id');
-            $this->applyUserTagsToTracksTask->run($dto->user_id, $trackIds, $tagIds);
+            $result = $this->applyUserTagsToTracksTask->syncUnion($dto->user_id, $trackIds, $tagIds);
             $this->dispatchUserTagRecalculationTask->forArtist($dto->user_id, $model);
 
-            return ['attached' => $tagIds];
+            return $result;
         }
 
         throw new InvalidArgumentException('User tags can only be synced for Track, Album or Artist.');

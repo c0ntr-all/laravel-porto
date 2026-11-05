@@ -13,6 +13,49 @@ class ApplyUserTagsToTracksTask extends ParentTask
     /**
      * @param Collection<int, int|string>|array<int, int|string> $trackIds
      * @param array<int, int|string> $userTagIds
+     * @return array{attached: list<int>, detached: list<int>}
+     */
+    public function syncUnion(int $userId, Collection|array $trackIds, array $userTagIds): array
+    {
+        $trackIds = Collection::wrap($trackIds)->filter()->unique()->values();
+        $desired = Collection::wrap($userTagIds)
+            ->filter()
+            ->unique()
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->values();
+
+        if ($trackIds->isEmpty()) {
+            return ['attached' => [], 'detached' => []];
+        }
+
+        $current = DB::table('music_user_track_tag')
+            ->where('user_id', $userId)
+            ->whereIn('track_id', $trackIds)
+            ->distinct()
+            ->pluck('user_tag_id')
+            ->map(static fn (mixed $id): int => (int) $id);
+
+        $detach = $current->diff($desired)->values();
+        if ($detach->isNotEmpty()) {
+            DB::table('music_user_track_tag')
+                ->where('user_id', $userId)
+                ->whereIn('track_id', $trackIds)
+                ->whereIn('user_tag_id', $detach->all())
+                ->delete();
+        }
+
+        $attach = $desired->diff($current)->values();
+        $this->run($userId, $trackIds, $attach->all());
+
+        return [
+            'attached' => $attach->all(),
+            'detached' => $detach->map(static fn (mixed $id): int => (int) $id)->all(),
+        ];
+    }
+
+    /**
+     * @param Collection<int, int|string>|array<int, int|string> $trackIds
+     * @param array<int, int|string> $userTagIds
      */
     public function run(int $userId, Collection|array $trackIds, array $userTagIds): void
     {

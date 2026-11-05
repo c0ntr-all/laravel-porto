@@ -50,8 +50,8 @@ class UpdateTrackAction extends BaseAction
                 );
             }
 
-            if (!empty($requestData['tags'])) {
-                $this->syncTagsTask->run($track, SyncTagsDto::from(['tags' => $requestData['tags']]));
+            if (array_key_exists('tags', $requestData)) {
+                $this->syncTagsTask->run($track, SyncTagsDto::from(['tags' => $requestData['tags'] ?? []]));
             }
 
             return $track->load(['tags', 'artists', 'rate', 'album.albumType']);

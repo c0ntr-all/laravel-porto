@@ -41,18 +41,33 @@ class DispatchSystemTagRecalculationTask extends ParentTask
 
     public function forArtist(Artist $artist): void
     {
-        RecalculateArtistAggregatedTagsJob::dispatch((int) $artist->id);
+        $artistId = (int) $artist->id;
+        RecalculateArtistAggregatedTagsJob::dispatch($artistId);
 
-        $albumIds = DB::table('music_track_artist')
+        $trackIds = DB::table('music_track_artist')
             ->join('music_tracks', 'music_tracks.id', '=', 'music_track_artist.track_id')
-            ->where('music_track_artist.artist_id', $artist->id)
+            ->where('music_track_artist.artist_id', $artistId)
             ->whereNull('music_tracks.deleted_at')
-            ->whereNotNull('music_tracks.album_id')
+            ->pluck('music_tracks.id');
+
+        $albumIds = DB::table('music_tracks')
+            ->whereIn('id', $trackIds)
+            ->whereNotNull('album_id')
             ->distinct()
-            ->pluck('music_tracks.album_id');
+            ->pluck('album_id');
 
         foreach ($albumIds as $albumId) {
             RecalculateAlbumAggregatedTagsJob::dispatch((int) $albumId);
+        }
+
+        $relatedArtistIds = DB::table('music_track_artist')
+            ->whereIn('track_id', $trackIds)
+            ->where('artist_id', '!=', $artistId)
+            ->distinct()
+            ->pluck('artist_id');
+
+        foreach ($relatedArtistIds as $relatedArtistId) {
+            RecalculateArtistAggregatedTagsJob::dispatch((int) $relatedArtistId);
         }
     }
 }

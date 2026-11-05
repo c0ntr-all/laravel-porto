@@ -18,8 +18,9 @@ class SyncTagsTask extends ParentTask
     }
 
     /**
-     * Tags are stored only on tracks. Album/Artist assignment attaches the tags
-     * to every track of that entity, then aggregated counts are recalculated.
+     * Tags are stored only on tracks. Album/Artist assignment updates that union:
+     * new tags are attached to every track, removed tags are detached from every
+     * track, then aggregated counts are recalculated for the related entities.
      *
      * @return array<string, mixed>
      */
@@ -36,18 +37,18 @@ class SyncTagsTask extends ParentTask
 
         if ($model instanceof Album) {
             $trackIds = $model->tracks()->pluck('id');
-            $this->applySystemTagsToTracksTask->run($trackIds, $tagIds);
+            $result = $this->applySystemTagsToTracksTask->syncUnion($trackIds, $tagIds);
             $this->dispatchSystemTagRecalculationTask->forAlbum($model);
 
-            return ['attached' => $tagIds];
+            return $result;
         }
 
         if ($model instanceof Artist) {
             $trackIds = $model->tracks()->pluck('id');
-            $this->applySystemTagsToTracksTask->run($trackIds, $tagIds);
+            $result = $this->applySystemTagsToTracksTask->syncUnion($trackIds, $tagIds);
             $this->dispatchSystemTagRecalculationTask->forArtist($model);
 
-            return ['attached' => $tagIds];
+            return $result;
         }
 
         throw new InvalidArgumentException('System tags can only be synced for Track, Album or Artist.');

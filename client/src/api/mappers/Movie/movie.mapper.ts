@@ -387,7 +387,7 @@ export function mapMovieImportResponse(response: IJsonApiResponse): IMovieImport
 export function normalizeMovieFranchise(raw: Record<string, unknown>): IMovieFranchise {
   return {
     id: String(raw.id),
-    user_id: Number(raw.user_id ?? 0),
+    created_by: toNullableNumber(raw.created_by),
     name: String(raw.name ?? ''),
     description: toNullableString(raw.description),
     image: toNullableString(raw.image),

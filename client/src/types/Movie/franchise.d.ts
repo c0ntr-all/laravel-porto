@@ -2,7 +2,7 @@ import { IMovie } from './movie'
 
 export interface IMovieFranchise {
   id: string
-  user_id: number
+  created_by: number | null
   name: string
   description: string | null
   image: string | null

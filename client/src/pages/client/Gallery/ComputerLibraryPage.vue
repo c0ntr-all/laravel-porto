@@ -7,7 +7,7 @@
     <div class="library__head">
       <div>
         <h1 class="library__title">Folders on this computer</h1>
-        <div class="library__path">{{ listing?.path || 'F:\\Images' }}</div>
+        <div v-if="listing?.path" class="library__path">{{ listing.path }}</div>
       </div>
       <div class="library__actions">
         <q-btn
@@ -171,7 +171,7 @@ let pollTimer = 0
 let requestToken = 0
 
 const files = computed(() => listing.value?.files ?? [])
-const breadcrumbs = computed(() => listing.value?.breadcrumbs ?? [{ name: 'Images', path: 'F:\\Images' }])
+const breadcrumbs = computed(() => listing.value?.breadcrumbs ?? [])
 const selectedPaths = computed(() => [...selected.value])
 const albumOptions = computed(() => (
   galleryStore.albums
@@ -206,7 +206,7 @@ function toggle(path: string): void {
   selected.value = next
 }
 
-async function load(path: string, page = 1): Promise<void> {
+async function load(path?: string, page = 1): Promise<void> {
   const token = ++requestToken
   loading.value = true
 
@@ -357,7 +357,7 @@ watch(showAlbumDialog, (open) => {
 
 onMounted(() => {
   void galleryStore.getAlbums()
-  void load('F:\\Images')
+  void load()
   measure()
   window.addEventListener('resize', measure)
   pollTimer = window.setInterval(() => {

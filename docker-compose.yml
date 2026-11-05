@@ -3,6 +3,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+        image: home-portal-v2loc-app
         container_name: php-app
         volumes:
             - ${WINDOWS_F_MOUNT:-/mnt/f}/Music:/var/www/laravel/storage/mnt/f/Music
@@ -71,6 +72,7 @@ services:
             - app-network
         restart: unless-stopped
         depends_on:
+            - app
             - mysql
             - redis
 

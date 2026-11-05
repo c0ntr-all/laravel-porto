@@ -176,9 +176,13 @@ export const galleryApi = {
     return response.data
   },
 
-  async listComputerFolder(path: string, page = 1, perPage = 60): Promise<IGalleryLibraryListing> {
+  async listComputerFolder(path?: string, page = 1, perPage = 60): Promise<IGalleryLibraryListing> {
     const response = await api.get('v1/gallery/library/folders', {
-      params: { path, page, per_page: perPage }
+      params: {
+        ...(path ? { path } : {}),
+        page,
+        per_page: perPage
+      }
     })
 
     return mapGalleryLibraryListing(response.data)

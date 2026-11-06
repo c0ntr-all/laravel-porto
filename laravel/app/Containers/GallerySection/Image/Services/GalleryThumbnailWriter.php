@@ -20,7 +20,7 @@ class GalleryThumbnailWriter
         }
 
         $directory = dirname($destination);
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
             throw new \RuntimeException('Unable to create thumbnail directory.');
         }
 

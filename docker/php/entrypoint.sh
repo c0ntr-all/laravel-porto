@@ -3,11 +3,31 @@ set -e
 
 cd /var/www/laravel
 
-for dir in storage bootstrap/cache; do
-    if [ -d "$dir" ]; then
-        chmod -R ug+rwx "$dir" 2>/dev/null || chmod -R 777 "$dir" 2>/dev/null || true
-    fi
-done
+# Bind-mounted storage is often root:root 775. php-fpm runs as www-data and
+# creates gallery folders (storage/app/public/userfiles/...). chmod without
+# chown leaves www-data unable to mkdir. Skip storage/mnt: those are host
+# library mounts. 2775 keeps the group on new directories.
+own_writable_tree() {
+    root="$1"
+    [ -d "$root" ] || return 0
+
+    find "$root" \
+        \( -path "$root/mnt" -o -path "$root/mnt/*" \) -prune \
+        -o -exec chown www-data:www-data {} +
+
+    find "$root" \
+        \( -path "$root/mnt" -o -path "$root/mnt/*" \) -prune \
+        -o -type d -exec chmod 2775 {} +
+
+    find "$root" \
+        \( -path "$root/mnt" -o -path "$root/mnt/*" \) -prune \
+        -o -type f -exec chmod ug+rw {} +
+}
+
+own_writable_tree storage
+own_writable_tree bootstrap/cache
+
+umask 0002
 
 if [ -f storage/logs/laravel.log ]; then
     chmod 666 storage/logs/laravel.log 2>/dev/null || true

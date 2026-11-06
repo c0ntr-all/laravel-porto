@@ -48,7 +48,7 @@ class PathGenerationService
         $absolutePath = $disk->path($folder);
 
         if (!File::exists($absolutePath)) {
-            File::makeDirectory($absolutePath, 0755, true);
+            File::makeDirectory($absolutePath, 0775, true);
         }
     }
 }

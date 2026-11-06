@@ -126,6 +126,7 @@ class MovieRepository
             AllowedFilter::partial('title'),
             AllowedFilter::custom('search', new MovieSearchFilter()),
             AllowedFilter::exact('year'),
+            $this->hasYearFilter(),
             AllowedFilter::exact('type'),
             AllowedFilter::exact('kp_id'),
             AllowedFilter::callback('genre_id', function (Builder $query, mixed $value): void {
@@ -149,6 +150,22 @@ class MovieRepository
                 });
             }),
         ];
+    }
+
+    private function hasYearFilter(): AllowedFilter
+    {
+        return AllowedFilter::callback('has_year', function (Builder $query, mixed $value): void {
+            $enabled = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($enabled === true) {
+                $query->whereNotNull('year');
+
+                return;
+            }
+
+            if ($enabled === false) {
+                $query->whereNull('year');
+            }
+        });
     }
 
     /**

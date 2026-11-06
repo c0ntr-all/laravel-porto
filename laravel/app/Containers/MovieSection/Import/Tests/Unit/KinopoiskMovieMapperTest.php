@@ -70,4 +70,33 @@ class KinopoiskMovieMapperTest extends TestCase
 
         (new KinopoiskMovieMapper())->fromApi(['id' => 1, 'year' => 1999], 1);
     }
+
+    public function test_allows_missing_year_for_unreleased_movie(): void
+    {
+        $parsed = (new KinopoiskMovieMapper())->fromApi([
+            'id' => 999001,
+            'name' => 'Будущий блокбастер',
+            'year' => null,
+            'type' => 'movie',
+            'genres' => [],
+            'countries' => [],
+        ], 999001);
+
+        $this->assertSame('Будущий блокбастер', $parsed->title);
+        $this->assertNull($parsed->year);
+    }
+
+    public function test_invalid_year_is_normalized_to_null(): void
+    {
+        $parsed = (new KinopoiskMovieMapper())->fromApi([
+            'id' => 999002,
+            'name' => 'Сломанный год',
+            'year' => 0,
+            'type' => 'movie',
+            'genres' => [],
+            'countries' => [],
+        ], 999002);
+
+        $this->assertNull($parsed->year);
+    }
 }

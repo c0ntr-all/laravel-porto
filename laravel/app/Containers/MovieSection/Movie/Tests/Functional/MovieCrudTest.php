@@ -91,6 +91,33 @@ class MovieCrudTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_user_can_filter_movies_without_year(): void
+    {
+        $withoutYear = Movie::factory()->create([
+            'title' => 'Upcoming',
+            'year' => null,
+        ]);
+        Movie::factory()->create([
+            'title' => 'Released',
+            'year' => 2024,
+        ]);
+
+        $missing = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/movies?filter[has_year]=0');
+
+        $missing->assertOk();
+        $missingIds = collect($missing->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertSame([(int) $withoutYear->id], $missingIds);
+
+        $present = $this->actingAs($this->user, 'api')
+            ->getJson('/api/v1/movie/movies?filter[has_year]=1');
+
+        $present->assertOk();
+        $presentIds = collect($present->json('data'))->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertNotContains((int) $withoutYear->id, $presentIds);
+        $this->assertCount(1, $presentIds);
+    }
+
     public function test_user_can_list_filter_get_update_and_delete_movie(): void
     {
         $drama = Genre::factory()->create(['name' => 'Drama', 'slug' => 'drama']);

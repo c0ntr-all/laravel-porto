@@ -12,7 +12,7 @@ class MovieUpdateData extends Data
     public string|Optional $title;
     public string|Optional|null $description;
     public string|Optional|null $short_description;
-    public int|Optional $year;
+    public int|Optional|null $year;
     public MovieTypeEnum|Optional $type;
     public string|Optional|null $cover;
     public string|Optional|null $embed_link;

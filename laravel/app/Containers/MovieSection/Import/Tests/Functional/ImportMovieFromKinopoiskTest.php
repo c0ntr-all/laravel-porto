@@ -229,6 +229,29 @@ class ImportMovieFromKinopoiskTest extends TestCase
             ->assertJsonPath('data.meta.exception.class', 'App\\Containers\\MovieSection\\Import\\Exceptions\\KinopoiskParseException');
     }
 
+    public function test_imports_unreleased_movie_without_year(): void
+    {
+        $payload = $this->moviePayload();
+        $payload['id'] = 999001;
+        $payload['name'] = 'Будущий блокбастер';
+        $payload['year'] = null;
+
+        $this->fakeKinopoiskMovieHttp(999001, $payload);
+
+        $response = $this->actingAs($this->user, 'api')
+            ->postJson('/api/v1/movie/imports', ['kp_id' => 999001]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.attributes.status', MovieImportStatusEnum::Completed->value)
+            ->assertJsonPath('data.meta.after.year', null);
+
+        $this->assertDatabaseHas('movies', [
+            'kp_id' => 999001,
+            'title' => 'Будущий блокбастер',
+            'year' => null,
+        ]);
+    }
+
     public function test_imports_tv_series_with_seasons_and_episodes(): void
     {
         Http::fake(function (Request $request) {

@@ -22,15 +22,14 @@ class KinopoiskMovieMapper
             $data['enName'] ?? null,
         ]);
         $year = isset($data['year']) && is_numeric($data['year']) ? (int) $data['year'] : null;
+        // Upcoming / unreleased titles often have no year yet.
+        if ($year !== null && ($year < 1888 || $year > 2100)) {
+            $year = null;
+        }
 
         if ($title === null || $title === '') {
             throw new KinopoiskParseException('Unable to extract film title from PoiskKino API.', [
                 'reason' => 'missing_title',
-            ]);
-        }
-        if ($year === null || $year < 1888) {
-            throw new KinopoiskParseException('Unable to extract film year from PoiskKino API.', [
-                'reason' => 'missing_year',
             ]);
         }
 

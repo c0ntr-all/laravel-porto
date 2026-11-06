@@ -15,7 +15,7 @@ class ParsedKinopoiskFilmDto extends Data
     public function __construct(
         public int $kp_id,
         public string $title,
-        public int $year,
+        public ?int $year,
         public MovieTypeEnum $type,
         public ?string $description = null,
         public ?string $short_description = null,

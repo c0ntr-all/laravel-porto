@@ -75,13 +75,11 @@
     <div class="lifelog-post-form-actions flex justify-between q-pa-md">
       <div class="lifelog-post-form-actions__left">
         <div v-if="model.datetime" class="lifelog-post-form__action column">
-          <div class="flex">
+          <div class="row items-center no-wrap q-gutter-xs">
             <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
             <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
-            <q-checkbox
+            <LifeLogNullTimeButton
               v-model="model.isNullTime"
-              name="не учитывать время"
-              label="не учитывать время"
               @update:model-value="onNullTimeChange"
             />
           </div>
@@ -132,6 +130,7 @@ import AppAddButton from 'src/components/default/AppAddButton.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
 import PostFormAttachmentPreview from 'src/components/client/LifeLog/forms/PostFormAttachmentPreview.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
+import LifeLogNullTimeButton from 'src/components/client/LifeLog/forms/LifeLogNullTimeButton.vue'
 
 interface IInputRef {
   resetValidation: () => void

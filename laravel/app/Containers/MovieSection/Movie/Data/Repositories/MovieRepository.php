@@ -4,6 +4,7 @@ namespace App\Containers\MovieSection\Movie\Data\Repositories;
 
 use App\Containers\MovieSection\Movie\Data\DTO\MovieCreateData;
 use App\Containers\MovieSection\Movie\Data\DTO\MovieUpdateData;
+use App\Containers\MovieSection\Movie\Data\Filters\MovieSearchFilter;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Parents\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
@@ -123,18 +124,7 @@ class MovieRepository
     {
         return [
             AllowedFilter::partial('title'),
-            AllowedFilter::callback('search', function (Builder $query, mixed $value): void {
-                $term = trim((string) $value);
-                if ($term === '') {
-                    return;
-                }
-
-                $query->where(function (Builder $builder) use ($term): void {
-                    $builder->where('title', 'like', '%' . $term . '%')
-                        ->orWhere('description', 'like', '%' . $term . '%')
-                        ->orWhere('short_description', 'like', '%' . $term . '%');
-                });
-            }),
+            AllowedFilter::custom('search', new MovieSearchFilter()),
             AllowedFilter::exact('year'),
             AllowedFilter::exact('type'),
             AllowedFilter::exact('kp_id'),

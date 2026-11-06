@@ -47,11 +47,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
-import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
-import { commentApi } from 'src/api/requests/commentApi'
-import { mapCommentResponse, mapCommentsResponse } from 'src/api/mappers/comment.mapper'
-import { IGalleryComment } from 'src/types/gallery'
+import { computed, ref, watch } from 'vue'
+import { useCommentStore } from 'src/stores/modules/commentStore'
 import { humanDatetime } from 'src/utils/datetime'
 
 const props = defineProps<{
@@ -59,10 +56,37 @@ const props = defineProps<{
   commentableType?: string
 }>()
 
-const comments = ref<IGalleryComment[]>([])
+const commentStore = useCommentStore()
 const draft = ref('')
-const isLoading = ref(false)
-const isSending = ref(false)
+
+const cacheKey = computed(() => {
+  if (!props.commentableId || !props.commentableType) {
+    return ''
+  }
+
+  return `${props.commentableType}:${props.commentableId}`
+})
+const comments = computed(() => {
+  if (!cacheKey.value) {
+    return []
+  }
+
+  return commentStore.commentsByKey[cacheKey.value] ?? []
+})
+const isLoading = computed(() => {
+  if (!cacheKey.value) {
+    return false
+  }
+
+  return Boolean(commentStore.loadingByKey[cacheKey.value])
+})
+const isSending = computed(() => {
+  if (!cacheKey.value) {
+    return false
+  }
+
+  return Boolean(commentStore.sendingByKey[cacheKey.value])
+})
 
 function formatTime(value: string): string {
   return humanDatetime(value)
@@ -70,24 +94,10 @@ function formatTime(value: string): string {
 
 async function loadComments(): Promise<void> {
   if (!props.commentableId || !props.commentableType) {
-    comments.value = []
     return
   }
 
-  isLoading.value = true
-
-  try {
-    const response = await commentApi.getComments({
-      commentable_id: props.commentableId,
-      commentable_type: props.commentableType
-    })
-    comments.value = mapCommentsResponse(response)
-  } catch (error) {
-    handleApiError(error)
-    comments.value = []
-  } finally {
-    isLoading.value = false
-  }
+  await commentStore.loadComments(props.commentableType, props.commentableId)
 }
 
 async function submit(): Promise<void> {
@@ -97,23 +107,15 @@ async function submit(): Promise<void> {
     return
   }
 
-  isSending.value = true
+  const created = await commentStore.createComment(
+    props.commentableType,
+    props.commentableId,
+    content,
+    { placement: 'start', notifySuccess: true }
+  )
 
-  try {
-    const response = await commentApi.createComment({
-      commentable_id: props.commentableId,
-      commentable_type: props.commentableType,
-      content
-    })
-    const created = mapCommentResponse(response)
-
-    comments.value = [created, ...comments.value]
+  if (created) {
     draft.value = ''
-    handleApiSuccess(response)
-  } catch (error) {
-    handleApiError(error)
-  } finally {
-    isSending.value = false
   }
 }
 

@@ -3,15 +3,10 @@ import { ref } from 'vue'
 import { movieApi } from 'src/api/requests/movieApi'
 import { mapMovieResponse, mapMoviesResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { extractCursorFromResponse, handleApiError, handleApiSuccess, hasMoreFromResponse } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { IMovie, IMovieWriteDto } from 'src/types/Movie'
 import { useMovieStore } from 'src/stores/modules/movieStore'
-
-function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 export const useMovieAdminStore = defineStore('movieAdmin', () => {
   const movies = ref<IMovie[]>([])

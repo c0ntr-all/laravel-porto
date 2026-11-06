@@ -1,28 +1,14 @@
-import { ref, watch } from 'vue'
 import { MoviesViewModeEnum } from 'src/enums/Movie/MoviesViewModeEnum'
+import { usePersistedEnum } from 'src/composables/usePersistedEnum'
 
 const STORAGE_KEY = 'movies.viewMode'
 
-function readViewMode(): MoviesViewModeEnum {
-  if (typeof window === 'undefined') {
-    return MoviesViewModeEnum.TILE
-  }
-
-  const stored = localStorage.getItem(STORAGE_KEY)
-
-  if (stored === MoviesViewModeEnum.LIST || stored === MoviesViewModeEnum.TILE) {
-    return stored
-  }
-
-  return MoviesViewModeEnum.TILE
-}
-
 export function useMoviesViewMode() {
-  const viewMode = ref(readViewMode())
-
-  watch(viewMode, (value) => {
-    localStorage.setItem(STORAGE_KEY, value)
-  })
+  const { value: viewMode } = usePersistedEnum<MoviesViewModeEnum>(
+    STORAGE_KEY,
+    [MoviesViewModeEnum.LIST, MoviesViewModeEnum.TILE],
+    MoviesViewModeEnum.TILE
+  )
 
   return { viewMode }
 }

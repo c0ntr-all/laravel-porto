@@ -2,5 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "./dist",
+    "./.quasar",
+    "./node_modules",
+    "./src-capacitor",
+    "./src-cordova",
+    "./quasar.config.*.temporary.compiled*",
+    "src/**/*.spec.ts"
+  ]
 }

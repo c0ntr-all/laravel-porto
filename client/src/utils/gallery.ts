@@ -1,3 +1,4 @@
+import { getAccessToken } from 'src/services/auth-session'
 import { GalleryMediaKind, GalleryUploadSource, IGalleryMediaItem } from 'src/types/gallery'
 import { ITag } from 'src/types/tag'
 
@@ -179,7 +180,7 @@ export function resolveAuthedMediaUrl(path?: string | null): string {
     return url
   }
 
-  const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('access_token')
+  const token = getAccessToken()
 
   if (!token) {
     return url

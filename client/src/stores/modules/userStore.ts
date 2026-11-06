@@ -2,6 +2,12 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { userApi } from 'src/api/requests/userApi'
 import {
+  bumpSessionEpoch,
+  clearAccessToken,
+  hasAccessToken,
+  setAccessToken
+} from 'src/services/auth-session'
+import {
   emptyUser,
   mapProfile,
   toProfileUpdateDto
@@ -81,7 +87,7 @@ export const useUserStore = defineStore('userStore', () => {
   const isLoading = ref(false)
   const isAvatarBusy = ref(false)
 
-  const isLoggedIn = computed(() => Boolean(localStorage.getItem('access_token')))
+  const isLoggedIn = computed(() => hasAccessToken.value)
   const roles = computed(() => user.value.roles)
   const isAdmin = computed(() => roles.value.includes(UserRoleEnum.Admin))
   const displayName = computed(() => {
@@ -141,7 +147,7 @@ export const useUserStore = defineStore('userStore', () => {
       throw new Error('Не удалось получить токен доступа')
     }
 
-    localStorage.setItem('access_token', token)
+    setAccessToken(token)
     status.value = 'success'
 
     try {
@@ -164,16 +170,26 @@ export const useUserStore = defineStore('userStore', () => {
     })
   }
 
+  function clearLocalSession(): void {
+    clearAccessToken()
+    clearStoredUser()
+    status.value = ''
+    message.value = ''
+    user.value = emptyUser()
+    isLoading.value = false
+    isAvatarBusy.value = false
+  }
+
   async function logout(): Promise<void> {
     try {
       await userApi.logout()
     } catch {
       // Token is cleared locally even if the API call fails.
     } finally {
-      localStorage.removeItem('access_token')
-      clearStoredUser()
-      status.value = ''
-      user.value = emptyUser()
+      bumpSessionEpoch()
+      clearLocalSession()
+      const { resetSessionStores } = await import('src/stores/resetSessionStores')
+      resetSessionStores()
     }
   }
 
@@ -273,6 +289,7 @@ export const useUserStore = defineStore('userStore', () => {
     displayLogin,
     login,
     logout,
+    clearLocalSession,
     register,
     fetchCurrentUser,
     updateProfile,

@@ -1,28 +1,14 @@
-import { ref, watch } from 'vue'
 import { PlaylistsViewModeEnum } from 'src/enums/Music/PlaylistsViewModeEnum'
+import { usePersistedEnum } from 'src/composables/usePersistedEnum'
 
 const STORAGE_KEY = 'music.playlists.viewMode'
 
-function readViewMode (): PlaylistsViewModeEnum {
-  if (typeof window === 'undefined') {
-    return PlaylistsViewModeEnum.BLOCKS
-  }
-
-  const stored = localStorage.getItem(STORAGE_KEY)
-
-  if (stored === PlaylistsViewModeEnum.LIST || stored === PlaylistsViewModeEnum.BLOCKS) {
-    return stored
-  }
-
-  return PlaylistsViewModeEnum.BLOCKS
-}
-
-export function usePlaylistsViewMode () {
-  const viewMode = ref(readViewMode())
-
-  watch(viewMode, (value) => {
-    localStorage.setItem(STORAGE_KEY, value)
-  })
+export function usePlaylistsViewMode() {
+  const { value: viewMode } = usePersistedEnum<PlaylistsViewModeEnum>(
+    STORAGE_KEY,
+    [PlaylistsViewModeEnum.LIST, PlaylistsViewModeEnum.BLOCKS],
+    PlaylistsViewModeEnum.BLOCKS
+  )
 
   return { viewMode }
 }

@@ -4,21 +4,12 @@ import { artistApi } from 'src/api/requests/artistApi'
 import { trackApi } from 'src/api/requests/trackApi'
 import { mapArtistResponse, mapArtistsResponse } from 'src/api/mappers/Music/artist.mapper'
 import { mapTracksResponse } from 'src/api/mappers/Music/track.mapper'
-import {
-  extractCursorFromLink,
-  extractCursorFromResponse,
-  handleApiError,
-  hasMoreFromResponse
-} from 'src/utils/jsonapi'
+import { extractCursorFromLink, handleApiError } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
+import { createListRequest, mergeCursorPage, withListRequest } from 'src/utils/listRequest'
 import { IArtist, ITrack } from 'src/types'
 
 export type TrackSortField = 'created_at' | 'name' | 'rate'
-
-function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const artist = ref<IArtist | null>(null)
@@ -30,7 +21,7 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const artistTrackListRates = ref<number[]>([])
   const artistTrackListSortField = ref<TrackSortField>('created_at')
   const artistTrackListSortDesc = ref(true)
-  let artistTrackListRequestId = 0
+  const artistTrackListRequest = createListRequest()
 
   const artists = ref<IArtist[]>([])
   const artistsCursor = ref<string | null>(null)
@@ -55,8 +46,8 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
   const trackListSortField = ref<TrackSortField>('created_at')
   const trackListSortDesc = ref(true)
 
-  let artistListRequestId = 0
-  let trackListRequestId = 0
+  const artistListRequest = createListRequest()
+  const trackListRequest = createListRequest()
 
   async function getArtist(id: string): Promise<IArtist | null> {
     if (artist.value?.id !== id) {
@@ -108,47 +99,44 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
       artistTrackListSortDesc.value = Boolean(options.sortDesc)
     }
 
-    if (append) {
-      if (!artistTracksCursor.value || isArtistTracksLoadingMore.value || isArtistTracksLoading.value) {
-        return
-      }
-      isArtistTracksLoadingMore.value = true
-    } else {
-      artistTrackListRequestId += 1
-      isArtistTracksLoading.value = true
-      isArtistTracksLoadingMore.value = false
-      artistTracks.value = []
-      artistTracksCursor.value = null
-    }
-
-    const requestId = artistTrackListRequestId
-
-    try {
-      const response = await artistApi.getArtistTracks(id, {
-        cursor: append ? artistTracksCursor.value : null,
-        rate: artistTrackListRates.value,
-        sort: `${artistTrackListSortDesc.value ? '-' : ''}${artistTrackListSortField.value}`
-      })
-
-      if (requestId !== artistTrackListRequestId) {
-        return
-      }
-
-      const mapped = mapTracksResponse(response, options?.fallbackArtist ?? artist.value?.name ?? '')
-
-      artistTracks.value = append ? mergeById(artistTracks.value, mapped) : mapped
-      artistTracksCursor.value = extractCursorFromLink(response.links?.next)
-    } catch (error) {
-      if (requestId !== artistTrackListRequestId) {
-        return
-      }
-      handleApiError(error)
-    } finally {
-      if (requestId === artistTrackListRequestId) {
+    await withListRequest(artistTrackListRequest, append, {
+      canAppend: Boolean(artistTracksCursor.value) && !isArtistTracksLoadingMore.value && !isArtistTracksLoading.value,
+      onAppend: () => {
+        isArtistTracksLoadingMore.value = true
+      },
+      onFresh: () => {
+        isArtistTracksLoading.value = true
+        isArtistTracksLoadingMore.value = false
+        artistTracks.value = []
+        artistTracksCursor.value = null
+      },
+      onSettle: () => {
         isArtistTracksLoading.value = false
         isArtistTracksLoadingMore.value = false
       }
-    }
+    }, async (isCurrent) => {
+      try {
+        const response = await artistApi.getArtistTracks(id, {
+          cursor: append ? artistTracksCursor.value : null,
+          rate: artistTrackListRates.value,
+          sort: `${artistTrackListSortDesc.value ? '-' : ''}${artistTrackListSortField.value}`
+        })
+
+        if (!isCurrent()) {
+          return
+        }
+
+        const mapped = mapTracksResponse(response, options?.fallbackArtist ?? artist.value?.name ?? '')
+
+        artistTracks.value = append ? mergeById(artistTracks.value, mapped) : mapped
+        artistTracksCursor.value = extractCursorFromLink(response.links?.next)
+      } catch (error) {
+        if (!isCurrent()) {
+          return
+        }
+        handleApiError(error)
+      }
+    })
   }
 
   async function getArtists(options?: {
@@ -176,50 +164,47 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
       artistListTagsNested.value = Boolean(options.tagsNested)
     }
 
-    if (append) {
-      if (!artistsCursor.value || isArtistsLoadingMore.value || isArtistsLoading.value) {
-        return
-      }
-      isArtistsLoadingMore.value = true
-    } else {
-      artistListRequestId += 1
-      isArtistsLoading.value = true
-      isArtistsLoadingMore.value = false
-      artists.value = []
-      artistsCursor.value = null
-      hasMoreArtists.value = false
-    }
-
-    const requestId = artistListRequestId
-
-    try {
-      const response = await artistApi.getArtists({
-        name: artistListName.value || undefined,
-        tags: artistListTags.value,
-        tags_match: artistListTagsMatch.value,
-        tags_nested: artistListTagsNested.value,
-        cursor: append ? artistsCursor.value : null
-      })
-
-      if (requestId !== artistListRequestId) {
-        return
-      }
-
-      const mapped = mapArtistsResponse(response)
-      artists.value = append ? mergeById(artists.value, mapped) : mapped
-      artistsCursor.value = extractCursorFromResponse(response)
-      hasMoreArtists.value = hasMoreFromResponse(response)
-    } catch (error) {
-      if (requestId !== artistListRequestId) {
-        return
-      }
-      handleApiError(error)
-    } finally {
-      if (requestId === artistListRequestId) {
+    await withListRequest(artistListRequest, append, {
+      canAppend: Boolean(artistsCursor.value) && !isArtistsLoadingMore.value && !isArtistsLoading.value,
+      onAppend: () => {
+        isArtistsLoadingMore.value = true
+      },
+      onFresh: () => {
+        isArtistsLoading.value = true
+        isArtistsLoadingMore.value = false
+        artists.value = []
+        artistsCursor.value = null
+        hasMoreArtists.value = false
+      },
+      onSettle: () => {
         isArtistsLoading.value = false
         isArtistsLoadingMore.value = false
       }
-    }
+    }, async (isCurrent) => {
+      try {
+        const response = await artistApi.getArtists({
+          name: artistListName.value || undefined,
+          tags: artistListTags.value,
+          tags_match: artistListTagsMatch.value,
+          tags_nested: artistListTagsNested.value,
+          cursor: append ? artistsCursor.value : null
+        })
+
+        if (!isCurrent()) {
+          return
+        }
+
+        const page = mergeCursorPage(artists.value, mapArtistsResponse(response), response, append)
+        artists.value = page.items
+        artistsCursor.value = page.cursor
+        hasMoreArtists.value = page.hasMore
+      } catch (error) {
+        if (!isCurrent()) {
+          return
+        }
+        handleApiError(error)
+      }
+    })
   }
 
   async function getTracks(options?: {
@@ -262,52 +247,49 @@ export const useMusicCatalogStore = defineStore('musicCatalog', () => {
       trackListSortDesc.value = Boolean(options.sortDesc)
     }
 
-    if (append) {
-      if (!tracksCursor.value || isTracksLoadingMore.value || isTracksLoading.value) {
-        return
-      }
-      isTracksLoadingMore.value = true
-    } else {
-      trackListRequestId += 1
-      isTracksLoading.value = true
-      isTracksLoadingMore.value = false
-      tracks.value = []
-      tracksCursor.value = null
-      hasMoreTracks.value = false
-    }
-
-    const requestId = trackListRequestId
-
-    try {
-      const response = await trackApi.listTracks({
-        name: trackListName.value || undefined,
-        tags: trackListTags.value,
-        tags_match: trackListTagsMatch.value,
-        tags_nested: trackListTagsNested.value,
-        rate: trackListRates.value,
-        sort: `${trackListSortDesc.value ? '-' : ''}${trackListSortField.value}`,
-        cursor: append ? tracksCursor.value : null
-      })
-
-      if (requestId !== trackListRequestId) {
-        return
-      }
-
-      const mapped = mapTracksResponse(response)
-      tracks.value = append ? mergeById(tracks.value, mapped) : mapped
-      tracksCursor.value = extractCursorFromResponse(response)
-      hasMoreTracks.value = hasMoreFromResponse(response)
-    } catch (error) {
-      if (requestId !== trackListRequestId) {
-        return
-      }
-      handleApiError(error)
-    } finally {
-      if (requestId === trackListRequestId) {
+    await withListRequest(trackListRequest, append, {
+      canAppend: Boolean(tracksCursor.value) && !isTracksLoadingMore.value && !isTracksLoading.value,
+      onAppend: () => {
+        isTracksLoadingMore.value = true
+      },
+      onFresh: () => {
+        isTracksLoading.value = true
+        isTracksLoadingMore.value = false
+        tracks.value = []
+        tracksCursor.value = null
+        hasMoreTracks.value = false
+      },
+      onSettle: () => {
         isTracksLoading.value = false
         isTracksLoadingMore.value = false
       }
-    }
+    }, async (isCurrent) => {
+      try {
+        const response = await trackApi.listTracks({
+          name: trackListName.value || undefined,
+          tags: trackListTags.value,
+          tags_match: trackListTagsMatch.value,
+          tags_nested: trackListTagsNested.value,
+          rate: trackListRates.value,
+          sort: `${trackListSortDesc.value ? '-' : ''}${trackListSortField.value}`,
+          cursor: append ? tracksCursor.value : null
+        })
+
+        if (!isCurrent()) {
+          return
+        }
+
+        const page = mergeCursorPage(tracks.value, mapTracksResponse(response), response, append)
+        tracks.value = page.items
+        tracksCursor.value = page.cursor
+        hasMoreTracks.value = page.hasMore
+      } catch (error) {
+        if (!isCurrent()) {
+          return
+        }
+        handleApiError(error)
+      }
+    })
   }
 
   return {

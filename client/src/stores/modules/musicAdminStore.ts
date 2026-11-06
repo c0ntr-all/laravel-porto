@@ -12,13 +12,8 @@ import {
   handleApiSuccess,
   hasMoreFromResponse
 } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
 import { IAlbum, IAlbumType, IAlbumWriteDto, IArtist, ITrack, ITrackWriteDto } from 'src/types'
-
-function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 export const useMusicAdminStore = defineStore('musicAdmin', () => {
   const artists = ref<IArtist[]>([])

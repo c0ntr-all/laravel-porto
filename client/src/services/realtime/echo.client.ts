@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
+import { getAccessToken } from 'src/services/auth-session'
 import {
   INotificationCreatedPayload,
   INotificationReadPayload
@@ -54,7 +55,7 @@ function createEcho(): Echo<'reverb'> | null {
     authEndpoint: '/broadcasting/auth',
     auth: {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}`,
+        Authorization: `Bearer ${getAccessToken() ?? ''}`,
         Accept: 'application/json'
       }
     }

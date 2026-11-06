@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { Notify } from 'quasar'
+import { isRequestCanceled } from 'src/utils/apiNotify'
 import { pluralizeRu } from 'src/utils/movieLabels'
 
 const STEAM_APP_ID = /\/app\/(\d+)/i
@@ -70,6 +71,10 @@ export function formatGamesCount(count: number): string {
 }
 
 export function notifyGameApiError(error: unknown): void {
+  if (isRequestCanceled(error)) {
+    return
+  }
+
   let message = 'Не удалось выполнить запрос'
 
   if (error instanceof AxiosError) {

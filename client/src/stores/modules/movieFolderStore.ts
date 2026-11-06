@@ -8,6 +8,7 @@ import {
   mapMoviesResponse
 } from 'src/api/mappers/Movie/movie.mapper'
 import { handleApiError, handleApiSuccess } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
 import { SystemMovieFolderEnum } from 'src/enums/Movie/SystemMovieFolderEnum'
 import { IMovie, IMovieFolder } from 'src/types/Movie'
 import { useMovieStore } from 'src/stores/modules/movieStore'
@@ -18,12 +19,6 @@ import {
   sortedMovieFolders,
   withFolderMembership
 } from 'src/utils/movieFolders'
-
-function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 export const useMovieFolderStore = defineStore('movieFolders', () => {
   const folders = ref<IMovieFolder[]>([])

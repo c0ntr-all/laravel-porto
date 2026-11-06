@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
+import { getAccessToken } from 'src/services/auth-session'
 import { handleApiError } from 'src/utils/jsonapi'
 import { audioEngine, type AudioBufferedRange } from 'src/services/audio-engine'
 import { formatPlaybackTime, parseDuration } from 'src/utils/playbackTime'
@@ -42,7 +43,7 @@ function getTrackAudioSrc(track: ITrack): string {
   }
 
   const url = `${process.env.host}/v1/music/tracks/${track.id}/play`
-  const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('access_token')
+  const token = getAccessToken()
 
   if (!token) {
     return url
@@ -659,6 +660,24 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     updateMediaSession()
   }
 
+  function clearSession(): void {
+    audioEngine.stop()
+    currentTrack.value = null
+    originalPlaylist.value = []
+    queue.value = []
+    currentIndex.value = -1
+    status.value = 'idle'
+    resetProgress()
+    resetScrobbleState()
+    bufferedRanges.value = []
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(QUEUE_KEY)
+    }
+
+    updateMediaSession()
+  }
+
   function seek(time: number): void {
     audioEngine.seek(time)
     currentTime.value = audioEngine.currentTime
@@ -875,6 +894,7 @@ export const useMusicPlayer = defineStore('musicPlayer', () => {
     pause,
     toggle,
     stop,
+    clearSession,
     seek,
     seekBy,
     seekBackward,

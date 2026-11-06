@@ -1,8 +1,17 @@
-import { Notify } from 'quasar'
-import { AxiosError } from 'axios'
-import { StoreEntity } from 'src/types/store'
-import { IJsonApiResource, IJsonApiResponse } from 'src/types'
-import { updateObject } from 'src/utils/helpers'
+import { IJsonApiResource } from 'src/types'
+
+export {
+  handleApiError,
+  handleApiSuccess,
+  isRequestCanceled
+} from 'src/utils/apiNotify'
+export {
+  buildFilterForUrl,
+  extractCursorFromLink,
+  extractCursorFromResponse,
+  hasMoreFromResponse
+} from 'src/utils/apiQuery'
+export { patchEntity, upsertEntity } from 'src/utils/entityStore'
 
 interface IIncluded {
   type: string
@@ -22,14 +31,6 @@ interface IProcessItem {
   relationships?: IRelationshipItem | undefined
   [key: string]: any
 }
-interface IRawRelationItem {
-  id: string
-  type: string
-}
-interface IRawRelations {
-  data: IRawRelationItem[] | IProcessItem[]
-  meta?: any
-}
 interface IncludedItem {
   type: string
   id: string
@@ -37,14 +38,6 @@ interface IncludedItem {
     [key: string]: any
   }
   relationships?: IRelationshipItem
-}
-interface IRawElement {
-  id: string
-  type: string
-  attributes: {
-    [key: string]: any
-  }
-  relationships?: any
 }
 interface IResolvedCollection<T> {
   data: T[]
@@ -54,92 +47,6 @@ interface IResolvedItem<T> {
   data: T
   meta?: Record<string, any>
 }
-interface IResponse {
-  data: IRawElement[]
-  included?: any
-  meta: any
-}
-
-const processRelation = (mainRelData: IRawRelationItem, included: IncludedItem[]) => {
-  const includedItem = included.find((include: IncludedItem) => {
-    return include.type === mainRelData.type && include.id === mainRelData.id
-  }) as IncludedItem
-
-  const fullRelation: IProcessItem = {
-    id: includedItem.id,
-    ...includedItem.attributes
-  }
-
-  if (includedItem.relationships) {
-    for (const relName in includedItem.relationships) {
-      const relData: IRawRelations = includedItem.relationships[relName]
-
-      fullRelation[relName] = <IRelationshipValue>processRawRelation(relData, included)
-    }
-  }
-
-  return fullRelation
-}
-
-const processRawRelation = (mainRelData: IRawRelations, included: IncludedItem[]) => {
-  if (Array.isArray(mainRelData.data)) {
-    if (mainRelData.data.length > 0) {
-      if (!isIRawRelationItemArray(mainRelData.data)) {
-        return mainRelData // Если данные уже IProcessItem[], просто возвращаем
-      }
-      mainRelData.data = mainRelData.data.map((relItem: IRawRelationItem) => {
-        return processRelation(relItem, included)
-      })
-
-      return mainRelData
-    } else {
-      return mainRelData
-    }
-  } else {
-    return {
-      data: processRelation(mainRelData.data as IRawRelationItem, included)
-    }
-  }
-}
-// Type Guard
-const isIRawRelationItemArray = (data: any[]): data is IRawRelationItem[] => {
-  return data.every(item => 'type' in item && 'id' in item && !('relationships' in item))
-}
-
-export function normalizeApiResponse(responseData: IResponse) {
-  // TODO: any to clear type
-  responseData.data = responseData.data.map((item: any) => {
-    if (item.relationships) {
-      for (const relName in item.relationships) {
-        const relData = item.relationships[relName]
-
-        item[relName] = processRawRelation(relData, responseData.included)
-      }
-
-      delete item.relationships
-    }
-
-    return item
-  })
-
-  return responseData
-}
-
-export function normalizeApiItemResponse(responseData: any) {
-  // TODO: any to clear type
-  if (responseData.data.relationships) {
-    for (const relName in responseData.data.relationships) {
-      const relData = responseData.data.relationships[relName]
-
-      responseData.data[relName] = processRawRelation(relData, responseData.included)
-    }
-
-    delete responseData.data.relationships
-  }
-
-  return responseData
-}
-
 export function getIncluded<T>(
   chain: string,
   relationships: any,
@@ -205,100 +112,6 @@ const processItem = (relationName: string, relationItem: IRelationshipItem, incl
     relationships: includedItem.relationships
   }
 }
-
-export function handleApiError(error: unknown) {
-  let message = 'Unknown error occurred'
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as any
-
-    message = data?.message || error.message
-  } else if (error instanceof Error) {
-    message = error.message
-  }
-
-  console.error(message)
-
-  Notify.create({
-    type: 'negative',
-    message
-  })
-}
-
-export function handleApiSuccess(response: any) {
-  const message = response.meta?.message || 'The action was done!'
-
-  Notify.create({
-    type: 'positive',
-    message
-  })
-}
-
-/**
- * Строит URL с фильтрами в формате, совместимом со Spatie Query Builder (например: ?filter[tags]=1,2,3).
- *
- * @param {Record<string, any>} filters - Объект фильтров, где ключ — это имя фильтра, а значение — строка или массив значений.
- * @returns {string} Полный URL с корректно сформированными query-параметрами.
- *
- * @example
- * // Пример использования:
- * const url = buildFilterUrl('v1/posts', { tags: [1, 2, 3], author: 'John' })
- * // Результат: "filter[tags]=1,2,3&filter[author]=John"
- *
- * @remarks
- * - Массивы значений объединяются через запятую.
- * - Пустые, `null` и `undefined` значения игнорируются.
- * - Используется `URLSearchParams` для корректного экранирования параметров.
- */
-export function buildFilterForUrl(filters: Record<string, any>): string {
-  const params = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        continue
-      }
-      params.append(`filter[${key}]`, value.join(','))
-    } else if (value !== undefined && value !== null && value !== '') {
-      params.append(`filter[${key}]`, String(value))
-    }
-  }
-
-  return params.toString()
-}
-
-export function extractCursorFromLink(link?: string | { href?: string } | null): string | null {
-  if (!link) {
-    return null
-  }
-
-  const href = typeof link === 'string' ? link : link.href
-  if (!href) {
-    return null
-  }
-
-  try {
-    return new URL(href, 'http://localhost').searchParams.get('cursor')
-  } catch {
-    return null
-  }
-}
-
-export function extractCursorFromResponse(response: IJsonApiResponse): string | null {
-  return response.meta?.next_cursor ??
-    response.meta?.cursor?.next ??
-    extractCursorFromLink(response.links?.next) ??
-    extractCursorFromLink(response.meta?.next_page_url)
-}
-
-export function hasMoreFromResponse(response: IJsonApiResponse): boolean {
-  if (typeof response.meta?.has_more === 'boolean') {
-    return response.meta.has_more
-  }
-
-  return Boolean(extractCursorFromResponse(response))
-}
-
-// NEW
 
 function indexIncluded(included: IJsonApiResource[] = []) {
   const map = new Map<string, IJsonApiResource>()
@@ -470,31 +283,4 @@ export function normalizeEntityCollection(
   }
 
   return entities
-}
-
-/**
- * Целиком обновляет entity в сторе по id
- */
-export function upsertEntity<T extends { id: string }>(
-  store: StoreEntity<T>,
-  entity: T
-) {
-  if (!store.byId[entity.id]) {
-    store.allIds.push(entity.id)
-  }
-
-  store.byId[entity.id] = entity
-}
-
-/**
- * Поточечно обновляет свойства entity в сторе по id
- */
-export function patchEntity<T extends { id: string }>(
-  store: StoreEntity<T>,
-  entity: T
-) {
-  const object = store.byId[entity.id]
-  const updated = updateObject(object, entity)
-
-  upsertEntity(store, updated)
 }

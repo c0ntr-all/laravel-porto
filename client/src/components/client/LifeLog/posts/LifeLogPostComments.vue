@@ -203,17 +203,14 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { Dialog } from 'quasar'
-import { commentApi } from 'src/api/requests/commentApi'
-import { mapCommentResponse, mapCommentsResponse } from 'src/api/mappers/comment.mapper'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'
 import { UserRoleEnum } from 'src/enums/User/UserRoleEnum'
-import { usePostStore } from 'src/stores/modules/postStore'
+import { useCommentStore } from 'src/stores/modules/commentStore'
 import { useUserStore } from 'src/stores/modules/userStore'
 import { IPost } from 'src/types'
 import { IGalleryComment, IGalleryCommentAuthor } from 'src/types/gallery'
 import { IUser } from 'src/types/user'
 import { humanDatetime } from 'src/utils/datetime'
-import { handleApiError } from 'src/utils/jsonapi'
 
 const POST_COMMENTABLE_TYPE = 'll_posts'
 
@@ -225,19 +222,20 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const postStore = usePostStore()
+const commentStore = useCommentStore()
 const userStore = useUserStore()
 
-const comments = ref<IGalleryComment[]>([])
 const draft = ref('')
 const editDraft = ref('')
 const editingId = ref<string | null>(null)
 const savingId = ref<string | null>(null)
-const isLoading = ref(false)
-const loadFailed = ref(false)
-const isSending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 
+const cacheKey = computed(() => `${POST_COMMENTABLE_TYPE}:${props.post.id}`)
+const comments = computed(() => commentStore.commentsByKey[cacheKey.value] ?? [])
+const isLoading = computed(() => Boolean(commentStore.loadingByKey[cacheKey.value]))
+const loadFailed = computed(() => Boolean(commentStore.loadFailedByKey[cacheKey.value]))
+const isSending = computed(() => Boolean(commentStore.sendingByKey[cacheKey.value]))
 const panelId = computed(() => `ll-post-comments-${props.post.id}`)
 const displayCount = computed(() => {
   if (isLoading.value || loadFailed.value) {
@@ -281,10 +279,6 @@ function isOwn(comment: IGalleryComment): boolean {
   return userId !== '' && userId === authorId
 }
 
-function syncCount(): void {
-  postStore.setCommentsCount(props.post.id, comments.value.length)
-}
-
 async function scrollToEnd(): Promise<void> {
   await nextTick()
   const list = listRef.value
@@ -296,25 +290,12 @@ async function scrollToEnd(): Promise<void> {
 }
 
 async function loadComments(): Promise<void> {
-  isLoading.value = true
-  loadFailed.value = false
+  await commentStore.loadComments(POST_COMMENTABLE_TYPE, props.post.id, {
+    sort: 'created_at'
+  })
 
-  try {
-    const response = await commentApi.getComments({
-      commentable_id: props.post.id,
-      commentable_type: POST_COMMENTABLE_TYPE
-    }, 'created_at')
-    comments.value = mapCommentsResponse(response).sort((left, right) =>
-      left.created_at.localeCompare(right.created_at)
-    )
-    syncCount()
+  if (!loadFailed.value) {
     await scrollToEnd()
-  } catch (error) {
-    handleApiError(error)
-    loadFailed.value = true
-    comments.value = []
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -325,23 +306,19 @@ async function submit(): Promise<void> {
     return
   }
 
-  isSending.value = true
+  const created = await commentStore.createComment(
+    POST_COMMENTABLE_TYPE,
+    props.post.id,
+    content,
+    { placement: 'end' }
+  )
 
-  try {
-    const response = await commentApi.createComment({
-      commentable_id: props.post.id,
-      commentable_type: POST_COMMENTABLE_TYPE,
-      content
-    })
-    comments.value = [...comments.value, mapCommentResponse(response)]
-    draft.value = ''
-    syncCount()
-    await scrollToEnd()
-  } catch (error) {
-    handleApiError(error)
-  } finally {
-    isSending.value = false
+  if (!created) {
+    return
   }
+
+  draft.value = ''
+  await scrollToEnd()
 }
 
 function startEdit(comment: IGalleryComment): void {
@@ -369,12 +346,16 @@ async function saveEdit(comment: IGalleryComment): Promise<void> {
   savingId.value = comment.id
 
   try {
-    const response = await commentApi.updateComment(comment.id, content)
-    const updated = mapCommentResponse(response)
-    comments.value = comments.value.map(item => item.id === updated.id ? updated : item)
-    cancelEdit()
-  } catch (error) {
-    handleApiError(error)
+    const updated = await commentStore.updateComment(
+      POST_COMMENTABLE_TYPE,
+      props.post.id,
+      comment.id,
+      content
+    )
+
+    if (updated) {
+      cancelEdit()
+    }
   } finally {
     savingId.value = null
   }
@@ -393,15 +374,14 @@ function confirmDelete(comment: IGalleryComment): void {
 }
 
 async function removeComment(comment: IGalleryComment): Promise<void> {
-  try {
-    await commentApi.deleteComment(comment.id)
-    comments.value = comments.value.filter(item => item.id !== comment.id)
-    if (editingId.value === comment.id) {
-      cancelEdit()
-    }
-    syncCount()
-  } catch (error) {
-    handleApiError(error)
+  const removed = await commentStore.deleteComment(
+    POST_COMMENTABLE_TYPE,
+    props.post.id,
+    comment.id
+  )
+
+  if (removed && editingId.value === comment.id) {
+    cancelEdit()
   }
 }
 

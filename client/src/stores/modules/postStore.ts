@@ -1,12 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from 'src/api/requests/postApi'
-import {
-  extractCursorFromResponse,
-  handleApiError,
-  handleApiSuccess,
-  hasMoreFromResponse
-} from 'src/utils/jsonapi'
+import { handleApiError, handleApiSuccess, isRequestCanceled } from 'src/utils/jsonapi'
+import { createListRequest, mergeCursorPage, withListRequest } from 'src/utils/listRequest'
 import { mapResponse } from 'src/utils/jsonApiMapper'
 import { normalizePost, normalizePosts } from 'src/api/mappers/post.response.mapper'
 import {
@@ -28,12 +24,6 @@ import {
   IRelationshipItem
 } from 'src/types'
 
-function mergePostsById(current: IPost[], incoming: IPost[]): IPost[] {
-  const seen = new Set(current.map(post => post.id))
-
-  return [...current, ...incoming.filter(post => !seen.has(post.id))]
-}
-
 export const usePostStore = defineStore('post', () => {
   const posts = ref<IPost[]>([])
   const postsCount = ref<number>(0)
@@ -43,7 +33,7 @@ export const usePostStore = defineStore('post', () => {
   const isLoadingMore = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  let listRequestId = 0
+  const listRequest = createListRequest()
   let lastListFilters: IFilter = {}
 
   function syncPostWithListFilters(post: IPost): void {
@@ -76,57 +66,55 @@ export const usePostStore = defineStore('post', () => {
       lastListFilters = { ...options.filters }
     }
 
-    if (append) {
-      if (!postsCursor.value || isLoadingMore.value || isLoading.value) {
-        return
-      }
-
-      isLoadingMore.value = true
-    } else {
-      listRequestId += 1
-      isLoading.value = true
-      isLoadingMore.value = false
-      posts.value = []
-      postsCursor.value = null
-      hasMorePosts.value = false
-    }
-
-    const requestId = listRequestId
-    error.value = null
-
-    try {
-      const response = await postApi.getPosts(lastListFilters, {
-        cursor: append ? postsCursor.value : null
-      })
-
-      if (requestId !== listRequestId) {
-        return
-      }
-
-      const mapped = normalizePosts(mapResponse(response) as IPost[])
-      const previousCount = posts.value.length
-
-      posts.value = append ? mergePostsById(posts.value, mapped) : mapped
-      postsCursor.value = extractCursorFromResponse(response)
-      hasMorePosts.value = hasMoreFromResponse(response)
-
-      if (append && posts.value.length === previousCount) {
+    await withListRequest(listRequest, append, {
+      canAppend: Boolean(postsCursor.value) && !isLoadingMore.value && !isLoading.value,
+      onAppend: () => {
+        isLoadingMore.value = true
+      },
+      onFresh: () => {
+        isLoading.value = true
+        isLoadingMore.value = false
+        posts.value = []
+        postsCursor.value = null
         hasMorePosts.value = false
-      }
-
-      postsCount.value = posts.value.length
-    } catch (err: any) {
-      if (requestId !== listRequestId) {
-        return
-      }
-
-      error.value = err.message ?? 'Ошибка загрузки'
-    } finally {
-      if (requestId === listRequestId) {
+      },
+      onSettle: () => {
         isLoading.value = false
         isLoadingMore.value = false
       }
-    }
+    }, async (isCurrent) => {
+      error.value = null
+
+      try {
+        const response = await postApi.getPosts(lastListFilters, {
+          cursor: append ? postsCursor.value : null
+        })
+
+        if (!isCurrent()) {
+          return
+        }
+
+        const mapped = normalizePosts(mapResponse(response) as IPost[])
+        const previousCount = posts.value.length
+        const page = mergeCursorPage(posts.value, mapped, response, append)
+
+        posts.value = page.items
+        postsCursor.value = page.cursor
+        hasMorePosts.value = page.hasMore
+
+        if (append && posts.value.length === previousCount) {
+          hasMorePosts.value = false
+        }
+
+        postsCount.value = posts.value.length
+      } catch (err: unknown) {
+        if (!isCurrent() || isRequestCanceled(err)) {
+          return
+        }
+
+        error.value = err instanceof Error ? err.message : 'Ошибка загрузки'
+      }
+    })
   }
 
   async function createPost(

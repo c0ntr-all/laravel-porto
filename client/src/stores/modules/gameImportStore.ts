@@ -5,17 +5,12 @@ import { Notify } from 'quasar'
 import { gameImportApi } from 'src/api/requests/gameImportApi'
 import { mapGameImportResponse, mapGameImportsResponse } from 'src/api/mappers/Game/game.mapper'
 import { extractCursorFromResponse, handleApiSuccess, hasMoreFromResponse } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
 import { notifyGameApiError } from 'src/utils/game'
 import { useGameAdminStore } from 'src/stores/modules/gameAdminStore'
 import { GameImportStatusEnum } from 'src/enums/Game/GameImportStatusEnum'
 import { IJsonApiResponse } from 'src/types'
 import { IGameImport } from 'src/types/Game'
-
-function mergeById(current: IGameImport[], incoming: IGameImport[]): IGameImport[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 function importResponseFromError(error: unknown): IJsonApiResponse | null {
   if (!(error instanceof AxiosError) || !error.response?.data) {

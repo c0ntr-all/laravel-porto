@@ -5,17 +5,12 @@ import { Notify } from 'quasar'
 import { movieImportApi } from 'src/api/requests/movieImportApi'
 import { mapMovieImportResponse, mapMovieImportsResponse } from 'src/api/mappers/Movie/movie.mapper'
 import { extractCursorFromResponse, handleApiError, handleApiSuccess, hasMoreFromResponse } from 'src/utils/jsonapi'
+import { mergeById } from 'src/utils/collection'
 import { useMovieAdminStore } from 'src/stores/modules/movieAdminStore'
 import { useMovieGenreStore } from 'src/stores/modules/movieGenreStore'
 import { MovieImportStatusEnum } from 'src/enums/Movie/MovieImportStatusEnum'
 import { IJsonApiResponse } from 'src/types'
 import { IMovieImport } from 'src/types/Movie'
-
-function mergeById(current: IMovieImport[], incoming: IMovieImport[]): IMovieImport[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 function importResponseFromError(error: unknown): IJsonApiResponse | null {
   if (!(error instanceof AxiosError) || !error.response?.data) {

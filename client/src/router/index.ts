@@ -6,6 +6,7 @@ import {
   createWebHistory
 } from 'vue-router'
 
+import { getAccessToken } from 'src/services/auth-session'
 import { useUserStore } from 'src/stores/modules/userStore'
 import routes from './routes'
 
@@ -35,30 +36,26 @@ export default route(function (/* { store, ssrContext } */) {
 
   Router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title}`
-    if (to.name !== 'login') {
-      if (!localStorage.getItem('access_token')) {
-        return next({
-          name: 'login'
-        })
-      }
+
+    const token = getAccessToken()
+
+    if (!token && to.name !== 'login') {
+      return next({
+        name: 'login'
+      })
     }
-    if (to.name === 'login' && localStorage.getItem('access_token')) {
+
+    if (token && to.name === 'login') {
       return next({
         name: 'home'
       })
     }
 
-    next()
-  })
-
-  Router.beforeEach((to, from, next) => {
-    if (to.name === 'login' || !localStorage.getItem('access_token')) {
-      return next()
-    }
-
-    const userStore = useUserStore()
-    if (!userStore.hasRouteAccess(to.matched) && to.name !== 'dashboard') {
-      return next({ name: 'dashboard' })
+    if (token && to.name !== 'login') {
+      const userStore = useUserStore()
+      if (!userStore.hasRouteAccess(to.matched) && to.name !== 'dashboard') {
+        return next({ name: 'dashboard' })
+      }
     }
 
     next()

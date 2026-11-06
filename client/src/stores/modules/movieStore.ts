@@ -8,7 +8,8 @@ import {
   mapMovieSeasonResponse,
   mapMoviesResponse
 } from 'src/api/mappers/Movie/movie.mapper'
-import { extractCursorFromResponse, handleApiError, hasMoreFromResponse } from 'src/utils/jsonapi'
+import { handleApiError } from 'src/utils/jsonapi'
+import { createListRequest, mergeCursorPage, withListRequest } from 'src/utils/listRequest'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { IMovie, IMovieCredit, IMovieFolder, IMovieSeason } from 'src/types/Movie'
 import { withFolderMembership } from 'src/utils/movieFolders'
@@ -18,12 +19,6 @@ import {
   withEpisodeWatched,
   withSeasonWatched
 } from 'src/utils/movieSeasons'
-
-function mergeById(current: IMovie[], incoming: IMovie[]): IMovie[] {
-  const seen = new Set(current.map(item => item.id))
-
-  return [...current, ...incoming.filter(item => !seen.has(item.id))]
-}
 
 export const useMovieStore = defineStore('movies', () => {
   const movies = ref<IMovie[]>([])
@@ -43,7 +38,7 @@ export const useMovieStore = defineStore('movies', () => {
   const listSort = ref<string | null>(null)
   const pendingWatchKeys = ref<string[]>([])
 
-  let listRequestId = 0
+  const listRequest = createListRequest()
   let creditsMovieId: string | null = null
 
   function isWatchPending(key: string): boolean {
@@ -91,57 +86,53 @@ export const useMovieStore = defineStore('movies', () => {
       listSort.value = options.sort || null
     }
 
-    if (append) {
-      if (!moviesCursor.value || isMoviesLoadingMore.value || isMoviesLoading.value) {
-        return
-      }
-
-      isMoviesLoadingMore.value = true
-    } else {
-      listRequestId += 1
-      isMoviesLoading.value = true
-      isMoviesLoadingMore.value = false
-      movies.value = []
-      moviesCursor.value = null
-      hasMoreMovies.value = false
-    }
-
-    const requestId = listRequestId
-
-    try {
-      const response = await movieApi.getMovies({
-        title: listTitle.value || undefined,
-        type: listType.value ?? undefined,
-        genre_id: listGenreIds.value.length ? listGenreIds.value : undefined,
-        year: listYears.value.length ? listYears.value : undefined,
-        sort: listSort.value || undefined,
-        cursor: append ? moviesCursor.value : null
-      })
-
-      if (requestId !== listRequestId) {
-        return
-      }
-
-      const mapped = mapMoviesResponse(response)
-      movies.value = append ? mergeById(movies.value, mapped) : mapped
-      moviesCursor.value = extractCursorFromResponse(response)
-      hasMoreMovies.value = hasMoreFromResponse(response)
-
-      if (typeof response.meta?.total === 'number') {
-        moviesTotal.value = response.meta.total
-      }
-    } catch (error) {
-      if (requestId !== listRequestId) {
-        return
-      }
-
-      handleApiError(error)
-    } finally {
-      if (requestId === listRequestId) {
+    await withListRequest(listRequest, append, {
+      canAppend: Boolean(moviesCursor.value) && !isMoviesLoadingMore.value && !isMoviesLoading.value,
+      onAppend: () => {
+        isMoviesLoadingMore.value = true
+      },
+      onFresh: () => {
+        isMoviesLoading.value = true
+        isMoviesLoadingMore.value = false
+        movies.value = []
+        moviesCursor.value = null
+        hasMoreMovies.value = false
+      },
+      onSettle: () => {
         isMoviesLoading.value = false
         isMoviesLoadingMore.value = false
       }
-    }
+    }, async (isCurrent) => {
+      try {
+        const response = await movieApi.getMovies({
+          title: listTitle.value || undefined,
+          type: listType.value ?? undefined,
+          genre_id: listGenreIds.value.length ? listGenreIds.value : undefined,
+          year: listYears.value.length ? listYears.value : undefined,
+          sort: listSort.value || undefined,
+          cursor: append ? moviesCursor.value : null
+        })
+
+        if (!isCurrent()) {
+          return
+        }
+
+        const page = mergeCursorPage(movies.value, mapMoviesResponse(response), response, append)
+        movies.value = page.items
+        moviesCursor.value = page.cursor
+        hasMoreMovies.value = page.hasMore
+
+        if (typeof response.meta?.total === 'number') {
+          moviesTotal.value = response.meta.total
+        }
+      } catch (error) {
+        if (!isCurrent()) {
+          return
+        }
+
+        handleApiError(error)
+      }
+    })
   }
 
   async function getMovie(id: string): Promise<IMovie | null> {

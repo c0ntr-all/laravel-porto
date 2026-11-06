@@ -1,11 +1,23 @@
 import { boot } from 'quasar/wrappers'
 import axios, { AxiosInstance } from 'axios'
 import { Notify } from 'quasar'
+import {
+  getAccessToken,
+  getSessionEpoch,
+  handleUnauthorized,
+  setUnauthorizedHandler
+} from 'src/services/auth-session'
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $axios: AxiosInstance;
     $api: AxiosInstance;
+  }
+}
+
+declare module 'axios' {
+  interface InternalAxiosRequestConfig {
+    sessionEpoch?: number;
   }
 }
 
@@ -18,12 +30,27 @@ declare module '@vue/runtime-core' {
 const api = axios.create({ baseURL: `${process.env.host}/` })
 
 export default boot(({ app, router }) => {
+  setUnauthorizedHandler(async () => {
+    const { useUserStore } = await import('src/stores/modules/userStore')
+    useUserStore().clearLocalSession()
+
+    const { resetSessionStores } = await import('src/stores/resetSessionStores')
+    resetSessionStores()
+
+    if (router.currentRoute.value.name !== 'login') {
+      await router.push({ name: 'login' })
+    }
+  })
+
   // for use inside Vue files (Options API) through this.$axios and this.$api
   api.interceptors.request.use(config => {
     config.headers.accept = 'application/json, text/plain, */*'
-    if (localStorage.access_token) {
-      config.headers.authorization = `Bearer ${localStorage.access_token}`
+    const accessToken = getAccessToken()
+    if (accessToken) {
+      config.headers.authorization = `Bearer ${accessToken}`
     }
+
+    config.sessionEpoch = getSessionEpoch()
 
     return config
   }, error => {
@@ -31,13 +58,23 @@ export default boot(({ app, router }) => {
   })
 
   api.interceptors.response.use(
-    response => response,
+    response => {
+      const epoch = response.config.sessionEpoch
+      if (typeof epoch === 'number' && epoch !== getSessionEpoch()) {
+        return Promise.reject(new axios.CanceledError())
+      }
+
+      return response
+    },
     error => {
+      if (axios.isCancel(error)) {
+        return Promise.reject(error)
+      }
+
       if (error.response) {
         // Auth errors
         if (error.response.status === 401) {
-          localStorage.removeItem('access_token')
-          router.push('/login')
+          handleUnauthorized()
         }
       } else if (error.request) {
         // Errors that did not receive a response from the server (including CORS errors)

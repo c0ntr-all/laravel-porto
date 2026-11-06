@@ -8,15 +8,20 @@ use App\Containers\MovieSection\Folder\UI\API\Requests\AttachMovieRequest;
 use App\Containers\MovieSection\Folder\UI\API\Transformers\FolderTransformer;
 use App\Containers\MovieSection\Movie\Tasks\FindMovieByIdTask;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class AttachMovieToFolderAction extends BaseAction
+class AttachMovieToFolderAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::MOVIE_FOLDER;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::ATTACHED;
+
     public function __construct(
         private readonly AttachMovieToFolderTask $attachMovieToFolderTask,
         private readonly FindMovieByIdTask $findMovieByIdTask,
     ) {
+        parent::__construct();
     }
 
     public function asController(Folder $folder, AttachMovieRequest $request): JsonResponse
@@ -25,6 +30,8 @@ class AttachMovieToFolderAction extends BaseAction
 
         $movie = $this->findMovieByIdTask->run((int) $request->validated('movie_id'));
         $folder = $this->attachMovieToFolderTask->run($folder, $movie);
+
+        $this->recordUseCase($folder);
 
         return fractal($folder, new FolderTransformer())
             ->withResourceName(ContainerAliasEnum::MOVIE_FOLDER->value)

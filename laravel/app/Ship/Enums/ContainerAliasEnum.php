@@ -30,6 +30,12 @@ enum ContainerAliasEnum: string
     case MUSIC_HISTORY = 'music_history';
     // TaskManagerSection
     case TM_TASK = 'tm_tasks';
+    case TM_TASK_LIST = 'tm_task_lists';
+    case TM_CHECKLIST = 'tm_checklists';
+    case TM_CHECKLIST_ITEM = 'tm_checklist_items';
+    case TM_REMINDER = 'tm_reminders';
+    case TM_TASK_PROGRESS = 'tm_task_progress';
+    case TM_TASK_TEMPLATE = 'tm_task_templates';
     // LifelogSection
     case LL_POST = 'll_posts';
     case LL_PRESET = 'll_presets';
@@ -77,6 +83,12 @@ enum ContainerAliasEnum: string
             self::MUSIC_TAG => 'Музыкальный тег',
             self::MUSIC_HISTORY => 'История прослушивания',
             self::TM_TASK => 'Задача',
+            self::TM_TASK_LIST => 'Список задач',
+            self::TM_CHECKLIST => 'Чеклист',
+            self::TM_CHECKLIST_ITEM => 'Пункт чеклиста',
+            self::TM_REMINDER => 'Напоминание',
+            self::TM_TASK_PROGRESS => 'Прогресс задачи',
+            self::TM_TASK_TEMPLATE => 'Шаблон задачи',
             self::LL_POST => 'Пост',
             self::LL_PRESET => 'Пресет',
             self::DASHBOARD => 'Дашборд',

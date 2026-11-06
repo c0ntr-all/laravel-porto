@@ -5,7 +5,8 @@ namespace App\Containers\DashboardSection\Widget\Models;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\DashboardSection\Dashboard\Models\Dashboard;
 use App\Containers\DashboardSection\Widget\Enums\WidgetSizeEnum;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,13 +26,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Dashboard $dashboard
  * @mixin \Eloquent
  */
-class Widget extends Model
+class Widget extends ActivityLoggableModel
 {
     use HasUser,
         SoftDeletes;
 
     /** @var array<string, mixed>|null */
     public ?array $resolvedPayload = null;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::DASHBOARD_WIDGET;
 
     protected $table = 'dashboard_widgets';
 

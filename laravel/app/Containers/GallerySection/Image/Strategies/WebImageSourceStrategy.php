@@ -2,8 +2,9 @@
 
 namespace App\Containers\GallerySection\Image\Strategies;
 
-use Illuminate\Support\Facades\Http;
+use App\Ship\Helpers\PublicHttps;
 use Intervention\Gif\Exceptions\NotReadableException;
+use InvalidArgumentException;
 use Intervention\Image\Image;
 use Intervention\Image\Laravel\Facades\Image as ImageFacade;
 
@@ -17,17 +18,11 @@ class WebImageSourceStrategy extends AbstractImageSourceStrategy
             $fullPath = $this->getFullPath();
 
             try {
-                $contents = Http::timeout(30)
-                    ->withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-                    ])
-                    ->withOptions(['verify' => false])
-                    ->get($fullPath)
-                    ->throw()
-                    ->body();
+                $contents = PublicHttps::get($fullPath, PublicHttps::MAX_IMAGE_BYTES);
 
                 $this->image = ImageFacade::read($contents)->orient();
+            } catch (InvalidArgumentException $e) {
+                throw $e;
             } catch (NotReadableException|\Throwable $e) {
                 throw new \RuntimeException(
                     "Unable to load image from path: {$fullPath}. " . $e->getMessage(),

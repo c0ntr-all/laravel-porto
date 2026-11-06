@@ -5,12 +5,13 @@ namespace App\Containers\TaskManagerSection\Reminder\Jobs;
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\Reminder\Tasks\ProcessDueReminderTask;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SendReminderNotificationJob implements ShouldQueue
+class SendReminderNotificationJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -22,6 +23,16 @@ class SendReminderNotificationJob implements ShouldQueue
     public function __construct(
         public readonly int $reminderId
     ) {
+    }
+
+    public function uniqueId(): string
+    {
+        return (string) $this->reminderId;
+    }
+
+    public function uniqueFor(): int
+    {
+        return 120;
     }
 
     public function handle(ProcessDueReminderTask $processDueReminderTask): void

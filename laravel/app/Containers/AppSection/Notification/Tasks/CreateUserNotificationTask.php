@@ -7,6 +7,8 @@ use App\Containers\AppSection\Notification\Data\Repositories\UserNotificationRep
 use App\Containers\AppSection\Notification\Events\UserNotificationCreated;
 use App\Containers\AppSection\Notification\Models\UserNotification;
 use App\Ship\Parents\Tasks\Task as ParentTask;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CreateUserNotificationTask extends ParentTask
 {
@@ -18,9 +20,17 @@ class CreateUserNotificationTask extends ParentTask
     public function run(CreateUserNotificationDto $dto): UserNotification
     {
         $notification = $this->userNotificationRepository->create($dto->toArray());
-        $unreadCount = $this->userNotificationRepository->countUnread($dto->user_id);
 
-        UserNotificationCreated::dispatch($notification, $unreadCount);
+        try {
+            $unreadCount = $this->userNotificationRepository->countUnread($dto->user_id);
+            UserNotificationCreated::dispatch($notification, $unreadCount);
+        } catch (Throwable $exception) {
+            Log::warning('notification.broadcast_failed', [
+                'user_notification_id' => $notification->id,
+                'user_id' => $notification->user_id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
         return $notification;
     }

@@ -5,8 +5,9 @@ namespace App\Containers\TaskManagerSection\Reminder\Models;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Reminder\Enums\ReminderTimeUnitEnum;
 use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -27,9 +28,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @mixin \Eloquent
  */
-class Reminder extends Model
+class Reminder extends ActivityLoggableModel
 {
     use HasUser;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_REMINDER;
 
     protected $table = 'tm_reminders';
 

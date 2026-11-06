@@ -10,18 +10,28 @@ use App\Containers\NotesSection\Note\Tasks\UpdateNoteTask;
 use App\Containers\NotesSection\Note\UI\API\Requests\UpdateRequest;
 use App\Containers\NotesSection\Note\UI\API\Transformers\NoteTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class UpdateNoteAction extends BaseAction
+class UpdateNoteAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::NOTE;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
+
     public function __construct(
         private readonly UpdateNoteTask $updateNoteTask,
-    ) {}
+    ) {
+        parent::__construct();
+    }
 
     public function handle(Note $note, UpdateNoteDto $dto): Note
     {
-        return $this->updateNoteTask->run($note, $dto);
+        $note = $this->updateNoteTask->run($note, $dto);
+
+        $this->recordUseCase($note);
+
+        return $note;
     }
 
     public function asController(Note $note, UpdateRequest $request): JsonResponse

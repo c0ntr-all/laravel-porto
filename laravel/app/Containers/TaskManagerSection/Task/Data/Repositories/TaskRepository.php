@@ -123,7 +123,7 @@ class TaskRepository
 
     public function nextPriority(?int $taskListId, ?int $parentId): int
     {
-        $max = $this->siblingQuery($taskListId, $parentId)->max('priority');
+        $max = $this->siblingQuery($taskListId, $parentId)->lockForUpdate()->max('priority');
 
         return $max === null ? 0 : ((int) $max) + 1;
     }

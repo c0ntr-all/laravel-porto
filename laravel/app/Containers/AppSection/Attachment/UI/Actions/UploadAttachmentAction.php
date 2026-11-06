@@ -10,17 +10,22 @@ use App\Containers\AppSection\Attachment\Tasks\ValidateAttachableOwnershipTask;
 use App\Containers\AppSection\Attachment\UI\API\Requests\UploadRequest;
 use App\Containers\AppSection\Attachment\UI\API\Transformers\AttachmentTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
-class UploadAttachmentAction extends BaseAction
+class UploadAttachmentAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::ATTACHMENT;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::ATTACHED;
+
     public function __construct(
         private readonly CreateAttachmentTask $createAttachmentTask,
         private readonly ResolveFileableFromUploadTask $resolveFileableFromUploadTask,
         private readonly ValidateAttachableOwnershipTask $validateAttachableOwnershipTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(AttachmentsCreateDto $attachmentsCreateDto): Collection
@@ -46,6 +51,10 @@ class UploadAttachmentAction extends BaseAction
                 'fileable_type' => $fileableReference->fileable_type,
                 'fileable_id' => $fileableReference->fileable_id,
             ]));
+
+            if ($attachment->wasRecentlyCreated) {
+                $this->recordUseCase($attachment);
+            }
 
             $attachments[] = $attachment->load('fileable');
         }

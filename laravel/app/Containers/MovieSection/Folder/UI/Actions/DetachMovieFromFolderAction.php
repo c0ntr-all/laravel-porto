@@ -8,14 +8,19 @@ use App\Containers\MovieSection\Folder\UI\API\Requests\DetachMovieRequest;
 use App\Containers\MovieSection\Folder\UI\API\Transformers\FolderTransformer;
 use App\Containers\MovieSection\Movie\Models\Movie;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class DetachMovieFromFolderAction extends BaseAction
+class DetachMovieFromFolderAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::MOVIE_FOLDER;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::DETACHED;
+
     public function __construct(
         private readonly DetachMovieFromFolderTask $detachMovieFromFolderTask,
     ) {
+        parent::__construct();
     }
 
     public function asController(Folder $folder, Movie $movie, DetachMovieRequest $request): JsonResponse
@@ -23,6 +28,8 @@ class DetachMovieFromFolderAction extends BaseAction
         abort_unless((int) $folder->user_id === (int) $request->user()->id, 404);
 
         $folder = $this->detachMovieFromFolderTask->run($folder, $movie);
+
+        $this->recordUseCase($folder);
 
         return fractal($folder, new FolderTransformer())
             ->withResourceName(ContainerAliasEnum::MOVIE_FOLDER->value)

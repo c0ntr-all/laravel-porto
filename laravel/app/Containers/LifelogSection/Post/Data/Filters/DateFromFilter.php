@@ -5,6 +5,7 @@ namespace App\Containers\LifelogSection\Post\Data\Filters;
 use App\Ship\Parents\QueryBuilder\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class DateFromFilter implements Filter
 {
@@ -31,7 +32,9 @@ class DateFromFilter implements Filter
         try {
             return Carbon::parse((string) $value)->toDateString();
         } catch (\Throwable) {
-            return null;
+            throw ValidationException::withMessages([
+                'filter.date_from' => ['The date_from filter must be a valid date.'],
+            ]);
         }
     }
 }

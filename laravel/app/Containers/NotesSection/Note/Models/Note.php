@@ -7,9 +7,10 @@ namespace App\Containers\NotesSection\Note\Models;
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\NotesSection\Note\Support\NotePlainText;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -35,7 +36,7 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-class Note extends Model
+class Note extends ActivityLoggableModel
 {
     use HasFactory,
         HasUser,
@@ -53,6 +54,8 @@ class Note extends Model
      * @var list<string>
      */
     public array $ambiguousLinks = [];
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::NOTE;
 
     protected $table = 'notes';
 

@@ -7,9 +7,11 @@ use App\Containers\AppSection\Notification\Contracts\NotificationChannelInterfac
 use App\Containers\AppSection\Notification\Data\DTO\OutgoingNotificationData;
 use App\Containers\AppSection\Notification\Enums\NotificationChannelEnum;
 use App\Containers\AppSection\Notification\Mails\NotificationMail;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
-use Illuminate\Notifications\Notifiable;
+use Throwable;
 
 class EmailChannel implements NotificationChannelInterface
 {
@@ -20,13 +22,19 @@ class EmailChannel implements NotificationChannelInterface
 
     public function send(object $notifiable, OutgoingNotificationData $notification): void
     {
-        $email = $this->resolveEmail($notifiable);
+        try {
+            $email = $this->resolveEmail($notifiable);
 
-        if ($email === null || $email === '') {
-            throw new InvalidArgumentException('Notifiable does not provide a mail address.');
+            if ($email === null || $email === '') {
+                throw new InvalidArgumentException('Notifiable does not provide a mail address.');
+            }
+
+            Mail::to($email)->send(new NotificationMail($notification));
+        } catch (Throwable $exception) {
+            Log::warning('notification.email_failed', [
+                'message' => $exception->getMessage(),
+            ]);
         }
-
-        Mail::to($email)->send(new NotificationMail($notification));
     }
 
     private function resolveEmail(object $notifiable): ?string

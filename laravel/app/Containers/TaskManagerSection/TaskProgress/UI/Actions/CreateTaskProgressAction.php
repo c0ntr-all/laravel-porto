@@ -8,21 +8,30 @@ use App\Containers\TaskManagerSection\TaskProgress\Models\TaskProgress;
 use App\Containers\TaskManagerSection\TaskProgress\Tasks\CreateTaskProgressTask;
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Requests\TaskProgressCreateRequest;
 use App\Containers\TaskManagerSection\TaskProgress\UI\API\Transformers\TaskProgressTransformer;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
 
-class CreateTaskProgressAction extends BaseAction
+class CreateTaskProgressAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK_PROGRESS;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
 
     public function __construct(
         private readonly CreateTaskProgressTask $createTaskProgressTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(TaskProgressCreateData $dto): TaskProgress
     {
-        return $this->createTaskProgressTask->run($dto);
+        $taskProgress = $this->createTaskProgressTask->run($dto);
+
+        $this->recordUseCase($taskProgress);
+
+        return $taskProgress;
     }
 
     public function asController(TaskProgressCreateRequest $request, Task $task): JsonResponse

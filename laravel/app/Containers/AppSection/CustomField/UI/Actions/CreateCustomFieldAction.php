@@ -8,15 +8,19 @@ use App\Containers\AppSection\CustomField\Tasks\CreateCustomFieldTask;
 use App\Containers\AppSection\CustomField\UI\API\Requests\CreateCustomFieldRequest;
 use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Exceptions\CreateResourceFailedException;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class CreateCustomFieldAction extends BaseAction
+class CreateCustomFieldAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::CUSTOM_FIELD;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
     public function __construct(
         private readonly CreateCustomFieldTask $createCustomFieldTask,
     ) {
+        parent::__construct();
     }
 
     /**
@@ -24,7 +28,11 @@ class CreateCustomFieldAction extends BaseAction
      */
     public function handle(CustomFieldCreateData $dto): CustomField
     {
-        return $this->createCustomFieldTask->run($dto);
+        $customField = $this->createCustomFieldTask->run($dto);
+
+        $this->recordUseCase($customField);
+
+        return $customField;
     }
 
     public function asController(CreateCustomFieldRequest $request): JsonResponse

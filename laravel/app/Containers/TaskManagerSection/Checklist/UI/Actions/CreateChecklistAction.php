@@ -8,21 +8,30 @@ use App\Containers\TaskManagerSection\Checklist\Tasks\CreateChecklistTask;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Requests\ChecklistCreateRequest;
 use App\Containers\TaskManagerSection\Checklist\UI\API\Transformers\ChecklistTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
 
-class CreateChecklistAction extends BaseAction
+class CreateChecklistAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_CHECKLIST;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
 
     public function __construct(
         private readonly CreateChecklistTask $createChecklistTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(ChecklistCreateData $dto): Checklist
     {
-        return $this->createChecklistTask->run($dto);
+        $checklist = $this->createChecklistTask->run($dto);
+
+        $this->recordUseCase($checklist);
+
+        return $checklist;
     }
 
     public function asController(ChecklistCreateRequest $request, Task $task): JsonResponse

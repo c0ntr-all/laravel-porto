@@ -5,9 +5,10 @@ namespace App\Containers\MovieSection\Folder\Models;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\MovieSection\Folder\Support\FolderMoviesCountCache;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
@@ -24,9 +25,11 @@ use Illuminate\Support\Carbon;
  * @property-read User $user
  * @property-read Collection<int, Movie> $movies
  */
-class Folder extends Model
+class Folder extends ActivityLoggableModel
 {
     use HasFactory;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::MOVIE_FOLDER;
 
     protected $table = 'movie_folders';
 

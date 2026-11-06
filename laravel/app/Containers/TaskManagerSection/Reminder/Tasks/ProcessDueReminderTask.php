@@ -2,10 +2,12 @@
 
 namespace App\Containers\TaskManagerSection\Reminder\Tasks;
 
+use App\Containers\TaskManagerSection\Reminder\Data\Repositories\ReminderOccurrenceRepository;
 use App\Containers\TaskManagerSection\Reminder\Data\Repositories\ReminderRepository;
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Ship\Parents\Tasks\Task as ParentTask;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProcessDueReminderTask extends ParentTask
@@ -13,7 +15,8 @@ class ProcessDueReminderTask extends ParentTask
     public function __construct(
         private readonly SendReminderNotificationTask $sendReminderNotificationTask,
         private readonly MarkReminderAsNotifiedTask $markReminderAsNotifiedTask,
-        private readonly ReminderRepository $reminderRepository
+        private readonly ReminderRepository $reminderRepository,
+        private readonly ReminderOccurrenceRepository $occurrenceRepository
     ) {
     }
 
@@ -44,19 +47,90 @@ class ProcessDueReminderTask extends ParentTask
         });
 
         if ($claimed === null) {
-            return $reminder;
+            return $this->recoverUnclaimed($reminder);
         }
 
         try {
             $this->sendReminderNotificationTask->run($claimed);
-            $result = $this->markReminderAsNotifiedTask->run($claimed);
 
-            return $result['reminder'];
-        } catch (Throwable $exception) {
-            $claimed->next_remind_at = now();
+            $claimed->last_reminded_at = now();
             $this->reminderRepository->save($claimed);
 
-            throw $exception;
+            return $this->markReminderAsNotifiedTask->run($claimed)['reminder'];
+        } catch (Throwable $exception) {
+            $claimed->refresh();
+
+            if ($claimed->last_reminded_at === null) {
+                $claimed->next_remind_at = now();
+                $this->reminderRepository->save($claimed);
+
+                throw $exception;
+            }
+
+            try {
+                return $this->markIfUnrecorded($claimed);
+            } catch (Throwable $markException) {
+                Log::warning('reminder.notify.mark_failed', [
+                    'reminder_id' => $claimed->id,
+                    'message' => $markException->getMessage(),
+                ]);
+
+                throw $markException;
+            }
         }
+    }
+
+    private function recoverUnclaimed(Reminder $reminder): Reminder
+    {
+        return DB::transaction(function () use ($reminder) {
+            /** @var Reminder|null $fresh */
+            $fresh = Reminder::withoutGlobalScopes()
+                ->whereKey($reminder->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($fresh === null) {
+                return $reminder;
+            }
+
+            if ($fresh->next_remind_at === null
+                && $fresh->last_reminded_at !== null
+                && !$this->hasNotifiedOccurrence($fresh)
+            ) {
+                return $this->markIfUnrecorded($fresh);
+            }
+
+            // Claimed, then the worker died before the notification was stored.
+            if ($fresh->is_active
+                && $fresh->next_remind_at === null
+                && $fresh->last_reminded_at === null
+            ) {
+                $fresh->next_remind_at = now();
+                $this->reminderRepository->save($fresh);
+            }
+
+            return $fresh;
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    private function markIfUnrecorded(Reminder $reminder): Reminder
+    {
+        if ($this->hasNotifiedOccurrence($reminder)) {
+            return $reminder;
+        }
+
+        return $this->markReminderAsNotifiedTask->run($reminder)['reminder'];
+    }
+
+    private function hasNotifiedOccurrence(Reminder $reminder): bool
+    {
+        if ($reminder->datetime === null) {
+            return false;
+        }
+
+        return $this->occurrenceRepository->findOpenForSchedule($reminder, $reminder->datetime) !== null;
     }
 }

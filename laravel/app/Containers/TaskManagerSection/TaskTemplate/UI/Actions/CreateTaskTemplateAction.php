@@ -7,20 +7,32 @@ use App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate;
 use App\Containers\TaskManagerSection\TaskTemplate\Tasks\CreateTaskTemplateTask;
 use App\Containers\TaskManagerSection\TaskTemplate\UI\API\Requests\CreateRequest;
 use App\Containers\TaskManagerSection\TaskTemplate\UI\API\Transformers\TaskTemplateTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class CreateTaskTemplateAction extends BaseAction
+class CreateTaskTemplateAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK_TEMPLATE;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
+
     public function __construct(
         private readonly CreateTaskTemplateTask $createTaskTemplateTask
     ) {
+        parent::__construct();
     }
 
     public function handle(TaskTemplateCreateData $dto): TaskTemplate
     {
-        return DB::transaction(fn () => $this->createTaskTemplateTask->run($dto));
+        return DB::transaction(function () use ($dto): TaskTemplate {
+            $taskTemplate = $this->createTaskTemplateTask->run($dto);
+
+            $this->recordUseCase($taskTemplate);
+
+            return $taskTemplate;
+        });
     }
 
     public function asController(CreateRequest $request): JsonResponse

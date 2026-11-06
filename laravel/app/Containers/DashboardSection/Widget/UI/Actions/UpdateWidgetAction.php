@@ -12,19 +12,24 @@ use App\Containers\DashboardSection\Widget\Tasks\UpdateWidgetTask;
 use App\Containers\DashboardSection\Widget\Tasks\ValidateWidgetConfigTask;
 use App\Containers\DashboardSection\Widget\UI\API\Requests\UpdateRequest;
 use App\Containers\DashboardSection\Widget\UI\API\Transformers\WidgetTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
-class UpdateWidgetAction extends BaseAction
+class UpdateWidgetAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::DASHBOARD_WIDGET;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
     public function __construct(
         private readonly WidgetRegistry $widgetRegistry,
         private readonly ValidateWidgetConfigTask $validateWidgetConfigTask,
         private readonly UpdateWidgetTask $updateWidgetTask,
         private readonly AttachWidgetPayloadsTask $attachWidgetPayloadsTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(Widget $widget, UpdateWidgetDto $dto): Widget
@@ -46,6 +51,8 @@ class UpdateWidgetAction extends BaseAction
 
         $widget = $this->updateWidgetTask->run($widget, $dto);
         $this->attachWidgetPayloadsTask->run(collect([$widget]));
+
+        $this->recordUseCase($widget);
 
         return $widget;
     }

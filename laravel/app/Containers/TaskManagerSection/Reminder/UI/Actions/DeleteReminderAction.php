@@ -7,20 +7,31 @@ use App\Containers\TaskManagerSection\Reminder\Tasks\DeleteReminderTask;
 use App\Containers\TaskManagerSection\Reminder\Tasks\GetReminderByTaskTask;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Requests\ReminderDeleteRequest;
 use App\Containers\TaskManagerSection\Task\Models\Task;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
-class DeleteReminderAction extends BaseAction
+class DeleteReminderAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_REMINDER;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::DELETED;
+
     public function __construct(
         private readonly GetReminderByTaskTask $getReminderByTaskTask,
         private readonly DeleteReminderTask $deleteReminderTask
     ) {
+        parent::__construct();
     }
 
     public function handle(Reminder $reminder): bool
     {
-        return $this->deleteReminderTask->run($reminder);
+        return DB::transaction(function () use ($reminder): bool {
+            $this->recordUseCase($reminder);
+
+            return $this->deleteReminderTask->run($reminder);
+        });
     }
 
     public function asController(Task $task, ReminderDeleteRequest $request): JsonResponse

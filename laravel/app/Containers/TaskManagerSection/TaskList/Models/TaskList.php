@@ -4,8 +4,9 @@ namespace App\Containers\TaskManagerSection\TaskList\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Task\Models\Task;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use App\Ship\Models\Traits\HasUuidV7;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -18,11 +19,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @mixin \Eloquent
  */
-class TaskList extends Model
+class TaskList extends ActivityLoggableModel
 {
     use HasUser,
         HasUuidV7,
         SoftDeletes;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_TASK_LIST;
 
     protected $table = 'tm_task_lists';
 

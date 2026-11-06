@@ -9,6 +9,7 @@ use App\Containers\AppSection\User\Data\DTO\CreateUserDto;
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\AppSection\User\Tasks\CreateUserTask;
 use App\Ship\Parents\Actions\BaseAction;
+use Illuminate\Support\Facades\DB;
 
 class RegisterUserAction extends BaseAction
 {
@@ -27,15 +28,17 @@ class RegisterUserAction extends BaseAction
 
     public function asController(RegisterRequest $request)
     {
-        $dto = CreateUserDto::from($request->validated());
+        $validated = $request->validated();
+        unset($validated['password_confirm']);
 
-        $user = $this->handle($dto);
-        $dto = CreatePasswordGrantTokenDto::from($request->validated());
-        $response = $this->createPasswordGrantTokenTask->run($dto);
+        $user = DB::transaction(fn () => $this->handle(CreateUserDto::from($validated)));
+        $response = $this->createPasswordGrantTokenTask->run(CreatePasswordGrantTokenDto::from($validated));
 
         if ($response->successful()) {
             return $response->json();
         }
+
+        $user->delete();
 
         if ($response->status() === 400) {
             $decoded = json_decode($response->body(), true);

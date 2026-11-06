@@ -3,6 +3,7 @@
 namespace App\Containers\MusicSection\Upload\UI\Actions;
 
 use App\Containers\MusicSection\Upload\Data\DTO\CreateUploadDto;
+use App\Containers\MusicSection\Upload\Enums\UploadStatusEnum;
 use App\Containers\MusicSection\Upload\Helpers\PathHelper;
 use App\Containers\MusicSection\Upload\Jobs\ImportArtistMusicJob;
 use App\Containers\MusicSection\Upload\Models\MusicUpload;
@@ -26,8 +27,12 @@ class CreateUploadAction extends BaseAction
 
         try {
             ImportArtistMusicJob::dispatch($upload);
-        } catch (Throwable) {
-            // Session already contains failed status and error_message.
+        } catch (Throwable $exception) {
+            $upload->update([
+                'status' => UploadStatusEnum::Failed,
+                'error_message' => $exception->getMessage(),
+                'finished_at' => now(),
+            ]);
         }
 
         return $upload->fresh(['artists', 'albums.artists', 'tracks.album', 'tracks.artist']) ?? $upload;

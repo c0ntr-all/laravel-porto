@@ -4,7 +4,8 @@ namespace App\Containers\DashboardSection\Dashboard\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\DashboardSection\Widget\Models\Widget;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -21,10 +22,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Widget> $widgets
  * @mixin \Eloquent
  */
-class Dashboard extends Model
+class Dashboard extends ActivityLoggableModel
 {
     use HasUser,
         SoftDeletes;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::DASHBOARD;
 
     protected $table = 'dashboards';
 

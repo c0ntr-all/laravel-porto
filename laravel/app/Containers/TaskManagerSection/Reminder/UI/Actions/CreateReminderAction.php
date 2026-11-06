@@ -8,19 +8,29 @@ use App\Containers\TaskManagerSection\Reminder\Tasks\CreateReminderTask;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Requests\ReminderCreateRequest;
 use App\Containers\TaskManagerSection\Reminder\UI\API\Transformers\ReminderTransformer;
 use App\Containers\TaskManagerSection\Task\Models\Task;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class CreateReminderAction extends BaseAction
+class CreateReminderAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_REMINDER;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
+
     public function __construct(
         private readonly CreateReminderTask $createReminderTask
     ) {
+        parent::__construct();
     }
 
     public function handle(ReminderCreateData $dto): Reminder
     {
-        return $this->createReminderTask->run($dto);
+        $reminder = $this->createReminderTask->run($dto);
+
+        $this->recordUseCase($reminder);
+
+        return $reminder;
     }
 
     public function asController(ReminderCreateRequest $request, Task $task): JsonResponse

@@ -3,7 +3,8 @@
 namespace App\Containers\AppSection\Comment\Models;
 
 use App\Containers\AppSection\User\Models\User;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,9 +38,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|Comment withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Comment withoutTrashed()
  */
-class Comment extends Model
+class Comment extends ActivityLoggableModel
 {
     use SoftDeletes;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::COMMENTS;
 
     protected $fillable = [
         'user_id',

@@ -5,16 +5,23 @@ namespace App\Containers\AppSection\Comment\UI\Actions;
 use App\Containers\AppSection\Comment\Models\Comment;
 use App\Containers\AppSection\Comment\Tasks\DeleteCommentTask;
 use App\Containers\AppSection\Comment\UI\API\Requests\DeleteRequest;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-class DeleteCommentAction extends BaseAction
+class DeleteCommentAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::COMMENTS;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::DELETED;
+
     public function __construct(
         private readonly DeleteCommentTask $deleteCommentTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(Comment $comment, int $userId): bool
@@ -23,7 +30,11 @@ class DeleteCommentAction extends BaseAction
             throw new AccessDeniedHttpException('You can change only your own comments.');
         }
 
-        return $this->deleteCommentTask->run($comment);
+        return DB::transaction(function () use ($comment): bool {
+            $this->recordUseCase($comment);
+
+            return $this->deleteCommentTask->run($comment);
+        });
     }
 
     public function asController(Comment $comment, DeleteRequest $request): JsonResponse

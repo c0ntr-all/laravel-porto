@@ -7,19 +7,29 @@ use App\Containers\DashboardSection\Dashboard\Models\Dashboard;
 use App\Containers\DashboardSection\Dashboard\Tasks\UpdateDashboardTask;
 use App\Containers\DashboardSection\Dashboard\UI\API\Requests\UpdateRequest;
 use App\Containers\DashboardSection\Dashboard\UI\API\Transformers\DashboardTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class UpdateDashboardAction extends BaseAction
+class UpdateDashboardAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::DASHBOARD;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
+
     public function __construct(
         private readonly UpdateDashboardTask $updateDashboardTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(Dashboard $dashboard, UpdateDashboardDto $dto): Dashboard
     {
-        return $this->updateDashboardTask->run($dashboard, $dto)->load('widgets');
+        $dashboard = $this->updateDashboardTask->run($dashboard, $dto)->load('widgets');
+
+        $this->recordUseCase($dashboard);
+
+        return $dashboard;
     }
 
     public function asController(Dashboard $dashboard, UpdateRequest $request): JsonResponse

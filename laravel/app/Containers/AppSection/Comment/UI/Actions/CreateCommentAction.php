@@ -8,17 +8,21 @@ use App\Containers\AppSection\Comment\Tasks\CreateCommentTask;
 use App\Containers\AppSection\Comment\UI\API\Requests\CreateRequest;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
 use App\Ship\Exceptions\CreateResourceFailedException;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 
-class CreateCommentAction extends BaseAction
+class CreateCommentAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::COMMENTS;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
 
     public function __construct(
         private readonly CreateCommentTask $commentCreateTask
     )
     {
+        parent::__construct();
     }
 
     /**
@@ -26,7 +30,11 @@ class CreateCommentAction extends BaseAction
      */
     public function handle(CommentCreateData $dto): Comment
     {
-        return $this->commentCreateTask->run($dto);
+        $comment = $this->commentCreateTask->run($dto);
+
+        $this->recordUseCase($comment);
+
+        return $comment;
     }
 
     public function asController(CreateRequest $request): JsonResponse

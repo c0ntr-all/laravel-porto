@@ -8,19 +8,27 @@ use App\Containers\AppSection\CustomField\Tasks\UpdateCustomFieldTask;
 use App\Containers\AppSection\CustomField\UI\API\Requests\UpdateCustomFieldRequest;
 use App\Containers\AppSection\CustomField\UI\API\Transformers\CustomFieldTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class UpdateCustomFieldAction extends BaseAction
+class UpdateCustomFieldAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::CUSTOM_FIELD;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
     public function __construct(
         private readonly UpdateCustomFieldTask $updateCustomFieldTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(CustomField $customField, CustomFieldUpdateData $dto): CustomField
     {
-        return $this->updateCustomFieldTask->run($customField, $dto);
+        $customField = $this->updateCustomFieldTask->run($customField, $dto);
+
+        $this->recordUseCase($customField);
+
+        return $customField;
     }
 
     public function asController(CustomField $customField, UpdateCustomFieldRequest $request): JsonResponse

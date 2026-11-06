@@ -6,7 +6,10 @@ namespace App\Containers\NotesSection\Note\Tests\Functional;
 
 use App\Containers\AppSection\User\Models\User;
 use App\Containers\NotesSection\Note\Models\Note;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class NoteCrudTest extends TestCase
@@ -47,6 +50,13 @@ class NoteCrudTest extends TestCase
             'name' => 'Идеи',
             'user_id' => $this->user->id,
         ]);
+
+        $this->assertSame(1, DB::table('activity_use_case_logs')->where([
+            'user_id' => $this->user->id,
+            'loggable_type' => ContainerAliasEnum::NOTE->value,
+            'loggable_id' => (string) $response->json('data.id'),
+            'event_type' => EventTypesEnum::CREATED->value,
+        ])->count());
     }
 
     public function test_user_can_list_search_and_open_own_note(): void
@@ -130,6 +140,13 @@ class NoteCrudTest extends TestCase
             ->assertJsonPath('meta.message', 'Note successfully deleted!');
 
         $this->assertSoftDeleted('notes', ['id' => $note->id]);
+
+        $this->assertSame(1, DB::table('activity_use_case_logs')->where([
+            'user_id' => $this->user->id,
+            'loggable_type' => ContainerAliasEnum::NOTE->value,
+            'loggable_id' => (string) $note->id,
+            'event_type' => EventTypesEnum::DELETED->value,
+        ])->count());
 
         $this->actingAs($this->user, 'api')
             ->getJson('/api/v1/notes/'.$note->id)

@@ -3,4 +3,4 @@
 use App\Containers\AppSection\Registration\UI\Actions\RegisterUserAction;
 use Illuminate\Support\Facades\Route;
 
-Route::post('register', RegisterUserAction::class);
+Route::post('register', RegisterUserAction::class)->middleware('throttle:5,1');

@@ -4,7 +4,8 @@ namespace App\Containers\TaskManagerSection\Checklist\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Task\Models\Task;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -19,9 +20,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @mixin \Eloquent
  */
-class Checklist extends Model
+class Checklist extends ActivityLoggableModel
 {
     use HasUser;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_CHECKLIST;
 
     protected $table = 'tm_checklists';
 

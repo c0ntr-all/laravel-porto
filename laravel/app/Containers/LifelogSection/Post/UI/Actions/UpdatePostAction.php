@@ -57,6 +57,7 @@ class UpdatePostAction extends UseCaseAction
             $updatedPost = $this->updatePostTask->run($post, $postUpdateDto);
 
             $tagsIdsForSync = [];
+            $tagsWereSent = !($postUpdateContextDto->tags instanceof Optional);
             $newTags = $this->optionalArray($postUpdateContextDto->new_tags);
             $existingTagIds = $this->optionalArray($postUpdateContextDto->tags);
 
@@ -92,7 +93,7 @@ class UpdatePostAction extends UseCaseAction
                 $tagsIdsForSync = array_merge($tagsIdsForSync, $existingTagIds);
             }
 
-            if ($tagsIdsForSync !== []) {
+            if ($tagsWereSent || $tagsIdsForSync !== []) {
                 $this->syncPostTagsTask->run($post, $postUpdateDto->user_id, $tagsIdsForSync);
             }
 

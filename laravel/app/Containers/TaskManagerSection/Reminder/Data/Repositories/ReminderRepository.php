@@ -4,6 +4,7 @@ namespace App\Containers\TaskManagerSection\Reminder\Data\Repositories;
 
 use App\Containers\TaskManagerSection\Reminder\Data\DTO\ReminderCreateData;
 use App\Containers\TaskManagerSection\Reminder\Data\DTO\ReminderUpdateData;
+use App\Containers\TaskManagerSection\Reminder\Enums\ReminderTimeUnitEnum;
 use App\Containers\TaskManagerSection\Reminder\Models\Reminder;
 use App\Containers\TaskManagerSection\Reminder\Services\ReminderScheduleCalculator;
 use Illuminate\Database\Eloquent\Collection;
@@ -53,6 +54,8 @@ class ReminderRepository
 
     public function update(Reminder $reminder, ReminderUpdateData $dto): Reminder
     {
+        $awaitingCompletion = $reminder->isAwaitingCompletion();
+        $scheduleChanged = $this->scheduleInputChanged($reminder, $dto);
         $attributes = [];
 
         if (!($dto->datetime instanceof Optional)) {
@@ -78,20 +81,52 @@ class ReminderRepository
             $reminder->fill($attributes);
         }
 
-        $eventAt = $reminder->datetime;
-        $isActive = $reminder->is_active;
+        if ($awaitingCompletion && !$scheduleChanged) {
+            $reminder->next_remind_at = null;
+        } else {
+            $eventAt = $reminder->datetime;
+            $isActive = $reminder->is_active;
 
-        $reminder->next_remind_at = $isActive && $eventAt
-            ? $this->scheduleCalculator->calculateNextRemindAt(
-                $eventAt,
-                $reminder->to_remind_before_value,
-                $reminder->to_remind_before_unit
-            )
-            : null;
+            $reminder->next_remind_at = $isActive && $eventAt
+                ? $this->scheduleCalculator->calculateNextRemindAt(
+                    $eventAt,
+                    $reminder->to_remind_before_value,
+                    $reminder->to_remind_before_unit
+                )
+                : null;
+        }
 
         $reminder->save();
 
         return $reminder->refresh();
+    }
+
+    private function scheduleInputChanged(Reminder $reminder, ReminderUpdateData $dto): bool
+    {
+        if (!($dto->datetime instanceof Optional)) {
+            $current = $reminder->datetime?->format('Y-m-d H:i');
+            if ($current !== $dto->datetime->format('Y-m-d H:i')) {
+                return true;
+            }
+        }
+
+        if (!($dto->to_remind_before_value instanceof Optional)
+            && $dto->to_remind_before_value !== $reminder->to_remind_before_value
+        ) {
+            return true;
+        }
+
+        if (!($dto->to_remind_before_unit instanceof Optional)) {
+            $currentUnit = $reminder->to_remind_before_unit instanceof ReminderTimeUnitEnum
+                ? $reminder->to_remind_before_unit->value
+                : ($reminder->to_remind_before_unit === null ? null : (string) $reminder->to_remind_before_unit);
+
+            if ($dto->to_remind_before_unit !== $currentUnit) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function delete(Reminder $reminder): bool

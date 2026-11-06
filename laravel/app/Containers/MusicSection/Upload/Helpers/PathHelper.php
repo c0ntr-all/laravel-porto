@@ -88,8 +88,8 @@ class PathHelper
 
     public static function isInsideLibrary(string $windowsPath): bool
     {
-        $path = self::normalizeWindows($windowsPath);
-        $root = self::libraryRootWindows();
+        $path = strtolower(self::normalizeWindows($windowsPath));
+        $root = strtolower(rtrim(self::libraryRootWindows(), '\\'));
 
         return $path === $root || str_starts_with($path, $root . '\\');
     }

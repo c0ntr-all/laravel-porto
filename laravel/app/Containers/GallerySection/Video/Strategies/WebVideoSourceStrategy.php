@@ -3,7 +3,7 @@
 namespace App\Containers\GallerySection\Video\Strategies;
 
 use App\Containers\GallerySection\Video\Contracts\VideoSourceContract;
-use Illuminate\Support\Facades\Http;
+use App\Ship\Helpers\PublicHttps;
 use Illuminate\Support\Facades\Storage;
 
 class WebVideoSourceStrategy implements VideoSourceContract
@@ -31,18 +31,10 @@ class WebVideoSourceStrategy implements VideoSourceContract
         $disk = Storage::disk($this->getDisk());
         $disk->makeDirectory('tmp/gallery-videos');
 
-        $response = Http::timeout(60)
-            ->withHeaders([
-                'User-Agent' => 'Mozilla/5.0',
-            ])
-            ->withOptions(['verify' => false])
-            ->get($this->url);
-
-        if (!$response->successful()) {
-            throw new \RuntimeException('Unable to download remote video.');
-        }
-
-        $disk->put($this->tempRelativePath, $response->body());
+        $disk->put(
+            $this->tempRelativePath,
+            PublicHttps::get($this->url, PublicHttps::MAX_VIDEO_BYTES),
+        );
 
         return $this->tempRelativePath;
     }

@@ -4,7 +4,8 @@ namespace App\Containers\TaskManagerSection\TaskProgress\Models;
 
 use App\Containers\AppSection\User\Models\Traits\HasUser;
 use App\Containers\TaskManagerSection\Task\Models\Task;
-use Illuminate\Database\Eloquent\Model;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Models\ActivityLoggableModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -21,9 +22,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @mixin \Eloquent
  */
-class TaskProgress extends Model
+class TaskProgress extends ActivityLoggableModel
 {
     use HasUser;
+
+    protected ContainerAliasEnum $loggableType = ContainerAliasEnum::TM_TASK_PROGRESS;
 
     protected $table = 'tm_task_progress';
 

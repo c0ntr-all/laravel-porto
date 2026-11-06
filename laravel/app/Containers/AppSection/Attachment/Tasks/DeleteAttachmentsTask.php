@@ -18,11 +18,17 @@ class DeleteAttachmentsTask extends ParentTask
     {
         $ids = $dto->deleted_attachments_ids;
 
-        $model->attachments()
+        $attachments = $model->attachments()
             ->where(function ($query) use ($ids): void {
                 $query->whereIn('id', $ids)->orWhereIn('uuid', $ids);
             })
-            ->delete();
+            ->get();
+
+        foreach ($attachments as $attachment) {
+            $attachment->delete();
+        }
+
+        $model->unsetRelation('attachments');
 
         return $model->attachments;
     }

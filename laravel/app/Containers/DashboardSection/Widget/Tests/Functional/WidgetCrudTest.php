@@ -6,6 +6,7 @@ use App\Containers\AppSection\User\Models\User;
 use App\Containers\DashboardSection\Dashboard\Models\Dashboard;
 use App\Containers\DashboardSection\Widget\Models\Widget;
 use App\Containers\LifelogSection\Post\Models\Post;
+use App\Ship\Helpers\UuidV7;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -85,6 +86,7 @@ class WidgetCrudTest extends TestCase
             Post::factory()->create([
                 'user_id' => $this->user->id,
                 'title' => 'Today',
+                'uuid' => UuidV7::generate(),
             ]);
         });
 

@@ -8,20 +8,30 @@ use App\Containers\TaskManagerSection\Checklist\Tasks\ConvertChecklistItemToTask
 use App\Containers\TaskManagerSection\Checklist\UI\API\Requests\ConvertChecklistItemToTaskRequest;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Containers\TaskManagerSection\Task\UI\API\Transformers\TaskTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class ConvertChecklistItemToTaskAction extends BaseAction
+class ConvertChecklistItemToTaskAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
+
     public function __construct(
         private readonly ConvertChecklistItemToTaskTask $convertChecklistItemToTaskTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(ChecklistItem $checklistItem, int $userId): Task
     {
-        return $this->convertChecklistItemToTaskTask->run($checklistItem, $userId);
+        $task = $this->convertChecklistItemToTaskTask->run($checklistItem, $userId);
+
+        $this->recordUseCase($task);
+
+        return $task;
     }
 
     public function asController(

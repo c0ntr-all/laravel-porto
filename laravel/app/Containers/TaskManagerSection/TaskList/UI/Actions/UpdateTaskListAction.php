@@ -7,19 +7,29 @@ use App\Containers\TaskManagerSection\TaskList\Models\TaskList;
 use App\Containers\TaskManagerSection\TaskList\Tasks\UpdateTaskListTask;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Requests\UpdateRequest;
 use App\Containers\TaskManagerSection\TaskList\UI\API\Transformers\TaskListTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 
-class UpdateTaskListAction extends BaseAction
+class UpdateTaskListAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK_LIST;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
+
     public function __construct(
         private readonly UpdateTaskListTask $updateTaskListTask
     ) {
+        parent::__construct();
     }
 
     public function handle(TaskList $taskList, TaskListUpdateData $dto): TaskList
     {
-        return $this->updateTaskListTask->run($taskList, $dto);
+        $taskList = $this->updateTaskListTask->run($taskList, $dto);
+
+        $this->recordUseCase($taskList);
+
+        return $taskList;
     }
 
     public function asController(TaskList $taskList, UpdateRequest $request): JsonResponse

@@ -13,12 +13,16 @@ use App\Containers\DashboardSection\Widget\Tasks\CreateWidgetTask;
 use App\Containers\DashboardSection\Widget\Tasks\ValidateWidgetConfigTask;
 use App\Containers\DashboardSection\Widget\UI\API\Requests\CreateRequest;
 use App\Containers\DashboardSection\Widget\UI\API\Transformers\WidgetTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class CreateWidgetAction extends BaseAction
+class CreateWidgetAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::DASHBOARD_WIDGET;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
     public function __construct(
         private readonly WidgetRegistry $widgetRegistry,
         private readonly WidgetRepository $widgetRepository,
@@ -26,6 +30,7 @@ class CreateWidgetAction extends BaseAction
         private readonly CreateWidgetTask $createWidgetTask,
         private readonly AttachWidgetPayloadsTask $attachWidgetPayloadsTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(Dashboard $dashboard, CreateWidgetDto $dto): Widget
@@ -40,6 +45,8 @@ class CreateWidgetAction extends BaseAction
 
         $widget = $this->createWidgetTask->run($dto);
         $this->attachWidgetPayloadsTask->run(collect([$widget]));
+
+        $this->recordUseCase($widget);
 
         return $widget;
     }

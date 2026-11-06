@@ -8,16 +8,21 @@ use App\Containers\AppSection\Comment\Tasks\UpdateCommentTask;
 use App\Containers\AppSection\Comment\UI\API\Requests\UpdateRequest;
 use App\Containers\AppSection\Comment\UI\API\Transformers\CommentTransformer;
 use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
 use Illuminate\Http\JsonResponse;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-class UpdateCommentAction extends BaseAction
+class UpdateCommentAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::COMMENTS;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
+
     public function __construct(
         private readonly UpdateCommentTask $updateCommentTask
     )
     {
+        parent::__construct();
     }
 
     public function handle(Comment $comment, CommentUpdateData $dto, int $userId): Comment
@@ -26,7 +31,11 @@ class UpdateCommentAction extends BaseAction
             throw new AccessDeniedHttpException('You can change only your own comments.');
         }
 
-        return $this->updateCommentTask->run($comment, $dto);
+        $comment = $this->updateCommentTask->run($comment, $dto);
+
+        $this->recordUseCase($comment);
+
+        return $comment;
     }
 
     public function asController(Comment $comment, UpdateRequest $request): JsonResponse

@@ -7,20 +7,32 @@ use App\Containers\TaskManagerSection\TaskTemplate\Models\TaskTemplate;
 use App\Containers\TaskManagerSection\TaskTemplate\Tasks\UpdateTaskTemplateTask;
 use App\Containers\TaskManagerSection\TaskTemplate\UI\API\Requests\UpdateRequest;
 use App\Containers\TaskManagerSection\TaskTemplate\UI\API\Transformers\TaskTemplateTransformer;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class UpdateTaskTemplateAction extends BaseAction
+class UpdateTaskTemplateAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::TM_TASK_TEMPLATE;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::UPDATED;
+
     public function __construct(
         private readonly UpdateTaskTemplateTask $updateTaskTemplateTask
     ) {
+        parent::__construct();
     }
 
     public function handle(TaskTemplate $taskTemplate, TaskTemplateUpdateData $dto): TaskTemplate
     {
-        return DB::transaction(fn () => $this->updateTaskTemplateTask->run($taskTemplate, $dto));
+        return DB::transaction(function () use ($taskTemplate, $dto): TaskTemplate {
+            $taskTemplate = $this->updateTaskTemplateTask->run($taskTemplate, $dto);
+
+            $this->recordUseCase($taskTemplate);
+
+            return $taskTemplate;
+        });
     }
 
     public function asController(TaskTemplate $taskTemplate, UpdateRequest $request): JsonResponse

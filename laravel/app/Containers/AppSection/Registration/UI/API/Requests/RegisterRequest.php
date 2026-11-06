@@ -21,7 +21,7 @@ class RegisterRequest extends PublicRequest
         return [
             'name' => 'required|string|max:30',
             'email' => 'required|email|unique:App\Containers\AppSection\User\Models\User,email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8|same:password_confirm',
             'password_confirm' => 'required|string',
         ];
     }

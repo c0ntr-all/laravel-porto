@@ -9,17 +9,23 @@ use App\Containers\DashboardSection\Dashboard\UI\API\Requests\CreateRequest;
 use App\Containers\DashboardSection\Dashboard\UI\API\Transformers\DashboardTransformer;
 use App\Containers\DashboardSection\Widget\Tasks\AttachWidgetPayloadsTask;
 use App\Containers\DashboardSection\Widget\Tasks\SeedDefaultWidgetsTask;
-use App\Ship\Parents\Actions\BaseAction;
+use App\Ship\Enums\ContainerAliasEnum;
+use App\Ship\Enums\EventTypesEnum;
+use App\Ship\Parents\Actions\UseCaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class CreateDashboardAction extends BaseAction
+class CreateDashboardAction extends UseCaseAction
 {
+    protected ?ContainerAliasEnum $containerAliasEnum = ContainerAliasEnum::DASHBOARD;
+    protected ?EventTypesEnum $eventTypesEnum = EventTypesEnum::CREATED;
+
     public function __construct(
         private readonly CreateDashboardTask $createDashboardTask,
         private readonly SeedDefaultWidgetsTask $seedDefaultWidgetsTask,
         private readonly AttachWidgetPayloadsTask $attachWidgetPayloadsTask,
     ) {
+        parent::__construct();
     }
 
     public function handle(CreateDashboardDto $dto): Dashboard
@@ -34,6 +40,8 @@ class CreateDashboardAction extends BaseAction
             }
 
             $this->attachWidgetPayloadsTask->run($dashboard->widgets);
+
+            $this->recordUseCase($dashboard);
 
             return $dashboard;
         });

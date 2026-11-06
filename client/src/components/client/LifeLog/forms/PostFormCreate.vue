@@ -33,38 +33,36 @@
       />
     </div>
 
-    <div class="lifelog-post-form-actions flex justify-between q-pa-md">
+    <div class="lifelog-post-form-actions flex wrap justify-between items-end q-pa-md">
       <div class="lifelog-post-form-actions__left">
-        <div v-if="model.datetime" class="flex column">
-          <div class="flex">
-            <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
-            <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
-            <q-checkbox
-              v-model="model.isNullTime"
-              name="не учитывать время"
-              label="не учитывать время"
-              @update:model-value="onNullTimeChange"
-            />
-          </div>
-          <q-checkbox
-            v-model="model.is_draft"
-            class="q-mt-xs"
-            name="Черновик"
-            label="Черновик"
+        <div v-if="model.datetime" class="row items-center no-wrap q-gutter-xs">
+          <AppDatetimeField v-if="!model.isNullTime" class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <AppDateField v-else class="lifelog-post-form__datetime" v-model="model.datetime" />
+          <LifeLogNullTimeButton
+            v-model="model.isNullTime"
+            @update:model-value="onNullTimeChange"
           />
         </div>
       </div>
-      <div class="lifelog-post-form-actions__right">
-        <div class="lifelog-post-form__action">
-          <q-btn
-            label="Отправить"
-            color="primary"
-            :loading="isSubmitting"
-            :disable="isSubmitting"
-            :round="false"
-            @click="createPost"
-          />
-        </div>
+      <div class="lifelog-post-form-actions__right row items-center no-wrap q-gutter-sm">
+        <q-btn
+          flat
+          no-caps
+          color="grey-8"
+          label="Сохранить черновик"
+          :loading="submitMode === 'draft'"
+          :disable="isSubmitting"
+          @click="createPost(true)"
+        />
+        <q-btn
+          unelevated
+          no-caps
+          color="primary"
+          label="Отправить"
+          :loading="submitMode === 'publish'"
+          :disable="isSubmitting"
+          @click="createPost(false)"
+        />
       </div>
     </div>
   </div>
@@ -86,6 +84,7 @@ import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormFilesUpload from 'src/components/client/LifeLog/forms/PostFormFilesUpload.vue'
 import PostFormCreateTags from 'src/components/client/LifeLog/forms/PostFormCreateTags.vue'
+import LifeLogNullTimeButton from 'src/components/client/LifeLog/forms/LifeLogNullTimeButton.vue'
 
 interface IInputRef {
   resetValidation: () => void
@@ -120,6 +119,7 @@ const pendingAttachments = ref<IPostFormPendingAttachment[]>([])
 const attachedTask = ref<IPostTaskSubject | null>(null)
 const attachedAlbum = ref<IPostAlbumSubject | null>(null)
 const isSubmitting = ref(false)
+const submitMode = ref<'draft' | 'publish' | null>(null)
 
 // --- Refs ---
 const titleRef = ref<IInputRef | null>(null)
@@ -166,12 +166,14 @@ watch(attachedAlbum, album => {
 })
 
 // --- Methods ---
-const createPost = async () => {
+const createPost = async (asDraft: boolean) => {
   if (isSubmitting.value) {
     return
   }
 
   isSubmitting.value = true
+  submitMode.value = asDraft ? 'draft' : 'publish'
+  model.value.is_draft = asDraft
   const { files, galleryRefs } = splitPendingAttachments(pendingAttachments.value)
   const submission = postStore.createPost(model.value, files, galleryRefs)
 
@@ -186,6 +188,7 @@ const createPost = async () => {
     await submission
   } finally {
     isSubmitting.value = false
+    submitMode.value = null
   }
 }
 const clearModel = () => {
@@ -224,7 +227,12 @@ const onNullTimeChange = (isNullTime: boolean | null) => {
   }
 
   &-actions {
+    gap: 12px;
     background-color: #fbfbfb;
+
+    &__right {
+      margin-left: auto;
+    }
   }
 }
 </style>

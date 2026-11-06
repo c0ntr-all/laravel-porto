@@ -18,11 +18,12 @@
 
         <div class="row items-center justify-end q-mb-sm">
           <q-btn
+            flat
+            dense
+            no-caps
             color="primary"
             icon="add"
-            label="Создать preset"
-            no-caps
-            dense
+            label="Новый preset"
             @click="openCreateModal"
           />
         </div>

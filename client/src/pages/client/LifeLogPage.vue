@@ -8,7 +8,7 @@
     />
 
     <div class="lifelog-page__grid">
-      <aside ref="sidebarRef" class="lifelog-page__sidebar">
+      <aside class="lifelog-page__sidebar">
         <LifeLogFilterPanel
           v-model="filter"
           :all-tags="allTags"
@@ -24,7 +24,7 @@
         />
       </aside>
 
-      <main ref="contentRef" class="lifelog-page__content">
+      <main class="lifelog-page__content">
         <LifeLogPostsTabs
           :model-value="postsTab"
           @update:model-value="onPostsTabChange"
@@ -79,12 +79,11 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePresetStore } from 'src/stores/modules/presetStore'
 import { useLifeLogFilters } from 'src/composables/client/Lifelog/useLifeLogFilters'
 import { useLifeLogView } from 'src/composables/client/Lifelog/useLifeLogView'
-import { useLifeLogSidebarScroll } from 'src/composables/client/Lifelog/useLifeLogSidebarScroll'
 import { mapPresetToLifeLogFilter } from 'src/utils/LifeLog/filter.mapper'
 import LifeLogToolbar from 'src/components/client/LifeLog/layout/LifeLogToolbar.vue'
 import LifeLogFilterPanel from 'src/components/client/LifeLog/layout/LifeLogFilterPanel.vue'
@@ -99,9 +98,6 @@ import { ILifeLogFilter, IPreset } from 'src/types'
 
 const presetStore = usePresetStore()
 const { presets } = storeToRefs(presetStore)
-
-const sidebarRef = ref<HTMLElement | null>(null)
-const contentRef = ref<HTMLElement | null>(null)
 
 const {
   filter,
@@ -125,8 +121,6 @@ const {
   togglePostExpanded
 } = useLifeLogView()
 
-const { syncSidebarScroll } = useLifeLogSidebarScroll(sidebarRef, contentRef)
-
 const isCreatePostModalOpen = ref(false)
 const isMovieWatchModalOpen = ref(false)
 
@@ -140,17 +134,14 @@ const openMovieWatchModal = () => {
 
 const onPostsTabChange = async (tab: LifeLogPostsTabId) => {
   await setPostsTab(tab)
-  void nextTick(syncSidebarScroll)
 }
 
 const onPostCreated = () => {
   isCreatePostModalOpen.value = false
-  void nextTick(syncSidebarScroll)
 }
 
 const onMovieWatchCreated = () => {
   isMovieWatchModalOpen.value = false
-  void nextTick(syncSidebarScroll)
 }
 
 const onFilterSubmit = async (nextFilter: ILifeLogFilter) => {
@@ -168,13 +159,6 @@ const onPresetFilter = async (preset: IPreset) => {
 onMounted(() => {
   void initialize()
 })
-
-watch(
-  () => [filteredPosts.value.length, isLoading.value],
-  () => {
-    void nextTick(syncSidebarScroll)
-  }
-)
 </script>
 
 <style lang="scss" scoped>
@@ -190,9 +174,10 @@ watch(
   }
 
   &__sidebar {
+    // Топбар в MainLayout фиксированный, высота .header — 75px.
     position: sticky;
-    top: 12px;
-    max-height: calc(100vh - 96px);
+    top: calc(75px + 12px);
+    max-height: calc(100vh - 75px - 24px);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;

@@ -71,10 +71,7 @@
           @click="enableStartedAt"
         />
         <template v-else>
-          <q-checkbox
-            v-model="isStartNullTime"
-            label="не учитывать время"
-          />
+          <LifeLogNullTimeButton v-model="isStartNullTime" />
           <q-btn
             flat
             dense
@@ -89,10 +86,10 @@
       </div>
     </div>
 
-    <div class="lifelog-post-form-actions flex justify-between q-pa-md">
+    <div class="lifelog-post-form-actions flex wrap justify-between items-end q-pa-md">
       <div class="lifelog-post-form-actions__left">
         <div class="text-subtitle2 text-grey-8 q-mb-sm">Окончание</div>
-        <div class="flex">
+        <div class="row items-center no-wrap q-gutter-xs">
           <AppDatetimeField
             v-if="!isNullTime"
             class="lifelog-post-form__datetime"
@@ -103,29 +100,30 @@
             class="lifelog-post-form__datetime"
             v-model="datetime"
           />
-          <q-checkbox
+          <LifeLogNullTimeButton
             v-model="isNullTime"
-            name="не учитывать время"
-            label="не учитывать время"
             @update:model-value="onNullTimeChange"
           />
         </div>
-        <q-checkbox
-          v-model="isDraft"
-          class="q-mt-xs"
-          name="Черновик"
-          label="Черновик"
-        />
       </div>
-      <div class="lifelog-post-form-actions__right self-end">
+      <div class="lifelog-post-form-actions__right row items-center no-wrap q-gutter-sm self-end">
         <q-btn
-          label="Отправить"
-          color="primary"
-          :loading="isSubmitting"
-          :disable="isSubmitting || !canSubmit"
-          :round="false"
+          flat
           no-caps
-          @click="submit"
+          color="grey-8"
+          label="Сохранить черновик"
+          :loading="submitMode === 'draft'"
+          :disable="isSubmitting || !canSubmit"
+          @click="submit(true)"
+        />
+        <q-btn
+          unelevated
+          no-caps
+          color="primary"
+          label="Отправить"
+          :loading="submitMode === 'publish'"
+          :disable="isSubmitting || !canSubmit"
+          @click="submit(false)"
         />
       </div>
     </div>
@@ -151,6 +149,7 @@ import { markEpisodesWatchedIfNeeded } from 'src/utils/Movie/markEpisodesWatched
 import AppDatetimeField from 'src/components/default/AppDatetimeField.vue'
 import AppDateField from 'src/components/default/AppDateField.vue'
 import PostFormSeriesWatchFields from 'src/components/client/LifeLog/forms/PostFormSeriesWatchFields.vue'
+import LifeLogNullTimeButton from 'src/components/client/LifeLog/forms/LifeLogNullTimeButton.vue'
 
 const postStore = usePostStore()
 
@@ -160,11 +159,11 @@ const emit = defineEmits<{
 
 const datetime = ref(getCurrentDateTime())
 const isNullTime = ref(false)
-const isDraft = ref(false)
 const hasStartedAt = ref(false)
 const startDatetime = ref('')
-const isStartNullTime = ref(true)
+const isStartNullTime = ref(false)
 const isSubmitting = ref(false)
+const submitMode = ref<'draft' | 'publish' | null>(null)
 
 const selectedMovie = ref<IMovie | null>(null)
 const movieInput = ref('')
@@ -283,20 +282,19 @@ const onMoviePopupShow = () => {
 
 const enableStartedAt = () => {
   hasStartedAt.value = true
-  startDatetime.value = datetime.value.split(' ')[0]
-  isStartNullTime.value = true
+  isStartNullTime.value = false
+  startDatetime.value = applyIsNullTimeToDatetime(datetime.value.split(' ')[0], false)
 }
 
 const clearStartedAt = () => {
   hasStartedAt.value = false
   startDatetime.value = ''
-  isStartNullTime.value = true
+  isStartNullTime.value = false
 }
 
 const resetForm = () => {
   datetime.value = getCurrentDateTime()
   isNullTime.value = false
-  isDraft.value = false
   clearStartedAt()
   selectedMovie.value = null
   movieInput.value = ''
@@ -304,12 +302,13 @@ const resetForm = () => {
   watchProgress.value = emptySeriesWatchProgress()
 }
 
-const submit = async () => {
+const submit = async (asDraft: boolean) => {
   if (isSubmitting.value || !canSubmit.value) {
     return
   }
 
   isSubmitting.value = true
+  submitMode.value = asDraft ? 'draft' : 'publish'
 
   const isSeries = isTvSeriesSelected.value
   const movieId = selectedMovie.value?.id ?? null
@@ -327,7 +326,7 @@ const submit = async () => {
     content_type: isSeries
       ? PostContentTypeEnum.TV_SERIES
       : PostContentTypeEnum.MOVIE,
-    is_draft: isDraft.value,
+    is_draft: asDraft,
     tags: [],
     newTags: [],
     datetime: datetime.value,
@@ -357,6 +356,7 @@ const submit = async () => {
     }
   } finally {
     isSubmitting.value = false
+    submitMode.value = null
   }
 }
 
@@ -397,7 +397,12 @@ onMounted(() => {
   }
 
   &-actions {
+    gap: 12px;
     background-color: #fbfbfb;
+
+    &__right {
+      margin-left: auto;
+    }
   }
 }
 </style>

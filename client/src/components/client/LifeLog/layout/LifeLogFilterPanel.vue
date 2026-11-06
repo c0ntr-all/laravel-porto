@@ -101,37 +101,43 @@
             @selected="selectTag"
           />
         </div>
+
+        <div class="ll-filter-panel__controls">
+          <div class="ll-filter-panel__mode">
+            <div class="ll-filter-panel__mode-label">Совпадение тегов</div>
+            <q-btn-toggle
+              v-model="draft.tags_mode"
+              class="ll-filter-panel__mode-toggle"
+              spread
+              no-caps
+              unelevated
+              dense
+              toggle-color="primary"
+              color="grey-2"
+              text-color="grey-8"
+              :options="tagModeOptions"
+            />
+          </div>
+
+          <div class="ll-filter-panel__actions">
+            <q-btn
+              flat
+              no-caps
+              color="grey-7"
+              label="Сбросить"
+              @click="reset"
+            />
+            <q-btn
+              unelevated
+              no-caps
+              color="primary"
+              label="Применить"
+              @click="submit"
+            />
+          </div>
+        </div>
       </q-card-section>
     </q-expansion-item>
-
-    <q-separator />
-
-    <q-card-section class="row items-center justify-between q-pt-sm">
-      <q-select
-        v-model="draft.tags_mode"
-        :options="tagsModes"
-        dense
-        outlined
-        label="Режим тегов"
-        style="min-width: 120px"
-      />
-
-      <div class="row q-gutter-sm">
-        <q-btn
-          outline
-          color="grey-7"
-          label="Сброс"
-          no-caps
-          @click="reset"
-        />
-        <q-btn
-          color="primary"
-          label="Применить"
-          no-caps
-          @click="submit"
-        />
-      </div>
-    </q-card-section>
   </q-card>
 </template>
 
@@ -157,7 +163,10 @@ const emit = defineEmits<{
   reset: []
 }>()
 
-const tagsModes = ['or', 'and']
+const tagModeOptions = [
+  { label: 'Любой', value: 'or' },
+  { label: 'Все', value: 'and' }
+]
 const draft = ref<ILifeLogFilter>(createEmptyLifeLogFilter())
 const expanded = reactive({
   search: true,
@@ -239,6 +248,42 @@ function reset() {
   :deep(.ll-filter-panel__header) {
     min-height: 44px;
     font-weight: 600;
+  }
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #eef2f6;
+  }
+
+  &__mode {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__mode-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  &__mode-toggle {
+    width: 100%;
+    border: 1px solid #e4e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
   }
 }
 </style>

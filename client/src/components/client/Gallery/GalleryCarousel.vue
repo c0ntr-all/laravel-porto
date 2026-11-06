@@ -22,7 +22,7 @@
             :arrows="false"
           >
             <q-carousel-slide
-              v-for="slide in slides"
+              v-for="(slide, index) in slides"
               :key="slide.id"
               class="photo-viewer__slide column no-wrap flex-center q-pa-none"
               :name="slide.id"
@@ -31,7 +31,7 @@
                 <AppVideo
                   v-if="isGalleryVideo(slide) && isCurrentSlide(slide)"
                   class="photo-viewer__video"
-                  :src="resolveAuthedMediaUrl(slide.original_path)"
+                  :src="originalSrc(slide)"
                   :autoplay="true"
                 />
                 <div
@@ -42,10 +42,12 @@
                   <span>File not found</span>
                 </div>
                 <q-img
-                  v-else
+                  v-else-if="frameSrc(slide, index)"
                   class="photo-viewer__image"
-                  :src="resolveAuthedMediaUrl(slide.original_path || slide.preview_thumb_path)"
+                  :src="frameSrc(slide, index)"
                   fit="contain"
+                  no-spinner
+                  no-transition
                 >
                   <template #error>
                     <div class="photo-viewer__missing">
@@ -74,6 +76,16 @@
               </div>
             </q-carousel-slide>
           </q-carousel>
+
+          <video
+            v-if="prefetchVideoSrc"
+            class="photo-viewer__prefetch"
+            :src="prefetchVideoSrc"
+            preload="auto"
+            muted
+            playsinline
+            aria-hidden="true"
+          />
 
           <button
             v-if="canGoPrev"
@@ -115,9 +127,10 @@
 </template>
 
 <script lang="ts" setup generic="T extends IImageSource">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, toRef, watch } from 'vue'
 import { IImageSource } from 'src/types/carousel'
 import { useGalleryStore } from 'src/stores/modules/galleryStore'
+import { useGalleryViewerPreload } from 'src/composables/client/Gallery/useGalleryViewerPreload'
 import AppVideo from 'src/components/default/AppVideo.vue'
 import GalleryViewerComments from 'src/components/client/Gallery/GalleryViewerComments.vue'
 import GalleryViewerActions from 'src/components/client/Gallery/GalleryViewerActions.vue'
@@ -125,8 +138,7 @@ import GalleryViewerTags from 'src/components/client/Gallery/GalleryViewerTags.v
 import GalleryInlineDescription from 'src/components/client/Gallery/GalleryInlineDescription.vue'
 import {
   galleryCommentableType,
-  isGalleryVideo,
-  resolveAuthedMediaUrl
+  isGalleryVideo
 } from 'src/utils/gallery'
 
 const props = defineProps<{
@@ -152,6 +164,12 @@ const currentSlide = computed(() => {
 const currentIndex = computed(() => (
   props.slides.findIndex((slide: IImageSource) => isCurrentSlide(slide))
 ))
+
+const {
+  prefetchVideoSrc,
+  frameSrc,
+  originalSrc
+} = useGalleryViewerPreload(show, toRef(props, 'slides'), currentIndex)
 
 const canGoPrev = computed(() => currentIndex.value > 0)
 const canGoNext = computed(() => (
@@ -363,6 +381,17 @@ onUnmounted(() => {
     max-height: 100%;
     object-fit: contain;
     background: #000;
+  }
+
+  &__prefetch {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
   }
 
   &__hit {

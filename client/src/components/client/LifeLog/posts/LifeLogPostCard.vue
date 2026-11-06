@@ -63,6 +63,13 @@
     </section>
 
     <section
+      v-if="post.note"
+      class="ll-post-card__section"
+    >
+      <LifeLogPostNoteSubject :note="post.note" />
+    </section>
+
+    <section
       v-if="post.attachments?.length"
       class="ll-post-card__section"
     >
@@ -94,6 +101,7 @@ import { useLifeLogPostActions } from 'src/composables/client/Lifelog/useLifeLog
 import LifeLogPostAttachments from 'src/components/client/LifeLog/posts/LifeLogPostAttachments.vue'
 import LifeLogPostTaskSubject from 'src/components/client/LifeLog/posts/LifeLogPostTaskSubject.vue'
 import LifeLogPostAlbumSubject from 'src/components/client/LifeLog/posts/LifeLogPostAlbumSubject.vue'
+import LifeLogPostNoteSubject from 'src/components/client/LifeLog/posts/LifeLogPostNoteSubject.vue'
 import LifeLogPostMeta from 'src/components/client/LifeLog/posts/LifeLogPostMeta.vue'
 import PostFormUpdate from 'src/components/client/LifeLog/forms/PostFormUpdate.vue'
 import AppUserAvatar from 'src/components/default/AppUserAvatar.vue'

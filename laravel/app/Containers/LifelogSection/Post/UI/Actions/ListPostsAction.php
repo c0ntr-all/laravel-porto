@@ -41,7 +41,7 @@ class ListPostsAction extends BaseAction
             $posts->getCollection()->load('comments.user');
         }
 
-        $defaultIncludes = ['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album'];
+        $defaultIncludes = ['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album', 'note'];
         if (str_contains($include, 'comments')) {
             $defaultIncludes[] = 'comments';
         }

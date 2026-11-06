@@ -17,4 +17,5 @@ export interface IPostCreateDto {
   started_at?: string | null
   task_id?: number
   album_id?: number
+  note_id?: number
 }

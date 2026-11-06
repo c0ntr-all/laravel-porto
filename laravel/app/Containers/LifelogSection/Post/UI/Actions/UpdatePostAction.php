@@ -145,7 +145,7 @@ class UpdatePostAction extends UseCaseAction
         $post = $this->handle($post, $postUpdateContextDto);
 
         return fractal($post, new PostTransformer($postUpdateContextDto->user_id))
-            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album'])
+            ->parseIncludes(['user', 'tags', 'attachments', 'movies.genres', 'movies.countries', 'task.taskList', 'album', 'note'])
             ->withResourceName(ContainerAliasEnum::LL_POST->value)
             ->addMeta(['message' => 'Post successfully updated!'])
             ->respond(200, [], JSON_PRETTY_PRINT);

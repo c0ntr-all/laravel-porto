@@ -8,15 +8,17 @@
       @select-gallery="appendGallery"
       @select-task="onSelectTask"
       @select-album="onSelectAlbum"
+      @select-note="onSelectNote"
     />
 
     <div class="text-caption text-grey-7 q-mt-xs">
-      Файлы, фото из галереи, задача или альбом
+      Файлы, фото из галереи, задача, альбом или заметка
     </div>
 
     <PostFormSubjectPreview
       :task="attachedTask"
       :album="attachedAlbum"
+      :note="attachedNote"
       @clear="clearSubject"
     />
 
@@ -57,6 +59,7 @@ import {
   IGalleryMediaItem,
   IPostAlbumSubject,
   IPostFormPendingAttachment,
+  IPostNoteSubject,
   IPostTaskSubject
 } from 'src/types'
 import AppMediaAttach from 'src/components/default/AppMediaAttach.vue'
@@ -80,6 +83,10 @@ const attachedTask = defineModel<IPostTaskSubject | null>('task', {
 })
 
 const attachedAlbum = defineModel<IPostAlbumSubject | null>('album', {
+  default: null
+})
+
+const attachedNote = defineModel<IPostNoteSubject | null>('note', {
   default: null
 })
 
@@ -173,17 +180,26 @@ function appendGallery (media: IGalleryMediaItem[]) {
 
 function onSelectTask (task: IPostTaskSubject) {
   attachedAlbum.value = null
+  attachedNote.value = null
   attachedTask.value = task
 }
 
 function onSelectAlbum (album: IPostAlbumSubject) {
   attachedTask.value = null
+  attachedNote.value = null
   attachedAlbum.value = album
+}
+
+function onSelectNote (note: IPostNoteSubject) {
+  attachedTask.value = null
+  attachedAlbum.value = null
+  attachedNote.value = note
 }
 
 function clearSubject () {
   attachedTask.value = null
   attachedAlbum.value = null
+  attachedNote.value = null
 }
 
 function removeItem (key: string) {

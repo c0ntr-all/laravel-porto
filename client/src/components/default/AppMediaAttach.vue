@@ -109,6 +109,22 @@
             </span>
             <q-icon name="chevron_right" color="grey-5" size="22px" />
           </button>
+
+          <button
+            v-if="allowNote"
+            type="button"
+            class="source-option"
+            @click="chooseNote"
+          >
+            <span class="source-option__icon source-option__icon--note">
+              <q-icon name="sticky_note_2" size="22px" />
+            </span>
+            <span class="source-option__text">
+              <span class="source-option__title">Заметка</span>
+              <span class="source-option__hint">Прикрепить заметку</span>
+            </span>
+            <q-icon name="chevron_right" color="grey-5" size="22px" />
+          </button>
         </div>
       </q-card>
     </q-dialog>
@@ -131,16 +147,23 @@
       v-model="albumOpen"
       @select="onAlbumSelect"
     />
+
+    <AppMediaAttachNote
+      v-if="allowNote"
+      v-model="noteOpen"
+      @select="onNoteSelect"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { nextTick, ref } from 'vue'
-import { IPostAlbumSubject, IPostTaskSubject } from 'src/types'
+import { IPostAlbumSubject, IPostNoteSubject, IPostTaskSubject } from 'src/types'
 import { IGalleryMediaItem } from 'src/types/gallery'
 import AppMediaAttachGallery from 'src/components/default/AppMediaAttachGallery.vue'
 import AppMediaAttachTask from 'src/components/default/AppMediaAttachTask.vue'
 import AppMediaAttachAlbum from 'src/components/default/AppMediaAttachAlbum.vue'
+import AppMediaAttachNote from 'src/components/default/AppMediaAttachNote.vue'
 
 defineOptions({
   inheritAttrs: false
@@ -161,6 +184,7 @@ const props = withDefaults(defineProps<{
   disable?: boolean
   allowTask?: boolean
   allowAlbum?: boolean
+  allowNote?: boolean
 }>(), {
   limit: 10,
   accept: 'image/*,video/*',
@@ -175,7 +199,8 @@ const props = withDefaults(defineProps<{
   dense: false,
   disable: false,
   allowTask: true,
-  allowAlbum: true
+  allowAlbum: true,
+  allowNote: true
 })
 
 const emit = defineEmits<{
@@ -183,12 +208,14 @@ const emit = defineEmits<{
   'select-gallery': [items: IGalleryMediaItem[]]
   'select-task': [task: IPostTaskSubject]
   'select-album': [album: IPostAlbumSubject]
+  'select-note': [note: IPostNoteSubject]
 }>()
 
 const sourceOpen = ref(false)
 const galleryOpen = ref(false)
 const taskOpen = ref(false)
 const albumOpen = ref(false)
+const noteOpen = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
 function openSource() {
@@ -225,6 +252,12 @@ async function chooseAlbum() {
   albumOpen.value = true
 }
 
+async function chooseNote() {
+  sourceOpen.value = false
+  await nextTick()
+  noteOpen.value = true
+}
+
 function onFilesPicked(event: Event) {
   const input = event.target as HTMLInputElement
   const files = input.files ? Array.from(input.files) : []
@@ -252,6 +285,10 @@ function onTaskSelect(task: IPostTaskSubject) {
 
 function onAlbumSelect(album: IPostAlbumSubject) {
   emit('select-album', album)
+}
+
+function onNoteSelect(note: IPostNoteSubject) {
+  emit('select-note', note)
 }
 </script>
 
@@ -347,6 +384,11 @@ function onAlbumSelect(album: IPostAlbumSubject) {
     &--album {
       background: rgba(38, 166, 218, 0.12);
       color: #26a6da;
+    }
+
+    &--note {
+      background: rgba(242, 192, 55, 0.18);
+      color: #c48a12;
     }
   }
 

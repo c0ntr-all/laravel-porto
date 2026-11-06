@@ -45,6 +45,7 @@
         v-model="newAttachmentsModel"
         v-model:task="attachedTask"
         v-model:album="attachedAlbum"
+        v-model:note="attachedNote"
         :exclude-ids="attachedMediaIds"
       />
     </div>
@@ -119,6 +120,7 @@ import {
   IPostAlbumSubject,
   IPostAttachmentWithState,
   IPostFormPendingAttachment,
+  IPostNoteSubject,
   IPostTaskSubject,
   IPostUpdateModel
 } from 'src/types'
@@ -157,6 +159,7 @@ const model = ref<IPostUpdateModel>({
 const newAttachmentsModel = ref<IPostFormPendingAttachment[]>([])
 const attachedTask = ref<IPostTaskSubject | null>(null)
 const attachedAlbum = ref<IPostAlbumSubject | null>(null)
+const attachedNote = ref<IPostNoteSubject | null>(null)
 const availableTags = ref<ITag[]>([])
 
 const titleRef = ref<IInputRef | null>(null)
@@ -176,6 +179,8 @@ watch(attachedTask, task => {
   model.value.task = task
   model.value.album_id = null
   model.value.album = null
+  model.value.note_id = null
+  model.value.note = null
 })
 
 watch(attachedAlbum, album => {
@@ -193,6 +198,27 @@ watch(attachedAlbum, album => {
   model.value.album = album
   model.value.task_id = null
   model.value.task = null
+  model.value.note_id = null
+  model.value.note = null
+})
+
+watch(attachedNote, note => {
+  if (!note) {
+    if (model.value.content_type === PostContentTypeEnum.NOTE) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.note_id = null
+      model.value.note = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.NOTE
+  model.value.note_id = Number(note.id)
+  model.value.note = note
+  model.value.task_id = null
+  model.value.task = null
+  model.value.album_id = null
+  model.value.album = null
 })
 
 const attachedMediaIds = computed(() =>
@@ -292,8 +318,10 @@ const mapPostToModel = (post: IPost) => {
     isNullTime: !rawPost.time,
     task_id: rawPost.task ? Number(rawPost.task.id) : null,
     album_id: rawPost.album ? Number(rawPost.album.id) : null,
+    note_id: rawPost.note ? Number(rawPost.note.id) : null,
     task: rawPost.task ?? null,
     album: rawPost.album ?? null,
+    note: rawPost.note ?? null,
     attachments: (rawPost.attachments ?? []).map((item: IPostAttachmentWithState) => ({
       ...toRaw(item),
       is_deleted: false
@@ -303,6 +331,7 @@ const mapPostToModel = (post: IPost) => {
   model.value = preparedPost
   attachedTask.value = rawPost.task ?? null
   attachedAlbum.value = rawPost.album ?? null
+  attachedNote.value = rawPost.note ?? null
 }
 
 const clearAttachmentModel = () => {
@@ -331,14 +360,17 @@ onUnmounted(() => {
     isNullTime: !rawPost.time,
     task_id: rawPost.task ? Number(rawPost.task.id) : null,
     album_id: rawPost.album ? Number(rawPost.album.id) : null,
+    note_id: rawPost.note ? Number(rawPost.note.id) : null,
     task: rawPost.task ?? null,
     album: rawPost.album ?? null,
+    note: rawPost.note ?? null,
     attachments: []
   }
 
   newAttachmentsModel.value = []
   attachedTask.value = null
   attachedAlbum.value = null
+  attachedNote.value = null
 })
 
 </script>

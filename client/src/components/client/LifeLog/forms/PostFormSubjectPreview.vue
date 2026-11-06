@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="task || album"
+    v-if="task || album || note"
     class="post-form-subject-preview"
   >
     <div class="post-form-subject-preview__head">
@@ -24,17 +24,23 @@
       v-else-if="album"
       :album="album"
     />
+    <LifeLogPostNoteSubject
+      v-else-if="note"
+      :note="note"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { IPostAlbumSubject, IPostTaskSubject } from 'src/types'
+import { IPostAlbumSubject, IPostNoteSubject, IPostTaskSubject } from 'src/types'
 import LifeLogPostTaskSubject from 'src/components/client/LifeLog/posts/LifeLogPostTaskSubject.vue'
 import LifeLogPostAlbumSubject from 'src/components/client/LifeLog/posts/LifeLogPostAlbumSubject.vue'
+import LifeLogPostNoteSubject from 'src/components/client/LifeLog/posts/LifeLogPostNoteSubject.vue'
 
 defineProps<{
   task?: IPostTaskSubject | null
   album?: IPostAlbumSubject | null
+  note?: IPostNoteSubject | null
 }>()
 
 const emit = defineEmits<{

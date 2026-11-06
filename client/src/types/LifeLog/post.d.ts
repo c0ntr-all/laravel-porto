@@ -21,6 +21,12 @@ export interface IPostAlbumSubject {
   media_count?: number
 }
 
+export interface IPostNoteSubject {
+  id: string
+  name: string
+  excerpt: string | null
+}
+
 export interface IPostGalleryAttachment {
   id: string
   type: string
@@ -59,6 +65,7 @@ export interface IPost {
   movie?: IMovie | null
   task?: IPostTaskSubject | null
   album?: IPostAlbumSubject | null
+  note?: IPostNoteSubject | null
   watch?: ISeriesWatchProgress | null
   started_at?: string | null
   comments_count: number
@@ -80,8 +87,10 @@ export interface IPostModel {
   started_at?: string | null
   task_id?: number | null
   album_id?: number | null
+  note_id?: number | null
   task?: IPostTaskSubject | null
   album?: IPostAlbumSubject | IGalleryAlbum | null
+  note?: IPostNoteSubject | null
 }
 
 export interface IPostUpdateModel extends IPostModel {

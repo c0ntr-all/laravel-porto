@@ -39,6 +39,8 @@ class PostTransformer extends TransformerAbstract
         'task',
         'albums',
         'album',
+        'notes',
+        'note',
     ];
 
     public function transform(Post $post): array
@@ -175,5 +177,27 @@ class PostTransformer extends TransformerAbstract
         }
 
         return $this->item($album, new AlbumTransformer(), ContainerAliasEnum::GALLERY_ALBUM->value);
+    }
+
+    public function includeNotes(Post $post): Collection
+    {
+        $notes = $post->relationLoaded('notes')
+            ? $post->notes
+            : $post->notes()->get();
+
+        return $this->collection($notes, new PostNoteSubjectTransformer(), ContainerAliasEnum::NOTE->value);
+    }
+
+    public function includeNote(Post $post): Item|NullResource
+    {
+        $note = $post->relationLoaded('notes')
+            ? $post->notes->first()
+            : $post->notes()->first();
+
+        if (!$note) {
+            return $this->null();
+        }
+
+        return $this->item($note, new PostNoteSubjectTransformer(), ContainerAliasEnum::NOTE->value);
     }
 }

@@ -15,6 +15,7 @@ enum PostContentTypeEnum: string
     case GAME = 'game';
     case TASK = 'task';
     case ALBUM = 'album';
+    case NOTE = 'note';
 
     public static function default(): self
     {
@@ -31,6 +32,7 @@ enum PostContentTypeEnum: string
             self::GAME => 'Игра',
             self::TASK => 'Задача',
             self::ALBUM => 'Альбом',
+            self::NOTE => 'Заметка',
         };
     }
 }

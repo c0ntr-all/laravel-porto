@@ -23,6 +23,7 @@
         v-model="pendingAttachments"
         v-model:task="attachedTask"
         v-model:album="attachedAlbum"
+        v-model:note="attachedNote"
       />
     </div>
 
@@ -76,6 +77,7 @@ import {
   IPostAlbumSubject,
   IPostFormPendingAttachment,
   IPostModel,
+  IPostNoteSubject,
   IPostTaskSubject
 } from 'src/types'
 import { splitPendingAttachments } from 'src/utils/attachment'
@@ -118,6 +120,7 @@ const model = ref<IPostModel>(getEmptyPostModel())
 const pendingAttachments = ref<IPostFormPendingAttachment[]>([])
 const attachedTask = ref<IPostTaskSubject | null>(null)
 const attachedAlbum = ref<IPostAlbumSubject | null>(null)
+const attachedNote = ref<IPostNoteSubject | null>(null)
 const isSubmitting = ref(false)
 const submitMode = ref<'draft' | 'publish' | null>(null)
 
@@ -140,6 +143,8 @@ watch(attachedTask, task => {
   model.value.task = task
   model.value.album_id = null
   model.value.album = null
+  model.value.note_id = null
+  model.value.note = null
   if (!model.value.title?.trim()) {
     model.value.title = task.title
   }
@@ -160,8 +165,32 @@ watch(attachedAlbum, album => {
   model.value.album = album
   model.value.task_id = null
   model.value.task = null
+  model.value.note_id = null
+  model.value.note = null
   if (!model.value.title?.trim()) {
     model.value.title = album.name
+  }
+})
+
+watch(attachedNote, note => {
+  if (!note) {
+    if (model.value.content_type === PostContentTypeEnum.NOTE) {
+      model.value.content_type = PostContentTypeEnum.DEFAULT
+      model.value.note_id = null
+      model.value.note = null
+    }
+    return
+  }
+
+  model.value.content_type = PostContentTypeEnum.NOTE
+  model.value.note_id = Number(note.id)
+  model.value.note = note
+  model.value.task_id = null
+  model.value.task = null
+  model.value.album_id = null
+  model.value.album = null
+  if (!model.value.title?.trim()) {
+    model.value.title = note.name
   }
 })
 
@@ -181,6 +210,7 @@ const createPost = async (asDraft: boolean) => {
   pendingAttachments.value = []
   attachedTask.value = null
   attachedAlbum.value = null
+  attachedNote.value = null
   resetAvailableTags()
   emit('success')
 
@@ -195,6 +225,7 @@ const clearModel = () => {
   model.value = getEmptyPostModel()
   attachedTask.value = null
   attachedAlbum.value = null
+  attachedNote.value = null
 
   nextTick(() => {
     if (titleRef.value) {

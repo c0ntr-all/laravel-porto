@@ -6,6 +6,7 @@ use App\Containers\LifelogSection\Post\Contracts\PostContentHandlerInterface;
 use App\Containers\LifelogSection\Post\Enums\PostContentTypeEnum;
 use App\Containers\LifelogSection\Post\Handlers\AlbumPostContentHandler;
 use App\Containers\LifelogSection\Post\Handlers\MoviePostContentHandler;
+use App\Containers\LifelogSection\Post\Handlers\NotePostContentHandler;
 use App\Containers\LifelogSection\Post\Handlers\TaskPostContentHandler;
 use Illuminate\Support\Collection;
 
@@ -18,11 +19,13 @@ class PostContentHandlerRegistry
         MoviePostContentHandler $moviePostContentHandler,
         TaskPostContentHandler $taskPostContentHandler,
         AlbumPostContentHandler $albumPostContentHandler,
+        NotePostContentHandler $notePostContentHandler,
     ) {
         $this->handlers = [
             $moviePostContentHandler,
             $taskPostContentHandler,
             $albumPostContentHandler,
+            $notePostContentHandler,
         ];
     }
 

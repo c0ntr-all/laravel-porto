@@ -28,6 +28,7 @@ class PostCreateDto extends Data
     public ?string $started_at = null;
     public ?int $task_id = null;
     public ?int $album_id = null;
+    public ?int $note_id = null;
 
     public function __construct(
     ) {
@@ -44,6 +45,7 @@ class PostCreateDto extends Data
             'has_started_at_input' => true,
             'task_id' => $this->task_id,
             'album_id' => $this->album_id,
+            'note_id' => $this->note_id,
         ]);
     }
 }

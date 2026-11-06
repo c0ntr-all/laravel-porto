@@ -7,6 +7,7 @@ use App\Containers\LifelogSection\Post\Data\ValueObjects\MovieSubjectPayload;
 use App\Containers\LifelogSection\Post\Data\ValueObjects\SeriesWatchProgress;
 use App\Containers\LifelogSection\Post\Models\PostSubjectable;
 use App\Containers\MovieSection\Movie\Models\Movie;
+use App\Containers\NotesSection\Note\Models\Note;
 use App\Containers\TaskManagerSection\Task\Models\Task;
 use App\Ship\Enums\ContainerAliasEnum;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -62,6 +63,20 @@ trait HasSubjects
             ->withTimestamps();
     }
 
+    public function notes(): MorphToMany
+    {
+        return $this->morphedByMany(
+            Note::class,
+            'subjectable',
+            'lifelog_post_subjectables',
+            'post_id',
+            'subjectable_id'
+        )
+            ->using(PostSubjectable::class)
+            ->withPivot('payload')
+            ->withTimestamps();
+    }
+
     public function syncMovies(array $movieIds): void
     {
         $this->movies()->sync($movieIds);
@@ -88,11 +103,17 @@ trait HasSubjects
         $this->albums()->sync([$album->getKey()]);
     }
 
+    public function attachNote(Note $note): void
+    {
+        $this->notes()->sync([$note->getKey()]);
+    }
+
     public function detachAllSubjects(): void
     {
         $this->movies()->detach();
         $this->tasks()->detach();
         $this->albums()->detach();
+        $this->notes()->detach();
     }
 
     public function detachSubjectsExcept(ContainerAliasEnum $keepType): void
@@ -107,6 +128,10 @@ trait HasSubjects
 
         if ($keepType !== ContainerAliasEnum::GALLERY_ALBUM) {
             $this->albums()->detach();
+        }
+
+        if ($keepType !== ContainerAliasEnum::NOTE) {
+            $this->notes()->detach();
         }
     }
 

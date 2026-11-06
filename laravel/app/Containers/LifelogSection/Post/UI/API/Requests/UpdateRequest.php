@@ -24,6 +24,7 @@ class UpdateRequest extends AuthenticatedRequest
         $allowsStartedAt = $this->allowsStartedAt();
         $requiresTaskPayload = $this->requiresTaskPayload();
         $requiresAlbumPayload = $this->requiresAlbumPayload();
+        $requiresNotePayload = $this->requiresNotePayload();
         $userId = auth()->id();
 
         return [
@@ -113,6 +114,14 @@ class UpdateRequest extends AuthenticatedRequest
                 'nullable',
                 'integer',
                 new AttachableAlbumRule((int) $userId),
+            ],
+            'note_id' => [
+                Rule::requiredIf(fn () => $requiresNotePayload),
+                Rule::prohibitedIf(fn () => $this->isNonNoteContentType()),
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('notes', 'id')->where('user_id', $userId)->whereNull('deleted_at'),
             ],
         ];
     }
@@ -213,6 +222,22 @@ class UpdateRequest extends AuthenticatedRequest
         }
 
         return $contentType !== PostContentTypeEnum::ALBUM->value;
+    }
+
+    private function requiresNotePayload(): bool
+    {
+        return $this->input('content_type') === PostContentTypeEnum::NOTE->value;
+    }
+
+    private function isNonNoteContentType(): bool
+    {
+        $contentType = $this->input('content_type');
+
+        if ($contentType === null) {
+            return false;
+        }
+
+        return $contentType !== PostContentTypeEnum::NOTE->value;
     }
 
     private function allowsWatch(): bool

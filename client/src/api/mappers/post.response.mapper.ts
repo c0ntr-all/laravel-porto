@@ -1,4 +1,4 @@
-import { IPost, IPostAlbumSubject, IPostTaskSubject } from 'src/types'
+import { IPost, IPostAlbumSubject, IPostNoteSubject, IPostTaskSubject } from 'src/types'
 import { mapPostAttachmentsResponse } from 'src/api/mappers/attachment.mapper'
 import { normalizeMovie } from 'src/api/mappers/Movie/movie.mapper'
 import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
@@ -13,6 +13,8 @@ type PostWithRelations = IPost & {
   task?: Record<string, unknown> | null
   albums?: Record<string, unknown>[]
   album?: Record<string, unknown> | null
+  notes?: Record<string, unknown>[]
+  note?: Record<string, unknown> | null
   watch?: unknown
   started_at?: unknown
   attributes?: Record<string, unknown>
@@ -78,6 +80,21 @@ function extractPostAlbum (post: PostWithRelations): IPostAlbumSubject | null {
   }
 }
 
+function extractPostNote (post: PostWithRelations): IPostNoteSubject | null {
+  const raw = asRecord(post.note) ?? asRecord(post.notes?.[0])
+  if (!raw) {
+    return null
+  }
+
+  const excerpt = raw.excerpt == null || raw.excerpt === '' ? null : String(raw.excerpt)
+
+  return {
+    id: String(raw.id),
+    name: String(raw.name ?? ''),
+    excerpt
+  }
+}
+
 export function normalizePost (post: IPost): IPost {
   const withRelations = post as PostWithRelations
   const rawWatch = withRelations.watch ?? withRelations.attributes?.watch
@@ -91,6 +108,7 @@ export function normalizePost (post: IPost): IPost {
     movie: extractPostMovie(withRelations),
     task: extractPostTask(withRelations),
     album: extractPostAlbum(withRelations),
+    note: extractPostNote(withRelations),
     watch: normalizeSeriesWatchProgress(rawWatch),
     started_at: normalizeStartedAt(rawStartedAt),
     comments_count: normalizeCommentsCount(post.comments_count)

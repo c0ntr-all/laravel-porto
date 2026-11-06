@@ -134,6 +134,7 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
             }
           : null)
       : null,
+    note: contentType === PostContentTypeEnum.NOTE ? (model.note ?? null) : null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     is_draft: Boolean(model.is_draft),

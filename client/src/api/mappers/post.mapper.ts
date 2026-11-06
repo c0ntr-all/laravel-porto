@@ -90,6 +90,10 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
     data.album_id = postModel.album_id
   }
 
+  if (contentType === PostContentTypeEnum.NOTE && postModel.note_id != null) {
+    data.note_id = postModel.note_id
+  }
+
   return data
 }
 
@@ -182,6 +186,15 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
     if (nextAlbumId !== prevAlbumId && nextAlbumId != null) {
       dto.album_id = nextAlbumId
       dto.content_type = PostContentTypeEnum.ALBUM
+    }
+  }
+
+  if (contentType === PostContentTypeEnum.NOTE) {
+    const nextNoteId = edited.note_id ?? null
+    const prevNoteId = original.note ? Number(original.note.id) : null
+    if (nextNoteId !== prevNoteId && nextNoteId != null) {
+      dto.note_id = nextNoteId
+      dto.content_type = PostContentTypeEnum.NOTE
     }
   }
 

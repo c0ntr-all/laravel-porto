@@ -16,6 +16,7 @@ class PostContentAttachDto extends Data
     public bool $has_started_at_input = false;
     public ?int $task_id = null;
     public ?int $album_id = null;
+    public ?int $note_id = null;
 
     public function __construct()
     {

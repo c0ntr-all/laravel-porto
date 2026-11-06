@@ -61,6 +61,7 @@ class PostRepository
                                'movies.countries',
                                'tasks.taskList',
                                'albums',
+                               'notes',
                            ])
                            ->withCount('comments')
                            ->cursorPaginate(self::LIST_PER_PAGE);

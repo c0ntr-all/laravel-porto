@@ -17,6 +17,7 @@ class CreateRequest extends AuthenticatedRequest
         $isTvSeriesContent = $this->isTvSeriesContentType();
         $isTaskContent = $this->isTaskContentType();
         $isAlbumContent = $this->isAlbumContentType();
+        $isNoteContent = $this->isNoteContentType();
         $userId = auth()->id();
 
         return [
@@ -101,6 +102,13 @@ class CreateRequest extends AuthenticatedRequest
                 'integer',
                 new AttachableAlbumRule((int) $userId),
             ],
+            'note_id' => [
+                Rule::requiredIf(fn () => $isNoteContent),
+                Rule::prohibitedIf(fn () => !$isNoteContent),
+                'nullable',
+                'integer',
+                Rule::exists('notes', 'id')->where('user_id', $userId)->whereNull('deleted_at'),
+            ],
         ];
     }
 
@@ -166,5 +174,12 @@ class CreateRequest extends AuthenticatedRequest
         $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
 
         return $contentType === PostContentTypeEnum::ALBUM->value;
+    }
+
+    private function isNoteContentType(): bool
+    {
+        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
+
+        return $contentType === PostContentTypeEnum::NOTE->value;
     }
 }

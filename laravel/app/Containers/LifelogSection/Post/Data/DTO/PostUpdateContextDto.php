@@ -30,6 +30,7 @@ class PostUpdateContextDto extends Data
     public string|Optional|null $started_at;
     public int|Optional|null $task_id;
     public int|Optional|null $album_id;
+    public int|Optional|null $note_id;
 
     public function __construct()
     {
@@ -44,14 +45,16 @@ class PostUpdateContextDto extends Data
         $startedAt = $hasStartedAtInput ? $this->started_at : null;
         $taskId = $this->task_id instanceof Optional ? null : $this->task_id;
         $albumId = $this->album_id instanceof Optional ? null : $this->album_id;
+        $noteId = $this->note_id instanceof Optional ? null : $this->note_id;
 
         $hasMovie = $movieId !== null || ($movieTitle !== null && trim((string) $movieTitle) !== '');
         $hasWatch = $watch !== null && $watch !== [];
         $hasTask = $taskId !== null;
         $hasAlbum = $albumId !== null;
+        $hasNote = $noteId !== null;
         $hasContentTypeChange = $this->content_type instanceof PostContentTypeEnum;
 
-        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput && !$hasTask && !$hasAlbum && !$hasContentTypeChange) {
+        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput && !$hasTask && !$hasAlbum && !$hasNote && !$hasContentTypeChange) {
             return null;
         }
 
@@ -68,6 +71,7 @@ class PostUpdateContextDto extends Data
             'has_started_at_input' => $hasStartedAtInput,
             'task_id' => $taskId,
             'album_id' => $albumId,
+            'note_id' => $noteId,
         ]);
     }
 }

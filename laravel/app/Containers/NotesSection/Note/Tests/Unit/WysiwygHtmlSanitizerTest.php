@@ -48,6 +48,34 @@ class WysiwygHtmlSanitizerTest extends TestCase
         $this->assertStringNotContainsString('data:', $lower);
     }
 
+    public function test_keeps_callout_classes_and_drops_other_classes(): void
+    {
+        $clean = $this->sanitizer->sanitize(
+            '<div class="note-callout note-callout--red evil"><span class="note-callout__mark">!</span><p>Текст</p></div>'
+        );
+
+        $this->assertNotNull($clean);
+        $this->assertStringContainsString('note-callout', $clean);
+        $this->assertStringContainsString('note-callout--red', $clean);
+        $this->assertStringContainsString('note-callout__mark', $clean);
+        $this->assertStringContainsString('Текст', $clean);
+        $this->assertStringNotContainsString('evil', $clean);
+    }
+
+    public function test_keeps_a_note_table_and_drops_unknown_classes(): void
+    {
+        $clean = $this->sanitizer->sanitize(
+            '<table class="note-table evil"><tbody><tr><td>А</td><td>Б</td></tr></tbody></table>'
+        );
+
+        $this->assertNotNull($clean);
+        $this->assertStringContainsString('note-table', $clean);
+        $this->assertStringContainsString('А', $clean);
+        $this->assertStringContainsString('Б', $clean);
+        $this->assertStringNotContainsString('evil', $clean);
+        $this->assertStringContainsString('<td>', strtolower($clean));
+    }
+
     public function test_null_and_blank_content_stay_empty(): void
     {
         $this->assertNull($this->sanitizer->sanitize(null));

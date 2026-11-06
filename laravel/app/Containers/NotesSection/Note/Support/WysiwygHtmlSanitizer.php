@@ -19,7 +19,8 @@ final class WysiwygHtmlSanitizer
     private const ALLOWED_TAGS = [
         'a', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'font',
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li',
-        'ol', 'p', 'pre', 's', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul',
+        'ol', 'p', 'pre', 's', 'span', 'strike', 'strong', 'sub', 'sup',
+        'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul',
     ];
 
     private const DROPPED_TAGS = [
@@ -35,6 +36,19 @@ final class WysiwygHtmlSanitizer
         'a' => ['href', 'target'],
         'font' => ['color', 'face', 'size'],
         'img' => ['alt', 'height', 'src', 'width'],
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private const CALLOUT_CLASSES = [
+        'note-callout',
+        'note-callout--red',
+        'note-callout--yellow',
+        'note-callout--green',
+        'note-callout--blue',
+        'note-callout__mark',
+        'note-table',
     ];
 
     /**
@@ -145,6 +159,7 @@ final class WysiwygHtmlSanitizer
     {
         $allowed = self::ATTRIBUTES[$tag] ?? [];
         $allowed[] = 'style';
+        $allowed[] = 'class';
 
         $remove = [];
         foreach ($element->attributes ?? [] as $attribute) {
@@ -186,6 +201,7 @@ final class WysiwygHtmlSanitizer
                 : null,
             'alt' => $this->plainText($value, 500),
             'style' => $this->safeStyle($value),
+            'class' => $this->safeClass($value),
             'color' => $this->safeColor($value),
             'face' => self::FONT_FACES[strtolower(trim($value))] ?? null,
             'size' => preg_match('/^[1-7]$/', trim($value)) === 1 ? trim($value) : null,
@@ -253,6 +269,20 @@ final class WysiwygHtmlSanitizer
         }
 
         return $kept === [] ? null : implode('; ', $kept);
+    }
+
+    private function safeClass(string $value): ?string
+    {
+        $tokens = preg_split('/\s+/', trim($value)) ?: [];
+        $kept = [];
+
+        foreach ($tokens as $token) {
+            if (in_array($token, self::CALLOUT_CLASSES, true)) {
+                $kept[$token] = $token;
+            }
+        }
+
+        return $kept === [] ? null : implode(' ', $kept);
     }
 
     private function safeColor(string $value): ?string

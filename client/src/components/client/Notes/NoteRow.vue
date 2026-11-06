@@ -27,13 +27,14 @@
       @click="emit('open')"
     >
       <span class="note-row__name">
+        <span class="note-row__label">{{ note.name }}</span>
         <q-icon
           v-if="note.is_pinned"
+          class="note-row__pin"
           name="push_pin"
           size="14px"
           color="primary"
         />
-        {{ note.name }}
       </span>
       <span
         v-if="note.excerpt"
@@ -148,12 +149,21 @@ const emit = defineEmits<{
 
   &__name {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
     font-size: 14px;
     font-weight: 600;
     color: #282f53;
+  }
+
+  &__label {
+    min-width: 0;
     word-break: break-word;
+  }
+
+  &__pin {
+    flex: none;
+    margin-top: 3px;
   }
 
   &__excerpt {

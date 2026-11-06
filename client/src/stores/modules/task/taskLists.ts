@@ -40,6 +40,7 @@ export function createTaskListActions(ctx: TaskStoreContext) {
       const responseData = await taskApi.createTaskList(payload)
       const { entity } = normalizeEntity<ITaskList>(responseData.data, responseData.included)
 
+      entity.tasksIds = entity.tasksIds || []
       upsertEntity(taskLists, entity)
     } catch (error: unknown) {
       handleApiError(error)

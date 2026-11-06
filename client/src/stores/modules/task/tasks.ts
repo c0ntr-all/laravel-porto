@@ -165,8 +165,13 @@ export function createTaskActions(ctx: TaskStoreContext) {
         linkSubtaskToParent(tasks, entity.parent_id, entity.id)
       } else if (entity.task_list_id) {
         const list = taskLists.byId[entity.task_list_id]
-        if (list && !list.tasksIds.includes(entity.id)) {
-          list.tasksIds.push(entity.id)
+        if (list) {
+          if (!list.tasksIds) {
+            list.tasksIds = []
+          }
+          if (!list.tasksIds.includes(entity.id)) {
+            list.tasksIds.push(entity.id)
+          }
         }
       }
 
@@ -281,7 +286,7 @@ export function createTaskActions(ctx: TaskStoreContext) {
 
       if (task.task_list_id) {
         const list = taskLists.byId[task.task_list_id]
-        if (list) {
+        if (list?.tasksIds) {
           list.tasksIds = list.tasksIds.filter(id => id !== taskId)
         }
       }

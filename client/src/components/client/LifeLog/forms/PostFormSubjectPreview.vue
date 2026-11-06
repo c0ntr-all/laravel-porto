@@ -3,31 +3,55 @@
     v-if="task || album || note"
     class="post-form-subject-preview"
   >
-    <div class="post-form-subject-preview__head">
-      <span class="text-caption text-grey-7">Прикреплено</span>
+    <span class="text-caption text-grey-7">Прикреплено</span>
+
+    <div
+      v-if="task"
+      class="post-form-subject-preview__item"
+    >
+      <LifeLogPostTaskSubject :task="task" />
       <q-btn
         flat
         dense
-        no-caps
+        round
         color="grey-7"
         icon="close"
-        label="Убрать"
-        @click="emit('clear')"
+        aria-label="Убрать задачу"
+        @click="emit('clear', 'task')"
       />
     </div>
 
-    <LifeLogPostTaskSubject
-      v-if="task"
-      :task="task"
-    />
-    <LifeLogPostAlbumSubject
-      v-else-if="album"
-      :album="album"
-    />
-    <LifeLogPostNoteSubject
-      v-else-if="note"
-      :note="note"
-    />
+    <div
+      v-if="album"
+      class="post-form-subject-preview__item"
+    >
+      <LifeLogPostAlbumSubject :album="album" />
+      <q-btn
+        flat
+        dense
+        round
+        color="grey-7"
+        icon="close"
+        aria-label="Убрать альбом"
+        @click="emit('clear', 'album')"
+      />
+    </div>
+
+    <div
+      v-if="note"
+      class="post-form-subject-preview__item"
+    >
+      <LifeLogPostNoteSubject :note="note" />
+      <q-btn
+        flat
+        dense
+        round
+        color="grey-7"
+        icon="close"
+        aria-label="Убрать заметку"
+        @click="emit('clear', 'note')"
+      />
+    </div>
   </div>
 </template>
 
@@ -44,19 +68,26 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  clear: []
+  clear: [kind: 'task' | 'album' | 'note']
 }>()
 </script>
 
 <style scoped lang="scss">
 .post-form-subject-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 12px;
 
-  &__head {
+  &__item {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
+    align-items: flex-start;
+    gap: 8px;
+
+    > :first-child {
+      flex: 1;
+      min-width: 0;
+    }
   }
 }
 </style>

@@ -27,7 +27,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Task post',
-                'content_type' => PostContentTypeEnum::TASK->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-10-21',
                 'task_id' => $task->id,
                 'tags' => [],
@@ -35,7 +35,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::TASK->value)
+            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::DEFAULT->value)
             ->assertJsonPath('data.relationships.task.data.type', ContainerAliasEnum::TM_TASK->value)
             ->assertJsonPath('data.relationships.task.data.id', (string) $task->id);
 
@@ -56,7 +56,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Album post',
-                'content_type' => PostContentTypeEnum::ALBUM->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-10-21',
                 'album_id' => $album->id,
                 'tags' => [],
@@ -64,7 +64,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::ALBUM->value)
+            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::DEFAULT->value)
             ->assertJsonPath('data.relationships.album.data.type', ContainerAliasEnum::GALLERY_ALBUM->value)
             ->assertJsonPath('data.relationships.album.data.id', (string) $album->id);
 
@@ -85,7 +85,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Task post',
-                'content_type' => PostContentTypeEnum::TASK->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-10-21',
                 'task_id' => $foreignTask->id,
             ]);
@@ -105,7 +105,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Album post',
-                'content_type' => PostContentTypeEnum::ALBUM->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-10-21',
                 'album_id' => $foreignAlbum->id,
             ]);
@@ -125,7 +125,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'System album post',
-                'content_type' => PostContentTypeEnum::ALBUM->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-10-21',
                 'album_id' => $systemAlbum->id,
             ]);
@@ -138,13 +138,13 @@ class AttachTaskAndAlbumToPostTest extends TestCase
             );
     }
 
-    public function test_changing_content_type_from_movie_to_task_replaces_subject(): void
+    public function test_task_attachment_keeps_movie_subject(): void
     {
         $user = User::factory()->create();
         $movie = Movie::factory()->create();
         $task = Task::create([
             'user_id' => $user->id,
-            'title' => 'Replacement task',
+            'title' => 'Trip task',
         ]);
 
         $post = Post::factory()->create([
@@ -156,15 +156,14 @@ class AttachTaskAndAlbumToPostTest extends TestCase
 
         $response = $this->actingAs($user, 'api')
             ->patchJson("/api/v1/lifelog/posts/{$post->id}", [
-                'content_type' => PostContentTypeEnum::TASK->value,
                 'task_id' => $task->id,
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::TASK->value)
+            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::MOVIE->value)
             ->assertJsonPath('data.relationships.task.data.id', (string) $task->id);
 
-        $this->assertDatabaseMissing('lifelog_post_subjectables', [
+        $this->assertDatabaseHas('lifelog_post_subjectables', [
             'post_id' => $post->id,
             'subjectable_type' => ContainerAliasEnum::MOVIE->value,
             'subjectable_id' => $movie->id,
@@ -176,24 +175,29 @@ class AttachTaskAndAlbumToPostTest extends TestCase
         ]);
     }
 
-    public function test_changing_content_type_to_default_detaches_subjects(): void
+    public function test_null_album_id_detaches_only_album(): void
     {
         $user = User::factory()->create();
         $album = Album::create([
             'user_id' => $user->id,
             'name' => 'Detach me',
         ]);
+        $task = Task::create([
+            'user_id' => $user->id,
+            'title' => 'Keep me',
+        ]);
 
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'content_type' => PostContentTypeEnum::ALBUM,
+            'content_type' => PostContentTypeEnum::DEFAULT,
             'title' => 'Album post',
         ]);
         $post->attachAlbum($album);
+        $post->attachTask($task);
 
         $response = $this->actingAs($user, 'api')
             ->patchJson("/api/v1/lifelog/posts/{$post->id}", [
-                'content_type' => PostContentTypeEnum::DEFAULT->value,
+                'album_id' => null,
             ]);
 
         $response->assertOk()
@@ -201,6 +205,12 @@ class AttachTaskAndAlbumToPostTest extends TestCase
 
         $this->assertDatabaseMissing('lifelog_post_subjectables', [
             'post_id' => $post->id,
+            'subjectable_type' => ContainerAliasEnum::GALLERY_ALBUM->value,
+        ]);
+        $this->assertDatabaseHas('lifelog_post_subjectables', [
+            'post_id' => $post->id,
+            'subjectable_type' => ContainerAliasEnum::TM_TASK->value,
+            'subjectable_id' => $task->id,
         ]);
     }
 
@@ -214,7 +224,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
 
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'content_type' => PostContentTypeEnum::TASK,
+            'content_type' => PostContentTypeEnum::DEFAULT,
         ]);
         $post->attachTask($task);
 
@@ -236,7 +246,7 @@ class AttachTaskAndAlbumToPostTest extends TestCase
 
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'content_type' => PostContentTypeEnum::ALBUM,
+            'content_type' => PostContentTypeEnum::DEFAULT,
         ]);
         $post->attachAlbum($album);
 

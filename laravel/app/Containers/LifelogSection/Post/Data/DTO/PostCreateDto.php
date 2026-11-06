@@ -46,6 +46,10 @@ class PostCreateDto extends Data
             'task_id' => $this->task_id,
             'album_id' => $this->album_id,
             'note_id' => $this->note_id,
+            'has_content_type_input' => true,
+            'has_task_input' => $this->task_id !== null,
+            'has_album_input' => $this->album_id !== null,
+            'has_note_input' => $this->note_id !== null,
         ]);
     }
 }

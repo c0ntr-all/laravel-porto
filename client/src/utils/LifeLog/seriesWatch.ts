@@ -1,4 +1,3 @@
-import { PostContentTypeEnum } from 'src/enums/LifeLog/PostContentTypeEnum'
 import { MovieTypeEnum } from 'src/enums/Movie/MovieTypeEnum'
 import { IPost } from 'src/types'
 import { ISeriesWatchProgress } from 'src/types/LifeLog/watch'
@@ -81,10 +80,6 @@ export function serializeSeriesWatchProgress (
 }
 
 export function isSeriesWatchPost (post: IPost): boolean {
-  if (post.content_type === PostContentTypeEnum.TV_SERIES) {
-    return true
-  }
-
   return post.movie?.type === MovieTypeEnum.TV_SERIES
 }
 

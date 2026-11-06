@@ -11,11 +11,7 @@ enum PostContentTypeEnum: string
     case DEFAULT = 'default';
     case MUSIC = 'music';
     case MOVIE = 'movie';
-    case TV_SERIES = 'tv_series';
     case GAME = 'game';
-    case TASK = 'task';
-    case ALBUM = 'album';
-    case NOTE = 'note';
 
     public static function default(): self
     {
@@ -27,12 +23,8 @@ enum PostContentTypeEnum: string
         return match ($this) {
             self::DEFAULT => 'Обычный',
             self::MUSIC => 'Музыка',
-            self::MOVIE => 'Фильм',
-            self::TV_SERIES => 'Сериал',
+            self::MOVIE => 'Фильмы и сериалы',
             self::GAME => 'Игра',
-            self::TASK => 'Задача',
-            self::ALBUM => 'Альбом',
-            self::NOTE => 'Заметка',
         };
     }
 }

@@ -231,8 +231,7 @@ const RECENT_MOVIES_LIMIT = 5
 let searchRequestId = 0
 
 const isTvSeriesSelected = computed(() => {
-  return selectedMovie.value?.type === MovieTypeEnum.TV_SERIES ||
-    model.value.content_type === PostContentTypeEnum.TV_SERIES
+  return selectedMovie.value?.type === MovieTypeEnum.TV_SERIES
 })
 
 const canSubmit = computed(() => {
@@ -289,16 +288,12 @@ function syncStartedAtToModel () {
 
 function mapPostToModel (post: IPost): IPostUpdateModel {
   const rawPost = toRaw(post)
-  const isSeries =
-    rawPost.content_type === PostContentTypeEnum.TV_SERIES ||
-    rawPost.movie?.type === MovieTypeEnum.TV_SERIES
+  const isSeries = rawPost.movie?.type === MovieTypeEnum.TV_SERIES
 
   return {
     title: rawPost.title ?? '',
     content: rawPost.content ?? '',
-    content_type: isSeries
-      ? PostContentTypeEnum.TV_SERIES
-      : (rawPost.content_type ?? PostContentTypeEnum.MOVIE),
+    content_type: rawPost.content_type ?? PostContentTypeEnum.MOVIE,
     is_draft: Boolean(rawPost.is_draft),
     tags: [...(rawPost.tags ?? [])],
     newTags: [],
@@ -318,9 +313,7 @@ function syncMovieFieldsToModel () {
   if (selectedMovie.value) {
     model.value.movie_id = Number(selectedMovie.value.id)
     model.value.movie_title = null
-    model.value.content_type = selectedMovie.value.type === MovieTypeEnum.TV_SERIES
-      ? PostContentTypeEnum.TV_SERIES
-      : PostContentTypeEnum.MOVIE
+    model.value.content_type = PostContentTypeEnum.MOVIE
 
     if (selectedMovie.value.type === MovieTypeEnum.TV_SERIES) {
       model.value.watch = model.value.watch ?? emptySeriesWatchProgress()

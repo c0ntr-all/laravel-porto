@@ -20,7 +20,7 @@ class NotePostContentHandler implements PostContentHandlerInterface
 
     public function supports(PostContentTypeEnum $contentType): bool
     {
-        return $contentType === PostContentTypeEnum::NOTE;
+        return false;
     }
 
     public function attach(Post $post, PostContentAttachDto $dto): void

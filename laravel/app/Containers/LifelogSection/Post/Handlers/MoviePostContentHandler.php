@@ -26,8 +26,7 @@ class MoviePostContentHandler implements PostContentHandlerInterface
 
     public function supports(PostContentTypeEnum $contentType): bool
     {
-        return $contentType === PostContentTypeEnum::MOVIE
-            || $contentType === PostContentTypeEnum::TV_SERIES;
+        return $contentType === PostContentTypeEnum::MOVIE;
     }
 
     public function attach(Post $post, PostContentAttachDto $dto): void
@@ -55,11 +54,7 @@ class MoviePostContentHandler implements PostContentHandlerInterface
         }
 
         if ($dto->movie_title !== null && trim($dto->movie_title) !== '') {
-            $type = $dto->content_type === PostContentTypeEnum::TV_SERIES
-                ? MovieTypeEnum::TV_SERIES
-                : MovieTypeEnum::MOVIE;
-
-            return $this->findOrCreateMovieByTitleTask->run($dto->movie_title, $type);
+            return $this->findOrCreateMovieByTitleTask->run($dto->movie_title, MovieTypeEnum::MOVIE);
         }
 
         $existing = $this->currentMovie($post);

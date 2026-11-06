@@ -43,18 +43,18 @@ class PostUpdateContextDto extends Data
         $watch = $this->watch instanceof Optional ? null : $this->watch;
         $hasStartedAtInput = !($this->started_at instanceof Optional);
         $startedAt = $hasStartedAtInput ? $this->started_at : null;
-        $taskId = $this->task_id instanceof Optional ? null : $this->task_id;
-        $albumId = $this->album_id instanceof Optional ? null : $this->album_id;
-        $noteId = $this->note_id instanceof Optional ? null : $this->note_id;
+        $hasTaskInput = !($this->task_id instanceof Optional);
+        $hasAlbumInput = !($this->album_id instanceof Optional);
+        $hasNoteInput = !($this->note_id instanceof Optional);
+        $taskId = $hasTaskInput ? $this->task_id : null;
+        $albumId = $hasAlbumInput ? $this->album_id : null;
+        $noteId = $hasNoteInput ? $this->note_id : null;
 
         $hasMovie = $movieId !== null || ($movieTitle !== null && trim((string) $movieTitle) !== '');
         $hasWatch = $watch !== null && $watch !== [];
-        $hasTask = $taskId !== null;
-        $hasAlbum = $albumId !== null;
-        $hasNote = $noteId !== null;
         $hasContentTypeChange = $this->content_type instanceof PostContentTypeEnum;
 
-        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput && !$hasTask && !$hasAlbum && !$hasNote && !$hasContentTypeChange) {
+        if (!$hasMovie && !$hasWatch && !$hasStartedAtInput && !$hasTaskInput && !$hasAlbumInput && !$hasNoteInput && !$hasContentTypeChange) {
             return null;
         }
 
@@ -72,6 +72,10 @@ class PostUpdateContextDto extends Data
             'task_id' => $taskId,
             'album_id' => $albumId,
             'note_id' => $noteId,
+            'has_content_type_input' => $hasContentTypeChange,
+            'has_task_input' => $hasTaskInput,
+            'has_album_input' => $hasAlbumInput,
+            'has_note_input' => $hasNoteInput,
         ]);
     }
 }

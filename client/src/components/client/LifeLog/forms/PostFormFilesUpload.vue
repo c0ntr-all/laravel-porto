@@ -179,27 +179,25 @@ function appendGallery (media: IGalleryMediaItem[]) {
 }
 
 function onSelectTask (task: IPostTaskSubject) {
-  attachedAlbum.value = null
-  attachedNote.value = null
   attachedTask.value = task
 }
 
 function onSelectAlbum (album: IPostAlbumSubject) {
-  attachedTask.value = null
-  attachedNote.value = null
   attachedAlbum.value = album
 }
 
 function onSelectNote (note: IPostNoteSubject) {
-  attachedTask.value = null
-  attachedAlbum.value = null
   attachedNote.value = note
 }
 
-function clearSubject () {
-  attachedTask.value = null
-  attachedAlbum.value = null
-  attachedNote.value = null
+function clearSubject (kind: 'task' | 'album' | 'note') {
+  if (kind === 'task') {
+    attachedTask.value = null
+  } else if (kind === 'album') {
+    attachedAlbum.value = null
+  } else {
+    attachedNote.value = null
+  }
 }
 
 function removeItem (key: string) {

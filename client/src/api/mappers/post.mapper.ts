@@ -57,10 +57,7 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
   }
 
   const contentType = data.content_type ?? PostContentTypeEnum.DEFAULT
-  if (
-    contentType === PostContentTypeEnum.MOVIE ||
-    contentType === PostContentTypeEnum.TV_SERIES
-  ) {
+  if (contentType === PostContentTypeEnum.MOVIE) {
     if (postModel.movie_id != null) {
       data.movie_id = postModel.movie_id
     } else if (postModel.movie_title?.trim()) {
@@ -73,24 +70,22 @@ export function mapPostFormToCreateDto (postModel: IPostModel): IPostCreateDto {
         data.started_at = normalized
       }
     }
-  }
 
-  if (contentType === PostContentTypeEnum.TV_SERIES) {
     const watch = serializeSeriesWatchProgress(postModel.watch)
     if (watch) {
       data.watch = watch
     }
   }
 
-  if (contentType === PostContentTypeEnum.TASK && postModel.task_id != null) {
+  if (postModel.task_id != null) {
     data.task_id = postModel.task_id
   }
 
-  if (contentType === PostContentTypeEnum.ALBUM && postModel.album_id != null) {
+  if (postModel.album_id != null) {
     data.album_id = postModel.album_id
   }
 
-  if (contentType === PostContentTypeEnum.NOTE && postModel.note_id != null) {
+  if (postModel.note_id != null) {
     data.note_id = postModel.note_id
   }
 
@@ -136,11 +131,8 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
   if (edited.newTags.length > 0) dto.new_tags = edited.newTags.map(t => t.name)
 
   const contentType = edited.content_type ?? original.content_type ?? PostContentTypeEnum.DEFAULT
-  const isMovieContent =
-    contentType === PostContentTypeEnum.MOVIE ||
-    contentType === PostContentTypeEnum.TV_SERIES
 
-  if (isMovieContent) {
+  if (contentType === PostContentTypeEnum.MOVIE) {
     if (edited.movie_id != null && edited.movie_id !== Number(original.movie?.id)) {
       dto.movie_id = edited.movie_id
     } else if (
@@ -159,43 +151,29 @@ export function mapPostFormToUpdateDto (edited: IPostUpdateModel, original: IPos
       dto.started_at = nextStartedAt
     }
 
-    if (contentType === PostContentTypeEnum.TV_SERIES) {
-      const nextWatch = serializeSeriesWatchProgress(edited.watch)
-      const prevWatch = serializeSeriesWatchProgress(original.watch)
-      if (JSON.stringify(nextWatch ?? null) !== JSON.stringify(prevWatch ?? null)) {
-        if (nextWatch) {
-          dto.watch = nextWatch
-          dto.content_type = PostContentTypeEnum.TV_SERIES
-        }
-      }
+    const nextWatch = serializeSeriesWatchProgress(edited.watch)
+    const prevWatch = serializeSeriesWatchProgress(original.watch)
+    if (JSON.stringify(nextWatch ?? null) !== JSON.stringify(prevWatch ?? null) && nextWatch) {
+      dto.watch = nextWatch
     }
   }
 
-  if (contentType === PostContentTypeEnum.TASK) {
-    const nextTaskId = edited.task_id ?? null
-    const prevTaskId = original.task ? Number(original.task.id) : null
-    if (nextTaskId !== prevTaskId && nextTaskId != null) {
-      dto.task_id = nextTaskId
-      dto.content_type = PostContentTypeEnum.TASK
-    }
+  const nextTaskId = edited.task_id ?? null
+  const prevTaskId = original.task ? Number(original.task.id) : null
+  if (nextTaskId !== prevTaskId) {
+    dto.task_id = nextTaskId
   }
 
-  if (contentType === PostContentTypeEnum.ALBUM) {
-    const nextAlbumId = edited.album_id ?? null
-    const prevAlbumId = original.album ? Number(original.album.id) : null
-    if (nextAlbumId !== prevAlbumId && nextAlbumId != null) {
-      dto.album_id = nextAlbumId
-      dto.content_type = PostContentTypeEnum.ALBUM
-    }
+  const nextAlbumId = edited.album_id ?? null
+  const prevAlbumId = original.album ? Number(original.album.id) : null
+  if (nextAlbumId !== prevAlbumId) {
+    dto.album_id = nextAlbumId
   }
 
-  if (contentType === PostContentTypeEnum.NOTE) {
-    const nextNoteId = edited.note_id ?? null
-    const prevNoteId = original.note ? Number(original.note.id) : null
-    if (nextNoteId !== prevNoteId && nextNoteId != null) {
-      dto.note_id = nextNoteId
-      dto.content_type = PostContentTypeEnum.NOTE
-    }
+  const nextNoteId = edited.note_id ?? null
+  const prevNoteId = original.note ? Number(original.note.id) : null
+  if (nextNoteId !== prevNoteId) {
+    dto.note_id = nextNoteId
   }
 
   return dto

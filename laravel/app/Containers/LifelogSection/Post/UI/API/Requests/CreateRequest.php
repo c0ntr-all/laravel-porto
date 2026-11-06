@@ -14,10 +14,6 @@ class CreateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         $isMovieContent = $this->isMovieContentType();
-        $isTvSeriesContent = $this->isTvSeriesContentType();
-        $isTaskContent = $this->isTaskContentType();
-        $isAlbumContent = $this->isAlbumContentType();
-        $isNoteContent = $this->isNoteContentType();
         $userId = auth()->id();
 
         return [
@@ -61,7 +57,7 @@ class CreateRequest extends AuthenticatedRequest
                 'regex:/^\d{4}-\d{2}-\d{2}( \d{1,2}:\d{2})?$/',
             ],
             'watch' => [
-                Rule::prohibitedIf(fn () => !$isTvSeriesContent),
+                Rule::prohibitedIf(fn () => !$isMovieContent),
                 'sometimes',
                 'nullable',
                 'array',
@@ -89,22 +85,16 @@ class CreateRequest extends AuthenticatedRequest
                 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
             ],
             'task_id' => [
-                Rule::requiredIf(fn () => $isTaskContent),
-                Rule::prohibitedIf(fn () => !$isTaskContent),
                 'nullable',
                 'integer',
                 Rule::exists('tm_tasks', 'id')->where('user_id', $userId),
             ],
             'album_id' => [
-                Rule::requiredIf(fn () => $isAlbumContent),
-                Rule::prohibitedIf(fn () => !$isAlbumContent),
                 'nullable',
                 'integer',
                 new AttachableAlbumRule((int) $userId),
             ],
             'note_id' => [
-                Rule::requiredIf(fn () => $isNoteContent),
-                Rule::prohibitedIf(fn () => !$isNoteContent),
                 'nullable',
                 'integer',
                 Rule::exists('notes', 'id')->where('user_id', $userId)->whereNull('deleted_at'),
@@ -149,37 +139,6 @@ class CreateRequest extends AuthenticatedRequest
     {
         $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
 
-        return in_array($contentType, [
-            PostContentTypeEnum::MOVIE->value,
-            PostContentTypeEnum::TV_SERIES->value,
-        ], true);
-    }
-
-    private function isTvSeriesContentType(): bool
-    {
-        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
-
-        return $contentType === PostContentTypeEnum::TV_SERIES->value;
-    }
-
-    private function isTaskContentType(): bool
-    {
-        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
-
-        return $contentType === PostContentTypeEnum::TASK->value;
-    }
-
-    private function isAlbumContentType(): bool
-    {
-        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
-
-        return $contentType === PostContentTypeEnum::ALBUM->value;
-    }
-
-    private function isNoteContentType(): bool
-    {
-        $contentType = $this->input('content_type', PostContentTypeEnum::DEFAULT->value);
-
-        return $contentType === PostContentTypeEnum::NOTE->value;
+        return $contentType === PostContentTypeEnum::MOVIE->value;
     }
 }

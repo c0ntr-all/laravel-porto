@@ -15,23 +15,22 @@ export function isOptimisticPostId(id: string): boolean {
 }
 
 export function isMovieWatchPost(post: IPost): boolean {
-  return post.content_type === PostContentTypeEnum.MOVIE ||
-    post.content_type === PostContentTypeEnum.TV_SERIES
+  return post.content_type === PostContentTypeEnum.MOVIE
 }
 
 export function isTaskPost(post: IPost): boolean {
-  return post.content_type === PostContentTypeEnum.TASK
+  return Boolean(post.task)
 }
 
 export function isAlbumPost(post: IPost): boolean {
-  return post.content_type === PostContentTypeEnum.ALBUM
+  return Boolean(post.album)
 }
 
 export const MOVIE_WATCH_POST_TITLE = 'Просмотр фильма'
 export const TV_SERIES_WATCH_POST_TITLE = 'Просмотр сериала'
 
 export function movieWatchPostTitle(post: IPost): string {
-  return post.content_type === PostContentTypeEnum.TV_SERIES
+  return post.movie?.type === MovieTypeEnum.TV_SERIES
     ? TV_SERIES_WATCH_POST_TITLE
     : MOVIE_WATCH_POST_TITLE
 }
@@ -81,10 +80,8 @@ function mapNewTagsToOptimisticTags(newTags: INewTag[]): ITag[] {
 export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
   const [datePart, timePart = ''] = model.datetime.split(' ')
   const contentType = model.content_type ?? PostContentTypeEnum.DEFAULT
-  const isMoviePost =
-    contentType === PostContentTypeEnum.MOVIE ||
-    contentType === PostContentTypeEnum.TV_SERIES
-  const isSeriesPost = contentType === PostContentTypeEnum.TV_SERIES
+  const isMoviePost = contentType === PostContentTypeEnum.MOVIE
+  const isSeriesPost = isMoviePost && Boolean(model.watch)
   const movieTitle = model.title?.trim() ?? ''
 
   return {
@@ -122,19 +119,17 @@ export function buildOptimisticPost(model: IPostModel, user: IUser): IPost {
       : null,
     watch: isSeriesPost ? (model.watch ?? null) : null,
     started_at: isMoviePost ? (normalizeStartedAt(model.started_at) ?? null) : null,
-    task: contentType === PostContentTypeEnum.TASK ? (model.task ?? null) : null,
-    album: contentType === PostContentTypeEnum.ALBUM
-      ? (model.album
-          ? {
-              id: String(model.album.id),
-              name: 'name' in model.album ? model.album.name : '',
-              description: model.album.description ?? null,
-              image: 'image' in model.album ? (model.album.image || null) : null,
-              media_count: 'media_count' in model.album ? model.album.media_count : undefined
-            }
-          : null)
+    task: model.task ?? null,
+    album: model.album
+      ? {
+          id: String(model.album.id),
+          name: 'name' in model.album ? model.album.name : '',
+          description: model.album.description ?? null,
+          image: 'image' in model.album ? (model.album.image || null) : null,
+          media_count: 'media_count' in model.album ? model.album.media_count : undefined
+        }
       : null,
-    note: contentType === PostContentTypeEnum.NOTE ? (model.note ?? null) : null,
+    note: model.note ?? null,
     content: model.content,
     content_type: model.content_type ?? PostContentTypeEnum.DEFAULT,
     is_draft: Boolean(model.is_draft),

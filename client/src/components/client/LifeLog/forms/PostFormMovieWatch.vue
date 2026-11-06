@@ -323,9 +323,7 @@ const submit = async (asDraft: boolean) => {
   const postModel = {
     title,
     content: '',
-    content_type: isSeries
-      ? PostContentTypeEnum.TV_SERIES
-      : PostContentTypeEnum.MOVIE,
+    content_type: PostContentTypeEnum.MOVIE,
     is_draft: asDraft,
     tags: [],
     newTags: [],

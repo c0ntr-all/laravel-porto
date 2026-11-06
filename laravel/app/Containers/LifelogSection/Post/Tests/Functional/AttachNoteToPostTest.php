@@ -27,7 +27,7 @@ class AttachNoteToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Note post',
-                'content_type' => PostContentTypeEnum::NOTE->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-11-06',
                 'note_id' => $note->id,
                 'tags' => [],
@@ -35,7 +35,7 @@ class AttachNoteToPostTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::NOTE->value)
+            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::DEFAULT->value)
             ->assertJsonPath('data.relationships.note.data.type', ContainerAliasEnum::NOTE->value)
             ->assertJsonPath('data.relationships.note.data.id', (string) $note->id);
 
@@ -63,7 +63,7 @@ class AttachNoteToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Note post',
-                'content_type' => PostContentTypeEnum::NOTE->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-11-06',
                 'note_id' => $foreignNote->id,
             ]);
@@ -84,7 +84,7 @@ class AttachNoteToPostTest extends TestCase
         $response = $this->actingAs($user, 'api')
             ->postJson('/api/v1/lifelog/posts', [
                 'title' => 'Note post',
-                'content_type' => PostContentTypeEnum::NOTE->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'date' => '2026-11-06',
                 'note_id' => $note->id,
             ]);
@@ -107,22 +107,22 @@ class AttachNoteToPostTest extends TestCase
 
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'content_type' => PostContentTypeEnum::TASK,
+            'content_type' => PostContentTypeEnum::DEFAULT,
             'title' => 'Task post',
         ]);
         $post->attachTask($task);
 
         $response = $this->actingAs($user, 'api')
             ->patchJson("/api/v1/lifelog/posts/{$post->id}", [
-                'content_type' => PostContentTypeEnum::NOTE->value,
+                'content_type' => PostContentTypeEnum::DEFAULT->value,
                 'note_id' => $note->id,
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::NOTE->value)
+            ->assertJsonPath('data.attributes.content_type', PostContentTypeEnum::DEFAULT->value)
             ->assertJsonPath('data.relationships.note.data.id', (string) $note->id);
 
-        $this->assertDatabaseMissing('lifelog_post_subjectables', [
+        $this->assertDatabaseHas('lifelog_post_subjectables', [
             'post_id' => $post->id,
             'subjectable_type' => ContainerAliasEnum::TM_TASK->value,
             'subjectable_id' => $task->id,
@@ -134,7 +134,7 @@ class AttachNoteToPostTest extends TestCase
         ]);
     }
 
-    public function test_changing_content_type_to_default_detaches_note(): void
+    public function test_null_note_id_detaches_note(): void
     {
         $user = User::factory()->create();
         $note = Note::factory()->create([
@@ -144,14 +144,14 @@ class AttachNoteToPostTest extends TestCase
 
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'content_type' => PostContentTypeEnum::NOTE,
+            'content_type' => PostContentTypeEnum::DEFAULT,
             'title' => 'Note post',
         ]);
         $post->attachNote($note);
 
         $response = $this->actingAs($user, 'api')
             ->patchJson("/api/v1/lifelog/posts/{$post->id}", [
-                'content_type' => PostContentTypeEnum::DEFAULT->value,
+                'note_id' => null,
             ]);
 
         $response->assertOk()

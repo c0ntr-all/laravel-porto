@@ -20,11 +20,8 @@ class UpdateRequest extends AuthenticatedRequest
     public function rules(): array
     {
         $requiresMoviePayload = $this->requiresMoviePayload();
-        $allowsWatch = $this->allowsWatch();
+        $allowsWatch = $this->allowsStartedAt();
         $allowsStartedAt = $this->allowsStartedAt();
-        $requiresTaskPayload = $this->requiresTaskPayload();
-        $requiresAlbumPayload = $this->requiresAlbumPayload();
-        $requiresNotePayload = $this->requiresNotePayload();
         $userId = auth()->id();
 
         return [
@@ -100,24 +97,18 @@ class UpdateRequest extends AuthenticatedRequest
                 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/',
             ],
             'task_id' => [
-                Rule::requiredIf(fn () => $requiresTaskPayload),
-                Rule::prohibitedIf(fn () => $this->isNonTaskContentType()),
                 'sometimes',
                 'nullable',
                 'integer',
                 Rule::exists('tm_tasks', 'id')->where('user_id', $userId),
             ],
             'album_id' => [
-                Rule::requiredIf(fn () => $requiresAlbumPayload),
-                Rule::prohibitedIf(fn () => $this->isNonAlbumContentType()),
                 'sometimes',
                 'nullable',
                 'integer',
                 new AttachableAlbumRule((int) $userId),
             ],
             'note_id' => [
-                Rule::requiredIf(fn () => $requiresNotePayload),
-                Rule::prohibitedIf(fn () => $this->isNonNoteContentType()),
                 'sometimes',
                 'nullable',
                 'integer',
@@ -172,10 +163,7 @@ class UpdateRequest extends AuthenticatedRequest
             return false;
         }
 
-        return in_array($contentType, [
-            PostContentTypeEnum::MOVIE->value,
-            PostContentTypeEnum::TV_SERIES->value,
-        ], true);
+        return $contentType === PostContentTypeEnum::MOVIE->value;
     }
 
     private function isNonMovieContentType(): bool
@@ -186,87 +174,14 @@ class UpdateRequest extends AuthenticatedRequest
             return false;
         }
 
-        return !in_array($contentType, [
-            PostContentTypeEnum::MOVIE->value,
-            PostContentTypeEnum::TV_SERIES->value,
-        ], true);
-    }
-
-    private function requiresTaskPayload(): bool
-    {
-        return $this->input('content_type') === PostContentTypeEnum::TASK->value;
-    }
-
-    private function isNonTaskContentType(): bool
-    {
-        $contentType = $this->input('content_type');
-
-        if ($contentType === null) {
-            return false;
-        }
-
-        return $contentType !== PostContentTypeEnum::TASK->value;
-    }
-
-    private function requiresAlbumPayload(): bool
-    {
-        return $this->input('content_type') === PostContentTypeEnum::ALBUM->value;
-    }
-
-    private function isNonAlbumContentType(): bool
-    {
-        $contentType = $this->input('content_type');
-
-        if ($contentType === null) {
-            return false;
-        }
-
-        return $contentType !== PostContentTypeEnum::ALBUM->value;
-    }
-
-    private function requiresNotePayload(): bool
-    {
-        return $this->input('content_type') === PostContentTypeEnum::NOTE->value;
-    }
-
-    private function isNonNoteContentType(): bool
-    {
-        $contentType = $this->input('content_type');
-
-        if ($contentType === null) {
-            return false;
-        }
-
-        return $contentType !== PostContentTypeEnum::NOTE->value;
-    }
-
-    private function allowsWatch(): bool
-    {
-        $contentType = $this->input('content_type');
-
-        if ($contentType === PostContentTypeEnum::TV_SERIES->value) {
-            return true;
-        }
-
-        if ($contentType !== null) {
-            return false;
-        }
-
-        /** @var Post|null $post */
-        $post = $this->route('post');
-
-        return $post instanceof Post
-            && $post->content_type === PostContentTypeEnum::TV_SERIES;
+        return $contentType !== PostContentTypeEnum::MOVIE->value;
     }
 
     private function allowsStartedAt(): bool
     {
         $contentType = $this->input('content_type');
 
-        if (in_array($contentType, [
-            PostContentTypeEnum::MOVIE->value,
-            PostContentTypeEnum::TV_SERIES->value,
-        ], true)) {
+        if ($contentType === PostContentTypeEnum::MOVIE->value) {
             return true;
         }
 
@@ -278,9 +193,6 @@ class UpdateRequest extends AuthenticatedRequest
         $post = $this->route('post');
 
         return $post instanceof Post
-            && in_array($post->content_type, [
-                PostContentTypeEnum::MOVIE,
-                PostContentTypeEnum::TV_SERIES,
-            ], true);
+            && $post->content_type === PostContentTypeEnum::MOVIE;
     }
 }

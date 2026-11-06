@@ -20,7 +20,7 @@ class TaskPostContentHandler implements PostContentHandlerInterface
 
     public function supports(PostContentTypeEnum $contentType): bool
     {
-        return $contentType === PostContentTypeEnum::TASK;
+        return false;
     }
 
     public function attach(Post $post, PostContentAttachDto $dto): void

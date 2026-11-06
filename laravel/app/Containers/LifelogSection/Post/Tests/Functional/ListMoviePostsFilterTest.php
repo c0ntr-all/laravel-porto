@@ -64,7 +64,7 @@ class ListMoviePostsFilterTest extends TestCase
             ->getJson('/api/v1/lifelog/posts?sort=-date&filter[content_type]=movie&filter[movie_id]=' . $movie->id);
 
         $response->assertOk()
-            ->assertJsonPath('meta.count', 2)
+            ->assertJsonPath('meta.cursor.count', 2)
             ->assertJsonPath('data.0.attributes.title', 'Повтор')
             ->assertJsonPath('data.0.attributes.date', '2026-02-02')
             ->assertJsonPath('data.0.attributes.time', null)

@@ -165,60 +165,18 @@ const availableTags = ref<ITag[]>([])
 const titleRef = ref<IInputRef | null>(null)
 
 watch(attachedTask, task => {
-  if (!task) {
-    if (model.value.content_type === PostContentTypeEnum.TASK) {
-      model.value.content_type = PostContentTypeEnum.DEFAULT
-      model.value.task_id = null
-      model.value.task = null
-    }
-    return
-  }
-
-  model.value.content_type = PostContentTypeEnum.TASK
-  model.value.task_id = Number(task.id)
+  model.value.task_id = task ? Number(task.id) : null
   model.value.task = task
-  model.value.album_id = null
-  model.value.album = null
-  model.value.note_id = null
-  model.value.note = null
 })
 
 watch(attachedAlbum, album => {
-  if (!album) {
-    if (model.value.content_type === PostContentTypeEnum.ALBUM) {
-      model.value.content_type = PostContentTypeEnum.DEFAULT
-      model.value.album_id = null
-      model.value.album = null
-    }
-    return
-  }
-
-  model.value.content_type = PostContentTypeEnum.ALBUM
-  model.value.album_id = Number(album.id)
+  model.value.album_id = album ? Number(album.id) : null
   model.value.album = album
-  model.value.task_id = null
-  model.value.task = null
-  model.value.note_id = null
-  model.value.note = null
 })
 
 watch(attachedNote, note => {
-  if (!note) {
-    if (model.value.content_type === PostContentTypeEnum.NOTE) {
-      model.value.content_type = PostContentTypeEnum.DEFAULT
-      model.value.note_id = null
-      model.value.note = null
-    }
-    return
-  }
-
-  model.value.content_type = PostContentTypeEnum.NOTE
-  model.value.note_id = Number(note.id)
+  model.value.note_id = note ? Number(note.id) : null
   model.value.note = note
-  model.value.task_id = null
-  model.value.task = null
-  model.value.album_id = null
-  model.value.album = null
 })
 
 const attachedMediaIds = computed(() =>
